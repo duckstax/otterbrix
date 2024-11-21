@@ -123,448 +123,447 @@ namespace components::document::impl {
 
     document_result<uint8_t> element::get_uint8() const noexcept {
         assert(tape_.usable());
-        if (_usually_false(!tape_.is_uint8())) { // branch rarely taken
-            switch (tape_.tape_ref_type()) {
-                case types::physical_type::INT8: {
-                    return cast_from<int8_t, uint8_t>(tape_);
-                }
-                case types::physical_type::UINT16: {
-                    return cast_from<uint16_t, uint8_t>(tape_);
-                }
-                case types::physical_type::INT16: {
-                    return cast_from<int16_t, uint8_t>(tape_);
-                }
-                case types::physical_type::UINT32: {
-                    return cast_from<uint32_t, uint8_t>(tape_);
-                }
-                case types::physical_type::INT32: {
-                    return cast_from<int32_t, uint8_t>(tape_);
-                }
-                case types::physical_type::UINT64: {
-                    return cast_from<uint64_t, uint8_t>(tape_);
-                }
-                case types::physical_type::INT64: {
-                    return cast_from<int64_t, uint8_t>(tape_);
-                }
-                case types::physical_type::INT128: {
-                    return cast_from<absl::int128, uint8_t>(tape_);
-                }
-                case types::physical_type::FLOAT: {
-                    return cast_from<float, uint8_t>(tape_);
-                }
-                case types::physical_type::DOUBLE: {
-                    return cast_from<double, uint8_t>(tape_);
-                }
-                default:
-                    return INCORRECT_TYPE;
+        switch (tape_.tape_ref_type()) {
+            case types::physical_type::UINT8: {
+                return tape_.template next_tape_value<uint8_t>();
             }
+            case types::physical_type::INT8: {
+                return cast_from<int8_t, uint8_t>(tape_);
+            }
+            case types::physical_type::UINT16: {
+                return cast_from<uint16_t, uint8_t>(tape_);
+            }
+            case types::physical_type::INT16: {
+                return cast_from<int16_t, uint8_t>(tape_);
+            }
+            case types::physical_type::UINT32: {
+                return cast_from<uint32_t, uint8_t>(tape_);
+            }
+            case types::physical_type::INT32: {
+                return cast_from<int32_t, uint8_t>(tape_);
+            }
+            case types::physical_type::UINT64: {
+                return cast_from<uint64_t, uint8_t>(tape_);
+            }
+            case types::physical_type::INT64: {
+                return cast_from<int64_t, uint8_t>(tape_);
+            }
+            case types::physical_type::INT128: {
+                return cast_from<absl::int128, uint8_t>(tape_);
+            }
+            case types::physical_type::FLOAT: {
+                return cast_from<float, uint8_t>(tape_);
+            }
+            case types::physical_type::DOUBLE: {
+                return cast_from<double, uint8_t>(tape_);
+            }
+            default:
+                return INCORRECT_TYPE;
         }
-        return tape_.template next_tape_value<uint8_t>();
     }
 
     document_result<uint16_t> element::get_uint16() const noexcept {
         assert(tape_.usable());
-        if (_usually_false(!tape_.is_uint16())) { // branch rarely taken
-            switch (tape_.tape_ref_type()) {
-                case types::physical_type::UINT8: {
-                    return uint16_t(tape_.template next_tape_value<uint8_t>());
-                }
-                case types::physical_type::INT8: {
-                    return uint16_t(tape_.template next_tape_value<int8_t>());
-                }
-                case types::physical_type::INT16: {
-                    return cast_from<int16_t, uint16_t>(tape_);
-                }
-                case types::physical_type::UINT32: {
-                    return cast_from<uint32_t, uint16_t>(tape_);
-                }
-                case types::physical_type::INT32: {
-                    return cast_from<int32_t, uint16_t>(tape_);
-                }
-                case types::physical_type::UINT64: {
-                    return cast_from<uint64_t, uint16_t>(tape_);
-                }
-                case types::physical_type::INT64: {
-                    return cast_from<int64_t, uint16_t>(tape_);
-                }
-                case types::physical_type::INT128: {
-                    return cast_from<absl::int128, uint16_t>(tape_);
-                }
-                case types::physical_type::FLOAT: {
-                    return cast_from<float, uint16_t>(tape_);
-                }
-                case types::physical_type::DOUBLE: {
-                    return cast_from<double, uint16_t>(tape_);
-                }
-                default:
-                    return INCORRECT_TYPE;
+        switch (tape_.tape_ref_type()) {
+            case types::physical_type::UINT8: {
+                return uint16_t(tape_.template next_tape_value<uint8_t>());
             }
+            case types::physical_type::INT8: {
+                return uint16_t(tape_.template next_tape_value<int8_t>());
+            }
+            case types::physical_type::UINT16: {
+                return tape_.template next_tape_value<uint16_t>();
+            }
+            case types::physical_type::INT16: {
+                return cast_from<int16_t, uint16_t>(tape_);
+            }
+            case types::physical_type::UINT32: {
+                return cast_from<uint32_t, uint16_t>(tape_);
+            }
+            case types::physical_type::INT32: {
+                return cast_from<int32_t, uint16_t>(tape_);
+            }
+            case types::physical_type::UINT64: {
+                return cast_from<uint64_t, uint16_t>(tape_);
+            }
+            case types::physical_type::INT64: {
+                return cast_from<int64_t, uint16_t>(tape_);
+            }
+            case types::physical_type::INT128: {
+                return cast_from<absl::int128, uint16_t>(tape_);
+            }
+            case types::physical_type::FLOAT: {
+                return cast_from<float, uint16_t>(tape_);
+            }
+            case types::physical_type::DOUBLE: {
+                return cast_from<double, uint16_t>(tape_);
+            }
+            default:
+                return INCORRECT_TYPE;
         }
-        return tape_.template next_tape_value<uint16_t>();
     }
 
     document_result<uint32_t> element::get_uint32() const noexcept {
         assert(tape_.usable());
-        if (_usually_false(!tape_.is_uint32())) { // branch rarely taken
-            switch (tape_.tape_ref_type()) {
-                case types::physical_type::UINT8: {
-                    return uint32_t(tape_.template next_tape_value<uint8_t>());
-                }
-                case types::physical_type::INT8: {
-                    return uint32_t(tape_.template next_tape_value<int8_t>());
-                }
-                case types::physical_type::UINT16: {
-                    return uint32_t(tape_.template next_tape_value<uint16_t>());
-                }
-                case types::physical_type::INT16: {
-                    return cast_from<int16_t, uint32_t>(tape_);
-                }
-                case types::physical_type::INT32: {
-                    return cast_from<int32_t, uint32_t>(tape_);
-                }
-                case types::physical_type::UINT64: {
-                    return cast_from<uint64_t, uint32_t>(tape_);
-                }
-                case types::physical_type::INT64: {
-                    return cast_from<int64_t, uint32_t>(tape_);
-                }
-                case types::physical_type::INT128: {
-                    return cast_from<absl::int128, uint32_t>(tape_);
-                }
-                case types::physical_type::FLOAT: {
-                    return cast_from<float, uint32_t>(tape_);
-                }
-                case types::physical_type::DOUBLE: {
-                    return cast_from<double, uint32_t>(tape_);
-                }
-                default:
-                    return INCORRECT_TYPE;
+        switch (tape_.tape_ref_type()) {
+            case types::physical_type::UINT8: {
+                return uint32_t(tape_.template next_tape_value<uint8_t>());
             }
+            case types::physical_type::INT8: {
+                return uint32_t(tape_.template next_tape_value<int8_t>());
+            }
+            case types::physical_type::UINT16: {
+                return uint32_t(tape_.template next_tape_value<uint16_t>());
+            }
+            case types::physical_type::INT16: {
+                return cast_from<int16_t, uint32_t>(tape_);
+            }
+            case types::physical_type::UINT32: {
+                return tape_.template next_tape_value<uint32_t>();
+            }
+            case types::physical_type::INT32: {
+                return cast_from<int32_t, uint32_t>(tape_);
+            }
+            case types::physical_type::UINT64: {
+                return cast_from<uint64_t, uint32_t>(tape_);
+            }
+            case types::physical_type::INT64: {
+                return cast_from<int64_t, uint32_t>(tape_);
+            }
+            case types::physical_type::INT128: {
+                return cast_from<absl::int128, uint32_t>(tape_);
+            }
+            case types::physical_type::FLOAT: {
+                return cast_from<float, uint32_t>(tape_);
+            }
+            case types::physical_type::DOUBLE: {
+                return cast_from<double, uint32_t>(tape_);
+            }
+            default:
+                return INCORRECT_TYPE;
         }
-        return tape_.template next_tape_value<uint32_t>();
     }
 
     document_result<uint64_t> element::get_uint64() const noexcept {
         assert(tape_.usable());
-        if (_usually_false(!tape_.is_uint64())) { // branch rarely taken
-            switch (tape_.tape_ref_type()) {
-                case types::physical_type::UINT8: {
-                    return uint64_t(tape_.template next_tape_value<uint8_t>());
-                }
-                case types::physical_type::INT8: {
-                    return uint64_t(tape_.template next_tape_value<int8_t>());
-                }
-                case types::physical_type::UINT16: {
-                    return uint64_t(tape_.template next_tape_value<uint16_t>());
-                }
-                case types::physical_type::UINT32: {
-                    return uint64_t(tape_.template next_tape_value<uint32_t>());
-                }
-                case types::physical_type::INT16: {
-                    return cast_from<int16_t, uint64_t>(tape_);
-                }
-                case types::physical_type::INT32: {
-                    return cast_from<int32_t, uint64_t>(tape_);
-                }
-                case types::physical_type::INT64: {
-                    return cast_from<int64_t, uint64_t>(tape_);
-                }
-                case types::physical_type::INT128: {
-                    return cast_from<absl::int128, uint64_t>(tape_);
-                }
-                case types::physical_type::FLOAT: {
-                    return cast_from<float, uint64_t>(tape_);
-                }
-                case types::physical_type::DOUBLE: {
-                    return cast_from<double, uint64_t>(tape_);
-                }
-                default:
-                    return INCORRECT_TYPE;
+        switch (tape_.tape_ref_type()) {
+            case types::physical_type::UINT8: {
+                return uint64_t(tape_.template next_tape_value<uint8_t>());
             }
+            case types::physical_type::INT8: {
+                return uint64_t(tape_.template next_tape_value<int8_t>());
+            }
+            case types::physical_type::UINT16: {
+                return uint64_t(tape_.template next_tape_value<uint16_t>());
+            }
+            case types::physical_type::UINT32: {
+                return uint64_t(tape_.template next_tape_value<uint32_t>());
+            }
+            case types::physical_type::INT16: {
+                return cast_from<int16_t, uint64_t>(tape_);
+            }
+            case types::physical_type::INT32: {
+                return cast_from<int32_t, uint64_t>(tape_);
+            }
+            case types::physical_type::INT64: {
+                return cast_from<int64_t, uint64_t>(tape_);
+            }
+            case types::physical_type::UINT64: {
+                return tape_.template next_tape_value<uint64_t>();
+            }
+            case types::physical_type::INT128: {
+                return cast_from<absl::int128, uint64_t>(tape_);
+            }
+            case types::physical_type::FLOAT: {
+                return cast_from<float, uint64_t>(tape_);
+            }
+            case types::physical_type::DOUBLE: {
+                return cast_from<double, uint64_t>(tape_);
+            }
+            default:
+                return INCORRECT_TYPE;
         }
-        return tape_.template next_tape_value<uint64_t>();
     }
 
     document_result<int8_t> element::get_int8() const noexcept {
         assert(tape_.usable());
-        if (_usually_false(!tape_.is_int8())) { // branch rarely taken
-            switch (tape_.tape_ref_type()) {
-                case types::physical_type::UINT8: {
-                    return int8_t(tape_.template next_tape_value<uint8_t>());
-                }
-                case types::physical_type::INT16: {
-                    return cast_from<int16_t, int8_t>(tape_);
-                }
-                case types::physical_type::UINT16: {
-                    return cast_from<uint16_t, int8_t>(tape_);
-                }
-                case types::physical_type::INT32: {
-                    return cast_from<int32_t, int8_t>(tape_);
-                }
-                case types::physical_type::UINT32: {
-                    return cast_from<uint32_t, int8_t>(tape_);
-                }
-                case types::physical_type::INT64: {
-                    return cast_from<int64_t, int8_t>(tape_);
-                }
-                case types::physical_type::UINT64: {
-                    return cast_from<uint64_t, int8_t>(tape_);
-                }
-                case types::physical_type::INT128: {
-                    return cast_from<absl::int128, int8_t>(tape_);
-                }
-                case types::physical_type::FLOAT: {
-                    return cast_from<float, int8_t>(tape_);
-                }
-                case types::physical_type::DOUBLE: {
-                    return cast_from<double, int8_t>(tape_);
-                }
-                default:
-                    return INCORRECT_TYPE;
+        switch (tape_.tape_ref_type()) {
+            case types::physical_type::INT8: {
+                return tape_.template next_tape_value<int8_t>();
             }
+            case types::physical_type::UINT8: {
+                return int8_t(tape_.template next_tape_value<uint8_t>());
+            }
+            case types::physical_type::INT16: {
+                return cast_from<int16_t, int8_t>(tape_);
+            }
+            case types::physical_type::UINT16: {
+                return cast_from<uint16_t, int8_t>(tape_);
+            }
+            case types::physical_type::INT32: {
+                return cast_from<int32_t, int8_t>(tape_);
+            }
+            case types::physical_type::UINT32: {
+                return cast_from<uint32_t, int8_t>(tape_);
+            }
+            case types::physical_type::INT64: {
+                return cast_from<int64_t, int8_t>(tape_);
+            }
+            case types::physical_type::UINT64: {
+                return cast_from<uint64_t, int8_t>(tape_);
+            }
+            case types::physical_type::INT128: {
+                return cast_from<absl::int128, int8_t>(tape_);
+            }
+            case types::physical_type::FLOAT: {
+                return cast_from<float, int8_t>(tape_);
+            }
+            case types::physical_type::DOUBLE: {
+                return cast_from<double, int8_t>(tape_);
+            }
+            default:
+                return INCORRECT_TYPE;
         }
-        return tape_.template next_tape_value<int8_t>();
     }
 
     document_result<int16_t> element::get_int16() const noexcept {
         assert(tape_.usable());
-        if (_usually_false(!tape_.is_int16())) { // branch rarely taken
-            switch (tape_.tape_ref_type()) {
-                case types::physical_type::INT8: {
-                    return int16_t(tape_.template next_tape_value<int8_t>());
-                }
-                case types::physical_type::UINT8: {
-                    return int16_t(tape_.template next_tape_value<uint8_t>());
-                }
-                case types::physical_type::UINT16: {
-                    return cast_from<uint16_t, int16_t>(tape_);
-                }
-                case types::physical_type::INT32: {
-                    return cast_from<int32_t, int16_t>(tape_);
-                }
-                case types::physical_type::UINT32: {
-                    return cast_from<uint32_t, int16_t>(tape_);
-                }
-                case types::physical_type::INT64: {
-                    return cast_from<int64_t, int16_t>(tape_);
-                }
-                case types::physical_type::UINT64: {
-                    return cast_from<uint64_t, int16_t>(tape_);
-                }
-                case types::physical_type::INT128: {
-                    return cast_from<absl::int128, int16_t>(tape_);
-                }
-                case types::physical_type::FLOAT: {
-                    return cast_from<float, int16_t>(tape_);
-                }
-                case types::physical_type::DOUBLE: {
-                    return cast_from<double, int16_t>(tape_);
-                }
-                default:
-                    return INCORRECT_TYPE;
+        switch (tape_.tape_ref_type()) {
+            case types::physical_type::INT8: {
+                return int16_t(tape_.template next_tape_value<int8_t>());
             }
+            case types::physical_type::UINT8: {
+                return int16_t(tape_.template next_tape_value<uint8_t>());
+            }
+            case types::physical_type::INT16: {
+                return tape_.template next_tape_value<int16_t>();
+            }
+            case types::physical_type::UINT16: {
+                return cast_from<uint16_t, int16_t>(tape_);
+            }
+            case types::physical_type::INT32: {
+                return cast_from<int32_t, int16_t>(tape_);
+            }
+            case types::physical_type::UINT32: {
+                return cast_from<uint32_t, int16_t>(tape_);
+            }
+            case types::physical_type::INT64: {
+                return cast_from<int64_t, int16_t>(tape_);
+            }
+            case types::physical_type::UINT64: {
+                return cast_from<uint64_t, int16_t>(tape_);
+            }
+            case types::physical_type::INT128: {
+                return cast_from<absl::int128, int16_t>(tape_);
+            }
+            case types::physical_type::FLOAT: {
+                return cast_from<float, int16_t>(tape_);
+            }
+            case types::physical_type::DOUBLE: {
+                return cast_from<double, int16_t>(tape_);
+            }
+            default:
+                return INCORRECT_TYPE;
         }
-        return tape_.template next_tape_value<int16_t>();
     }
 
     document_result<int32_t> element::get_int32() const noexcept {
         assert(tape_.usable());
-        if (_usually_false(!tape_.is_int32())) { // branch rarely taken
-            switch (tape_.tape_ref_type()) {
-                case types::physical_type::INT8: {
-                    return int32_t(tape_.template next_tape_value<int8_t>());
-                }
-                case types::physical_type::UINT8: {
-                    return int32_t(tape_.template next_tape_value<uint8_t>());
-                }
-                case types::physical_type::INT16: {
-                    return int32_t(tape_.template next_tape_value<int16_t>());
-                }
-                case types::physical_type::UINT16: {
-                    return int32_t(tape_.template next_tape_value<uint16_t>());
-                }
-                case types::physical_type::UINT32: {
-                    return cast_from<uint32_t, int32_t>(tape_);
-                }
-                case types::physical_type::INT64: {
-                    return cast_from<int64_t, int32_t>(tape_);
-                }
-                case types::physical_type::UINT64: {
-                    return cast_from<uint64_t, int32_t>(tape_);
-                }
-                case types::physical_type::INT128: {
-                    return cast_from<absl::int128, int32_t>(tape_);
-                }
-                case types::physical_type::FLOAT: {
-                    return cast_from<float, int32_t>(tape_);
-                }
-                case types::physical_type::DOUBLE: {
-                    return cast_from<double, int32_t>(tape_);
-                }
-                default:
-                    return INCORRECT_TYPE;
+        switch (tape_.tape_ref_type()) {
+            case types::physical_type::INT8: {
+                return int32_t(tape_.template next_tape_value<int8_t>());
             }
+            case types::physical_type::UINT8: {
+                return int32_t(tape_.template next_tape_value<uint8_t>());
+            }
+            case types::physical_type::INT16: {
+                return int32_t(tape_.template next_tape_value<int16_t>());
+            }
+            case types::physical_type::UINT16: {
+                return int32_t(tape_.template next_tape_value<uint16_t>());
+            }
+            case types::physical_type::INT32: {
+                return tape_.template next_tape_value<int32_t>();
+            }
+            case types::physical_type::UINT32: {
+                return cast_from<uint32_t, int32_t>(tape_);
+            }
+            case types::physical_type::INT64: {
+                return cast_from<int64_t, int32_t>(tape_);
+            }
+            case types::physical_type::UINT64: {
+                return cast_from<uint64_t, int32_t>(tape_);
+            }
+            case types::physical_type::INT128: {
+                return cast_from<absl::int128, int32_t>(tape_);
+            }
+            case types::physical_type::FLOAT: {
+                return cast_from<float, int32_t>(tape_);
+            }
+            case types::physical_type::DOUBLE: {
+                return cast_from<double, int32_t>(tape_);
+            }
+            default:
+                return INCORRECT_TYPE;
         }
-        return tape_.template next_tape_value<int32_t>();
     }
 
     document_result<int64_t> element::get_int64() const noexcept {
         assert(tape_.usable());
-        if (_usually_false(!tape_.is_int64())) { // branch rarely taken
-            switch (tape_.tape_ref_type()) {
-                case types::physical_type::INT8: {
-                    return int64_t(tape_.template next_tape_value<int8_t>());
-                }
-                case types::physical_type::UINT8: {
-                    return int64_t(tape_.template next_tape_value<uint8_t>());
-                }
-                case types::physical_type::INT16: {
-                    return int32_t(tape_.template next_tape_value<int16_t>());
-                }
-                case types::physical_type::UINT16: {
-                    return int64_t(tape_.template next_tape_value<uint16_t>());
-                }
-                case types::physical_type::INT32: {
-                    return int64_t(tape_.template next_tape_value<int32_t>());
-                }
-                case types::physical_type::UINT32: {
-                    return int64_t(tape_.template next_tape_value<uint32_t>());
-                }
-                case types::physical_type::UINT64: {
-                    return cast_from<uint64_t, int64_t>(tape_);
-                }
-                case types::physical_type::INT128: {
-                    return cast_from<absl::int128, int64_t>(tape_);
-                }
-                case types::physical_type::FLOAT: {
-                    return cast_from<float, int64_t>(tape_);
-                }
-                case types::physical_type::DOUBLE: {
-                    return cast_from<double, int64_t>(tape_);
-                }
-                default:
-                    return INCORRECT_TYPE;
+        switch (tape_.tape_ref_type()) {
+            case types::physical_type::INT8: {
+                return int64_t(tape_.template next_tape_value<int8_t>());
             }
+            case types::physical_type::UINT8: {
+                return int64_t(tape_.template next_tape_value<uint8_t>());
+            }
+            case types::physical_type::INT16: {
+                return int32_t(tape_.template next_tape_value<int16_t>());
+            }
+            case types::physical_type::UINT16: {
+                return int64_t(tape_.template next_tape_value<uint16_t>());
+            }
+            case types::physical_type::INT32: {
+                return int64_t(tape_.template next_tape_value<int32_t>());
+            }
+            case types::physical_type::UINT32: {
+                return int64_t(tape_.template next_tape_value<uint32_t>());
+            }
+            case types::physical_type::INT64: {
+                return tape_.template next_tape_value<int64_t>();
+            }
+            case types::physical_type::UINT64: {
+                return cast_from<uint64_t, int64_t>(tape_);
+            }
+            case types::physical_type::INT128: {
+                return cast_from<absl::int128, int64_t>(tape_);
+            }
+            case types::physical_type::FLOAT: {
+                return cast_from<float, int64_t>(tape_);
+            }
+            case types::physical_type::DOUBLE: {
+                return cast_from<double, int64_t>(tape_);
+            }
+            default:
+                return INCORRECT_TYPE;
         }
-        return tape_.template next_tape_value<int64_t>();
     }
 
     document_result<absl::int128> element::get_int128() const noexcept {
         assert(tape_.usable());
-        if (_usually_false(!tape_.is_int128())) { // branch rarely taken
-            switch (tape_.tape_ref_type()) {
-                case types::physical_type::INT8: {
-                    return absl::int128(tape_.template next_tape_value<int8_t>());
-                }
-                case types::physical_type::UINT8: {
-                    return absl::int128(tape_.template next_tape_value<uint8_t>());
-                }
-                case types::physical_type::INT16: {
-                    return absl::int128(tape_.template next_tape_value<int16_t>());
-                }
-                case types::physical_type::UINT16: {
-                    return absl::int128(tape_.template next_tape_value<uint16_t>());
-                }
-                case types::physical_type::INT32: {
-                    return absl::int128(tape_.template next_tape_value<int32_t>());
-                }
-                case types::physical_type::UINT32: {
-                    return absl::int128(tape_.template next_tape_value<uint32_t>());
-                }
-                case types::physical_type::INT64: {
-                    return cast_from<int64_t, absl::int128>(tape_);
-                }
-                case types::physical_type::UINT64: {
-                    return cast_from<uint64_t, absl::int128>(tape_);
-                }
-                default:
-                    return INCORRECT_TYPE;
+        switch (tape_.tape_ref_type()) {
+            case types::physical_type::INT8: {
+                return absl::int128(tape_.template next_tape_value<int8_t>());
             }
+            case types::physical_type::UINT8: {
+                return absl::int128(tape_.template next_tape_value<uint8_t>());
+            }
+            case types::physical_type::INT16: {
+                return absl::int128(tape_.template next_tape_value<int16_t>());
+            }
+            case types::physical_type::UINT16: {
+                return absl::int128(tape_.template next_tape_value<uint16_t>());
+            }
+            case types::physical_type::INT32: {
+                return absl::int128(tape_.template next_tape_value<int32_t>());
+            }
+            case types::physical_type::UINT32: {
+                return absl::int128(tape_.template next_tape_value<uint32_t>());
+            }
+            case types::physical_type::INT64: {
+                return cast_from<int64_t, absl::int128>(tape_);
+            }
+            case types::physical_type::UINT64: {
+                return cast_from<uint64_t, absl::int128>(tape_);
+            }
+            case types::physical_type::INT128: {
+                return tape_.template next_tape_value<absl::int128>();
+            }
+            default:
+                return INCORRECT_TYPE;
         }
-        return tape_.template next_tape_value<absl::int128>();
     }
 
     document_result<float> element::get_float() const noexcept {
         assert(tape_.usable());
-        if (_usually_false(!tape_.is_float())) { // branch rarely taken
-            switch (tape_.tape_ref_type()) {
-                case types::physical_type::DOUBLE: {
-                    return float(tape_.template next_tape_value<double>());
-                }
-                case types::physical_type::UINT8: {
-                    return float(tape_.template next_tape_value<uint8_t>());
-                }
-                case types::physical_type::INT8: {
-                    return float(tape_.template next_tape_value<int8_t>());
-                }
-                case types::physical_type::UINT16: {
-                    return float(tape_.template next_tape_value<uint16_t>());
-                }
-                case types::physical_type::INT16: {
-                    return float(tape_.template next_tape_value<int16_t>());
-                }
-                case types::physical_type::UINT32: {
-                    return float(tape_.template next_tape_value<uint32_t>());
-                }
-                case types::physical_type::INT32: {
-                    return float(tape_.template next_tape_value<int32_t>());
-                }
-                case types::physical_type::UINT64: {
-                    return float(tape_.template next_tape_value<uint64_t>());
-                }
-                case types::physical_type::INT64: {
-                    return float(tape_.template next_tape_value<int64_t>());
-                }
-                case types::physical_type::INT128: {
-                    return float(tape_.template next_tape_value<absl::int128>());
-                }
-                default:
-                    return INCORRECT_TYPE;
+        switch (tape_.tape_ref_type()) {
+            case types::physical_type::FLOAT: {
+                return tape_.template next_tape_value<float>();
             }
+            case types::physical_type::DOUBLE: {
+                return float(tape_.template next_tape_value<double>());
+            }
+            case types::physical_type::UINT8: {
+                return float(tape_.template next_tape_value<uint8_t>());
+            }
+            case types::physical_type::INT8: {
+                return float(tape_.template next_tape_value<int8_t>());
+            }
+            case types::physical_type::UINT16: {
+                return float(tape_.template next_tape_value<uint16_t>());
+            }
+            case types::physical_type::INT16: {
+                return float(tape_.template next_tape_value<int16_t>());
+            }
+            case types::physical_type::UINT32: {
+                return float(tape_.template next_tape_value<uint32_t>());
+            }
+            case types::physical_type::INT32: {
+                return float(tape_.template next_tape_value<int32_t>());
+            }
+            case types::physical_type::UINT64: {
+                return float(tape_.template next_tape_value<uint64_t>());
+            }
+            case types::physical_type::INT64: {
+                return float(tape_.template next_tape_value<int64_t>());
+            }
+            case types::physical_type::INT128: {
+                return float(tape_.template next_tape_value<absl::int128>());
+            }
+            default:
+                return INCORRECT_TYPE;
         }
-        // this is common:
-        return tape_.template next_tape_value<float>();
     }
 
     document_result<double> element::get_double() const noexcept {
         assert(tape_.usable());
-        if (_usually_false(!tape_.is_double())) { // branch rarely taken    switch (tape_.tape_ref_type()) {
-            switch (tape_.tape_ref_type()) {
-                case types::physical_type::FLOAT: {
-                    return double(tape_.template next_tape_value<float>());
-                }
-                case types::physical_type::UINT8: {
-                    return double(tape_.template next_tape_value<uint8_t>());
-                }
-                case types::physical_type::INT8: {
-                    return double(tape_.template next_tape_value<int8_t>());
-                }
-                case types::physical_type::UINT16: {
-                    return double(tape_.template next_tape_value<uint16_t>());
-                }
-                case types::physical_type::INT16: {
-                    return double(tape_.template next_tape_value<int16_t>());
-                }
-                case types::physical_type::UINT32: {
-                    return double(tape_.template next_tape_value<uint32_t>());
-                }
-                case types::physical_type::INT32: {
-                    return double(tape_.template next_tape_value<int32_t>());
-                }
-                case types::physical_type::UINT64: {
-                    return double(tape_.template next_tape_value<uint64_t>());
-                }
-                case types::physical_type::INT64: {
-                    return double(tape_.template next_tape_value<int64_t>());
-                }
-                case types::physical_type::INT128: {
-                    return double(tape_.template next_tape_value<absl::int128>());
-                }
-                default:
-                    return INCORRECT_TYPE;
+        switch (tape_.tape_ref_type()) {
+            case types::physical_type::FLOAT: {
+                return double(tape_.template next_tape_value<float>());
             }
+            case types::physical_type::DOUBLE: {
+                return tape_.template next_tape_value<double>();
+            }
+            case types::physical_type::UINT8: {
+                return double(tape_.template next_tape_value<uint8_t>());
+            }
+            case types::physical_type::INT8: {
+                return double(tape_.template next_tape_value<int8_t>());
+            }
+            case types::physical_type::UINT16: {
+                return double(tape_.template next_tape_value<uint16_t>());
+            }
+            case types::physical_type::INT16: {
+                return double(tape_.template next_tape_value<int16_t>());
+            }
+            case types::physical_type::UINT32: {
+                return double(tape_.template next_tape_value<uint32_t>());
+            }
+            case types::physical_type::INT32: {
+                return double(tape_.template next_tape_value<int32_t>());
+            }
+            case types::physical_type::UINT64: {
+                return double(tape_.template next_tape_value<uint64_t>());
+            }
+            case types::physical_type::INT64: {
+                return double(tape_.template next_tape_value<int64_t>());
+            }
+            case types::physical_type::INT128: {
+                return double(tape_.template next_tape_value<absl::int128>());
+            }
+            default:
+                return INCORRECT_TYPE;
         }
-        return tape_.template next_tape_value<double>();
     }
 
     document_result<bool> element::get_bool() const noexcept {

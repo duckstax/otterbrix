@@ -413,6 +413,7 @@ TEST_CASE("operator::index::delete_and_update") {
             delete_.set_children(
                 boost::intrusive_ptr(new index_scan(d(collection), cond, components::ql::limit_t::unlimit())));
             delete_.on_execute(&pipeline_context);
+            REQUIRE(delete_.modified()->size() == 40);
 
             index_scan scan(d(collection), cond_check, components::ql::limit_t::unlimit());
             scan.on_execute(&pipeline_context_check);

@@ -543,6 +543,7 @@ namespace core::b_plus_tree {
                     leaf_nodes_count_--;
                 }
                 static_cast<inner_node_t*>(parent_node)->remove(current_node);
+                current_node = nullptr;
                 if (parent_node->unique_entry_count() == 1) {
                     // parent is a root node
                     base_node_t* new_root = static_cast<inner_node_t*>(parent_node)->deinitialize();
@@ -556,7 +557,6 @@ namespace core::b_plus_tree {
                     break;
                 }
 
-                current_node->unlock_exclusive();
                 current_node = parent_node;
                 if (!modified_nodes.empty()) {
                     parent_node = modified_nodes.back();
@@ -568,7 +568,9 @@ namespace core::b_plus_tree {
             tree_mutex_.unlock();
         }
 
-        current_node->unlock_exclusive();
+        if (current_node) {
+            current_node->unlock_exclusive();
+        }
         if (result) {
             item_count_--;
         }
@@ -682,6 +684,7 @@ namespace core::b_plus_tree {
                     leaf_nodes_count_--;
                 }
                 static_cast<inner_node_t*>(parent_node)->remove(current_node);
+                current_node = nullptr;
                 if (parent_node->unique_entry_count() == 1) {
                     // parent is a root node
                     base_node_t* new_root = static_cast<inner_node_t*>(parent_node)->deinitialize();
@@ -695,7 +698,6 @@ namespace core::b_plus_tree {
                     break;
                 }
 
-                current_node->unlock_exclusive();
                 current_node = parent_node;
                 if (!modified_nodes.empty()) {
                     parent_node = modified_nodes.back();
@@ -707,7 +709,9 @@ namespace core::b_plus_tree {
             tree_mutex_.unlock();
         }
 
-        current_node->unlock_exclusive();
+        if (current_node) {
+            current_node->unlock_exclusive();
+        }
         if (result) {
             item_count_ -= count_delta;
         }
@@ -773,8 +777,8 @@ namespace core::b_plus_tree {
             open_file(fs_, file_name, file_flags::WRITE | file_flags::FILE_CREATE);
         file->write(static_cast<void*>(buffer), METADATA_SIZE, 0);
 
-        resource_->deallocate(static_cast<void*>(buffer), METADATA_SIZE);
         tree_mutex_.unlock();
+        resource_->deallocate(static_cast<void*>(buffer), METADATA_SIZE);
     }
 
     void btree_t::load() {
@@ -860,9 +864,9 @@ namespace core::b_plus_tree {
 
         root_ = *nodes_layer;
 
+        tree_mutex_.unlock();
         resource_->deallocate(static_cast<void*>(buffer), METADATA_SIZE);
         resource_->deallocate(static_cast<void*>(nodes_layer), leaf_nodes_count_ * sizeof(base_node_t*));
-        tree_mutex_.unlock();
     }
 
     bool btree_t::contains_index(const index_t& index) {
