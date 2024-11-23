@@ -20,14 +20,10 @@ set_property(TARGET otterbrix_${CURRENT_TARGET} PROPERTY EXPORT_NAME ${CURRENT_T
 
 target_link_libraries(
         otterbrix_${CURRENT_TARGET}
-        INTERFACE
-        #PRIVATE
-        #${Boost_LIBRARIES}
 )
 
 target_include_directories(
         otterbrix_${CURRENT_TARGET}
-        INTERFACE
 )
 
 

@@ -14,7 +14,6 @@ on:
     branches:
       - '**'
 
-
 env:
   BUILD_TYPE: Release
   DEV_MODE: ON
@@ -47,6 +46,7 @@ jobs:
 
       - name: Set env
         run: |
+          
           export PYTHON_SHORT_VERSION=$(echo '${{ matrix.PYTHON_VERSION }}' | tr -d '.')
           echo "PYTHON_SHORT_VERSION=${PYTHON_SHORT_VERSION}" >> $GITHUB_ENV 
           export PYTHON_PATH=/opt/python/cp${PYTHON_SHORT_VERSION}-cp$(if [[ $PYTHON_SHORT_VERSION =~ ^3[67]$ ]]; then echo $PYTHON_SHORT_VERSION'm';else echo $PYTHON_SHORT_VERSION; fi )

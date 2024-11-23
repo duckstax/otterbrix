@@ -4,14 +4,17 @@ set(CMAKE_PROJECT_VERSION_MAJOR 1)
 set(CMAKE_PROJECT_VERSION_MINOR 0)
 set(CMAKE_PROJECT_VERSION_PATCH 0)
 set(CMAKE_PROJECT_VERSION "${CMAKE_PROJECT_VERSION_MAJOR}.${CMAKE_PROJECT_VERSION_MINOR}.${CMAKE_PROJECT_VERSION_PATCH}")
-PROJECT(otterbrix VERSION "${CMAKE_PROJECT_VERSION}" LANGUAGES CXX)
+PROJECT(otterbrix VERSION "${CMAKE_PROJECT_VERSION}" LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-message (STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 message(STATUS "ARCH : ${CMAKE_SYSTEM_NAME}")
+message(STATUS "CMAKE_CXX_COMPILER_ID = ${CMAKE_CXX_COMPILER_ID}")
+message(STATUS "CMAKE_C_COMPILER_ID = ${CMAKE_C_COMPILER_ID}")
+message(STATUS "STANDARD CPP = ${CMAKE_CXX_STANDARD}")
+message(STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_ASIO_HAS_MOVE -DEXCEPTIONS_DISABLE=OFF " CACHE STRING "compile flags" FORCE)
 
@@ -82,6 +85,66 @@ find_package(Sanitizers REQUIRED)
 
 #clang tools
 #############################################################################################
+if ((CMAKE_CXX_COMPILER_ID MATCHES "Clang") AND NOT APPLE) #------------------------------------- Clang
+    ############## LLVM CONFIGURATION #################
+    # https://github.com/nsumner/llvm-demo Example LLVM Build
+
+    # LLVM_DIR must be set to the prefix of /share/llvm/cmake via commandline
+    find_package(LLVM REQUIRED CONFIG)
+    message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION} at ${LLVM_LIBRARY_DIRS}")
+
+    find_library(CLANG_LIBCPP
+            NAMES libc++ c++
+            HINTS ${LLVM_LIBRARY_DIRS})
+
+    find_library(CLANG_LIBCPP_ABI
+            NAMES libc++abi c++abi
+            HINTS ${LLVM_LIBRARY_DIRS})
+
+    message(STATUS "Found CLANG_LIBCPP=${CLANG_LIBCPP}")
+    message(STATUS "Found CLANG_LIBCPP_ABI=${CLANG_LIBCPP_ABI}")
+
+    # Linker flags for targets and Conan
+    set(LINKFLAGS "")
+    ### https://stackoverflow.com/questions/43662736/cmake-switch-between-clang-g-and-libc-libstdc
+
+    if (${CLANG_LIBCPP} MATCHES "CLANG_LIBCPP-NOTFOUND")
+        set(LIBCXX "libstdc++11")
+    else()
+        # Change compiler library and libunwind from libgcc GCC implementation to LLVM's compiler-rt
+        # See https://clang.llvm.org/docs/Toolchain.html for details
+        # LINKFLAGS variable contains required link flags
+        set(LINKFLAGS "-stdlib=libc++ -rtlib=compiler-rt")
+
+        if (NOT APPLE)
+            find_library(
+                    LIBUNWIND_LIBRARY
+                    NAMES libunwind.a
+                    PATH_SUFFIXES lib lib64)
+
+            if (LIBUNWIND_LIBRARY)
+                message(STATUS "libunwind found: ${LIBUNWIND_LIBRARY}, using libunwind")
+                set(LINKFLAGS "${LINKFLAGS} -unwindlib=libunwind")
+            else()
+                message(STATUS "libunwind not found, using libgcc")
+                set(LINKFLAGS "${LINKFLAGS} -unwindlib=libgcc -lgcc_s")
+            endif()
+        endif()
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LINKFLAGS}")
+        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LINKFLAGS}")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+        set(LIBCXX "libc++")
+    endif()
+
+    if (CLANG_LIBCPP_ABI MATCHES "CLANG_LIBCPP_ABI-NOTFOUND")
+    else()
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lc++abi")
+    endif()
+
+else() #---------------------------------------------------------------------------- GNU
+    set(LIBCXX "libstdc++11")
+endif() #--------------------------------------------------------------------------- Clang
+#############################################################################################
 #conan
 
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
@@ -91,6 +154,14 @@ set(CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR} ${CMAKE_MODULE_PATH})
 
 include_directories(SYSTEM ${CONAN_INCLUDE_DIRS})
 conan_basic_setup(NO_OUTPUT_DIRS TARGETS KEEP_RPATHS)
+
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang"  AND UNIX AND NOT APPLE )
+    # https://docs.conan.io/1/reference/config_files/settings.yml.html#c-standard-libraries-aka-compiler-libcxx
+    #conan_cmake_autodetect(CONAN_SETTINGS)
+    set(CONAN_SETTINGS "build_type=${CMAKE_BUILD_TYPE};compiler.libcxx=${LIBCXX};compiler.cppstd=${CMAKE_CXX_STANDARD}")
+endif ()
+
+message(STATUS "CONAN_SETTINGS: ${CONAN_SETTINGS}")
 
 # conan
 #############################################################################################
@@ -126,7 +197,6 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 # add the automatically determined parts of the RPATH
 # which point to directories outside the build tree to the install RPATH
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
 
 include_directories(components)
 add_subdirectory(core)
