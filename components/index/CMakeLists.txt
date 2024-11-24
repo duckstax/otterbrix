@@ -21,9 +21,9 @@ target_link_libraries(
         otterbrix::document
         otterbrix::cursor
         otterbrix::ql
-        otterbrix::physical_plan_generator
+        otterbrix::context
         dl
-        CONAN_PKG::boost
+        Boost::boost
 )
 
 target_include_directories(

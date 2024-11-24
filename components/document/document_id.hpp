@@ -2,8 +2,8 @@
 
 #include <cstdint>
 
+#include <components/oid/oid.hpp>
 #include <memory>
-#include <oid/oid.hpp>
 
 namespace components::document {
 

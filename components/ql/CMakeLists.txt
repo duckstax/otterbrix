@@ -35,7 +35,8 @@ target_link_libraries(
         otterbrix::document
         otterbrix::types
         otterbrix::expressions
-        CONAN_PKG::boost
+        Boost::boost
+        magic_enum::magic_enum
 )
 
 target_include_directories(

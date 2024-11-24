@@ -1,4 +1,5 @@
 #include "parser_orderby.hpp"
+#include <algorithm>
 #include <components/expressions/expression.hpp>
 #include <components/sql/parser/base/parser_mask.hpp>
 

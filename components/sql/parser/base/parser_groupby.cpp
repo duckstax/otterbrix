@@ -1,4 +1,5 @@
 #include "parser_groupby.hpp"
+#include <algorithm>
 #include <array>
 #include <components/sql/parser/base/parser_mask.hpp>
 #include <memory_resource>

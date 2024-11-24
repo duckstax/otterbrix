@@ -20,13 +20,16 @@ target_link_libraries(
         otterbrix::types
         otterbrix::cursor
         otterbrix::session
+        otterbrix::context
         otterbrix::index
         otterbrix::logical_plan
         otterbrix::physical_plan_generator
-        CONAN_PKG::spdlog
-        CONAN_PKG::abseil
-        CONAN_PKG::boost
-        CONAN_PKG::actor-zeta
+        spdlog::spdlog
+        absl::int128
+        absl::flat_hash_map
+        absl::node_hash_map
+        Boost::boost
+        actor-zeta::actor-zeta
 )
 
 target_include_directories(otterbrix_${PROJECT_NAME} PUBLIC

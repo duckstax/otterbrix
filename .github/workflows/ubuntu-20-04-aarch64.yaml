@@ -45,6 +45,6 @@ jobs:
             cp ../conanfile.txt .
             conan install . --build missing -s build_type=Release
             
-            cmake  -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON ..
+            cmake  -G Ninja -DCMAKE_TOOLCHAIN_FILE="conan_toolchain.cmake" -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON ..
             cmake --build .
             ctest -C -V --output-on-failure
