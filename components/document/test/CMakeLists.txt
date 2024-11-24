@@ -14,9 +14,9 @@ target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         otterbrix::document
         otterbrix::test_generaty
-        CONAN_PKG::boost
-        CONAN_PKG::catch2
-        CONAN_PKG::msgpack-cxx
+        Boost::boost
+        Catch2::Catch2
+        msgpackc-cxx
         ${CMAKE_THREAD_LIBS_INIT}
 )
 

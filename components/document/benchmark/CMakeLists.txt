@@ -16,7 +16,7 @@ target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         otterbrix::document
         otterbrix::test_generaty
-        CONAN_PKG::benchmark
+        benchmark::benchmark
 )
 
 file(COPY start-perf DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

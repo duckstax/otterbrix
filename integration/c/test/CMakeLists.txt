@@ -25,20 +25,20 @@ target_link_libraries(
         otterbrix::disk
         otterbrix::locks
 
-        CONAN_PKG::spdlog
-        CONAN_PKG::msgpack-cxx
+        spdlog::spdlog
+        msgpackc-cxx
         #CONAN_PKG::date
-        CONAN_PKG::catch2
-        CONAN_PKG::crc32c
-        CONAN_PKG::abseil
-        CONAN_PKG::benchmark
-        CONAN_PKG::actor-zeta
-        CONAN_PKG::boost
-        CONAN_PKG::fmt
+        Catch2::Catch2
+        Crc32c::crc32c
+        absl::int128
+        benchmark::benchmark
+        actor-zeta::actor-zeta
+        Boost::boost
+        fmt::fmt
         #CONAN_PKG::libcurl
-        CONAN_PKG::zlib
-        CONAN_PKG::bzip2
-        CONAN_PKG::libbacktrace
+        ZLIB::ZLIB
+        BZip2::BZip2
+        libbacktrace::libbacktrace
 
 )
 

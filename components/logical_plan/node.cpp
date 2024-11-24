@@ -1,5 +1,7 @@
 #include "node.hpp"
+#include <algorithm>
 #include <boost/container_hash/hash.hpp>
+
 namespace components::logical_plan {
 
     node_type node_t::type() const { return type_; }
