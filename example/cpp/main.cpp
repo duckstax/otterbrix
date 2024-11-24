@@ -14,6 +14,7 @@ using id_par = core::parameter_id_t;
 inline configuration::config make_create_config(const std::filesystem::path& path) {
     auto config = configuration::config::default_config();
     config.log.path = path;
+    config.log.level = log_t::level::warn;
     config.disk.path = path;
     config.wal.path = path;
     return config;
@@ -31,19 +32,21 @@ TEST_CASE("example::sql::base") {
     config.wal.on = false;
     otterbrix::otterbrix_ptr otterbrix;
 
-    INFO("initialization") { otterbrix = otterbrix::make_otterbrix(config); }
+    INFO("initialization") {
+        otterbrix = otterbrix::make_otterbrix(config);
+        execute_sql(otterbrix, R"_(CREATE DATABASE TestDatabase;)_");
+        execute_sql(otterbrix, R"_(CREATE TABLE TestDatabase.TestCollection;)_");
+    }
 
     INFO("insert") {
-        {
-            std::stringstream query;
-            query << "INSERT INTO TestDatabase.TestCollection (_id, name, count) VALUES ";
-            for (int num = 0; num < 100; ++num) {
-                query << "('" << gen_id(num + 1) << "', "
-                      << "'Name " << num << "', " << num << ")" << (num == 99 ? ";" : ", ");
-            }
-            auto c = execute_sql(otterbrix, query.str());
-            REQUIRE(c->size() == 100);
+        std::stringstream query;
+        query << "INSERT INTO TestDatabase.TestCollection (_id, name, count) VALUES ";
+        for (int num = 0; num < 100; ++num) {
+            query << "('" << gen_id(num + 1) << "', "
+                  << "'Name " << num << "', " << num << ")" << (num == 99 ? ";" : ", ");
         }
+        auto c = execute_sql(otterbrix, query.str());
+        REQUIRE(c->size() == 100);
     }
 
     INFO("select") {
@@ -130,16 +133,18 @@ TEST_CASE("example::sql::group_by") {
     otterbrix::otterbrix_ptr otterbrix;
 
     INFO("initialization") {
-        { otterbrix = otterbrix::make_otterbrix(config); }
-        {
-            std::stringstream query;
-            query << "INSERT INTO TestDatabase.TestCollection (_id, name, count) VALUES ";
-            for (int num = 0; num < 100; ++num) {
-                query << "('" << gen_id(num + 1) << "', "
-                      << "'Name " << (num % 10) << "', " << (num % 20) << ")" << (num == 99 ? ";" : ", ");
-            }
-            execute_sql(otterbrix, query.str());
+        otterbrix = otterbrix::make_otterbrix(config);
+        execute_sql(otterbrix, R"_(CREATE DATABASE TestDatabase;)_");
+        execute_sql(otterbrix, R"_(CREATE TABLE TestDatabase.TestCollection;)_");
+
+        std::stringstream query;
+        query << "INSERT INTO TestDatabase.TestCollection (_id, name, count) VALUES ";
+        for (int num = 0; num < 100; ++num) {
+            query << "('" << gen_id(num + 1) << "', "
+                  << "'Name " << (num % 10) << "', " << (num % 20) << ")" << (num == 99 ? ";" : ", ");
         }
+        auto c = execute_sql(otterbrix, query.str());
+        REQUIRE(c->is_success());
     }
 
     INFO("group by") {

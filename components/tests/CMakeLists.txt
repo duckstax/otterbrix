@@ -13,5 +13,5 @@ add_library(otterbrix::${PROJECT_NAME} ALIAS otterbrix_${PROJECT_NAME})
 set_property(TARGET otterbrix_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAME})
 
 target_link_libraries(
-        otterbrix_${PROJECT_NAME}
+        otterbrix_${PROJECT_NAME} PRIVATE absl::numeric absl::int128 Boost::json
 )

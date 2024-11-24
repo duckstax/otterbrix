@@ -44,19 +44,19 @@ target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         ${otterbrix_LIBS}
         cpp_otterbrix
-        CONAN_PKG::spdlog
-        CONAN_PKG::pybind11
-        CONAN_PKG::msgpack-cxx
+        spdlog::spdlog
+        pybind11::pybind11
+        msgpackc-cxx
         #CONAN_PKG::date
-        CONAN_PKG::crc32c
-        CONAN_PKG::abseil
-        CONAN_PKG::actor-zeta
-        CONAN_PKG::boost
-        CONAN_PKG::fmt
+        Crc32c::crc32c
+        absl::int128
+        actor-zeta::actor-zeta
+        Boost::boost
+        fmt::fmt
         #CONAN_PKG::libcurl
-        CONAN_PKG::zlib
-        CONAN_PKG::bzip2
-        #CONAN_PKG::libbacktrace
+        ZLIB::ZLIB
+        BZip2::BZip2
+        #libbacktrace::libbacktrace
         #CONAN_PKG::openssl
 
 )
@@ -75,6 +75,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES CXX_VISIBILITY_PRESET "hidden")
 if(SKBUILD)
     install(DIRECTORY otterbrix DESTINATION  . )
     install(TARGETS ${PROJECT_NAME} DESTINATION  ./otterbrix )
+    set(CMAKE_TOOLCHAIN_FILE ="conan_toolchain.cmake")
 endif()
 
 if (DEV_MODE)

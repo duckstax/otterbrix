@@ -31,9 +31,10 @@ target_include_directories(otterbrix_${PROJECT_NAME} PUBLIC "${CMAKE_SOURCE_DIR}
 target_link_libraries(
         otterbrix_${PROJECT_NAME}
         otterbrix::types
-        CONAN_PKG::boost
-        CONAN_PKG::abseil
-        CONAN_PKG::msgpack-cxx
+        Boost::boost
+        absl::flat_hash_map
+        absl::node_hash_map
+        msgpackc-cxx
 )
 
 if (DEV_MODE)

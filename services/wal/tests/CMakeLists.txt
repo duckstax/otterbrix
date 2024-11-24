@@ -18,10 +18,10 @@ target_link_libraries(
         otterbrix::wal
         otterbrix::test_generaty
 
-        CONAN_PKG::catch2
-        CONAN_PKG::crc32c
-        CONAN_PKG::actor-zeta
-        CONAN_PKG::boost
+        Catch2::Catch2
+        Crc32c::crc32c
+        actor-zeta::actor-zeta
+        Boost::boost
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

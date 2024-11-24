@@ -26,10 +26,10 @@ target_link_libraries(
         otterbrix::locks
         otterbrix::file
 
-        CONAN_PKG::spdlog
-        CONAN_PKG::crc32c
-        CONAN_PKG::actor-zeta
-        CONAN_PKG::boost
+        spdlog::spdlog
+        Crc32c::crc32c
+        actor-zeta::actor-zeta
+        Boost::boost
 
 )
 

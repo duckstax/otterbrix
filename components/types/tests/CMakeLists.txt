@@ -13,6 +13,7 @@ target_link_libraries(
         otterbrix::log
         otterbrix::file
         otterbrix::types
+        Catch2::Catch2
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

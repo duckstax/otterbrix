@@ -16,6 +16,7 @@ target_link_libraries(
         otterbrix::file
         otterbrix::test_generaty
         otterbrix::b_plus_tree
+        Catch2::Catch2
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

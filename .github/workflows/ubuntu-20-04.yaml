@@ -55,7 +55,7 @@ jobs:
           CC: gcc
         run: |
           cd build
-          cmake  -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON -DEXAMPLE=ON ..
+          cmake  -G Ninja -DCMAKE_TOOLCHAIN_FILE="conan_toolchain.cmake" -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON -DEXAMPLE=ON ..
           cmake --build .
 
       - name: Test

@@ -31,7 +31,7 @@ target_link_libraries(
         otterbrix_${PROJECT_NAME} PRIVATE
         otterbrix::ql
         otterbrix::types
-        CONAN_PKG::boost
+        Boost::boost
 )
 
 target_include_directories(
