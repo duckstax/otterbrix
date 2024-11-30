@@ -12,6 +12,8 @@ target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         otterbrix::document
         otterbrix::ql
+        Catch2::Catch2
+        actor-zeta::actor-zeta
 )
 
 include(CTest)

@@ -1,12 +1,12 @@
-project(dispatcher)
+project(context)
 
-set(${PROJECT_NAME}_HEADERS
-        dispatcher.hpp
+set( ${PROJECT_NAME}_HEADERS
+        context.hpp
 )
 
 set(${PROJECT_NAME}_SOURCES
-        dispatcher.cpp
-        session.cpp
+        context.cpp
+
 )
 
 add_library(otterbrix_${PROJECT_NAME}
@@ -19,19 +19,10 @@ add_library(otterbrix::${PROJECT_NAME} ALIAS otterbrix_${PROJECT_NAME})
 set_property(TARGET otterbrix_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAME})
 
 target_link_libraries(
-        otterbrix_${PROJECT_NAME} PRIVATE
-        otterbrix::log
-        otterbrix::cursor
+        otterbrix_${PROJECT_NAME} PUBLIC
         otterbrix::session
         otterbrix::ql
-        otterbrix::planner
-        spdlog::spdlog
         actor-zeta::actor-zeta
 )
 
-target_include_directories(otterbrix_${PROJECT_NAME} PUBLIC
-)
-
-if (DEV_MODE)
-    #    add_subdirectory(tests)
-endif ()
+target_include_directories( otterbrix_${PROJECT_NAME} PUBLIC )

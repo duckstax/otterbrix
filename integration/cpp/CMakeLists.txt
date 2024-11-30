@@ -37,26 +37,26 @@ target_link_libraries(
         ${otterbrix_LIBS}
 )
 
-set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "otterbrix")
+# set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "otterbrix")
 
 add_library(${PROJECT_NAME}_shared SHARED ${${PROJECT_NAME}_sources})
 
 target_link_libraries(
         ${PROJECT_NAME}_shared PRIVATE
         ${otterbrix_LIBS}
-        CONAN_PKG::spdlog
-        CONAN_PKG::pybind11
-        CONAN_PKG::msgpack-cxx
+        spdlog::spdlog
+        pybind11::pybind11
+        msgpackc-cxx
         #CONAN_PKG::date
-        CONAN_PKG::crc32c
-        CONAN_PKG::abseil
-        CONAN_PKG::actor-zeta
-        CONAN_PKG::boost
-        CONAN_PKG::fmt
+        Crc32c::crc32c
+        absl::int128
+        actor-zeta::actor-zeta
+        Boost::boost
+        fmt::fmt
         #CONAN_PKG::libcurl
-        CONAN_PKG::zlib
-        CONAN_PKG::bzip2
-        #CONAN_PKG::libbacktrace
+        ZLIB::ZLIB
+        BZip2::BZip2
+        #libbacktrace::libbacktrace
         #CONAN_PKG::openssl
 )
 
@@ -86,18 +86,18 @@ if (DEV_MODE OR ALLOW_BENCHMARK)
 
             ${otterbrix_LIBS}
 
-            CONAN_PKG::spdlog
-            CONAN_PKG::msgpack-cxx
+            spdlog::spdlog
+            msgpackc-cxx
             #CONAN_PKG::date
-            CONAN_PKG::crc32c
-            CONAN_PKG::abseil
-            CONAN_PKG::actor-zeta
-            CONAN_PKG::boost
-            CONAN_PKG::fmt
+            Crc32c::crc32c
+            absl::int128
+            actor-zeta::actor-zeta
+            Boost::boost
+            fmt::fmt
             #CONAN_PKG::libcurl
-            CONAN_PKG::zlib
-            CONAN_PKG::bzip2
-            #CONAN_PKG::libbacktrace
+            ZLIB::ZLIB
+            BZip2::BZip2
+            #libbacktrace::libbacktrace
             #CONAN_PKG::openssl
     )
 endif()
