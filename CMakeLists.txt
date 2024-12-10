@@ -85,7 +85,7 @@ find_package(Sanitizers REQUIRED)
 #clang tools
 #############################################################################################
 # conan
-message("DCMAKE_TOOLCHAIN_FILE= ${CMAKE_TOOLCHAIN_FILE}")
+message(STATUS "DCMAKE_TOOLCHAIN_FILE = ${CMAKE_TOOLCHAIN_FILE}")
 
 find_package(Boost 1.86.0 REQUIRED)
 find_package(fmt 10.2.1 REQUIRED)

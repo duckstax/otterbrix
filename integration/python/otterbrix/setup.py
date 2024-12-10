@@ -13,5 +13,8 @@ setup(
     python_requires='>=3.6',
     # cmake_source_dir=".",
     include_package_data=True,
-    extras_require={"test": ["pytest"]}
+    extras_require={"test": ["pytest"]},
+    cmake_args=[
+        "-DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake",
+    ],
 )
