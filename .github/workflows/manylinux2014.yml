@@ -75,10 +75,7 @@ jobs:
           pwd
           ls
           conan install conanfile.txt --build missing  \
-          --build fmt \
-          --build spdlog  \
           -s build_type=Release \
-          -g CMakeDeps -g CMakeToolchain
 
       - name: Build wheel
         run: |
@@ -86,7 +83,7 @@ jobs:
           cp integration/python/otterbrix/pyproject.toml .
           cp integration/python/otterbrix/get_path.py .
           touch MANIFEST.in
-          
+
           python3 -m pip install wheel setuptools scikit-build==0.16.6 pytest==6.2.5
           mkdir -p $(echo "./$(python3 get_path.py )")
           conan install conanfile.txt --build missing -s build_type=Release -g CMakeDeps -g CMakeToolchain -if=$(echo "./$(python3 get_path.py )")
