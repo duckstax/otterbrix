@@ -9,7 +9,7 @@ add_executable(${PROJECT_NAME} main.cpp)
 
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
-        CONAN_PKG::benchmark
+        benchmark::benchmark
         otterbrix::document
         otterbrix::test_generaty
 )

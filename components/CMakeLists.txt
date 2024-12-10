@@ -13,6 +13,7 @@ add_subdirectory(physical_plan_generator)
 add_subdirectory(planner)
 add_subdirectory(ql)
 add_subdirectory(session)
+add_subdirectory(context)
 add_subdirectory(sql)
 add_subdirectory(types)
 

@@ -15,7 +15,8 @@ target_link_libraries(
         otterbrix::document
         otterbrix::index
         otterbrix::test_generaty
-        CONAN_PKG::boost
+        Boost::boost
+        Catch2::Catch2
 )
 
 include(CTest)

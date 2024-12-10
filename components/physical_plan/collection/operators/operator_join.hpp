@@ -3,7 +3,7 @@
 #include <components/expressions/join_expression.hpp>
 #include <components/physical_plan/collection/operators/operator.hpp>
 #include <components/ql/join/join.hpp>
-#include <components/ql/join/join_types.h>
+#include <components/ql/join/join_types.hpp>
 
 namespace services::collection::operators {
 

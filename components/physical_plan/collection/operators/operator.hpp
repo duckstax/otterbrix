@@ -1,8 +1,8 @@
 #pragma once
 
+#include <components/context/context.hpp>
 #include <components/physical_plan/collection/operators/operator_data.hpp>
 #include <components/physical_plan/collection/operators/operator_write_data.hpp>
-#include <components/physical_plan/context.hpp>
 
 namespace services::collection {
 
@@ -48,6 +48,7 @@ namespace services::collection::operators {
         operator_t(context_collection_t* collection, operator_type type);
         virtual ~operator_t() = default;
 
+        // TODO fwd
         void on_execute(components::pipeline::context_t* pipeline_context);
         void on_resume(components::pipeline::context_t* pipeline_context);
         void async_wait();

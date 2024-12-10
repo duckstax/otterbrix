@@ -14,7 +14,9 @@ target_link_libraries(
         otterbrix::document
         otterbrix::test_generaty
         otterbrix::cursor
-        CONAN_PKG::boost
+        Boost::boost
+        Catch2::Catch2
+        actor-zeta::actor-zeta
 )
 
 include(CTest)
