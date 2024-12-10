@@ -18,6 +18,7 @@ on:
 env:
   BUILD_TYPE: Release
   DEV_MODE: ON
+  CMAKE_TOOLCHAIN_FILE: conan_toolchain.cmake
   ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
 
 jobs:

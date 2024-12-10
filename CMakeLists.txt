@@ -25,6 +25,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 add_definitions(-D_GNU_SOURCE)
 
 if (DEV_MODE)
+    message("DEV_MOD ON")
     add_definitions(-DDEV_MODE)
     enable_testing()
 endif()
