@@ -57,7 +57,7 @@ jobs:
 
       - name: Install system packages
         run: |
-          yum install -y ninja-build python3-pip python3-devel wget unzip zip
+          yum install -y make ninja-build python3-pip python3-devel wget unzip zip
 
       - name: Set env conan dependencies
         run: |
