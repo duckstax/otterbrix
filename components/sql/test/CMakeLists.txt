@@ -16,6 +16,7 @@ add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
 target_link_libraries(
     ${PROJECT_NAME} PRIVATE
     otterbrix::sql
+    Catch2::Catch2
 )
 
 include(CTest)

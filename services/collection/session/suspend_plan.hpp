@@ -2,8 +2,8 @@
 
 #include "session_type.hpp"
 #include <actor-zeta.hpp>
+#include <components/context/context.hpp>
 #include <components/physical_plan/collection/operators/operator.hpp>
-#include <components/physical_plan/context.hpp>
 
 namespace services::collection::sessions {
 

@@ -11,7 +11,7 @@
 #include "core/pmr.hpp"
 #include "forward.hpp"
 #include "index.hpp"
-#include <components/physical_plan/context.hpp>
+#include <components/context/context.hpp>
 #include <core/btree/btree.hpp>
 
 namespace components::index {

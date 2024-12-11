@@ -1,5 +1,6 @@
 [requires]
 boost/1.86.0
+fmt/10.2.1
 spdlog/1.12.0
 pybind11/2.13.6
 msgpack-cxx/4.1.1
@@ -23,10 +24,9 @@ actor-zeta:rtti_disable=False
 
 [generators]
 cmake
-cmake_find_package
 CMakeDeps
 CMakeToolchain
-#cmake_paths
+
 
 
 [imports]
