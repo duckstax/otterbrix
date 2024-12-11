@@ -92,6 +92,9 @@ endif()
 
 message(STATUS "DCMAKE_TOOLCHAIN_FILE = ${CMAKE_TOOLCHAIN_FILE}")
 
+if(POLICY CMP0167)
+    cmake_policy(SET CMP0167 OLD)
+endif()
 find_package(Boost 1.86.0 REQUIRED)
 find_package(fmt 10.2.1 REQUIRED)
 find_package(spdlog 1.12.0 REQUIRED)
