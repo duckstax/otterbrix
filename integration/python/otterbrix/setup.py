@@ -1,4 +1,9 @@
 from skbuild import setup
+from pathlib import Path
+
+
+# Get the absolute path to the toolchain file
+toolchain_file = Path("conan_toolchain.cmake").resolve()
 
 setup(
     name="otterbrix",
@@ -15,7 +20,8 @@ setup(
     include_package_data=True,
     extras_require={"test": ["pytest"]},
         cmake_args=[
-        "-DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake",  # Pass toolchain file here
+        "-DCMAKE_TOOLCHAIN_FILE={toolchain_file}",  # Pass toolchain file here
+        # "-DCMAKE_TOOLCHAIN_FILE=_skbuild/linux-x86_64-3.8/cmake-build/conan_toolchain.cmake",
         "-DCMAKE_BUILD_TYPE=Release",
     ],
 )
