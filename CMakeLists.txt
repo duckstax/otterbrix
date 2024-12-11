@@ -85,6 +85,11 @@ find_package(Sanitizers REQUIRED)
 #clang tools
 #############################################################################################
 # conan
+if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+    message(STATUS "CMAKE DEFINE CMAKE_TOOLCHAIN_FILE")
+    set(CMAKE_TOOLCHAIN_FILE "conan_toolchain.cmake" CACHE FILEPATH "Path to the toolchain file")
+endif()
+
 message(STATUS "DCMAKE_TOOLCHAIN_FILE = ${CMAKE_TOOLCHAIN_FILE}")
 
 find_package(Boost 1.86.0 REQUIRED)

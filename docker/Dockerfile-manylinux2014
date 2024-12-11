@@ -39,7 +39,7 @@ RUN   PYBIN=(/opt/python/*/bin) && \
           ${BIN}/python3 -m pip install --no-cache-dir  wheel setuptools scikit-build==0.16.4  && \
           mkdir -p $(echo "./$(${BIN}/python3 get_path.py )") && \
           conan install . -s build_type=Release -g CMakeDeps -g CMakeToolchain -if=$(echo "./$(${BIN}/python3 get_path.py )") && \
-          ${BIN}/python3 setup.py bdist_wheel  --verbose -DCMAKE_TOOLCHAIN_FILE="conan_toolchain.cmake" -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON && \
+          ${BIN}/python3 setup.py bdist_wheel  --verbose -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON && \
           #${BIN}/python3 -m pip install --no-index --find-links . dist/otterbrix-*.whl  && \
           cd $(echo "./$(${BIN}/python3 get_path.py )") && \
           ctest  -C -V --output-on-failure --timeout 60 && \

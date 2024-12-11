@@ -89,7 +89,7 @@ jobs:
           python3 -m pip install wheel setuptools scikit-build==0.16.6 pytest==6.2.5
           mkdir -p $(echo "./$(python3 get_path.py )")
           conan install conanfile.txt --build missing -s build_type=Release -if=$(echo "./$(python3 get_path.py )")
-          python3 setup.py bdist_wheel --verbose -DCMAKE_TOOLCHAIN_FILE="conan_toolchain.cmake"
+          python3 setup.py bdist_wheel --verbose
 
       - name: Repair wheel
         run: |

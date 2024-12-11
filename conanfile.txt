@@ -23,6 +23,7 @@ actor-zeta:rtti_disable=False
 #OpenSSL:shared = True
 
 [generators]
+cmake
 CMakeDeps
 CMakeToolchain
 
