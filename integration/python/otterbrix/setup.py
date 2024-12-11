@@ -14,4 +14,8 @@ setup(
     # cmake_source_dir=".",
     include_package_data=True,
     extras_require={"test": ["pytest"]},
+        cmake_args=[
+        "-DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake",  # Pass toolchain file here
+        "-DCMAKE_BUILD_TYPE=Release",
+    ],
 )
