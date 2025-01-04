@@ -2,7 +2,7 @@ from skbuild import setup
 
 setup(
     name="otterbrix",
-    version="1.0a9",
+    version="1.0.0a9",
     description="""Otterbrix: computation framework for Semi-structured data processing """,
     author=" ",
     license=" ",
@@ -13,5 +13,6 @@ setup(
     python_requires='>=3.6',
     # cmake_source_dir=".",
     include_package_data=True,
-    extras_require={"test": ["pytest"]}
+    extras_require={"test": ["pytest"]},
+    cmake_args=["-DMyOption=ON", "-DAnotherOption=OFF"],
 )
