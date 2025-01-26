@@ -14,7 +14,7 @@ addopts = [
     "--import-mode=importlib",
 ]
 [project]
-name = "Django"
+name = "otterbrix"
 dynamic = ["version"]
 requires-python = ">= 3.10"
 dependencies = []
