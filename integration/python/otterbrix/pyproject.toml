@@ -20,7 +20,7 @@ addopts = [
 [project]
 name = "otterbrix"
 dynamic = ["version"]
-requires-python = ">= 3.10"
+requires-python = ">= 3.7"
 dependencies = []
 authors = [
     {name = "Otterbrix Team", email = "team@otterbrix.com"},
