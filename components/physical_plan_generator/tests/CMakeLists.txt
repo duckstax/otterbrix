@@ -18,9 +18,12 @@ target_link_libraries(
         otterbrix::cursor
         otterbrix::session
         otterbrix::test_generaty
-        CONAN_PKG::spdlog
-        CONAN_PKG::abseil
-        CONAN_PKG::boost
+        spdlog::spdlog
+        absl::int128
+        absl::flat_hash_map
+        absl::node_hash_map
+        Boost::boost
+        Catch2::Catch2
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

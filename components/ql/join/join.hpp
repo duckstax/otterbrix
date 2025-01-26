@@ -1,6 +1,6 @@
 #pragma once
 
-#include "join_types.h"
+#include "join_types.hpp"
 #include <components/expressions/expression.hpp>
 #include <components/ql/aggregate.hpp>
 #include <components/ql/ql_param_statement.hpp>
