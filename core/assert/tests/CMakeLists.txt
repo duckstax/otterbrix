@@ -11,8 +11,9 @@ add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         otterbrix::log
-        CONAN_PKG::boost
+        Boost::boost
         otterbrix::assert
+        Catch2::Catch2
 )
 
 include(CTest)

@@ -24,8 +24,8 @@ set_property(TARGET otterbrix_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 
 target_link_libraries(
         otterbrix_${PROJECT_NAME} PUBLIC
-        CONAN_PKG::crc32c
-        CONAN_PKG::msgpack-cxx
+        Crc32c::crc32c
+        msgpackc-cxx
         otterbrix::types
         otterbrix::document
         otterbrix::file

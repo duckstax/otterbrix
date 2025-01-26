@@ -13,6 +13,8 @@ target_link_libraries(
         otterbrix::logical_plan
         otterbrix::test_generaty
         otterbrix::planner
+        Catch2::Catch2
+        actor-zeta::actor-zeta
 )
 
 include(CTest)
