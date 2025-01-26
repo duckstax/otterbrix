@@ -14,5 +14,4 @@ setup(
     # cmake_source_dir=".",
     include_package_data=True,
     extras_require={"test": ["pytest"]},
-    cmake_args=["-DMyOption=ON", "-DAnotherOption=OFF"],
 )

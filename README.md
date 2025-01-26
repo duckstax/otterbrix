@@ -11,7 +11,9 @@ By adding the Otterbrix module to their applications, developers unlock the abil
 Particularly, Otterbrix enables inserting data without schema creation, see the example below:
 
 ```python
-xxxx
+client = Client()
+c = client.execute("SELECT * FROM schema.table WHERE count = 1000;")
+c.close()
 ```
 
 Otterbrix seamlessly integrates with column-oriented memory format and can represent both flat and hierarchical data for efficient analytical operations.
@@ -25,14 +27,6 @@ Otterbrix is available as a Python package on PyPI. You can install it using `pi
 
 ```bash
 pip install "otterbrix==1.0.0a9"
-```
-
-## Example
-```python
-client = Client()
-client["schema"]["table"] # todo: create collection <<<----
-c = client.execute("SELECT * FROM schema.table WHERE count = 1000;")
-c.close()
 ```
 
 ## Development

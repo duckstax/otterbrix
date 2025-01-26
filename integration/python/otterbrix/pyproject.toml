@@ -19,15 +19,15 @@ dynamic = ["version"]
 requires-python = ">= 3.10"
 dependencies = []
 authors = [
-    {name = "Django Software Foundation", email = "foundation@djangoproject.com"},
+    {name = "Otterbrix Team", email = "team@otterbrix.com"},
 ]
-description = "A high-level Python web framework that encourages rapid development and clean, pragmatic design."
+description = "Otterbrix: computation framework for Semi-structured data processing."
 readme = "README.md"
 license = {text = "BSD-3-Clause"}
 classifiers = [
-    "Development Status :: Alpha",
-    "Environment :: Web Environment",
-    "Framework :: Django",
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Framework :: Otterbrix :: 1.0.0a9",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
@@ -43,5 +43,4 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Topic :: Database",
     "Topic :: Database :: Database Engines/Servers",
-    "Topic :: Database :: Front-Ends"
 ]
