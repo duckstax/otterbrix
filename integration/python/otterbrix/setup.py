@@ -7,7 +7,7 @@ toolchain_file = Path("conan_toolchain.cmake").resolve()
 
 setup(
     name="otterbrix",
-    version="1.0.0a9",
+    version="1.0.1a9",
     description="""Otterbrix: computation framework for Semi-structured data processing """,
     author=" ",
     license=" ",
