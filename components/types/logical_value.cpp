@@ -26,16 +26,10 @@ namespace components::types {
             case logical_type::HUGEINT:
                 break;
             case logical_type::TIMESTAMP_SEC:
-                value_ = std::chrono::seconds{0};
-                break;
             case logical_type::TIMESTAMP_MS:
-                value_ = std::chrono::milliseconds{0};
-                break;
             case logical_type::TIMESTAMP_US:
-                value_ = std::chrono::microseconds{0};
-                break;
             case logical_type::TIMESTAMP_NS:
-                value_ = std::chrono::nanoseconds{0};
+                value_ = int64_t{0};
                 break;
             case logical_type::FLOAT:
                 value_ = float{0};
@@ -97,16 +91,10 @@ namespace components::types {
                 value_ = std::get<uint64_t>(other.value_);
                 break;
             case logical_type::TIMESTAMP_NS:
-                value_ = std::get<std::chrono::nanoseconds>(other.value_);
-                break;
             case logical_type::TIMESTAMP_US:
-                value_ = std::get<std::chrono::microseconds>(other.value_);
-                break;
             case logical_type::TIMESTAMP_MS:
-                value_ = std::get<std::chrono::milliseconds>(other.value_);
-                break;
             case logical_type::TIMESTAMP_SEC:
-                value_ = std::get<std::chrono::seconds>(other.value_);
+                value_ = std::get<int64_t>(other.value_);
                 break;
             case logical_type::STRING_LITERAL:
                 value_ = std::make_unique<std::string>(*std::get<std::unique_ptr<std::string>>(other.value_));

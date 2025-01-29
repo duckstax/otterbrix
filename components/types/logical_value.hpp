@@ -68,10 +68,6 @@ namespace components::types {
                      uint64_t,
                      float,
                      double,
-                     std::chrono::nanoseconds,
-                     std::chrono::microseconds,
-                     std::chrono::milliseconds,
-                     std::chrono::seconds,
                      void*,
 
                      // everything bigger then 8 bytes or has no fixed size is allocated on the heap
@@ -134,6 +130,7 @@ namespace components::types {
     }
     template<>
     inline int64_t logical_value_t::value<int64_t>() const {
+        assert(type_.type() != logical_type::BIGINT);
         return std::get<int64_t>(value_);
     }
     template<>
@@ -146,19 +143,71 @@ namespace components::types {
     }
     template<>
     inline std::chrono::nanoseconds logical_value_t::value<std::chrono::nanoseconds>() const {
-        return std::get<std::chrono::nanoseconds>(value_);
+        using namespace std::chrono;
+        switch (type_.type()) {
+            case logical_type::TIMESTAMP_NS:
+                return static_cast<nanoseconds>(std::get<int64_t>(value_));
+            case logical_type::TIMESTAMP_US:
+                return duration_cast<nanoseconds>(static_cast<microseconds>(std::get<int64_t>(value_)));
+            case logical_type::TIMESTAMP_MS:
+                return duration_cast<nanoseconds>(static_cast<milliseconds>(std::get<int64_t>(value_)));
+            case logical_type::TIMESTAMP_SEC:
+                return duration_cast<nanoseconds>(static_cast<seconds>(std::get<int64_t>(value_)));
+            default:
+                assert(false && "incorrect value logical type");
+                return nanoseconds{0};
+        }
     }
     template<>
     inline std::chrono::microseconds logical_value_t::value<std::chrono::microseconds>() const {
-        return std::get<std::chrono::microseconds>(value_);
+        using namespace std::chrono;
+        switch (type_.type()) {
+            case logical_type::TIMESTAMP_NS:
+                return duration_cast<microseconds>(static_cast<nanoseconds>(std::get<int64_t>(value_)));
+            case logical_type::TIMESTAMP_US:
+                return static_cast<microseconds>(std::get<int64_t>(value_));
+            case logical_type::TIMESTAMP_MS:
+                return duration_cast<microseconds>(static_cast<milliseconds>(std::get<int64_t>(value_)));
+            case logical_type::TIMESTAMP_SEC:
+                return duration_cast<microseconds>(static_cast<seconds>(std::get<int64_t>(value_)));
+            default:
+                assert(false && "incorrect value logical type");
+                return microseconds{0};
+        }
     }
     template<>
     inline std::chrono::milliseconds logical_value_t::value<std::chrono::milliseconds>() const {
-        return std::get<std::chrono::milliseconds>(value_);
+        using namespace std::chrono;
+        switch (type_.type()) {
+            case logical_type::TIMESTAMP_NS:
+                return duration_cast<milliseconds>(static_cast<nanoseconds>(std::get<int64_t>(value_)));
+            case logical_type::TIMESTAMP_US:
+                return duration_cast<milliseconds>(static_cast<microseconds>(std::get<int64_t>(value_)));
+            case logical_type::TIMESTAMP_MS:
+                return static_cast<milliseconds>(std::get<int64_t>(value_));
+            case logical_type::TIMESTAMP_SEC:
+                return duration_cast<milliseconds>(static_cast<seconds>(std::get<int64_t>(value_)));
+            default:
+                assert(false && "incorrect value logical type");
+                return milliseconds{0};
+        }
     }
     template<>
     inline std::chrono::seconds logical_value_t::value<std::chrono::seconds>() const {
-        return std::get<std::chrono::seconds>(value_);
+        using namespace std::chrono;
+        switch (type_.type()) {
+            case logical_type::TIMESTAMP_NS:
+                return duration_cast<seconds>(static_cast<nanoseconds>(std::get<int64_t>(value_)));
+            case logical_type::TIMESTAMP_US:
+                return duration_cast<seconds>(static_cast<microseconds>(std::get<int64_t>(value_)));
+            case logical_type::TIMESTAMP_MS:
+                return duration_cast<seconds>(static_cast<milliseconds>(std::get<int64_t>(value_)));
+            case logical_type::TIMESTAMP_SEC:
+                return static_cast<seconds>(std::get<int64_t>(value_));
+            default:
+                assert(false && "incorrect value logical type");
+                return seconds{0};
+        }
     }
     template<>
     inline void* logical_value_t::value<void*>() const {
