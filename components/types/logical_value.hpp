@@ -85,17 +85,16 @@ namespace components::types {
         assert(type_ != logical_type::INVALID);
     }
 
+    template<>
+    inline logical_value_t::logical_value_t(std::string value)
+        : type_(logical_type::STRING_LITERAL)
+        , value_(std::make_unique<std::string>(std::move(value))) {}
+
     template<typename T>
     T logical_value_t::value() const {
         assert(false);
     }
 
-    template<>
-    inline logical_value_t::logical_value_t<std::string>(std::string value)
-        : type_(logical_type::STRING_LITERAL)
-        , value_(std::make_unique<std::string>(std::move(value))) {}
-
-    // TODO: add checks for types
     template<>
     inline bool logical_value_t::value<bool>() const {
         return std::get<bool>(value_);
