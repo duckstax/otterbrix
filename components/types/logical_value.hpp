@@ -90,6 +90,11 @@ namespace components::types {
         : type_(logical_type::STRING_LITERAL)
         , value_(std::make_unique<std::string>(std::move(value))) {}
 
+    template<>
+    inline logical_value_t::logical_value_t(std::string_view value)
+        : type_(logical_type::STRING_LITERAL)
+        , value_(std::make_unique<std::string>(std::move(value))) {}
+
     template<typename T>
     T logical_value_t::value() const {
         assert(false);
@@ -215,6 +220,14 @@ namespace components::types {
     template<>
     inline std::string* logical_value_t::value<std::string*>() const {
         return std::get<std::unique_ptr<std::string>>(value_).get();
+    }
+    template<>
+    inline const std::string& logical_value_t::value<const std::string&>() const {
+        return *std::get<std::unique_ptr<std::string>>(value_);
+    }
+    template<>
+    inline std::string_view logical_value_t::value<std::string_view>() const {
+        return *std::get<std::unique_ptr<std::string>>(value_);
     }
     template<>
     inline std::vector<logical_value_t>* logical_value_t::value<std::vector<logical_value_t>*>() const {
