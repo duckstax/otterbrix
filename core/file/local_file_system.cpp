@@ -43,7 +43,7 @@ extern "C" WINBASEAPI BOOL WINAPI GetPhysicallyInstalledSystemMemory(PULONGLONG)
 
 namespace core::filesystem {
 
-    static constexpr const uint64_t INVALID_INDEX = uint64_t(-1);
+    static constexpr uint64_t INVALID_INDEX = uint64_t(-1);
 
 #ifndef PLATFORM_WINDOWS
 
@@ -469,6 +469,24 @@ namespace core::filesystem {
             return false;
         }
         return true;
+    }
+
+    bool trim(local_file_system_t&, file_handle_t& handle, uint64_t offset_bytes, uint64_t length_bytes) {
+#if defined(__linux__)
+        // FALLOC_FL_PUNCH_HOLE requires glibc 2.18 or up
+#if __GLIBC__ < 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ < 18)
+        return false;
+#else
+        int fd = reinterpret_cast<unix_file_handle_t&>(handle).fd;
+        int res = fallocate(fd,
+                            FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE,
+                            static_cast<int64_t>(offset_bytes),
+                            static_cast<int64_t>(length_bytes));
+        return res == 0;
+#endif
+#else
+        return false;
+#endif
     }
 
     bool directory_exists(local_file_system_t&, const path_t& directory) {

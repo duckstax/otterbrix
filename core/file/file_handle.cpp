@@ -85,6 +85,10 @@ namespace core::filesystem {
 
     bool file_handle_t::truncate(int64_t new_size) { return ::core::filesystem::truncate(fs_, *this, new_size); }
 
+    bool file_handle_t::trim(uint64_t offset_bytes, uint64_t length_bytes) {
+        return ::core::filesystem::trim(fs_, *this, offset_bytes, length_bytes);
+    }
+
     file_type_t file_handle_t::type() { return ::core::filesystem::file_type(fs_, *this); }
 
 } // namespace core::filesystem

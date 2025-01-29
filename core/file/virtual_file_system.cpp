@@ -110,6 +110,10 @@ namespace core::filesystem {
         return truncate(vfs.default_file_system(), handle, new_size);
     }
 
+    bool trim(virtual_file_system_t& vfs, file_handle_t& handle, uint64_t offset_bytes, uint64_t length_bytes) {
+        return trim(vfs.default_file_system(), handle, offset_bytes, length_bytes);
+    }
+
     bool file_sync(virtual_file_system_t& vfs, file_handle_t& handle) {
         return file_sync(vfs.default_file_system(), handle);
     }

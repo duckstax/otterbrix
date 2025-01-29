@@ -62,6 +62,11 @@ namespace core::filesystem {
     }
 
     template<class FSC, class... Args>
+    bool trim(file_system<FSC>& fs, Args&&... args) {
+        return trim(fs, std::forward<Args>(args)...);
+    }
+
+    template<class FSC, class... Args>
     bool directory_exist(file_system<FSC>& fs, Args&&... args) {
         return directory_exist(fs, std::forward<Args>(args)...);
     }
