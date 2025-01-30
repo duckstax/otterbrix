@@ -150,6 +150,12 @@ namespace components::types {
             case logical_type::UBIGINT:
                 value_ = std::get<uint64_t>(other.value_);
                 break;
+            case logical_type::TIMESTAMP_NS:
+            case logical_type::TIMESTAMP_US:
+            case logical_type::TIMESTAMP_MS:
+            case logical_type::TIMESTAMP_SEC:
+                value_ = std::get<int64_t>(other.value_);
+                break;
             case logical_type::STRING_LITERAL:
                 value_ = std::move(std::get<std::unique_ptr<std::string>>(other.value_));
                 break;
@@ -202,6 +208,12 @@ namespace components::types {
                 break;
             case logical_type::UBIGINT:
                 value_ = std::get<uint64_t>(other.value_);
+                break;
+            case logical_type::TIMESTAMP_NS:
+            case logical_type::TIMESTAMP_US:
+            case logical_type::TIMESTAMP_MS:
+            case logical_type::TIMESTAMP_SEC:
+                value_ = std::get<int64_t>(other.value_);
                 break;
             case logical_type::STRING_LITERAL:
                 value_ = std::make_unique<std::string>(*std::get<std::unique_ptr<std::string>>(other.value_));
@@ -257,6 +269,12 @@ namespace components::types {
                 break;
             case logical_type::UBIGINT:
                 value_ = std::get<uint64_t>(other.value_);
+                break;
+            case logical_type::TIMESTAMP_NS:
+            case logical_type::TIMESTAMP_US:
+            case logical_type::TIMESTAMP_MS:
+            case logical_type::TIMESTAMP_SEC:
+                value_ = std::get<int64_t>(other.value_);
                 break;
             case logical_type::STRING_LITERAL:
                 value_ = std::move(std::get<std::unique_ptr<std::string>>(other.value_));
@@ -319,6 +337,12 @@ namespace components::types {
                     return std::get<uint32_t>(value_) == std::get<uint32_t>(rhs.value_);
                 case logical_type::UBIGINT:
                     return std::get<uint64_t>(value_) == std::get<uint64_t>(rhs.value_);
+                // TODO: cross types comparasing
+                case logical_type::TIMESTAMP_NS:
+                case logical_type::TIMESTAMP_US:
+                case logical_type::TIMESTAMP_MS:
+                case logical_type::TIMESTAMP_SEC:
+                    return std::get<int64_t>(value_) == std::get<int64_t>(rhs.value_);
                 case logical_type::STRING_LITERAL:
                     return *std::get<std::unique_ptr<std::string>>(value_) ==
                            *std::get<std::unique_ptr<std::string>>(rhs.value_);
@@ -368,6 +392,12 @@ namespace components::types {
                     return std::get<uint32_t>(value_) < std::get<uint32_t>(rhs.value_);
                 case logical_type::UBIGINT:
                     return std::get<uint64_t>(value_) < std::get<uint64_t>(rhs.value_);
+                // TODO: cross types comparasing
+                case logical_type::TIMESTAMP_NS:
+                case logical_type::TIMESTAMP_US:
+                case logical_type::TIMESTAMP_MS:
+                case logical_type::TIMESTAMP_SEC:
+                    return std::get<int64_t>(value_) < std::get<int64_t>(rhs.value_);
                 case logical_type::STRING_LITERAL:
                     return *std::get<std::unique_ptr<std::string>>(value_) <
                            *std::get<std::unique_ptr<std::string>>(rhs.value_);
