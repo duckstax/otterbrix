@@ -26,7 +26,7 @@ Get started with **Otterbrix** using our installation and usage example below:
 Otterbrix is available as a Python package on PyPI. You can install it using `pip`.
 
 ```bash
-pip install "otterbrix==1.0.0a9"
+pip install "otterbrix==1.0.1a9"
 ```
 
 ## Development
