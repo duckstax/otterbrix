@@ -49,6 +49,7 @@ namespace core::filesystem {
         uint64_t seek_position();
         bool sync();
         bool truncate(int64_t new_size);
+        bool trim(uint64_t offset_bytes, uint64_t length_bytes);
         std::string read_line();
 
         bool can_seek();
@@ -93,11 +94,17 @@ namespace core::filesystem {
         NULL_IF_NOT_EXISTS = 1 << 7,
         PARALLEL_ACCESS = 1 << 8
     };
-    inline file_flags operator|(file_flags a, file_flags b) {
+    constexpr file_flags operator|(file_flags a, file_flags b) {
         return static_cast<file_flags>(static_cast<uint16_t>(a) | static_cast<uint16_t>(b));
     }
-    inline file_flags operator&(file_flags a, file_flags b) {
+    constexpr file_flags operator&(file_flags a, file_flags b) {
         return static_cast<file_flags>(static_cast<uint16_t>(a) & static_cast<uint16_t>(b));
+    }
+    constexpr file_flags& operator|=(file_flags& a, file_flags b) {
+        return a = static_cast<file_flags>(static_cast<uint16_t>(a) | static_cast<uint16_t>(b));
+    }
+    constexpr file_flags& operator&=(file_flags& a, file_flags b) {
+        return a = static_cast<file_flags>(static_cast<uint16_t>(a) & static_cast<uint16_t>(b));
     }
 
 } // namespace core::filesystem
