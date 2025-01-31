@@ -16,6 +16,7 @@ add_subdirectory(session)
 add_subdirectory(context)
 add_subdirectory(sql)
 add_subdirectory(types)
+add_subdirectory(vector)
 
 if (DEV_MODE)
     add_subdirectory(tests)
