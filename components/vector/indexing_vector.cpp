@@ -50,12 +50,12 @@ namespace components::vector {
         return *this;
     }
 
-    void indexing_vector_t::initialize(uint64_t count) {
+    void indexing_vector_t::reset(uint64_t count) {
         data_ = std::make_shared<indexing_data>(resource(), count);
         indexing_ = data_->data.get();
     }
 
-    void indexing_vector_t::initialize(uint32_t* indexing) {
+    void indexing_vector_t::reset(uint32_t* indexing) {
         data_.reset();
         indexing_ = indexing;
     }

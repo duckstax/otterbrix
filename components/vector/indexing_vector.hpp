@@ -29,8 +29,8 @@ namespace components::vector {
         indexing_vector_t(indexing_vector_t&& other) noexcept;
         indexing_vector_t& operator=(indexing_vector_t&& other) noexcept;
 
-        void initialize(uint64_t count);
-        void initialize(uint32_t* indexing);
+        void reset(uint64_t count);
+        void reset(uint32_t* indexing);
         bool is_set() const noexcept { return indexing_; }
         void set_index(uint64_t index, uint64_t location);
         void swap(uint64_t i, uint64_t j) noexcept;

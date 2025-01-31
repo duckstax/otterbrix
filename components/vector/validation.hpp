@@ -100,7 +100,6 @@ namespace components::vector {
         }
 
         uint64_t get_validity_entry(uint64_t entry_idx) const;
-        void initialize(const validity_mask_t& other);
 
         std::pmr::memory_resource* resource_;
         std::shared_ptr<validity_data_t> validity_data_;

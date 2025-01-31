@@ -172,12 +172,16 @@ namespace components::vector {
             return;
         }
         if (offset == 0) {
-            initialize(other);
+            validity_mask_ = other.validity_mask_;
+            validity_data_ = other.validity_data_;
+            count_ = other.count_;
             return;
         }
         validity_mask_t new_mask(resource(), count);
         new_mask.slice_in_place(other, 0, offset, count);
-        initialize(new_mask);
+        validity_mask_ = new_mask.validity_mask_;
+        validity_data_ = new_mask.validity_data_;
+        count_ = new_mask.count_;
     }
 
     void validity_mask_t::slice_in_place(const validity_mask_t& other,
@@ -273,12 +277,6 @@ namespace components::vector {
             return validity_data_t::MAX_ENTRY;
         }
         return validity_mask_[entry_idx];
-    }
-
-    void validity_mask_t::initialize(const validity_mask_t& other) {
-        validity_mask_ = other.validity_mask_;
-        validity_data_ = other.validity_data_;
-        count_ = other.count_;
     }
 
     void validity_mask_t::copy_indexing(const validity_mask_t& other,

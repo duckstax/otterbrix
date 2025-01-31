@@ -3,36 +3,11 @@
 
 namespace components::vector {
 
-    void data_chunk_t::initialize_empty(std::pmr::memory_resource* resource,
-                                        const std::vector<types::complex_logical_type>& types) {
-        assert(data.empty());
-        capacity_ = DEFAULT_VECTOR_CAPACITY;
-        for (uint64_t i = 0; i < types.size(); i++) {
-            data.emplace_back(resource, types[i], capacity_);
-        }
-    }
-
-    void data_chunk_t::initialize(std::pmr::memory_resource* resource,
-                                  const std::vector<types::complex_logical_type>& types,
-                                  uint64_t capacity) {
-        auto init = std::vector<bool>(types.size(), true);
-        initialize(resource, types, init, capacity);
-    }
-
-    void data_chunk_t::initialize(std::pmr::memory_resource* resource,
-                                  const std::vector<types::complex_logical_type>& types,
-                                  const std::vector<bool>& initialize,
-                                  uint64_t capacity) {
-        assert(types.size() == initialize.size());
-        assert(data.empty());
-
+    data_chunk_t::data_chunk_t(std::pmr::memory_resource* resource,
+                               const std::vector<types::complex_logical_type>& types,
+                               uint64_t capacity) {
         capacity_ = capacity;
         for (uint64_t i = 0; i < types.size(); i++) {
-            if (!initialize[i]) {
-                data.emplace_back(resource, types[i], capacity_);
-                continue;
-            }
-
             data.emplace_back(resource, types[i], capacity_);
         }
     }

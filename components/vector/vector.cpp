@@ -68,7 +68,30 @@ namespace components::vector {
         , data_(nullptr)
         , validity_(resource, capacity) {
         if (create_data) {
-            initialize(resource, zero_data, capacity);
+            auxiliary_.reset();
+            validity_.reset(capacity);
+            auto internal_type = type_.type();
+            if (internal_type == types::logical_type::STRUCT) {
+                auxiliary_ = std::make_shared<struct_vector_buffer_t>(resource, type_, capacity);
+            } else if (internal_type == types::logical_type::LIST) {
+                auxiliary_ = std::make_shared<list_vector_buffer_t>(resource, type_, capacity);
+            } else if (internal_type == types::logical_type::ARRAY) {
+                auxiliary_ = std::make_shared<array_vector_buffer_t>(resource, type_, capacity);
+            } else if (internal_type == types::logical_type::STRING_LITERAL) {
+                auxiliary_ = std::make_shared<string_vector_buffer_t>(resource);
+            }
+            auto type_size = type_.size();
+            if (type_size > 0) {
+                buffer_ = std::make_unique<vector_buffer_t>(resource, type_, capacity);
+                data_ = buffer_->data();
+                if (zero_data) {
+                    std::memset(data_, 0, capacity * type_size);
+                }
+            }
+
+            if (capacity > validity_.count()) {
+                validity_.resize(resource, capacity);
+            }
         }
     }
 
@@ -246,32 +269,6 @@ namespace components::vector {
             }
         } else {
             slice(indexing, count);
-        }
-    }
-
-    void vector_t::initialize(bool zero_data, uint64_t capacity) {
-        auxiliary_.reset();
-        validity_.reset(DEFAULT_VECTOR_CAPACITY);
-        auto& type = type_;
-        auto internal_type = type.type();
-        if (internal_type == types::logical_type::STRUCT) {
-            auxiliary_ = std::make_shared<struct_vector_buffer_t>(resource(), type_, capacity);
-        } else if (internal_type == types::logical_type::LIST) {
-            auxiliary_ = std::make_shared<list_vector_buffer_t>(resource(), type_, capacity);
-        } else if (internal_type == types::logical_type::ARRAY) {
-            auxiliary_ = std::make_shared<array_vector_buffer_t>(resource(), type_, capacity);
-        }
-        auto type_size = type_.size();
-        if (type_size > 0) {
-            buffer_ = std::make_unique<vector_buffer_t>(resource(), type_, capacity);
-            data_ = buffer_->data();
-            if (zero_data) {
-                std::memset(data_, 0, capacity * type_size);
-            }
-        }
-
-        if (capacity > validity_.count()) {
-            validity_.resize(resource(), capacity);
         }
     }
 
@@ -658,33 +655,6 @@ namespace components::vector {
             }
             default:
                 throw std::runtime_error("Unimplemented type for value access");
-        }
-    }
-
-    void vector_t::initialize(std::pmr::memory_resource* resource, bool zero_data, uint64_t capacity) {
-        auxiliary_.reset();
-        validity_.reset(capacity);
-        auto internal_type = type_.type();
-        if (internal_type == types::logical_type::STRUCT) {
-            auxiliary_ = std::make_shared<struct_vector_buffer_t>(resource, type_, capacity);
-        } else if (internal_type == types::logical_type::LIST) {
-            auxiliary_ = std::make_shared<list_vector_buffer_t>(resource, type_, capacity);
-        } else if (internal_type == types::logical_type::ARRAY) {
-            auxiliary_ = std::make_shared<array_vector_buffer_t>(resource, type_, capacity);
-        } else if (internal_type == types::logical_type::STRING_LITERAL) {
-            auxiliary_ = std::make_shared<string_vector_buffer_t>(resource);
-        }
-        auto type_size = type_.size();
-        if (type_size > 0) {
-            buffer_ = std::make_unique<vector_buffer_t>(resource, type_, capacity);
-            data_ = buffer_->data();
-            if (zero_data) {
-                std::memset(data_, 0, capacity * type_size);
-            }
-        }
-
-        if (capacity > validity_.count()) {
-            validity_.resize(resource, capacity);
         }
     }
 

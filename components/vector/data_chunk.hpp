@@ -6,7 +6,9 @@ namespace components::vector {
 
     class data_chunk_t {
     public:
-        data_chunk_t() = default;
+        data_chunk_t(std::pmr::memory_resource* resource,
+                     const std::vector<types::complex_logical_type>& types,
+                     uint64_t capacity = DEFAULT_VECTOR_CAPACITY);
         data_chunk_t(const data_chunk_t&) = delete;
         data_chunk_t& operator=(const data_chunk_t&) = delete;
         data_chunk_t(data_chunk_t&&) = default;
@@ -33,17 +35,6 @@ namespace components::vector {
         bool all_constant() const;
 
         void reference(data_chunk_t& chunk);
-
-        void initialize_empty(std::pmr::memory_resource* resource,
-                              const std::vector<types::complex_logical_type>& types);
-
-        void initialize(std::pmr::memory_resource* resource,
-                        const std::vector<types::complex_logical_type>& types,
-                        uint64_t capacity = DEFAULT_VECTOR_CAPACITY);
-        void initialize(std::pmr::memory_resource* resource,
-                        const std::vector<types::complex_logical_type>& types,
-                        const std::vector<bool>& initialize,
-                        uint64_t capacity = DEFAULT_VECTOR_CAPACITY);
 
         void append(const data_chunk_t& other,
                     bool resize = false,

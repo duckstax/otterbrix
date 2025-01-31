@@ -22,7 +22,7 @@ namespace components::vector {
         if (count <= DEFAULT_VECTOR_CAPACITY) {
             return zero_indexing_vector();
         }
-        owned_indexing.initialize(count);
+        owned_indexing.reset(count);
         for (uint64_t i = 0; i < count; i++) {
             owned_indexing.set_index(i, 0);
         }
@@ -136,8 +136,6 @@ namespace components::vector {
         void slice(const indexing_vector_t& indexing, uint64_t count);
         void slice(const indexing_vector_t& indexing, uint64_t count, indexing_cache_t& cache);
 
-        void initialize(bool zero_data = false, uint64_t capacity = DEFAULT_VECTOR_CAPACITY);
-
         void flatten(uint64_t count);
         void flatten(const indexing_vector_t& indexing, uint64_t count);
         void to_unified_format(uint64_t count, unified_vector_format& data);
@@ -195,8 +193,6 @@ namespace components::vector {
 
     private:
         types::logical_value_t value_internal(uint64_t index) const;
-
-        void initialize(std::pmr::memory_resource* resource, bool zero_data, uint64_t capacity);
 
         vector_type vector_type_;
         types::complex_logical_type type_;
