@@ -22,6 +22,30 @@ namespace core::pmr {
         std::pmr::memory_resource* ptr_;
     };
 
+    class array_deleter_t final {
+    public:
+        explicit array_deleter_t(std::pmr::memory_resource* ptr, size_t size, size_t align)
+            : ptr_(ptr)
+            , size_(size)
+            , align_(align) {}
+
+        template<typename T>
+        void operator()(T* target) {
+            if (!ptr_) {
+                return;
+            }
+            for (size_t i = 0; i < size_; i++) {
+                target[i].~T();
+            }
+            ptr_->deallocate(target, size_ * sizeof(T), align_);
+        }
+        std::pmr::memory_resource* resource() const noexcept { return ptr_; }
+
+    private:
+        std::pmr::memory_resource* ptr_;
+        size_t size_;
+        size_t align_;
+    };
     template<class T>
     using unique_ptr = std::unique_ptr<T, deleter_t>;
 
