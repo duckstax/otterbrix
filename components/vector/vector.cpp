@@ -2,6 +2,7 @@
 
 #include <components/types/logical_value.hpp>
 #include <cstring>
+#include <stdexcept>
 #include <vector/vector_operations.hpp>
 
 namespace components::vector {

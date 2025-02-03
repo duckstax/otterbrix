@@ -1,4 +1,5 @@
 #include "vector_operations.hpp"
+#include <stdexcept>
 
 namespace components::vector::vector_ops {
 
