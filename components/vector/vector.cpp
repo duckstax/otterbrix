@@ -796,8 +796,9 @@ namespace components::vector {
                 ;
                 auto old_buffer = std::move(buffer_);
                 auto old_data = data_;
-                buffer_ =
-                    std::make_unique<vector_buffer_t>(resource(), type_, std::max(DEFAULT_VECTOR_CAPACITY, count));
+                buffer_ = std::make_unique<vector_buffer_t>(resource(),
+                                                            type_,
+                                                            std::max<uint64_t>(DEFAULT_VECTOR_CAPACITY, count));
                 data_ = buffer_->data();
                 vector_type_ = vector_type::FLAT;
                 if (is_null() && type_.type() != types::logical_type::ARRAY) {
@@ -907,8 +908,9 @@ namespace components::vector {
                 get_sequence(start, increment, sequence_count);
                 auto seq_count = static_cast<uint64_t>(sequence_count);
 
-                buffer_ =
-                    std::make_unique<vector_buffer_t>(resource(), type_, std::max(DEFAULT_VECTOR_CAPACITY, seq_count));
+                buffer_ = std::make_unique<vector_buffer_t>(resource(),
+                                                            type_,
+                                                            std::max<uint64_t>(DEFAULT_VECTOR_CAPACITY, seq_count));
                 data_ = buffer_->data();
                 vector_ops::generate_sequence(*this, seq_count, start, increment);
                 break;
