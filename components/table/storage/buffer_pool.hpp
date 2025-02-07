@@ -54,42 +54,7 @@ namespace components::table::storage {
         std::vector<buffer_eviction_node_t> purge_nodes_;
     };
 
-    static uint64_t estimated_CPU_id() {
-#if defined(EMSCRIPTEN)
-        // FIXME: Wasm + multithreads can likely be implemented as
-        //   return return (uint64_t)std::hash<std::thread::id>()(std::this_thread::get_id());
-        return 0;
-#else
-        // this code comes from jemalloc
-#if defined(_WIN32)
-        return (uint64_t) GetCurrentProcessorNumber();
-#elif defined(_GNU_SOURCE)
-        auto cpu = sched_getcpu();
-        if (cpu < 0) {
-#ifndef NO_THREADS
-            // fallback to thread id
-            return (uint64_t) std::hash<std::thread::id>()(std::this_thread::get_id());
-#else
-
-            return 0;
-#endif
-        }
-        return (uint64_t) cpu;
-#elif defined(__aarch64__) && defined(__APPLE__)
-        /* Other oses most likely use tpidr_el0 instead */
-        uintptr_t c;
-        asm volatile("mrs %x0, tpidrro_el0" : "=r"(c)::"memory");
-        return (uint64_t)(c & (1 << 3) - 1);
-#else
-#ifndef NO_THREADS
-        // fallback to thread id
-        return (uint64_t) std::hash<std::thread::id>()(std::this_thread::get_id());
-#else
-        return 0;
-#endif
-#endif
-#endif
-    }
+    static uint64_t estimated_CPU_id() { return std::hash<std::thread::id>()(std::this_thread::get_id()); }
 
     class buffer_pool_t {
         friend class block_handle_t;
