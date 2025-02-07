@@ -60,7 +60,7 @@ namespace components::table::storage {
         std::pmr::memory_resource* resource_;
         file_buffer_type type_;
         std::byte* buffer_ = nullptr;
-        uint64_t size_ = 0;
+        size_t size_ = 0;
         std::byte* internal_buffer_ = nullptr;
         uint64_t internal_size_ = 0;
     };

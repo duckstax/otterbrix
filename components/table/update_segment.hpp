@@ -4,10 +4,10 @@
 #include <components/vector/indexing_vector.hpp>
 #include <components/vector/validation.hpp>
 #include <components/vector/vector.hpp>
-#include <core/pmr.hpp>
 #include <core/string_heap/string_heap.hpp>
 
 #include <cstring>
+#include <shared_mutex>
 
 #include "storage/buffer_handle.hpp"
 

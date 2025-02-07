@@ -14,11 +14,11 @@ namespace components::table {
     } // namespace storage
 
     class table_filter_t;
-    class column_append_state;
-    class column_segment_state;
-    class column_scan_state;
-    class column_fetch_state;
-    class compressed_segment_state;
+    struct column_append_state;
+    struct column_segment_state;
+    struct column_scan_state;
+    struct column_fetch_state;
+    struct compressed_segment_state;
 
     enum class scan_vector_type : uint8_t
     {

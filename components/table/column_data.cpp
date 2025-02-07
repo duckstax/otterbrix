@@ -510,7 +510,7 @@ namespace components::table {
 
     uint64_t column_data_t::vector_count(uint64_t vector_index) const {
         uint64_t current_row = vector_index * vector::DEFAULT_VECTOR_CAPACITY;
-        return std::min(vector::DEFAULT_VECTOR_CAPACITY, count_ - current_row);
+        return std::min<uint64_t>(vector::DEFAULT_VECTOR_CAPACITY, count_ - current_row);
     }
 
 } // namespace components::table
