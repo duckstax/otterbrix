@@ -2,6 +2,7 @@
 
 #include "block_handle.hpp"
 
+#include <array>
 #include <components/table/concurrent_queue.hpp>
 #include <thread>
 

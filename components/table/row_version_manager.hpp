@@ -1,6 +1,7 @@
 #pragma once
 
 #include <components/vector/indexing_vector.hpp>
+#include <stdexcept>
 #include <vector>
 
 namespace components::table {
