@@ -3,6 +3,7 @@
 #include <atomic>
 #include <cassert>
 #include <memory>
+#include <mutex>
 
 #include "file_buffer.hpp"
 
