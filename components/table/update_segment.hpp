@@ -8,6 +8,7 @@
 
 #include <cstring>
 #include <shared_mutex>
+#include <stdexcept>
 
 #include "storage/buffer_handle.hpp"
 

@@ -5,7 +5,6 @@
 #include "storage/file_buffer.hpp"
 
 namespace components::table {
-    class types::logical_value_t;
 
     class column_definition_t {
     public:

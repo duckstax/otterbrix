@@ -4,6 +4,7 @@
 #include <cassert>
 #include <memory>
 #include <mutex>
+#include <stdexcept>
 #include <vector>
 
 namespace components::table {
