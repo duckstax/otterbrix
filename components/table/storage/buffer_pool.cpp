@@ -1,4 +1,7 @@
 #include "buffer_pool.hpp"
+#include <cstdlib>
+#include <stdexcept>
+#include <string>
 
 namespace components::table::storage {
 
