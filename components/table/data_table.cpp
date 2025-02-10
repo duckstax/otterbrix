@@ -105,24 +105,6 @@ namespace components::table {
 
     uint64_t data_table_t::row_group_size() const { return row_groups_->row_group_size(); }
 
-    uint64_t data_table_t::max_threads() const {
-        uint64_t parallel_scan_vector_count = row_group_size() / vector::DEFAULT_VECTOR_CAPACITY;
-        uint64_t parallel_scan_tuple_count = vector::DEFAULT_VECTOR_CAPACITY * parallel_scan_vector_count;
-        return total_rows() / parallel_scan_tuple_count + 1;
-    }
-
-    void data_table_t::initialize_parallel_scan(parallel_table_scan_state& state) {
-        row_groups_->initialize_parallel_scan(state.scan_state);
-    }
-
-    bool data_table_t::next_parallel_scan(parallel_table_scan_state& state, table_scan_state& scan_state) {
-        if (row_groups_->next_parallel_scan(state.scan_state, scan_state.table_state)) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     void data_table_t::scan(vector::data_chunk_t& result, table_scan_state& state) { state.table_state.scan(result); }
 
     bool data_table_t::create_index_scan(table_scan_state& state, vector::data_chunk_t& result, table_scan_type type) {

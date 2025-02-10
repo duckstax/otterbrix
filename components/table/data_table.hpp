@@ -25,8 +25,6 @@ namespace components::table {
                              table_filter_set_t* table_filters = nullptr);
 
         uint64_t max_threads() const;
-        void initialize_parallel_scan(parallel_table_scan_state& state);
-        bool next_parallel_scan(parallel_table_scan_state& state, table_scan_state& scan_state);
 
         void scan(vector::data_chunk_t& result, table_scan_state& state);
 

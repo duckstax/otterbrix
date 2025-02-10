@@ -52,7 +52,7 @@ namespace components::table::storage {
         , unswizzled_(nullptr)
         , eviction_queue_idx_(INVALID_INDEX) {
         eviction_seq_num_ = 0;
-        state_ = block_state::BLOCK_UNLOADED;
+        state_ = block_state::UNLOADED;
         memory_usage_ = block_manager.block_allocation_size();
     }
 
@@ -74,7 +74,7 @@ namespace components::table::storage {
         , unswizzled_(nullptr)
         , eviction_queue_idx_(INVALID_INDEX) {
         buffer_ = std::move(buffer);
-        state_ = block_state::BLOCK_LOADED;
+        state_ = block_state::LOADED;
         memory_usage_ = block_size;
         memory_charge_ = std::move(reservation);
     }
@@ -87,7 +87,7 @@ namespace components::table::storage {
             buffer_manager.buffer_pool().increment_dead_nodes(*this);
         }
 
-        if (buffer_ && state_ == block_state::BLOCK_LOADED) {
+        if (buffer_ && state_ == block_state::LOADED) {
             assert(memory_charge_.size > 0);
             buffer_.reset();
             memory_charge_.resize(0);
@@ -144,19 +144,19 @@ namespace components::table::storage {
                                                      std::byte* data,
                                                      std::unique_ptr<file_buffer_t> reusable_buffer,
                                                      buffer_pool_reservation_t reservation) {
-        assert(state_ != block_state::BLOCK_LOADED);
+        assert(state_ != block_state::LOADED);
         assert(readers_ == 0);
         auto block = allocate_block(block_manager, std::move(reusable_buffer), block_id_);
         std::memcpy(block->internal_buffer(), data, block->allocation_size());
         buffer_ = std::move(block);
-        state_ = block_state::BLOCK_LOADED;
+        state_ = block_state::LOADED;
         readers_ = 1;
         memory_charge_ = std::move(reservation);
         return buffer_handle_t(shared_from_this(), buffer_.get());
     }
 
     buffer_handle_t block_handle_t::load(std::unique_ptr<file_buffer_t> reusable_buffer) {
-        if (state_ == block_state::BLOCK_LOADED) {
+        if (state_ == block_state::LOADED) {
             assert(buffer_);
             ++readers_;
             return buffer_handle_t(shared_from_this(), buffer_.get());
@@ -169,20 +169,20 @@ namespace components::table::storage {
         } else {
             return {};
         }
-        state_ = block_state::BLOCK_LOADED;
+        state_ = block_state::LOADED;
         readers_ = 1;
         return buffer_handle_t(shared_from_this(), buffer_.get());
     }
 
     std::unique_ptr<file_buffer_t> block_handle_t::unload_and_take_block(std::unique_lock<std::mutex>& lock) {
-        if (state_ == block_state::BLOCK_UNLOADED) {
+        if (state_ == block_state::UNLOADED) {
             return nullptr;
         }
         assert(!unswizzled_);
         assert(can_unload());
 
         memory_charge_.resize(0);
-        state_ = block_state::BLOCK_UNLOADED;
+        state_ = block_state::UNLOADED;
         return std::move(buffer_);
     }
 
@@ -192,7 +192,7 @@ namespace components::table::storage {
     }
 
     bool block_handle_t::can_unload() const {
-        if (state_ == block_state::BLOCK_UNLOADED) {
+        if (state_ == block_state::UNLOADED) {
             return false;
         }
         if (readers_ > 0) {

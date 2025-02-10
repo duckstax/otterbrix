@@ -208,23 +208,6 @@ namespace components::table {
         std::unique_lock<std::mutex> segment_lock;
     };
 
-    struct parallel_collection_scan_state {
-        parallel_collection_scan_state();
-
-        collection_t* collection;
-        row_group_t* current_row_group;
-        uint64_t vector_index;
-        uint64_t max_row;
-        uint64_t batch_index;
-        std::atomic<uint64_t> processed_rows;
-        std::mutex lock;
-    };
-
-    struct parallel_table_scan_state {
-        parallel_collection_scan_state scan_state;
-        parallel_collection_scan_state local_state;
-    };
-
     struct table_append_state {
         table_append_state(std::pmr::memory_resource* resource)
             : append_state(*this)

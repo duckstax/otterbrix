@@ -53,8 +53,6 @@ namespace components::table {
                                                  row_group_t& row_group,
                                                  uint64_t vector_index,
                                                  uint64_t max_row);
-        void initialize_parallel_scan(parallel_collection_scan_state& state);
-        bool next_parallel_scan(parallel_collection_scan_state& state, collection_scan_state& scan_state);
 
         bool scan(const std::vector<storage_index_t>& column_ids,
                   const std::function<bool(vector::data_chunk_t& chunk)>& fun);

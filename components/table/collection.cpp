@@ -86,50 +86,6 @@ namespace components::table {
         return row_group.initialize_scan_with_offset(state, vector_index);
     }
 
-    void collection_t::initialize_parallel_scan(parallel_collection_scan_state& state) {
-        state.collection = this;
-        state.current_row_group = row_groups_->root_segment();
-        state.vector_index = 0;
-        state.max_row = row_start_ + total_rows_;
-        state.batch_index = 0;
-        state.processed_rows = 0;
-    }
-
-    bool collection_t::next_parallel_scan(parallel_collection_scan_state& state, collection_scan_state& scan_state) {
-        while (true) {
-            uint64_t vector_index;
-            uint64_t max_row;
-            collection_t* collection;
-            row_group_t* row_group;
-            {
-                std::lock_guard l(state.lock);
-                if (!state.current_row_group || state.current_row_group->count == 0) {
-                    break;
-                }
-                collection = state.collection;
-                row_group = state.current_row_group;
-                state.processed_rows += state.current_row_group->count;
-                vector_index = 0;
-                max_row = state.current_row_group->start + state.current_row_group->count;
-                state.current_row_group = row_groups_->next_segment(state.current_row_group);
-                max_row = std::min<uint64_t>(max_row, state.max_row);
-                scan_state.batch_index = ++state.batch_index;
-            }
-            assert(collection);
-            assert(row_group);
-
-            bool need_to_scan =
-                initialize_scan_in_row_group(scan_state, *collection, *row_group, vector_index, max_row);
-            if (!need_to_scan) {
-                continue;
-            }
-            return true;
-        }
-        std::lock_guard l(state.lock);
-        scan_state.batch_index = state.batch_index;
-        return false;
-    }
-
     bool collection_t::scan(const std::vector<storage_index_t>& column_ids,
                             const std::function<bool(vector::data_chunk_t& chunk)>& fun) {
         std::vector<types::complex_logical_type> scan_types;

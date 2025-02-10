@@ -113,7 +113,7 @@ namespace components::table::storage {
         auto lock = handle->get_lock();
 
         auto handle_memory_usage = handle->memory_usage();
-        assert(handle->state() == block_state::BLOCK_LOADED);
+        assert(handle->state() == block_state::LOADED);
         assert(handle_memory_usage == handle->get_buffer(lock)->allocation_size());
         assert(handle_memory_usage == handle->memory_usage(lock).size);
 
@@ -158,7 +158,7 @@ namespace components::table::storage {
             buffer_handle_t buf;
             {
                 auto lock = handle->get_lock();
-                if (handle->state() == block_state::BLOCK_LOADED) {
+                if (handle->state() == block_state::LOADED) {
                     reservation.resize(0);
                     continue;
                 }
@@ -173,7 +173,7 @@ namespace components::table::storage {
         std::map<uint32_t, uint64_t> to_be_loaded;
         for (uint64_t block_idx = 0; block_idx < handles.size(); block_idx++) {
             auto& handle = handles[block_idx];
-            if (handle->state() != block_state::BLOCK_LOADED) {
+            if (handle->state() != block_state::LOADED) {
                 to_be_loaded.insert(std::make_pair(handle->block_id(), block_idx));
             }
         }
@@ -203,7 +203,7 @@ namespace components::table::storage {
         uint64_t required_memory;
         {
             auto lock = handle->get_lock();
-            if (handle->state() == block_state::BLOCK_LOADED) {
+            if (handle->state() == block_state::LOADED) {
                 buf = handle->load();
             }
             required_memory = handle->memory_usage();
@@ -216,7 +216,7 @@ namespace components::table::storage {
             auto reservation = evict_blocks_or_throw(handle->get_memory_tag(), required_memory, &reusable_buffer);
 
             auto lock = handle->get_lock();
-            if (handle->state() == block_state::BLOCK_LOADED) {
+            if (handle->state() == block_state::LOADED) {
                 reservation.resize(0);
                 buf = handle->load();
             } else {

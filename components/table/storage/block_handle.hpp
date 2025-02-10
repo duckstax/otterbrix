@@ -15,8 +15,8 @@ namespace components::table::storage {
 
     enum class block_state : uint8_t
     {
-        BLOCK_UNLOADED = 0,
-        BLOCK_LOADED = 1
+        UNLOADED = 0,
+        LOADED = 1
     };
     enum class memory_tag : uint8_t
     {
@@ -102,7 +102,7 @@ namespace components::table::storage {
 
         uint64_t memory_usage() const { return memory_usage_; }
 
-        bool is_unloaded() const { return state_ == block_state::BLOCK_UNLOADED; }
+        bool is_unloaded() const { return state_ == block_state::UNLOADED; }
 
         void set_eviction_queue_index(uint64_t index) {
             // can only be set once
