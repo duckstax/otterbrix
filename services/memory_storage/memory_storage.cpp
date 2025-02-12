@@ -321,7 +321,7 @@ namespace services {
         while (!dependency_tree_collections_names.empty()) {
             collection_full_name_t name =
                 dependency_tree_collections_names.extract(dependency_tree_collections_names.begin()).value();
-            if (name.database == "" && name.collection == "") {
+            if (name.empty()) {
                 // raw_data from ql does not belong to any collection
                 collections_context_storage.emplace(std::move(name), nullptr);
                 continue;
