@@ -17,6 +17,7 @@ set(SOURCE_${PROJECT_NAME}
         statements/drop_database.cpp
         statements/insert_many.cpp
         statements/insert_one.cpp
+        statements/raw_data.cpp
         statements/update_many.cpp
         statements/update_one.cpp
 )

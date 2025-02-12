@@ -19,6 +19,7 @@ namespace services::collection::operators {
 
         std::size_t size() const;
         std::pmr::vector<document_ptr>& documents();
+        std::pmr::memory_resource* resource();
         void append(document_ptr document);
 
     private:

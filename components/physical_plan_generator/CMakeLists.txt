@@ -3,6 +3,7 @@ project(physical_plan_generator)
 set(${PROJECT_NAME}_SOURCES
         create_plan.cpp
         impl/create_plan_aggregate.cpp
+        impl/create_plan_data.cpp
         impl/create_plan_delete.cpp
         impl/create_plan_group.cpp
         impl/create_plan_insert.cpp

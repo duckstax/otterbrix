@@ -7,6 +7,7 @@ set(SOURCE_${PROJECT_NAME}
         node_create_database.cpp
         node_create_index.cpp
         node_drop_index.cpp
+        node_data.cpp
         node_delete.cpp
         node_drop_collection.cpp
         node_drop_database.cpp

@@ -1,10 +1,14 @@
 #include "test_config.hpp"
 #include <catch2/catch.hpp>
+#include <components/expressions/join_expression.hpp>
 #include <components/ql/statements.hpp>
+#include <components/ql/statements/raw_data.hpp>
 #include <variant>
 
 static const database_name_t database_name = "TestDatabase";
 static const collection_name_t collection_name = "TestCollection";
+static const collection_name_t collection_left = "TestCollectionLeftJoin";
+static const collection_name_t collection_right = "TestCollectionRightJoin";
 
 using namespace components;
 using namespace components::cursor;
@@ -34,6 +38,18 @@ TEST_CASE("integration::cpp::test_collection::ql") {
         {
             auto session = otterbrix::session_id_t();
             dispatcher->create_collection(session, database_name, collection_name);
+        }
+        {
+            auto session = otterbrix::session_id_t();
+            dispatcher->create_collection(session, database_name, collection_name);
+        }
+        {
+            auto session = otterbrix::session_id_t();
+            dispatcher->create_collection(session, database_name, collection_left);
+        }
+        {
+            auto session = otterbrix::session_id_t();
+            dispatcher->create_collection(session, database_name, collection_right);
         }
     }
 
@@ -182,6 +198,139 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             auto cur = dispatcher->execute_ql(session, ql);
             REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 20);
+        }
+    }
+    INFO("join with outside data") {
+        std::pmr::vector<components::document::document_ptr> documents_left(dispatcher->resource());
+        std::pmr::vector<components::document::document_ptr> documents_right(dispatcher->resource());
+        for (int64_t num = 0, reversed = 100; num < 101; ++num, --reversed) {
+            auto doc_left = make_document(dispatcher->resource());
+            doc_left->set("_id", gen_id(num + 1, dispatcher->resource()));
+            doc_left->set("name", "Name " + std::to_string(num));
+            doc_left->set("key_1", num);
+            doc_left->set("key_2", reversed);
+            documents_left.emplace_back(std::move(doc_left));
+        }
+        for (int64_t num = 0; num < 100; ++num) {
+            auto doc_right = make_document(dispatcher->resource());
+            doc_right->set("_id", gen_id(num + 1001, dispatcher->resource()));
+            doc_right->set("value", (num + 25) * 2 * 10);
+            doc_right->set("key", (num + 25) * 2);
+            documents_right.emplace_back(std::move(doc_right));
+        }
+        {
+            auto session = otterbrix::session_id_t();
+            ql::insert_many_t ins_left{database_name, collection_left, documents_left};
+            components::ql::variant_statement_t ql{ins_left};
+            auto cur = dispatcher->execute_ql(session, ql);
+        }
+        {
+            auto session = otterbrix::session_id_t();
+            ql::insert_many_t ins_right{database_name, collection_right, documents_right};
+            components::ql::variant_statement_t ql{ins_right};
+            auto cur = dispatcher->execute_ql(session, ql);
+        }
+        INFO("right is raw data") {
+            auto session = otterbrix::session_id_t();
+            ql::join_t join(dispatcher->resource());
+            join.left = ql::make_aggregate(database_name, collection_left, dispatcher->resource());
+            join.right = new ql::raw_data_t(documents_right);
+            {
+                expressions::join_expression_field left;
+                expressions::join_expression_field right;
+
+                left.expr = expressions::make_scalar_expression(dispatcher->resource(),
+                                                                expressions::scalar_type::get_field,
+                                                                expressions::key_t{"key_1"});
+                right.expr = expressions::make_scalar_expression(dispatcher->resource(),
+                                                                 expressions::scalar_type::get_field,
+                                                                 expressions::key_t{"key"});
+                join.expressions.emplace_back(expressions::make_join_expression(dispatcher->resource(),
+                                                                                compare_type::eq,
+                                                                                std::move(left),
+                                                                                std::move(right)));
+            }
+            components::ql::variant_statement_t ql{join};
+            auto cur = dispatcher->execute_ql(session, ql);
+            REQUIRE(cur->is_success());
+            REQUIRE(cur->size() == 26);
+
+            for (int num = 0; num < 26; ++num) {
+                REQUIRE(cur->has_next());
+                cur->next();
+                REQUIRE(cur->get()->get_long("key_1") == (num + 25) * 2);
+                REQUIRE(cur->get()->get_long("key") == (num + 25) * 2);
+                REQUIRE(cur->get()->get_long("value") == (num + 25) * 2 * 10);
+                REQUIRE(cur->get()->get_string("name") == std::pmr::string("Name " + std::to_string((num + 25) * 2)));
+            }
+        }
+        INFO("left is raw data") {
+            auto session = otterbrix::session_id_t();
+            ql::join_t join(dispatcher->resource());
+            join.left = new ql::raw_data_t(documents_left);
+            join.right = ql::make_aggregate(database_name, collection_right, dispatcher->resource());
+            {
+                expressions::join_expression_field left;
+                expressions::join_expression_field right;
+
+                left.expr = expressions::make_scalar_expression(dispatcher->resource(),
+                                                                expressions::scalar_type::get_field,
+                                                                expressions::key_t{"key_1"});
+                right.expr = expressions::make_scalar_expression(dispatcher->resource(),
+                                                                 expressions::scalar_type::get_field,
+                                                                 expressions::key_t{"key"});
+                join.expressions.emplace_back(expressions::make_join_expression(dispatcher->resource(),
+                                                                                compare_type::eq,
+                                                                                std::move(left),
+                                                                                std::move(right)));
+            }
+            components::ql::variant_statement_t ql{join};
+            auto cur = dispatcher->execute_ql(session, ql);
+            REQUIRE(cur->is_success());
+            REQUIRE(cur->size() == 26);
+
+            for (int num = 0; num < 26; ++num) {
+                REQUIRE(cur->has_next());
+                cur->next();
+                REQUIRE(cur->get()->get_long("key_1") == (num + 25) * 2);
+                REQUIRE(cur->get()->get_long("key") == (num + 25) * 2);
+                REQUIRE(cur->get()->get_long("value") == (num + 25) * 2 * 10);
+                REQUIRE(cur->get()->get_string("name") == std::pmr::string("Name " + std::to_string((num + 25) * 2)));
+            }
+        }
+        INFO("both are raw data") {
+            auto session = otterbrix::session_id_t();
+            ql::join_t join(dispatcher->resource());
+            join.left = new ql::raw_data_t(documents_left);
+            join.right = new ql::raw_data_t(documents_right);
+            {
+                expressions::join_expression_field left;
+                expressions::join_expression_field right;
+
+                left.expr = expressions::make_scalar_expression(dispatcher->resource(),
+                                                                expressions::scalar_type::get_field,
+                                                                expressions::key_t{"key_1"});
+                right.expr = expressions::make_scalar_expression(dispatcher->resource(),
+                                                                 expressions::scalar_type::get_field,
+                                                                 expressions::key_t{"key"});
+                join.expressions.emplace_back(expressions::make_join_expression(dispatcher->resource(),
+                                                                                compare_type::eq,
+                                                                                std::move(left),
+                                                                                std::move(right)));
+            }
+            components::ql::variant_statement_t ql{join};
+            auto cur = dispatcher->execute_ql(session, ql);
+            REQUIRE(cur->is_success());
+            REQUIRE(cur->size() == 26);
+
+            for (int num = 0; num < 26; ++num) {
+                REQUIRE(cur->has_next());
+                cur->next();
+                REQUIRE(cur->get()->get_long("key_1") == (num + 25) * 2);
+                REQUIRE(cur->get()->get_long("key") == (num + 25) * 2);
+                REQUIRE(cur->get()->get_long("value") == (num + 25) * 2 * 10);
+                REQUIRE(cur->get()->get_string("name") == std::pmr::string("Name " + std::to_string((num + 25) * 2)));
+            }
         }
     }
 }

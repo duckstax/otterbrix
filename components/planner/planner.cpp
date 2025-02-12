@@ -6,6 +6,7 @@
 #include <components/logical_plan/node_create_collection.hpp>
 #include <components/logical_plan/node_create_database.hpp>
 #include <components/logical_plan/node_create_index.hpp>
+#include <components/logical_plan/node_data.hpp>
 #include <components/logical_plan/node_delete.hpp>
 #include <components/logical_plan/node_drop_collection.hpp>
 #include <components/logical_plan/node_drop_database.hpp>
@@ -98,6 +99,8 @@ namespace components::planner {
                 return logical_plan::make_node_update(resource, static_cast<ql::update_one_t*>(statement));
             case statement_type::update_many:
                 return logical_plan::make_node_update(resource, static_cast<ql::update_many_t*>(statement));
+            case statement_type::raw_data:
+                return logical_plan::make_node_data(resource, static_cast<ql::raw_data_t*>(statement));
             case statement_type::aggregate:
                 return translator_aggregate(resource, static_cast<ql::aggregate_statement*>(statement));
             case statement_type::join:

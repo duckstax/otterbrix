@@ -23,6 +23,7 @@ namespace services::collection::operators {
         sort,
         join,
         aggregate,
+        raw_data,
         add_index,
         drop_index
     };
