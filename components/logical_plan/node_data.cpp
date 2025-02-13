@@ -14,7 +14,7 @@ namespace components::logical_plan {
 
     std::string node_data_t::to_string_impl() const {
         std::stringstream stream;
-        stream << "$insert: {";
+        stream << "$raw_data: {";
         //todo: all documents
         stream << "$documents: " << documents_.size();
         stream << "}";
