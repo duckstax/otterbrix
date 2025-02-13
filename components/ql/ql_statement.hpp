@@ -23,7 +23,8 @@ namespace components::ql {
         create_index,
         drop_index,
         aggregate,
-        join
+        join,
+        raw_data
     };
 
     static inline std::string to_string(statement_type type) {
@@ -56,6 +57,10 @@ namespace components::ql {
                 return "drop_index";
             case statement_type::aggregate:
                 return "aggregate";
+            case statement_type::join:
+                return "join";
+            case statement_type::raw_data:
+                return "raw_data";
             default:
                 return "error_type";
         }

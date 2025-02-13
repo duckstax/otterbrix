@@ -2,6 +2,7 @@
 
 #include "impl/create_plan_add_index.hpp"
 #include "impl/create_plan_aggregate.hpp"
+#include "impl/create_plan_data.hpp"
 #include "impl/create_plan_delete.hpp"
 #include "impl/create_plan_drop_index.hpp"
 #include "impl/create_plan_group.hpp"
@@ -21,6 +22,8 @@ namespace services::collection::planner {
         switch (node->type()) {
             case node_type::aggregate_t:
                 return impl::create_plan_aggregate(context, node, std::move(limit));
+            case node_type::data_t:
+                return impl::create_plan_data(node);
             case node_type::delete_t:
                 return impl::create_plan_delete(context, node);
             case node_type::insert_t:

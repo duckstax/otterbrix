@@ -40,6 +40,7 @@ set(${PROJECT_NAME}_SOURCES
         collection/operators/operator_sort.cpp
         collection/operators/operator_join.cpp
         collection/operators/aggregation.cpp
+        collection/operators/operator_raw_data.cpp
 )
 
 add_library(otterbrix_${PROJECT_NAME}

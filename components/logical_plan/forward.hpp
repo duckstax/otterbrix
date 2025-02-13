@@ -11,6 +11,7 @@ namespace components::logical_plan {
         create_collection_t,
         create_database_t,
         create_index_t,
+        data_t,
         delete_t,
         drop_collection_t,
         drop_database_t,
