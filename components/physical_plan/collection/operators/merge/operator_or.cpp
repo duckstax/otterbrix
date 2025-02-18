@@ -13,7 +13,7 @@ namespace services::collection::operators::merge {
             return; //limit = 0
         }
         if (left_ && right_ && left_->output() && right_->output()) {
-            output_ = make_operator_data(context_->resource());
+            output_ = make_operator_data(left_->output()->resource());
             for (const auto& document : left_->output()->documents()) {
                 output_->append(document);
                 ++count;

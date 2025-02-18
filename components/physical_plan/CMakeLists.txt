@@ -36,6 +36,7 @@ set(${PROJECT_NAME}_SOURCES
         collection/operators/operator_insert.cpp
         collection/operators/operator_delete.cpp
         collection/operators/operator_update.cpp
+        collection/operators/operator_match.cpp
         collection/operators/operator_group.cpp
         collection/operators/operator_sort.cpp
         collection/operators/operator_join.cpp

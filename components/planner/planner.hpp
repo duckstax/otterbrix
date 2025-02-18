@@ -4,6 +4,11 @@
 #include <components/ql/aggregate/limit.hpp>
 #include <components/ql/ql_statement.hpp>
 
+namespace components::ql {
+    struct join_t;
+    class aggregate_statement;
+} // namespace components::ql
+
 namespace components::planner {
 
     /**
@@ -24,6 +29,11 @@ namespace components::planner {
     class planner_t {
     public:
         auto create_plan(std::pmr::memory_resource* resource, ql::ql_statement_t* statement) -> logical_plan::node_ptr;
+
+    private:
+        auto translator_aggregate_(std::pmr::memory_resource* resource, ql::aggregate_statement* aggregate)
+            -> logical_plan::node_ptr;
+        auto translator_join_(std::pmr::memory_resource* resource, ql::join_t* ql) -> logical_plan::node_ptr;
     };
 
 } // namespace components::planner
