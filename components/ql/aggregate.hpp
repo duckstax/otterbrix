@@ -16,9 +16,13 @@ namespace components::ql {
 
     class aggregate_statement final : public ql_param_statement_t {
     public:
+        ql_statement_ptr data{nullptr};
+
         aggregate_statement(database_name_t database,
                             collection_name_t collection,
                             std::pmr::memory_resource* resource);
+
+        explicit aggregate_statement(std::pmr::memory_resource* resource);
 
         void append(aggregate::operator_type type, aggregate::operator_storage_t storage);
 

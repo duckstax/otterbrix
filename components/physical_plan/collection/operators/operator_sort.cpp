@@ -16,7 +16,7 @@ namespace services::collection::operators {
 
     void operator_sort_t::on_execute_impl(components::pipeline::context_t*) {
         if (left_ && left_->output()) {
-            output_ = make_operator_data(context_->resource());
+            output_ = make_operator_data(left_->output()->resource());
             for (const auto& document : left_->output()->documents()) {
                 output_->append(document);
             }

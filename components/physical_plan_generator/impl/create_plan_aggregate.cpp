@@ -24,6 +24,7 @@ namespace services::collection::planner::impl {
                     op->set_sort(create_plan(context, child, limit));
                     break;
                 default:
+                    op->set_children(create_plan(context, child, limit));
                     break;
             }
         }

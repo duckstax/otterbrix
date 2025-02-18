@@ -8,6 +8,9 @@ namespace components::ql {
                                              std::pmr::memory_resource* resource)
         : ql_param_statement_t(statement_type::aggregate, std::move(database), std::move(collection), resource) {}
 
+    aggregate_statement::aggregate_statement(std::pmr::memory_resource* resource)
+        : ql_param_statement_t(statement_type::aggregate, "", "", resource) {}
+
     void aggregate_statement::append(aggregate::operator_type type, aggregate::operator_storage_t storage) {
         aggregate_operator_.append(type, std::move(storage));
     }

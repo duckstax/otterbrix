@@ -19,6 +19,7 @@ namespace services::collection::operators {
     class operator_group_t final : public read_write_operator_t {
     public:
         explicit operator_group_t(context_collection_t* context);
+        explicit operator_group_t(std::pmr::memory_resource* resource);
 
         void add_key(const std::string& name, get::operator_get_ptr&& getter);
         void add_value(const std::string& name, aggregate::operator_aggregate_ptr&& aggregator);

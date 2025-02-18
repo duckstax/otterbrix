@@ -13,7 +13,7 @@ namespace services::collection::operators::merge {
             return; //limit = 0
         }
         if (left_ && right_ && left_->output() && right_->output()) {
-            output_ = make_operator_data(context_->resource());
+            output_ = make_operator_data(left_->output()->resource());
             const auto& right_documents = right_->output()->documents();
             for (const auto& left_document : left_->output()->documents()) {
                 auto it = std::find_if(right_documents.cbegin(),

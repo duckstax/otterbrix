@@ -5,6 +5,7 @@
 #include <components/physical_plan/collection/operators/scan/index_scan.hpp>
 #include <components/physical_plan/collection/operators/scan/primary_key_scan.hpp>
 #include <components/physical_plan/collection/operators/scan/transfer_scan.hpp>
+#include <physical_plan/collection/operators/operator_match.hpp>
 
 namespace services::collection::planner::impl {
 
@@ -36,11 +37,16 @@ namespace services::collection::planner::impl {
         //if (is_can_primary_key_find_by_predicate(expr->type()) && expr->key().as_string() == "_id") {
         //return boost::intrusive_ptr(new operators::primary_key_scan(context_));
         //}
-        if (is_can_index_find_by_predicate(expr->type()) && search_index(context_->index_engine(), {expr->key()})) {
-            return boost::intrusive_ptr(new operators::index_scan(context_, expr, limit));
+        if (context_) {
+            if (is_can_index_find_by_predicate(expr->type()) && search_index(context_->index_engine(), {expr->key()})) {
+                return boost::intrusive_ptr(new operators::index_scan(context_, expr, limit));
+            }
+            auto predicate = operators::predicates::create_predicate(context_, expr);
+            return boost::intrusive_ptr(new operators::full_scan(context_, std::move(predicate), limit));
+        } else {
+            auto predicate = operators::predicates::create_predicate(context_, expr);
+            return boost::intrusive_ptr(new operators::operator_match_t(context_, std::move(predicate), limit));
         }
-        auto predicate = operators::predicates::create_predicate(context_, expr);
-        return boost::intrusive_ptr(new operators::full_scan(context_, std::move(predicate), limit));
     }
 
     operators::operator_ptr create_plan_match(const context_storage_t& context,

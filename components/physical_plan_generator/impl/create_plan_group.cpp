@@ -92,7 +92,13 @@ namespace services::collection::planner::impl {
 
     operators::operator_ptr create_plan_group(const context_storage_t& context,
                                               const components::logical_plan::node_ptr& node) {
-        auto group = boost::intrusive_ptr(new operators::operator_group_t(context.at(node->collection_full_name())));
+        boost::intrusive_ptr<operators::operator_group_t> group;
+        auto collection_context = context.at(node->collection_full_name());
+        if (collection_context) {
+            group = new operators::operator_group_t(collection_context);
+        } else {
+            group = new operators::operator_group_t(node->resource());
+        }
         std::for_each(node->expressions().begin(),
                       node->expressions().end(),
                       [&](const components::expressions::expression_ptr& expr) {

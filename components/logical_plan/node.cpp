@@ -50,6 +50,8 @@ namespace components::logical_plan {
 
     std::string node_t::to_string() const { return to_string_impl(); }
 
+    std::pmr::memory_resource* node_t::resource() const noexcept { return children_.get_allocator().resource(); }
+
     bool node_t::operator==(const node_t& rhs) const {
         bool result = type_ == rhs.type_ && children_.size() == rhs.children_.size() &&
                       expressions_.size() == rhs.expressions_.size();

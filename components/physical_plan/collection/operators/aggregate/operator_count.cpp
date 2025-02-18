@@ -9,7 +9,8 @@ namespace services::collection::operators::aggregate {
         : operator_aggregate_t(context) {}
 
     document_ptr operator_count_t::aggregate_impl() {
-        auto doc = components::document::make_document(context_->resource());
+        auto resource = left_ && left_->output() ? left_->output()->resource() : context_->resource();
+        auto doc = components::document::make_document(resource);
         if (left_ && left_->output()) {
             doc->set(key_result_, uint64_t(left_->output()->size()));
         } else {
