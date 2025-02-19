@@ -16,7 +16,7 @@ namespace components::table {
         , column_definitions_(std::move(column_definitions))
         , is_root_(true)
         , name_(std::move(name)) {
-        this->row_groups_ = std::make_shared<collection_t>(resource_, block_manager, types(), 0);
+        this->row_groups_ = std::make_shared<collection_t>(resource_, block_manager, copy_types(), 0);
     }
 
     data_table_t::data_table_t(data_table_t& parent, column_definition_t& new_column)
@@ -74,12 +74,12 @@ namespace components::table {
         // TODO: type casting
         // this->row_groups_ = parent.row_groups_->alter_type(resource_, changed_idx, target_type, bound_columns);
 
-        // replaces the previous; the parent is no longer the root data_table
         parent.is_root_ = false;
     }
 
-    std::vector<types::complex_logical_type> data_table_t::types() {
+    std::vector<types::complex_logical_type> data_table_t::copy_types() const {
         std::vector<types::complex_logical_type> types;
+        types.reserve(column_definitions_.size());
         for (auto& it : column_definitions_) {
             types.push_back(it.type());
         }
@@ -253,42 +253,6 @@ namespace components::table {
         result->constraint = initialize_constraint_state(bound_constraints);
         return result;
     }
-
-    /*
-	void data_table_t::update(table_update_state &state, vector::vector_t &row_ids,
-	                       const std::vector<uint64_t> &column_ids, vector::data_chunk_t &updates) {
-		assert(row_ids.type().type() == types::logical_type::BIGINT);
-		assert(column_ids.size() == updates.column_count());
-
-		auto count = updates.size();
-		if (count == 0) {
-			return;
-		}
-
-		if (!is_root_) {
-			throw std::logic_error("Transaction conflict: cannot update a table that has been altered!");
-		}
-
-		// now perform the actual update
-		vector::vector_t max_row_id_vec(resource_, types::logical_value_t(static_cast<int64_t>(MAX_ROW_ID)));
-		vector::vector_t row_ids_slice(resource_, types::logical_type::BIGINT);
-		vector::data_chunk_t updates_slice;
-		updates_slice.initialize_empty(resource_, updates.types());
-
-		vector::indexing_vector_t indexing_local_update(resource_, count), indexing_global_update(resource_, count);
-		auto n_local_update = vector::vector_ops::GreaterThanEquals(row_ids, max_row_id_vec, nullptr, count,
-		                                                                  &indexing_local_update, &indexing_global_update);
-		auto n_global_update = count - n_local_update;
-		// otherwise global storage
-		if (n_global_update > 0) {
-			updates_slice.slice(updates, indexing_global_update, n_global_update);
-			updates_slice.flatten();
-			row_ids_slice.slice(row_ids, indexing_global_update, n_global_update);
-			row_ids_slice.flatten(n_global_update);
-			row_groups_->update(row_ids_slice.data<int64_t>(), column_ids, updates_slice);
-		}
-	}
-	*/
 
     void data_table_t::update_column(vector::vector_t& row_ids,
                                      const std::vector<uint64_t>& column_path,

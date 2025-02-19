@@ -3,7 +3,7 @@
 #include "block_handle.hpp"
 
 #include <array>
-#include <components/table/concurrent_queue.hpp>
+#include <queue>
 #include <thread>
 
 namespace components::table::storage {
@@ -41,7 +41,7 @@ namespace components::table::storage {
 
     public:
         const file_buffer_type buffer_type;
-        concurrent_queue_t<buffer_eviction_node_t> q;
+        std::queue<buffer_eviction_node_t> q;
 
     private:
         constexpr static uint64_t INSERT_INTERVAL = 4096;
@@ -118,8 +118,9 @@ namespace components::table::storage {
         struct memory_usage_t {
             static constexpr uint64_t MEMORY_USAGE_CACHE_COUNT = 64;
             static constexpr uint64_t MEMORY_USAGE_CACHE_THRESHOLD = 32 << 10;
-            static constexpr uint64_t TOTAL_MEMORY_USAGE_INDEX = MEMORY_TAG_COUNT;
-            using memory_usage_counters_t = std::array<std::atomic<int64_t>, MEMORY_TAG_COUNT + 1>;
+            static constexpr uint64_t TOTAL_MEMORY_USAGE_INDEX = static_cast<uint64_t>(memory_tag::MEMORY_TAG_COUNT);
+            using memory_usage_counters_t =
+                std::array<std::atomic<int64_t>, static_cast<uint64_t>(memory_tag::MEMORY_TAG_COUNT) + 1>;
 
             memory_usage_counters_t memory_usage;
             std::array<memory_usage_counters_t, MEMORY_USAGE_CACHE_COUNT> memory_usage_caches_array;

@@ -61,15 +61,10 @@ namespace components::table {
             return scan_vector_type::SCAN_ENTIRE_VECTOR;
         }
         if (has_updates()) {
-            // if we have updates we need to merge in the updates
-            // always need to scan flat vectors
             return scan_vector_type::SCAN_FLAT_VECTOR;
         }
-        // check if the current segment has enough data remaining
         uint64_t remaining_in_segment = state.current->start + state.current->count - state.row_index;
         if (remaining_in_segment < scan_count) {
-            // there is not enough data remaining in the current segment so we need to scan across segments
-            // we need flat vectors here
             return scan_vector_type::SCAN_FLAT_VECTOR;
         }
         return scan_vector_type::SCAN_ENTIRE_VECTOR;
@@ -143,7 +138,6 @@ namespace components::table {
         if (count == 0) {
             return 0;
         }
-        // scan_count can only be used if there are no updates
         assert(!has_updates());
         return scan_vector(state, result, count, scan_vector_type::SCAN_FLAT_VECTOR);
     }
@@ -204,7 +198,6 @@ namespace components::table {
     void column_data_t::initialize_append(column_append_state& state) {
         auto l = data_.lock();
         if (data_.is_empty(l)) {
-            // no segments yet, append an empty segment
             apend_transient_segment(l, start_);
         }
         auto segment = data_.last_segment(l);
@@ -223,14 +216,11 @@ namespace components::table {
         uint64_t offset = 0;
         this->count_ += append_count;
         while (true) {
-            // Append the data from the vector
             uint64_t copied_elements = state.current->append(state, uvf, offset, append_count);
             if (copied_elements == append_count) {
-                // finished copying everything
                 break;
             }
 
-            // we couldn't fit everything we wanted in the current column segment, create a new one
             {
                 auto l = data_.lock();
                 apend_transient_segment(l, state.current->start + state.current->count);
@@ -244,19 +234,15 @@ namespace components::table {
 
     void column_data_t::revert_append(int64_t start_row) {
         auto l = data_.lock();
-        // check if this row is in the segment tree at all
         auto last_segment = data_.last_segment(l);
         if (static_cast<uint64_t>(start_row) >= last_segment->start + last_segment->count) {
-            // the start row is equal to the final portion of the column data: nothing was ever appended here
             assert(static_cast<uint64_t>(start_row) == last_segment->start + last_segment->count);
             return;
         }
-        // find the segment index that the current row belongs to
         uint64_t segment_index = data_.segment_index(l, static_cast<uint64_t>(start_row));
         auto segment = data_.segment_at(l, static_cast<int64_t>(segment_index));
         auto& transient = *segment;
 
-        // remove any segments AFTER this segment: they should be deleted entirely
         data_.erase_segments(l, segment_index);
 
         this->count_ = static_cast<uint64_t>(start_row) - this->start_;
@@ -267,7 +253,6 @@ namespace components::table {
     uint64_t column_data_t::fetch(column_scan_state& state, int64_t row_id, vector::vector_t& result) {
         assert(row_id >= 0);
         assert(static_cast<uint64_t>(row_id) >= start_);
-        // perform the fetch within the segment
         state.row_index = start_ + (static_cast<uint64_t>(row_id) - start_) / vector::DEFAULT_VECTOR_CAPACITY *
                                        vector::DEFAULT_VECTOR_CAPACITY;
         state.current = data_.get_segment(state.row_index);
@@ -279,9 +264,7 @@ namespace components::table {
     column_data_t::fetch_row(column_fetch_state& state, int64_t row_id, vector::vector_t& result, uint64_t result_idx) {
         auto segment = data_.get_segment(static_cast<uint64_t>(row_id));
 
-        // now perform the fetch within the segment
         segment->fetch_row(state, row_id, result, result_idx);
-        // merge any updates made to this row
 
         fetch_update_row(row_id, result, result_idx);
     }
@@ -303,7 +286,6 @@ namespace components::table {
                                       int64_t* row_ids,
                                       uint64_t update_count,
                                       uint64_t depth) {
-        // this method should only be called at the end of the path in the base column case
         assert(depth >= column_path.size());
         column_data_t::update(column_path[0], update_vector, row_ids, update_count);
     }
@@ -313,7 +295,6 @@ namespace components::table {
                                                 std::vector<column_segment_info>& result) {
         assert(!col_path.empty());
 
-        // convert the column path to a string
         std::string col_path_str = "[";
         for (uint64_t i = 0; i < col_path.size(); i++) {
             if (i > 0) {
@@ -323,7 +304,6 @@ namespace components::table {
         }
         col_path_str += "]";
 
-        // iterate over the segments
         uint64_t segment_idx = 0;
         auto segment = data_.root_segment();
         while (segment) {
@@ -384,7 +364,6 @@ namespace components::table {
             vector_segment_size = vector::DEFAULT_VECTOR_CAPACITY * type_size;
         }
 
-        // The segment size is bound by the block size, but can be smaller.
         uint64_t segment_size = block_size < vector_segment_size ? block_size : vector_segment_size;
         allocation_size_ += segment_size;
         auto new_segment =
@@ -457,7 +436,6 @@ namespace components::table {
         auto scan_type = get_vector_scan_type(state, target_scan, result);
         auto scan_count = scan_vector(state, result, target_scan, scan_type);
         if (scan_type != scan_vector_type::SCAN_ENTIRE_VECTOR) {
-            // if we are scanning an entire vector we cannot have updates
             fetch_updates(vector_index, result, scan_count, ALLOW_UPDATES, SCAN_COMMITTED);
         }
         return scan_count;

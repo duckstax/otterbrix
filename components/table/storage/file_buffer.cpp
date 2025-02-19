@@ -52,7 +52,6 @@ namespace components::table::storage {
         }
         internal_buffer_ = new_buffer;
         internal_size_ = new_size;
-        // Caller must update these.
         buffer_ = nullptr;
         size_ = 0;
     }

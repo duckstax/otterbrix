@@ -14,7 +14,7 @@ namespace components::table::storage {
         , buffer_pool_(buffer_pool)
         , temp_id_(MAXIMUM_BLOCK) {
         temp_block_manager_ = std::make_unique<in_memory_block_manager_t>(*this, DEFAULT_BLOCK_ALLOC_SIZE);
-        for (uint64_t i = 0; i < MEMORY_TAG_COUNT; i++) {
+        for (uint64_t i = 0; i < static_cast<uint64_t>(memory_tag::MEMORY_TAG_COUNT); i++) {
             evicted_data_per_tag_[i] = 0;
         }
     }
@@ -270,7 +270,7 @@ namespace components::table::storage {
 
     std::vector<memory_info_t> standard_buffer_manager_t::get_memory_usage_info() const {
         std::vector<memory_info_t> result;
-        for (uint64_t k = 0; k < MEMORY_TAG_COUNT; k++) {
+        for (uint64_t k = 0; k < static_cast<uint64_t>(memory_tag::MEMORY_TAG_COUNT); k++) {
             memory_info_t info;
             info.tag = memory_tag(k);
             info.size = buffer_pool_.memory_usage.used_memory(memory_tag(k), buffer_pool_t::memory_usage_caches::FLUSH);

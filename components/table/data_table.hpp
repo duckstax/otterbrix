@@ -17,7 +17,7 @@ namespace components::table {
                      const types::complex_logical_type& target_type,
                      const std::vector<storage_index_t>& bound_columns);
 
-        std::vector<types::complex_logical_type> types();
+        std::vector<types::complex_logical_type> copy_types() const;
         const std::vector<column_definition_t>& columns() const;
 
         void initialize_scan(table_scan_state& state,

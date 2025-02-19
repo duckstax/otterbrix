@@ -30,13 +30,18 @@ namespace components::table::storage {
     }
 
     bool eviction_queue_t::add_to_eviction_queue(buffer_eviction_node_t&& node) {
-        q.enqueue(std::move(node));
+        q.push(std::move(node));
         return ++evict_queue_insertions_ % INSERT_INTERVAL == 0;
     }
 
     bool eviction_queue_t::try_dequeue_with_lock(buffer_eviction_node_t& node) {
         std::lock_guard lock(purge_lock_);
-        return q.try_dequeue(node);
+        if (q.empty()) {
+            return false;
+        }
+        node = std::move(q.front());
+        q.pop();
+        return true;
     }
 
     void eviction_queue_t::purge() {
@@ -46,7 +51,7 @@ namespace components::table::storage {
         std::lock_guard lock{purge_lock_, std::adopt_lock};
 
         uint64_t purge_size = INSERT_INTERVAL * PURGE_SIZE_MULTIPLIER;
-        uint64_t approx_q_size = q.size_approx();
+        uint64_t approx_q_size = q.size();
 
         if (approx_q_size < purge_size * EARLY_OUT_MULTIPLIER) {
             return;
@@ -56,7 +61,7 @@ namespace components::table::storage {
         while (max_purges != 0) {
             purge_iteration(purge_size);
 
-            approx_q_size = q.size_approx();
+            approx_q_size = q.size();
 
             if (approx_q_size < purge_size * EARLY_OUT_MULTIPLIER) {
                 break;
@@ -80,14 +85,24 @@ namespace components::table::storage {
             purge_nodes_.resize(purge_size);
         }
 
-        uint64_t actually_dequeued = q.try_dequeue_bulk(purge_nodes_.begin(), purge_size);
+        uint64_t actually_dequeued = purge_size;
+        auto it = purge_nodes_.begin();
+        for (size_t i = 0; i < purge_size; i++) {
+            if (q.empty()) {
+                actually_dequeued = i;
+                break;
+            }
+            *it = std::move(q.front());
+            q.pop();
+            ++it;
+        }
 
         uint64_t alive_nodes = 0;
         for (uint64_t i = 0; i < actually_dequeued; i++) {
             auto& node = purge_nodes_[i];
             auto handle = node.try_get_block_handle();
             if (handle) {
-                q.enqueue(std::move(node));
+                q.push(std::move(node));
                 alive_nodes++;
             }
         }
@@ -99,11 +114,13 @@ namespace components::table::storage {
     void eviction_queue_t::iterate_unloadable_blocks(FN fn) {
         for (;;) {
             buffer_eviction_node_t node;
-            if (!q.try_dequeue(node)) {
+            if (q.empty()) {
                 if (!try_dequeue_with_lock(node)) {
                     return;
                 }
             }
+            node = std::move(q.front());
+            q.pop();
 
             auto handle = node.try_get_block_handle();
             if (!handle) {

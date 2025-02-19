@@ -32,9 +32,9 @@ namespace components::table::storage {
         IN_MEMORY_TABLE = 9,
         ALLOCATOR = 10,
         EXTENSION = 11,
-        TRANSACTION = 12
+        TRANSACTION = 12,
+        MEMORY_TAG_COUNT = 13
     };
-    static constexpr size_t MEMORY_TAG_COUNT = 13;
     enum class destroy_buffer_condition : uint8_t
     {
         BLOCK = 0,

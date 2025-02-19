@@ -75,7 +75,7 @@ TEST_CASE("data_table_t") {
 
     INFO("Append") {
         // set up a DataChunks
-        data_chunk_t chunk(std::pmr::get_default_resource(), data_table->types(), test_size);
+        data_chunk_t chunk(std::pmr::get_default_resource(), data_table->copy_types(), test_size);
         chunk.set_cardinality(test_size);
         for (size_t i = 0; i < test_size; i++) {
             // UBIGINT
@@ -154,7 +154,7 @@ TEST_CASE("data_table_t") {
         for (int64_t i = 0; i < test_size; i++) {
             rows.set_value(i, logical_value_t(i));
         }
-        data_chunk_t result(std::pmr::get_default_resource(), data_table->types());
+        data_chunk_t result(std::pmr::get_default_resource(), data_table->copy_types());
         data_table->fetch(result, column_indices, rows, test_size, state);
 
         for (size_t i = 0; i < test_size; i++) {
@@ -242,7 +242,7 @@ TEST_CASE("data_table_t") {
             column_indices.emplace_back(i);
         }
         table_scan_state state(std::pmr::get_default_resource());
-        data_chunk_t result(std::pmr::get_default_resource(), data_table->types());
+        data_chunk_t result(std::pmr::get_default_resource(), data_table->copy_types());
         data_table->initialize_scan(state, column_indices);
         data_table->scan(result, state);
 
@@ -340,7 +340,7 @@ TEST_CASE("data_table_t") {
             column_indices.emplace_back(i);
         }
         table_scan_state state(std::pmr::get_default_resource());
-        data_chunk_t result(std::pmr::get_default_resource(), data_table->types());
+        data_chunk_t result(std::pmr::get_default_resource(), data_table->copy_types());
         data_table->initialize_scan(state, column_indices);
         data_table->scan(result, state);
 
@@ -456,7 +456,7 @@ TEST_CASE("data_table_t") {
                 column_indices.emplace_back(i);
             }
             table_scan_state state(std::pmr::get_default_resource());
-            data_chunk_t result(std::pmr::get_default_resource(), extended_table->types());
+            data_chunk_t result(std::pmr::get_default_resource(), extended_table->copy_types());
             extended_table->initialize_scan(state, column_indices);
             extended_table->scan(result, state);
 
@@ -561,7 +561,7 @@ TEST_CASE("data_table_t") {
                 column_indices.emplace_back(i);
             }
             table_scan_state state(std::pmr::get_default_resource());
-            data_chunk_t result(std::pmr::get_default_resource(), short_table->types());
+            data_chunk_t result(std::pmr::get_default_resource(), short_table->copy_types());
             short_table->initialize_scan(state, column_indices);
             short_table->scan(result, state);
 
