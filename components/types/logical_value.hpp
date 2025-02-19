@@ -134,7 +134,7 @@ namespace components::types {
     }
     template<>
     inline int64_t logical_value_t::value<int64_t>() const {
-        assert(type_.type() != logical_type::BIGINT);
+        assert(type_.type() == logical_type::BIGINT);
         return std::get<int64_t>(value_);
     }
     template<>
