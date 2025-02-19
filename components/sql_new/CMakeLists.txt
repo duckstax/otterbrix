@@ -35,6 +35,8 @@ set(SOURCE_${PROJECT_NAME}
     transformer/statements/transform/transform_select_statement.cpp
 )
 
+include_directories(${CMAKE_SOURCE_DIR})
+
 add_library(otterbrix_${PROJECT_NAME} ${SOURCE_${PROJECT_NAME}})
 add_library(otterbrix::${PROJECT_NAME} ALIAS otterbrix_${PROJECT_NAME})
 
@@ -51,13 +53,11 @@ target_include_directories(
     otterbrix_${PROJECT_NAME}
     PUBLIC
 )
-# Отключить предупреждения для C и C++
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w")
-#
-## Если вы используете компиляторы, такие как Clang или GCC, вы можете добавить флаги для отключения предупреждений
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-all")
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-all")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w")
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-all")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-all")
 
 if (DEV_MODE)
     add_subdirectory(test)

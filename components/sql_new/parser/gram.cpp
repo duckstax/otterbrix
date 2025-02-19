@@ -47278,7 +47278,6 @@ makeColumnRef(char *colname, List *indirection,
 	c->location = location;
 	foreach(l, indirection)
 	{
-	    auto a = reinterpret_cast<const Node*>(l->data)->type;
 		if (IsA(lfirst(l), A_Indices))
 		{
 			A_Indirection *i = makeNode(A_Indirection);

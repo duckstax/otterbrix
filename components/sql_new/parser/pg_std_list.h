@@ -3,6 +3,7 @@
 #include "nodes/pg_type_definitions.h"
 #include "sql_new/parser/nodes/nodes.h"
 #include <list>
+#include <memory>
 
 struct PGListCell {
     void* data;
@@ -15,8 +16,8 @@ struct PGList {
 using List = PGList;
 using ListCell = PGListCell;
 
-// mdxn: incorrect definition
-#define NIL (nullptr)
+extern std::unique_ptr<List> NIL_;
+#define NIL (NIL_.get())
 
 static inline PGListCell* list_head(const PGList* l) { return const_cast<PGListCell*>(l ? &*l->lst.begin() : nullptr); }
 

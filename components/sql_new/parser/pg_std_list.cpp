@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 
+std::unique_ptr<List> NIL_ = std::make_unique<List>();
+
 PGList* lappend(PGList* list, void* datum) {
     if (list == NIL) {
         list = new PGList{};
