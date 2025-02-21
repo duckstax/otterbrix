@@ -6,7 +6,7 @@ namespace components::sql_new::transform {
     std::unique_ptr<expressions::value_expression> transformer::transform_value(Value val) {
         switch (val.type) {
             case T_Integer:
-                return std::make_unique<expressions::value_expression>(val.val.ival);
+                return std::make_unique<expressions::value_expression>(static_cast<int64_t>(val.val.ival));
             case T_String:
                 return std::make_unique<expressions::value_expression>(std::string(val.val.str));
             case T_Float: {
