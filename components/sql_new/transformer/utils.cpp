@@ -1,11 +1,10 @@
 #include "sql_new/transformer/utils.hpp"
-#include <charconv>
+#include <cstdlib>
 #include <stdexcept>
 
 namespace components::sql_new::transform {
-
-    bool string_to_double(const char* buf, size_t len, double& result /*,char decimal_separator = '.'*/) {
-        // skip any spaces at the start
+    bool string_to_double(const char* buf, size_t len, double& result /*, char decimal_separator = '.'*/) {
+        // Skip leading spaces
         while (len > 0 && std::isspace(*buf)) {
             buf++;
             len--;
@@ -18,16 +17,20 @@ namespace components::sql_new::transform {
             len--;
         }
 
-        auto endptr = buf + len;
-        auto parse_result = std::from_chars(buf, buf + len, result); // decimal_sep = '.'
-        if (parse_result.ec != std::errc()) {
+        std::string str(buf, len);
+        const char* start = str.c_str();
+        char* endptr = nullptr;
+
+        result = std::strtod(start, &endptr);
+
+        if (start == endptr) {
             return false;
         }
-        auto current_end = parse_result.ptr;
-        while (current_end < endptr && std::isspace(*current_end)) {
-            current_end++;
+        while (*endptr != '\0' && std::isspace(*endptr)) {
+            endptr++;
         }
-        return current_end == endptr;
+
+        return *endptr == '\0';
     }
 
     std::string node_tag_to_string(NodeTag type) {
