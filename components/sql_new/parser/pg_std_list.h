@@ -1,7 +1,7 @@
 #pragma once
 
+#include "nodes/nodes.h"
 #include "nodes/pg_type_definitions.h"
-#include "sql_new/parser/nodes/nodes.h"
 #include <list>
 #include <memory>
 
@@ -9,7 +9,11 @@ struct PGListCell {
     void* data;
 };
 
-struct PGList {
+struct ListNode {
+    NodeTag type = T_List;
+};
+
+struct PGList : ListNode {
     std::list<PGListCell> lst{};
 };
 
@@ -17,7 +21,11 @@ using List = PGList;
 using ListCell = PGListCell;
 
 extern std::unique_ptr<List> NIL_;
-#define NIL (NIL_.get())
+
+struct Nil_t {
+    operator List*() const { return NIL_.get(); }
+};
+inline Nil_t NIL;
 
 static inline PGListCell* list_head(const PGList* l) { return const_cast<PGListCell*>(l ? &*l->lst.begin() : nullptr); }
 

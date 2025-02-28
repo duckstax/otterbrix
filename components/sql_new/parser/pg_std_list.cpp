@@ -86,6 +86,6 @@ PGList* list_copy_tail(const PGList* list, int nskip) {
     auto it = list->lst.begin();
     std::advance(it, nskip);
 
-    PGList* new_list = new PGList{std::list<PGListCell>(it, list->lst.end())};
+    auto* new_list = new PGList{{}, std::list<PGListCell>(it, list->lst.end())};
     return new_list;
 }

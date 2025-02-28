@@ -1,45 +1,29 @@
 #include "transformer.hpp"
+#include "utils.hpp"
 
 namespace components::sql_new::transform {
-    transformer& transformer::get_root() {
-        std::reference_wrapper<transformer> node = *this;
-        while (node.get().parent) {
-            node = *node.get().parent;
+    logical_plan::node_ptr transformer::transform(Node& node, document::impl::base_document* tape) {
+        switch (node.type) {
+            case T_CreatedbStmt:
+                return transform_create_database(pg_cast<CreatedbStmt>(node));
+            case T_DropdbStmt:
+                return transform_drop_database(pg_cast<DropdbStmt>(node));
+            case T_CreateStmt:
+                return transform_create_table(pg_cast<CreateStmt>(node));
+            case T_DropStmt:
+                return transform_drop(pg_cast<DropStmt>(node));
+            case T_SelectStmt:
+                return transform_select(pg_cast<SelectStmt>(node), tape);
+            case T_UpdateStmt:
+                return transform_update(pg_cast<UpdateStmt>(node));
+            case T_InsertStmt:
+                return transform_insert(pg_cast<InsertStmt>(node));
+            case T_DeleteStmt:
+                return transform_delete(pg_cast<DeleteStmt>(node));
+            case T_IndexStmt:
+                return transform_create_index(pg_cast<IndexStmt>(node));
+            default:
+                throw std::runtime_error("Unsupported node type: " + node_tag_to_string(node.type));
         }
-        return node.get();
-    }
-
-    const transformer& transformer::get_root() const {
-        std::reference_wrapper<const transformer> node = *this;
-        while (node.get().parent) {
-            node = *node.get().parent;
-        }
-        return node.get();
-    }
-
-    void transformer::set_param(size_t key, size_t value) {
-        auto& root = get_root();
-        assert(!root.named_param_map.count(key));
-        root.named_param_map[key] = value;
-    }
-
-    bool transformer::get_param(size_t key, size_t& value) {
-        auto& root = get_root();
-        auto entry = root.named_param_map.find(key);
-        if (entry == root.named_param_map.end()) {
-            return false;
-        }
-        value = entry->second;
-        return true;
-    }
-
-    size_t transformer::get_param_count() const {
-        auto& root = get_root();
-        return root.prepared_statement_parameter_index;
-    }
-
-    void transformer::set_param_count(size_t new_count) {
-        auto& root = get_root();
-        root.prepared_statement_parameter_index = new_count;
     }
 } // namespace components::sql_new::transform

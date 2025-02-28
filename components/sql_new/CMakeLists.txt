@@ -18,21 +18,15 @@ set(SOURCE_${PROJECT_NAME}
     transformer/utils.cpp
     transformer/transformer.cpp
 
-    transformer/expressions/parsed_expression.cpp
-    transformer/expressions/transform/transform_expression.cpp
-    transformer/expressions/transform/transform_columnref.cpp
-    transformer/expressions/transform/transform_value.cpp
-    transformer/expressions/transform/transform_bool_expr.cpp
-    transformer/expressions/transform/transform_case_expr.cpp
-    transformer/expressions/transform/transform_coalesce.cpp
-    transformer/expressions/transform/transform_null_test.cpp
-    transformer/expressions/transform/transform_paramref.cpp
-    transformer/expressions/transform/transform_array_indirection.cpp
-    transformer/expressions/transform/transform_boolean_test.cpp
-
-    transformer/statements/transform/transform_statement.cpp
-    transformer/statements/transform/transform_create_statement.cpp
-    transformer/statements/transform/transform_select_statement.cpp
+    transformer/impl/transform_database.cpp
+    transformer/impl/transform_table.cpp
+    transformer/impl/transform_select.cpp
+    transformer/impl/transform_table.cpp
+    transformer/impl/transfrom_common.cpp
+    transformer/impl/transform_update.cpp
+    transformer/impl/transform_insert.cpp
+    transformer/impl/transform_delete.cpp
+    transformer/impl/transform_index.cpp
 )
 
 include_directories(${CMAKE_SOURCE_DIR})
@@ -44,9 +38,7 @@ set_property(TARGET otterbrix_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 
 target_link_libraries(
     otterbrix_${PROJECT_NAME} PUBLIC
-    otterbrix::document
-    otterbrix::expressions
-    otterbrix::ql
+    otterbrix::logical_plan
 )
 
 target_include_directories(

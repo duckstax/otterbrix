@@ -25,7 +25,7 @@ void* palloc0fast(size_t n);
 void* repalloc(void* ptr, size_t n);
 
 std::string NameListToString(PGList* names); // mdxn: used only in ereport
-int exprLocation(const Node* expr); // nodefuncs
+int exprLocation(const Node* expr);          // nodefuncs
 
 // string gunk
 // mdxn: pg_wchar.c

@@ -1,10 +1,5 @@
-#include "components/sql_new/transformer/expressions/parsed_expression.hpp"
-#include "sql_new/parser/pg_functions.h"
-#include "sql_new/transformer/tokens.hpp"
-#include "sql_new/transformer/transformer.hpp"
+#include "sql_new/parser/parser.h"
 #include <catch2/catch.hpp>
-#include <components/sql_new/parser/parser.h>
-#include <iostream>
 
 TEST_CASE("parser::base") {
     auto test = raw_parser("select * from tbl1 join tbl2 on tbl1.id = tbl2.id_tbl1;");

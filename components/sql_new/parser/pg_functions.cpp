@@ -1,5 +1,5 @@
 #include "pg_functions.h"
-#include "sql_new/parser/nodes/makefuncs.h"
+#include "nodes/makefuncs.h"
 #include <cstdarg>
 #include <cstring>
 #include <iostream>
@@ -13,18 +13,14 @@ int ereport(int code, ...) {
     return 0;
 }
 
-void elog(int code, const char* fmt, ...) {
-    ereport(code);
-}
+void elog(int code, const char* fmt, ...) { ereport(code); }
 
 int errcode(int sqlerrcode) {
     std::cerr << "errcode:" << sqlerrcode << std::endl;
     return 0;
 }
 
-int errmsg(const char* fmt, ...) {
-    return 0;
-}
+int errmsg(const char* fmt, ...) { return 0; }
 
 int errhint(const char* msg) {
     std::cerr << msg << std::endl;
