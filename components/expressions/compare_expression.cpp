@@ -14,14 +14,27 @@ namespace components::expressions {
                                                core::parameter_id_t value)
         : expression_i(expression_group::compare)
         , type_(type)
-        , key_(key)
+        , key_left_(key)
         , value_(value)
+        , children_(resource)
+        , union_(is_union_compare_condition(type_)) {}
+
+    compare_expression_t::compare_expression_t(std::pmr::memory_resource* resource,
+                                               compare_type type,
+                                               const key_t& key_left,
+                                               const key_t& key_right)
+        : expression_i(expression_group::compare)
+        , type_(type)
+        , key_left_(key_left)
+        , key_right_(key_right)
         , children_(resource)
         , union_(is_union_compare_condition(type_)) {}
 
     compare_type compare_expression_t::type() const { return type_; }
 
-    const key_t& compare_expression_t::key() const { return key_; }
+    const key_t& compare_expression_t::key_left() const { return key_left_; }
+
+    const key_t& compare_expression_t::key_right() const { return key_right_; }
 
     core::parameter_id_t compare_expression_t::value() const { return value_; }
 
@@ -36,7 +49,8 @@ namespace components::expressions {
     hash_t compare_expression_t::hash_impl() const {
         hash_t hash_{0};
         boost::hash_combine(hash_, type_);
-        boost::hash_combine(hash_, key_.hash());
+        boost::hash_combine(hash_, key_left_.hash());
+        boost::hash_combine(hash_, key_right_.hash());
         boost::hash_combine(hash_, std::hash<uint64_t>()(value_));
         for (const auto& child : children_) {
             boost::hash_combine(hash_, child->hash_impl());
@@ -58,15 +72,19 @@ namespace components::expressions {
             }
             stream << "]";
         } else {
-            stream << "\"" << key() << "\": {" << type() << ": #" << value().t << "}";
+            if (key_right().is_null()) {
+                stream << "\"" << key_left() << "\": {" << type() << ": #" << value().t << "}";
+            } else {
+                stream << "\"" << key_left() << "\": {" << type() << ": \"" << key_right() << "\"}";
+            }
         }
         return stream.str();
     }
 
     bool compare_expression_t::equal_impl(const expression_i* rhs) const {
         auto* other = static_cast<const compare_expression_t*>(rhs);
-        return type_ == other->type_ && key_ == other->key_ && value_ == other->value_ &&
-               children_.size() == other->children_.size() &&
+        return type_ == other->type_ && key_left_ == other->key_left_ && key_right_ == other->key_right_ &&
+               value_ == other->value_ && children_.size() == other->children_.size() &&
                std::equal(children_.begin(), children_.end(), other->children_.begin());
     }
 
@@ -75,6 +93,13 @@ namespace components::expressions {
                                                    const key_t& key,
                                                    core::parameter_id_t id) {
         return new compare_expression_t(resource, type, key, id);
+    }
+
+    compare_expression_ptr make_compare_expression(std::pmr::memory_resource* resource,
+                                                   compare_type type,
+                                                   const key_t& key_left,
+                                                   const key_t& key_right) {
+        return new compare_expression_t(resource, type, key_left, key_right);
     }
 
     compare_expression_ptr make_compare_expression(std::pmr::memory_resource* resource, compare_type type) {

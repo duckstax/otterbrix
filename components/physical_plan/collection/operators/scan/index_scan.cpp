@@ -57,8 +57,8 @@ namespace services::collection::operators {
         , limit_(limit) {}
 
     void index_scan::on_execute_impl(components::pipeline::context_t* pipeline_context) {
-        trace(context_->log(), "index_scan by field \"{}\"", expr_->key().as_string());
-        auto* index = components::index::search_index(context_->index_engine(), {expr_->key()});
+        trace(context_->log(), "index_scan by field \"{}\"", expr_->key_left().as_string());
+        auto* index = components::index::search_index(context_->index_engine(), {expr_->key_left()});
         if (index && index->is_disk()) {
             trace(context_->log(), "index_scan: send query into disk");
             auto value = components::ql::get_parameter(&pipeline_context->parameters, expr_->value());
@@ -77,8 +77,8 @@ namespace services::collection::operators {
     }
 
     void index_scan::on_resume_impl(components::pipeline::context_t* pipeline_context) {
-        trace(context_->log(), "resume index_scan by field \"{}\"", expr_->key().as_string());
-        auto* index = components::index::search_index(context_->index_engine(), {expr_->key()});
+        trace(context_->log(), "resume index_scan by field \"{}\"", expr_->key_left().as_string());
+        auto* index = components::index::search_index(context_->index_engine(), {expr_->key_left()});
         trace(context_->log(), "index_scan: prepare result");
         if (!limit_.check(0)) {
             return; //limit = 0

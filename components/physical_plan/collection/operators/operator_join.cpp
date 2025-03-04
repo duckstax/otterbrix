@@ -7,23 +7,18 @@ namespace services::collection::operators {
 
     operator_join_t::operator_join_t(context_collection_t* context,
                                      type join_type,
-                                     std::pmr::vector<components::expressions::join_expression_ptr>&& expressions)
+                                     predicates::predicate_ptr&& predicate)
         : read_only_operator_t(context, operator_type::join)
         , join_type_(join_type)
-        , expressions_(std::move(expressions)) {}
+        , predicate_(std::move(predicate)) {}
 
     bool operator_join_t::check_expressions_(const components::document::document_ptr& left,
-                                             const components::document::document_ptr& right) {
-        for (const auto& expr : expressions_) {
-            if (left->compare(expr->left().expr->key().as_string(), right, expr->right().expr->key().as_string()) !=
-                components::document::compare_t::equals) {
-                return false;
-            }
-        }
-        return true;
+                                             const components::document::document_ptr& right,
+                                             components::pipeline::context_t* context) {
+        return predicate_->check(left, right, context ? &context->parameters : nullptr);
     }
 
-    void operator_join_t::on_execute_impl([[maybe_unused]] components::pipeline::context_t* context) {
+    void operator_join_t::on_execute_impl(components::pipeline::context_t* context) {
         if (!left_ || !right_) {
             return;
         }
@@ -39,19 +34,19 @@ namespace services::collection::operators {
 
             switch (join_type_) {
                 case type::inner:
-                    inner_join_();
+                    inner_join_(context);
                     break;
                 case type::full:
-                    outer_full_join_();
+                    outer_full_join_(context);
                     break;
                 case type::left:
-                    outer_left_join_();
+                    outer_left_join_(context);
                     break;
                 case type::right:
-                    outer_right_join_();
+                    outer_right_join_(context);
                     break;
                 case type::cross:
-                    cross_join_();
+                    cross_join_(context);
                     break;
                 default:
                     break;
@@ -64,17 +59,17 @@ namespace services::collection::operators {
         }
     }
 
-    void operator_join_t::inner_join_() {
+    void operator_join_t::inner_join_(components::pipeline::context_t* context) {
         for (auto doc_left : left_->output()->documents()) {
             for (auto doc_right : right_->output()->documents()) {
-                if (check_expressions_(doc_left, doc_right)) {
+                if (check_expressions_(doc_left, doc_right, context)) {
                     output_->append(document_t::merge(doc_left, doc_right, left_->output()->resource()));
                 }
             }
         }
     }
 
-    void operator_join_t::outer_full_join_() {
+    void operator_join_t::outer_full_join_(components::pipeline::context_t* context) {
         auto empty_left = components::document::make_document(left_->output()->resource());
         auto empty_right = components::document::make_document(left_->output()->resource());
         if (!left_->output()->documents().empty()) {
@@ -97,7 +92,7 @@ namespace services::collection::operators {
             bool visited_left = false;
             size_t right_index = 0;
             for (auto doc_right : right_->output()->documents()) {
-                if (check_expressions_(doc_left, doc_right)) {
+                if (check_expressions_(doc_left, doc_right, context)) {
                     visited_left = true;
                     visited_right[right_index] = true;
                     output_->append(std::move(document_t::merge(doc_left, doc_right, left_->output()->resource())));
@@ -117,7 +112,7 @@ namespace services::collection::operators {
         }
     }
 
-    void operator_join_t::outer_left_join_() {
+    void operator_join_t::outer_left_join_(components::pipeline::context_t* context) {
         auto empty_right = components::document::make_document(left_->output()->resource());
         if (!right_->output()->documents().empty()) {
             auto doc = right_->output()->documents().front();
@@ -130,7 +125,7 @@ namespace services::collection::operators {
         for (auto doc_left : left_->output()->documents()) {
             bool visited_left = false;
             for (auto doc_right : right_->output()->documents()) {
-                if (check_expressions_(doc_left, doc_right)) {
+                if (check_expressions_(doc_left, doc_right, context)) {
                     visited_left = true;
                     output_->append(std::move(document_t::merge(doc_left, doc_right, left_->output()->resource())));
                 }
@@ -141,7 +136,7 @@ namespace services::collection::operators {
         }
     }
 
-    void operator_join_t::outer_right_join_() {
+    void operator_join_t::outer_right_join_(components::pipeline::context_t* context) {
         auto empty_left = components::document::make_document(left_->output()->resource());
         if (!left_->output()->documents().empty()) {
             auto doc = left_->output()->documents().front();
@@ -154,7 +149,7 @@ namespace services::collection::operators {
         for (auto doc_right : right_->output()->documents()) {
             bool visited_right = false;
             for (auto doc_left : left_->output()->documents()) {
-                if (check_expressions_(doc_left, doc_right)) {
+                if (check_expressions_(doc_left, doc_right, context)) {
                     visited_right = true;
                     output_->append(std::move(document_t::merge(doc_left, doc_right, left_->output()->resource())));
                 }
@@ -165,7 +160,7 @@ namespace services::collection::operators {
         }
     }
 
-    void operator_join_t::cross_join_() {
+    void operator_join_t::cross_join_(components::pipeline::context_t* context) {
         for (auto doc_left : left_->output()->documents()) {
             for (auto doc_right : right_->output()->documents()) {
                 output_->append(std::move(document_t::merge(doc_left, doc_right, left_->output()->resource())));

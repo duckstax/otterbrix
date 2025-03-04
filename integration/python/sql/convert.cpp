@@ -226,7 +226,7 @@ using components::expressions::scalar_expression_t;
 using components::expressions::scalar_type;
 
 void normalize(compare_expression_ptr& expr) {
-    if (expr->type() == compare_type::invalid && !expr->key().is_null()) {
+    if (expr->type() == compare_type::invalid && !expr->key_left().is_null()) {
         expr->set_type(compare_type::eq);
     }
 }

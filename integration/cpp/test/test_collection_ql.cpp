@@ -1,9 +1,10 @@
 #include "test_config.hpp"
 #include <catch2/catch.hpp>
-#include <components/expressions/join_expression.hpp>
+#include <components/expressions/compare_expression.hpp>
 #include <components/ql/statements.hpp>
 #include <components/ql/statements/raw_data.hpp>
 #include <expressions/aggregate_expression.hpp>
+#include <expressions/scalar_expression.hpp>
 #include <variant>
 
 static const database_name_t database_name = "TestDatabase";
@@ -237,19 +238,10 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             join.left = ql::make_aggregate(database_name, collection_left, dispatcher->resource());
             join.right = new ql::raw_data_t(documents_right);
             {
-                expressions::join_expression_field left;
-                expressions::join_expression_field right;
-
-                left.expr = expressions::make_scalar_expression(dispatcher->resource(),
-                                                                expressions::scalar_type::get_field,
-                                                                expressions::key_t{"key_1"});
-                right.expr = expressions::make_scalar_expression(dispatcher->resource(),
-                                                                 expressions::scalar_type::get_field,
-                                                                 expressions::key_t{"key"});
-                join.expressions.emplace_back(expressions::make_join_expression(dispatcher->resource(),
-                                                                                compare_type::eq,
-                                                                                std::move(left),
-                                                                                std::move(right)));
+                join.expressions.emplace_back(expressions::make_compare_expression(dispatcher->resource(),
+                                                                                   compare_type::eq,
+                                                                                   expressions::key_t{"key_1"},
+                                                                                   expressions::key_t{"key"}));
             }
             components::ql::variant_statement_t ql{join};
             auto cur = dispatcher->execute_ql(session, ql);
@@ -271,19 +263,10 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             join.left = new ql::raw_data_t(documents_left);
             join.right = ql::make_aggregate(database_name, collection_right, dispatcher->resource());
             {
-                expressions::join_expression_field left;
-                expressions::join_expression_field right;
-
-                left.expr = expressions::make_scalar_expression(dispatcher->resource(),
-                                                                expressions::scalar_type::get_field,
-                                                                expressions::key_t{"key_1"});
-                right.expr = expressions::make_scalar_expression(dispatcher->resource(),
-                                                                 expressions::scalar_type::get_field,
-                                                                 expressions::key_t{"key"});
-                join.expressions.emplace_back(expressions::make_join_expression(dispatcher->resource(),
-                                                                                compare_type::eq,
-                                                                                std::move(left),
-                                                                                std::move(right)));
+                join.expressions.emplace_back(expressions::make_compare_expression(dispatcher->resource(),
+                                                                                   compare_type::eq,
+                                                                                   expressions::key_t{"key_1"},
+                                                                                   expressions::key_t{"key"}));
             }
             components::ql::variant_statement_t ql{join};
             auto cur = dispatcher->execute_ql(session, ql);
@@ -305,19 +288,10 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             join.left = new ql::raw_data_t(documents_left);
             join.right = new ql::raw_data_t(documents_right);
             {
-                expressions::join_expression_field left;
-                expressions::join_expression_field right;
-
-                left.expr = expressions::make_scalar_expression(dispatcher->resource(),
-                                                                expressions::scalar_type::get_field,
-                                                                expressions::key_t{"key_1"});
-                right.expr = expressions::make_scalar_expression(dispatcher->resource(),
-                                                                 expressions::scalar_type::get_field,
-                                                                 expressions::key_t{"key"});
-                join.expressions.emplace_back(expressions::make_join_expression(dispatcher->resource(),
-                                                                                compare_type::eq,
-                                                                                std::move(left),
-                                                                                std::move(right)));
+                join.expressions.emplace_back(expressions::make_compare_expression(dispatcher->resource(),
+                                                                                   compare_type::eq,
+                                                                                   expressions::key_t{"key_1"},
+                                                                                   expressions::key_t{"key"}));
             }
             components::ql::variant_statement_t ql{join};
             auto cur = dispatcher->execute_ql(session, ql);
@@ -398,19 +372,10 @@ TEST_CASE("integration::cpp::test_collection::ql") {
                 join->left = new ql::raw_data_t(documents_left);
                 join->right = new ql::raw_data_t(documents_right);
                 {
-                    expressions::join_expression_field left;
-                    expressions::join_expression_field right;
-
-                    left.expr = expressions::make_scalar_expression(dispatcher->resource(),
-                                                                    expressions::scalar_type::get_field,
-                                                                    expressions::key_t{"key_1"});
-                    right.expr = expressions::make_scalar_expression(dispatcher->resource(),
-                                                                     expressions::scalar_type::get_field,
-                                                                     expressions::key_t{"key"});
-                    join->expressions.emplace_back(expressions::make_join_expression(dispatcher->resource(),
-                                                                                     compare_type::eq,
-                                                                                     std::move(left),
-                                                                                     std::move(right)));
+                    join->expressions.emplace_back(expressions::make_compare_expression(dispatcher->resource(),
+                                                                                        compare_type::eq,
+                                                                                        expressions::key_t{"key_1"},
+                                                                                        expressions::key_t{"key"}));
                 }
                 aggregate.data = std::move(join);
             }
