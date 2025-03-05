@@ -9,7 +9,12 @@ namespace services::collection::operators::predicates {
 
     bool predicate::check(const components::document::document_ptr& document,
                           const components::ql::storage_parameters* parameters) {
-        return check_impl(document, parameters);
+        return check_impl(document, nullptr, parameters);
+    }
+    bool predicate::check(const components::document::document_ptr& document_left,
+                          const components::document::document_ptr& document_right,
+                          const components::ql::storage_parameters* parameters) {
+        return check_impl(document_left, document_right, parameters);
     }
 
     predicate_ptr create_predicate(context_collection_t* context,

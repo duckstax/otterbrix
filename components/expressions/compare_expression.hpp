@@ -13,19 +13,24 @@ namespace components::expressions {
     class compare_expression_t;
     using compare_expression_ptr = boost::intrusive_ptr<compare_expression_t>;
 
-    class compare_expression_t final : public expression_i {
+    class compare_expression_t : public expression_i {
     public:
         compare_expression_t(const compare_expression_t&) = delete;
-        compare_expression_t(compare_expression_t&&) = default;
+        compare_expression_t(compare_expression_t&&) noexcept = default;
         ~compare_expression_t() final = default;
 
         compare_expression_t(std::pmr::memory_resource* resource,
                              compare_type type,
                              const key_t& key,
                              core::parameter_id_t);
+        compare_expression_t(std::pmr::memory_resource* resource,
+                             compare_type type,
+                             const key_t& key_left,
+                             const key_t& key_right);
 
         compare_type type() const;
-        const key_t& key() const;
+        const key_t& key_left() const;
+        const key_t& key_right() const;
         core::parameter_id_t value() const;
         const std::pmr::vector<compare_expression_ptr>& children() const;
 
@@ -36,7 +41,8 @@ namespace components::expressions {
 
     private:
         compare_type type_;
-        key_t key_;
+        key_t key_left_;
+        key_t key_right_;
         core::parameter_id_t value_;
         std::pmr::vector<compare_expression_ptr> children_;
         bool union_;
@@ -50,6 +56,10 @@ namespace components::expressions {
                                                    compare_type type,
                                                    const key_t& key,
                                                    core::parameter_id_t id);
+    compare_expression_ptr make_compare_expression(std::pmr::memory_resource* resource,
+                                                   compare_type type,
+                                                   const key_t& key_left,
+                                                   const key_t& key_right);
     compare_expression_ptr make_compare_expression(std::pmr::memory_resource* resource, compare_type type);
     compare_expression_ptr make_compare_union_expression(std::pmr::memory_resource* resource, compare_type type);
 

@@ -23,22 +23,12 @@ namespace services::collection::planner::impl {
     operators::operator_ptr create_plan_match_(context_collection_t* context_,
                                                const components::expressions::compare_expression_ptr& expr,
                                                components::ql::limit_t limit) {
-        if (operators::merge::is_operator_merge(expr)) {
-            auto op = operators::merge::create_operator_merge(context_, expr, limit);
-            operators::operator_ptr left = nullptr;
-            operators::operator_ptr right = nullptr;
-            left = create_plan_match_(context_, expr->children().at(0), components::ql::limit_t::unlimit());
-            if (expr->children().size() > 1) { //todo: make if size > 2
-                right = create_plan_match_(context_, expr->children().at(1), components::ql::limit_t::unlimit());
-            }
-            op->set_children(std::move(left), std::move(right));
-            return op;
-        }
         //if (is_can_primary_key_find_by_predicate(expr->type()) && expr->key().as_string() == "_id") {
         //return boost::intrusive_ptr(new operators::primary_key_scan(context_));
         //}
         if (context_) {
-            if (is_can_index_find_by_predicate(expr->type()) && search_index(context_->index_engine(), {expr->key()})) {
+            if (is_can_index_find_by_predicate(expr->type()) &&
+                search_index(context_->index_engine(), {expr->key_left()})) {
                 return boost::intrusive_ptr(new operators::index_scan(context_, expr, limit));
             }
             auto predicate = operators::predicates::create_predicate(context_, expr);

@@ -209,7 +209,7 @@ TEST_CASE("delete one test") {
         REQUIRE(std::get<delete_one_t>(record.data).match_.query->group() == expression_group::compare);
         auto match = reinterpret_cast<const compare_expression_ptr&>(std::get<delete_one_t>(record.data).match_.query);
         REQUIRE(match->type() == compare_type::eq);
-        REQUIRE(match->key() == components::expressions::key_t{"count"});
+        REQUIRE(match->key_left() == components::expressions::key_t{"count"});
         REQUIRE(match->value() == core::parameter_id_t{1});
         REQUIRE(std::get<delete_one_t>(record.data).parameters().parameters.size() == 1);
         REQUIRE(get_parameter(&std::get<delete_one_t>(record.data).parameters(), core::parameter_id_t{1}).as_int() ==
@@ -245,7 +245,7 @@ TEST_CASE("delete many test") {
         REQUIRE(std::get<delete_many_t>(record.data).match_.query->group() == expression_group::compare);
         auto match = reinterpret_cast<const compare_expression_ptr&>(std::get<delete_many_t>(record.data).match_.query);
         REQUIRE(match->type() == compare_type::eq);
-        REQUIRE(match->key() == components::expressions::key_t{"count"});
+        REQUIRE(match->key_left() == components::expressions::key_t{"count"});
         REQUIRE(match->value() == core::parameter_id_t{1});
         REQUIRE(std::get<delete_many_t>(record.data).parameters().parameters.size() == 1);
         REQUIRE(get_parameter(&std::get<delete_many_t>(record.data).parameters(), core::parameter_id_t{1}).as_int() ==
@@ -284,7 +284,7 @@ TEST_CASE("update one test") {
         REQUIRE(std::get<update_one_t>(record.data).match_.query->group() == expression_group::compare);
         auto match = reinterpret_cast<const compare_expression_ptr&>(std::get<update_one_t>(record.data).match_.query);
         REQUIRE(match->type() == compare_type::eq);
-        REQUIRE(match->key() == components::expressions::key_t{"count"});
+        REQUIRE(match->key_left() == components::expressions::key_t{"count"});
         REQUIRE(match->value() == core::parameter_id_t{1});
         REQUIRE(std::get<update_one_t>(record.data).parameters().parameters.size() == 1);
         REQUIRE(get_parameter(&std::get<update_one_t>(record.data).parameters(), core::parameter_id_t{1}).as_int() ==
@@ -325,7 +325,7 @@ TEST_CASE("update many test") {
         REQUIRE(std::get<update_many_t>(record.data).match_.query->group() == expression_group::compare);
         auto match = reinterpret_cast<const compare_expression_ptr&>(std::get<update_many_t>(record.data).match_.query);
         REQUIRE(match->type() == compare_type::eq);
-        REQUIRE(match->key() == components::expressions::key_t{"count"});
+        REQUIRE(match->key_left() == components::expressions::key_t{"count"});
         REQUIRE(match->value() == core::parameter_id_t{1});
         REQUIRE(std::get<update_many_t>(record.data).parameters().parameters.size() == 1);
         REQUIRE(get_parameter(&std::get<update_many_t>(record.data).parameters(), core::parameter_id_t{1}).as_int() ==
