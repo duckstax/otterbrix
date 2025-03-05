@@ -3,7 +3,7 @@
 #include "sql_new/parser/nodes/parsenodes.h"
 #include <components/base/collection_full_name.hpp>
 #include <components/expressions/forward.hpp>
-#include <ql/join/join_types.h>
+#include <ql/join/join_types.hpp>
 #include <string>
 
 namespace components::sql_new::transform {

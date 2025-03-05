@@ -15,6 +15,8 @@ target_link_libraries(
     otterbrix::sql_new
     otterbrix::logical_plan
     Catch2::Catch2
+    magic_enum::magic_enum
+    msgpackc-cxx
 )
 
 include(CTest)
