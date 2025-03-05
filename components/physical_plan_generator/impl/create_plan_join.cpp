@@ -1,6 +1,6 @@
 #include "create_plan_join.hpp"
 
-#include <components/expressions/join_expression.hpp>
+#include <components/expressions/compare_expression.hpp>
 #include <components/logical_plan/node_join.hpp>
 #include <components/physical_plan/collection/operators/operator_join.hpp>
 #include <components/physical_plan_generator/create_plan.hpp>
@@ -12,17 +12,12 @@ namespace services::collection::planner::impl {
                                              const components::logical_plan::node_ptr& node,
                                              components::ql::limit_t limit) {
         const auto* join_node = static_cast<const components::logical_plan::node_join_t*>(node.get());
-        std::pmr::vector<components::expressions::join_expression_ptr> expressions(node->expressions().get_allocator());
-        expressions.reserve(node->expressions().size());
-        for (const auto& expr : node->expressions()) {
-            expressions.emplace_back(static_cast<components::expressions::join_expression_t*>(expr.get()));
-        }
         // assign left collection as actor for join
+        auto expr = reinterpret_cast<const components::expressions::compare_expression_ptr*>(&node->expressions()[0]);
+        auto collection_context = context.at(node->children().front()->collection_full_name());
+        auto predicate = operators::predicates::create_predicate(collection_context, *expr);
         auto join = boost::intrusive_ptr(
-            new operators::operator_join_t(context.at(node->children().front()->collection_full_name()),
-                                           join_node->type(),
-                                           std::move(expressions)));
-
+            new operators::operator_join_t(collection_context, join_node->type(), std::move(predicate)));
         operators::operator_ptr left;
         operators::operator_ptr right;
         if (node->children().front()) {

@@ -1,6 +1,5 @@
 #include "parser_where.hpp"
-#include <components/expressions/expression.hpp>
-#include <components/expressions/join_expression.hpp>
+#include <components/expressions/compare_expression.hpp>
 #include <components/sql/parser/base/parser_mask.hpp>
 
 namespace components::sql::impl {
@@ -167,30 +166,27 @@ namespace components::sql::impl {
             return {parser_result{false}, nullptr};
         }
 
-        parser_result parse_join_on_expression(std::pmr::memory_resource* resource,
-                                               lexer_t& lexer,
-                                               expressions::join_expression_field& expr) {
+        parser_result
+        parse_join_on_expression(lexer_t& lexer, collection_full_name_t& collection, expressions::key_t& key) {
             auto token = lexer.current_significant_token();
             if (token.type != token_type::bare_word) {
                 return parser_result{parse_error::not_valid_join_condition, token, "not valid join condition"};
             }
-            expr.collection.collection = token.value();
+            collection.collection = token.value();
             token = lexer.next_token();
             if (token.type != token_type::dot) {
                 return parser_result{parse_error::not_valid_join_condition, token, "not valid join condition"};
             }
             token = lexer.next_token();
             if (token.type == token_type::bare_word && lexer.next_token().type == token_type::dot) {
-                expr.collection.database = expr.collection.collection;
-                expr.collection.collection = token.value();
+                collection.database = collection.collection;
+                collection.collection = token.value();
                 token = lexer.next_token();
             }
             if (!is_token_field_name(token)) {
                 return parser_result{parse_error::not_valid_join_condition, token, "not valid join condition"};
             }
-            expr.expr = expressions::make_scalar_expression(resource,
-                                                            expressions::scalar_type::get_field,
-                                                            expressions::key_t{token_clean_value(token)});
+            key = expressions::key_t{token_clean_value(token)};
             lexer.next_not_whitespace_token();
             return true;
         }
@@ -220,10 +216,13 @@ namespace components::sql::impl {
 
     parser_result parse_join_on(std::pmr::memory_resource* resource, lexer_t& lexer, ql::join_t& join) {
         auto token = lexer.current_significant_token();
+        std::vector<expressions::compare_expression_ptr> join_exprs;
         while (!is_token_end_query(token) && !is_token_join_end(token)) {
-            expressions::join_expression_field left;
-            expressions::join_expression_field right;
-            auto res = parse_join_on_expression(resource, lexer, left);
+            expressions::key_t key_left;
+            expressions::key_t key_right;
+            collection_full_name_t collection_left;
+            collection_full_name_t collection_right;
+            auto res = parse_join_on_expression(lexer, collection_left, key_left);
             if (res.is_error()) {
                 return res;
             }
@@ -233,12 +232,12 @@ namespace components::sql::impl {
                 return parser_result{parse_error::not_valid_join_condition, token, "not valid join condition"};
             }
             token = lexer.next_not_whitespace_token();
-            res = parse_join_on_expression(resource, lexer, right);
+            res = parse_join_on_expression(lexer, collection_right, key_right);
             if (res.is_error()) {
                 return res;
             }
-            join.expressions.push_back(
-                expressions::make_join_expression(resource, compare, std::move(left), std::move(right)));
+            join_exprs.emplace_back(
+                expressions::make_compare_expression(resource, compare, std::move(key_left), std::move(key_right)));
             token = lexer.current_significant_token();
             if (!is_token_end_query(token) && !is_token_join_end(token) && !is_token_join_on_end(token)) {
                 return parser_result{parse_error::not_valid_join_condition, token, "not valid join condition"};
@@ -246,6 +245,15 @@ namespace components::sql::impl {
             if (is_token_join_on_end(token)) {
                 token = lexer.next_not_whitespace_token();
             }
+        }
+        if (join_exprs.size() > 1) {
+            auto additive_expr = make_compare_union_expression(resource, expressions::compare_type::union_and);
+            for (const auto& expr : join_exprs) {
+                additive_expr->append_child(expr);
+            }
+            join.expressions.emplace_back(std::move(additive_expr));
+        } else {
+            join.expressions.emplace_back(std::move(join_exprs.front()));
         }
         return true;
     }

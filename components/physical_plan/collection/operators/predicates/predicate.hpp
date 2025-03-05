@@ -18,12 +18,16 @@ namespace services::collection::operators::predicates {
 
         bool check(const components::document::document_ptr& document,
                    const components::ql::storage_parameters* parameters);
+        bool check(const components::document::document_ptr& document_left,
+                   const components::document::document_ptr& document_right,
+                   const components::ql::storage_parameters* parameters);
 
     protected:
         context_collection_t* context_;
 
     private:
-        virtual bool check_impl(const components::document::document_ptr& document,
+        virtual bool check_impl(const components::document::document_ptr& document_left,
+                                const components::document::document_ptr& document_right,
                                 const components::ql::storage_parameters* parameters) = 0;
     };
 
