@@ -1,4 +1,5 @@
 #include "parser_mask.hpp"
+#include <algorithm>
 #include <charconv>
 #include <memory_resource>
 #include <numeric>

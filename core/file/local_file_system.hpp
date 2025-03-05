@@ -54,6 +54,7 @@ namespace core::filesystem {
     time_t last_modified_time(local_file_system_t&, file_handle_t& handle);
     file_type_t file_type(local_file_system_t&, file_handle_t& handle);
     bool truncate(local_file_system_t&, file_handle_t& handle, int64_t new_size);
+    bool trim(local_file_system_t&, file_handle_t& handle, uint64_t offset_bytes, uint64_t length_bytes);
 
     bool directory_exists(local_file_system_t&, const path_t& directory);
     bool create_directory(local_file_system_t&, const path_t& directory);

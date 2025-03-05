@@ -2,6 +2,7 @@
 
 #include <core/b_plus_tree/b_plus_tree.hpp>
 #include <core/file/file_system.hpp>
+#include <cstdint>
 #include <log/log.hpp>
 #include <thread>
 
@@ -46,14 +47,14 @@ private:
     std::pmr::synchronized_pool_resource resource_ = std::pmr::synchronized_pool_resource();
 };
 
-std::string gen_random(size_t len, size_t seed) {
+std::string gen_random(size_t len, std::size_t seed) {
     std::string result;
     result.reserve(len);
-    std::default_random_engine e{seed};
-    std::uniform_int_distribution uniform_dist('a', 'z');
+    std::default_random_engine e{static_cast<std::default_random_engine::result_type>(seed)};
+    std::uniform_int_distribution<int> uniform_dist('a', 'z');
 
     for (size_t i = 0; i < len; ++i) {
-        result += uniform_dist(e);
+        result += static_cast<char>(uniform_dist(e));
     }
 
     return result;

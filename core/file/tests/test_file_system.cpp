@@ -26,11 +26,6 @@ TEST_CASE("filesystem") {
         if (!directory_exists(fs, testing_directory)) {
             create_directory(fs, testing_directory);
         }
-        auto pid = getpid();
-        testing_directory /= to_string(pid);
-        if (!directory_exists(fs, testing_directory)) {
-            create_directory(fs, testing_directory);
-        }
     }
 
     INFO("operators") {

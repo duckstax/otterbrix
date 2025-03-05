@@ -65,7 +65,6 @@ def test_collection_len():
     assert len(friedrich_collection) == 100
     assert len(friedrich_database['FriedrichCollection']) == 100
 
-
 def test_collection_find():
     c = friedrich_collection.find({})
     assert len(c) == 100
@@ -86,7 +85,6 @@ def test_collection_find():
     c = friedrich_collection.find({'$and': [{'$or': [{'count': {'$gt': 90}}, {'countStr': {'$regex': '9$'}}]}, {'count': {'$lte': 30}}]})
     assert len(c) == 3
     c.close()
-
 
 def test_collection_cursor():
     c = friedrich_collection.find({})

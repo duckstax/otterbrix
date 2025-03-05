@@ -10,15 +10,24 @@ By adding the Otterbrix module to their applications, developers unlock the abil
 
 Particularly, Otterbrix enables inserting data without schema creation, see the example below:
 
-```cpp
-    auto config = create_config("/tmp/my_collection");
-    spaces_t space(config);
-    auto* dispatcher = space.dispatcher();
-    dispatcher->execute_sql("INSERT INTO MyDatabase.MyCollection (object_name, count ) VALUES ('object value', 1000)");
-    auto value = dispatcher->execute_sql("SELECT * FROM MyDatabase.MyCollection WHERE object_name = 'object value' ");
+```python
+client = Client()
+c = client.execute("SELECT * FROM schema.table WHERE count = 1000;")
+c.close()
 ```
 
 Otterbrix seamlessly integrates with column-oriented memory format and can represent both flat and hierarchical data for efficient analytical operations.
+
+## Get Started
+Get started with **Otterbrix** using our installation and usage example below:
+
+## Installation
+
+Otterbrix is available as a Python package on PyPI. You can install it using `pip`.
+
+```bash
+pip install "otterbrix==1.0.1a9"
+```
 
 ## Development
 

@@ -90,7 +90,6 @@ def test_drop_collection(gen_collection):
     assert c.drop() is True
     assert c.drop() is False
 
-
 def test_find_with_filter_named_parameter(gen_collection):
     c = gen_collection['collection'].find(filter={})
     assert c.count() == 100
@@ -140,7 +139,6 @@ def test_sort_negative(gen_collection):
     assert c[0]['count'] == 99
     assert c[1]['count'] == 98
 
-
 def test_has_next(gen_collection):
     c = gen_collection['collection'].find().sort('count', 1)
     assert c.hasNext() is True
@@ -170,7 +168,6 @@ def test_find_one_with_filter_named_parameter(gen_collection):
     c = gen_collection['collection'].find_one(filter={'count': 3})
     assert c['countStr'] == '3'
 
-
 def test_gte_lt(gen_collection):
     c = gen_collection['collection'].find({'count': {'$gte': 50, '$lt': 51}})
     assert c.count() == 1
@@ -188,7 +185,6 @@ def test_ne(gen_collection):
     assert c.count() == 99
     for item in c:
         assert item['countStr'] != '50'
-
 
 def test_regex(gen_collection):
     c = gen_collection['collection'].find({'countStr': {'$regex': r'^[5]{1,2}'}}).sort('count', 1)

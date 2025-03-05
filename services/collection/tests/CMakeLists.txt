@@ -17,10 +17,11 @@ target_link_libraries(
         otterbrix::cursor
         otterbrix::session
         otterbrix::test_generaty
-        CONAN_PKG::spdlog
-        CONAN_PKG::abseil
-        CONAN_PKG::boost
-        CONAN_PKG::actor-zeta
+        spdlog::spdlog
+        absl::int128
+        Boost::boost
+        Catch2::Catch2
+        actor-zeta::actor-zeta
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

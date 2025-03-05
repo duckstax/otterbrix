@@ -19,6 +19,8 @@ namespace services::collection::operators {
 
     std::pmr::vector<operator_data_t::document_ptr>& operator_data_t::documents() { return documents_; }
 
+    std::pmr::memory_resource* operator_data_t::resource() { return resource_; }
+
     void operator_data_t::append(document_ptr document) { documents_.push_back(std::move(document)); }
 
 } // namespace services::collection::operators

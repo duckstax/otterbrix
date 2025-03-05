@@ -1,5 +1,7 @@
 #include "node.hpp"
+#include <algorithm>
 #include <boost/container_hash/hash.hpp>
+
 namespace components::logical_plan {
 
     node_type node_t::type() const { return type_; }
@@ -47,6 +49,8 @@ namespace components::logical_plan {
     }
 
     std::string node_t::to_string() const { return to_string_impl(); }
+
+    std::pmr::memory_resource* node_t::resource() const noexcept { return children_.get_allocator().resource(); }
 
     bool node_t::operator==(const node_t& rhs) const {
         bool result = type_ == rhs.type_ && children_.size() == rhs.children_.size() &&

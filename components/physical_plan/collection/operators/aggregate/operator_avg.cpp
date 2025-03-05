@@ -10,9 +10,7 @@ namespace services::collection::operators::aggregate {
         , key_(std::move(key)) {}
 
     document_ptr operator_avg_t::aggregate_impl() {
-        auto resource = (left_ && left_->output() && !left_->output()->documents().empty())
-                            ? left_->output()->documents().at(0)->get_allocator()
-                            : context_->resource();
+        auto resource = left_ && left_->output() ? left_->output()->resource() : context_->resource();
         auto result = components::document::make_document(resource);
         auto tape = std::make_unique<components::document::impl::base_document>(resource);
         if (left_ && left_->output()) {

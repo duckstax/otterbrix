@@ -1,0 +1,52 @@
+name: macos
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+env:
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+
+jobs:
+  run:
+    name: Run
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install system dependencies
+        run: |
+            brew install ninja cmake
+            python3 -m pip install --no-cache-dir conan==1.64 --break-system-packages
+
+      - name: conan installation and configuration
+        run: |
+          pip install conan==1.64.0 pytest==6.2.5
+          conan user
+          conan profile new default --detect --force
+          conan config set general.parallel_download=$(sysctl -n hw.logicalcpu)
+          conan config set general.cpu_count=$(sysctl -n hw.logicalcpu)
+          conan remote add duckstax http://conan.duckstax.com
+
+      - name: download dependencies
+        run: |
+          mkdir build && cd build
+          cp ../conanfile.txt .
+          conan install . --build missing -s build_type=Release
+
+      - name: build
+        env:
+          CC: gcc
+        run: |
+          cd build
+          cmake  -G Ninja -DCMAKE_TOOLCHAIN_FILE="conan_toolchain.cmake" -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON -DEXAMPLE=ON ..
+          cmake --build .
+
+      - name: Test
+        run: |
+          cd build
+          ctest -C -V --output-on-failure

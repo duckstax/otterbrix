@@ -6,6 +6,7 @@
 #include <components/logical_plan/node_create_collection.hpp>
 #include <components/logical_plan/node_create_database.hpp>
 #include <components/logical_plan/node_create_index.hpp>
+#include <components/logical_plan/node_data.hpp>
 #include <components/logical_plan/node_delete.hpp>
 #include <components/logical_plan/node_drop_collection.hpp>
 #include <components/logical_plan/node_drop_database.hpp>
@@ -18,13 +19,18 @@
 #include <components/logical_plan/node_update.hpp>
 
 namespace components::planner {
-    auto translator_aggregate(std::pmr::memory_resource* resource, ql::aggregate_statement* aggregate)
+    auto planner_t::translator_aggregate_(std::pmr::memory_resource* resource, ql::aggregate_statement* aggregate)
         -> logical_plan::node_ptr {
         using components::ql::aggregate::operator_type;
 
         auto node = new logical_plan::node_aggregate_t{resource, {aggregate->database_, aggregate->collection_}};
         auto count = aggregate->count_operators();
-        node->reserve_child(count);
+        if (aggregate->data) {
+            node->reserve_child(count + 1);
+            node->append_child(create_plan(resource, aggregate->data.get()));
+        } else {
+            node->reserve_child(count);
+        }
         for (std::size_t i = 0; i < count; ++i) {
             auto type = aggregate->type_operator(i);
             switch (type) {
@@ -52,11 +58,10 @@ namespace components::planner {
         return node;
     }
 
-    auto translator_join(std::pmr::memory_resource* resource, ql::join_t* ql) -> logical_plan::node_ptr {
-        planner_t planner; //  hotfix
+    auto planner_t::translator_join_(std::pmr::memory_resource* resource, ql::join_t* ql) -> logical_plan::node_ptr {
         auto node = new logical_plan::node_join_t{resource, {ql->left->database_, ql->left->collection_}, ql->join};
-        node->append_child(planner.create_plan(resource, ql->left.get()));
-        node->append_child(planner.create_plan(resource, ql->right.get()));
+        node->append_child(create_plan(resource, ql->left.get()));
+        node->append_child(create_plan(resource, ql->right.get()));
         node->append_expressions(ql->expressions);
         return node;
     }
@@ -98,10 +103,12 @@ namespace components::planner {
                 return logical_plan::make_node_update(resource, static_cast<ql::update_one_t*>(statement));
             case statement_type::update_many:
                 return logical_plan::make_node_update(resource, static_cast<ql::update_many_t*>(statement));
+            case statement_type::raw_data:
+                return logical_plan::make_node_data(resource, static_cast<ql::raw_data_t*>(statement));
             case statement_type::aggregate:
-                return translator_aggregate(resource, static_cast<ql::aggregate_statement*>(statement));
+                return translator_aggregate_(resource, static_cast<ql::aggregate_statement*>(statement));
             case statement_type::join:
-                return translator_join(resource, static_cast<ql::join_t*>(statement));
+                return translator_join_(resource, static_cast<ql::join_t*>(statement));
             default:
                 throw std::logic_error("invalid statement");
         }

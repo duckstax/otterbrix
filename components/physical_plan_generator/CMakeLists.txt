@@ -3,6 +3,7 @@ project(physical_plan_generator)
 set(${PROJECT_NAME}_SOURCES
         create_plan.cpp
         impl/create_plan_aggregate.cpp
+        impl/create_plan_data.cpp
         impl/create_plan_delete.cpp
         impl/create_plan_group.cpp
         impl/create_plan_insert.cpp
@@ -33,9 +34,12 @@ target_link_libraries(
         otterbrix::logical_plan
         otterbrix::planner
         otterbrix::physical_plan
-        CONAN_PKG::spdlog
-        CONAN_PKG::abseil
-        CONAN_PKG::boost
+        spdlog::spdlog
+        absl::int128
+        absl::flat_hash_map
+        absl::node_hash_map
+        Boost::boost
+        actor-zeta::actor-zeta
 )
 
 target_include_directories(otterbrix_${PROJECT_NAME} PUBLIC

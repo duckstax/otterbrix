@@ -1,11 +1,12 @@
 [requires]
 boost/1.86.0
+fmt/10.2.1
 spdlog/1.12.0
-pybind11/2.10.0
+pybind11/2.13.6
 msgpack-cxx/4.1.1
 catch2/2.13.7 #catch2/3.4.0
 crc32c/1.1.2
-abseil/20211102.0
+abseil/20230802.1
 benchmark/1.6.1
 zlib/1.2.12
 bzip2/1.0.8
@@ -23,10 +24,9 @@ actor-zeta:rtti_disable=False
 
 [generators]
 cmake
-cmake_find_package
 CMakeDeps
 CMakeToolchain
-#cmake_paths
+
 
 
 [imports]

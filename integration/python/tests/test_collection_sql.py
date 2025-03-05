@@ -13,7 +13,6 @@ def gen_id(num):
     return res
 
 def test_collection_sql():
-
     # insert
 
     query = "INSERT INTO schema.table (_id, name, count) VALUES "
@@ -26,8 +25,6 @@ def test_collection_sql():
     c = client.execute(query)
     assert len(c) == 100
     c.close()
-
-
 
     # select
 

@@ -6,9 +6,15 @@ namespace services::collection::operators {
 
     operator_group_t::operator_group_t(context_collection_t* context)
         : read_write_operator_t(context, operator_type::aggregate)
-        , keys_(context->resource())
-        , values_(context->resource())
-        , input_documents_(context->resource()) {}
+        , keys_(context_->resource())
+        , values_(context_->resource())
+        , input_documents_(context_->resource()) {}
+
+    operator_group_t::operator_group_t(std::pmr::memory_resource* resource)
+        : read_write_operator_t(nullptr, operator_type::aggregate)
+        , keys_(resource)
+        , values_(resource)
+        , input_documents_(resource) {}
 
     void operator_group_t::add_key(const std::string& name, get::operator_get_ptr&& getter) {
         keys_.push_back({name, std::move(getter)});
@@ -20,7 +26,7 @@ namespace services::collection::operators {
 
     void operator_group_t::on_execute_impl(components::pipeline::context_t* pipeline_context) {
         if (left_ && left_->output()) {
-            output_ = make_operator_data(context_->resource());
+            output_ = make_operator_data(left_->output()->resource());
             create_list_documents();
             calc_aggregate_values(pipeline_context);
         }

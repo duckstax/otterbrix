@@ -43,6 +43,7 @@ namespace core::filesystem {
     time_t last_modified_time(virtual_file_system_t&, file_handle_t& handle);
     file_type_t file_type(virtual_file_system_t&, file_handle_t& handle);
     bool truncate(virtual_file_system_t&, file_handle_t& handle, int64_t new_size);
+    bool trim(virtual_file_system_t&, file_handle_t& handle, uint64_t offset_bytes, uint64_t length_bytes);
     bool directory_exists(virtual_file_system_t&, const path_t& directory);
     bool create_directory(virtual_file_system_t&, const path_t& directory);
     bool remove_directory(virtual_file_system_t&, const path_t& directory);

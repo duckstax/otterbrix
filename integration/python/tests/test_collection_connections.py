@@ -15,7 +15,7 @@ def test_connection():
     connection = Connection(client)
 
     #insert
-    
+
     query = "INSERT INTO schema.table (_id, name, count) VALUES "
     for num in  range(0, 100):
         query += "('" + gen_id(num + 1) + "', 'Name " + str(num) + "', " + str(num) + ")"

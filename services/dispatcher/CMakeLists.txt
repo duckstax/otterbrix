@@ -25,8 +25,8 @@ target_link_libraries(
         otterbrix::session
         otterbrix::ql
         otterbrix::planner
-        CONAN_PKG::spdlog
-        CONAN_PKG::actor-zeta
+        spdlog::spdlog
+        actor-zeta::actor-zeta
 )
 
 target_include_directories(otterbrix_${PROJECT_NAME} PUBLIC

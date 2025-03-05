@@ -39,6 +39,7 @@ namespace components::logical_plan {
         hash_t hash() const;
 
         std::string to_string() const;
+        std::pmr::memory_resource* resource() const noexcept;
 
     protected:
         const node_type type_;

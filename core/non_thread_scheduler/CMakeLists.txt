@@ -4,6 +4,6 @@ add_library(${PROJECT_NAME} scheduler_test.cpp clock_test.cpp)
 
 target_link_libraries(
         ${PROJECT_NAME} PUBLIC
-        CONAN_PKG::actor-zeta
+        actor-zeta::actor-zeta
 )
 

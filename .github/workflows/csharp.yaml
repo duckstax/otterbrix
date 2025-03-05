@@ -1,9 +1,9 @@
 name: dotnet package
 
-on:
-  pull_request:
-    paths-ignore:
-      - '**.md'
+#on:
+#  pull_request:
+#    paths-ignore:
+#      - '**.md'
 
 jobs:
   run:
@@ -19,7 +19,7 @@ jobs:
             uses: actions/checkout@v4
 
           - name: Set up Python ${{ matrix.python-version }}
-            uses: actions/setup-python@v4
+            uses: actions/setup-python@v5
             with:
               python-version: ${{ matrix.python-version }}
 
@@ -48,7 +48,7 @@ jobs:
               CC: gcc
             run: |
               cd build
-              cmake  -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON ..
+              cmake  -G Ninja -DCMAKE_TOOLCHAIN_FILE="conan_toolchain.cmake" -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON ..
               cmake --build .
 
           - name: Test
@@ -68,10 +68,10 @@ jobs:
 
           - name: Test with dotnet
             run: |
-              mkdir -p integration/csharp/src/Duckstax.Otterbrix/bin/Release/net7.0
-              mkdir -p integration/csharp/tests/Duckstax.Otterbrix.Tests/bin/Release/net7.0
-              cp ./build/integration/c/libotterbrix.so ./integration/csharp/src/Duckstax.Otterbrix/bin/Release/net7.0/libotterbrix.so
-              cp ./build/integration/c/libotterbrix.so ./integration/csharp/tests/Duckstax.Otterbrix.Tests/bin/Release/net7.0/libotterbrix.so
+              mkdir -p integration/csharp/src/Duckstax.Otterbrix/bin/Release/net${{ matrix.dotnet-version }}
+              mkdir -p integration/csharp/tests/Duckstax.Otterbrix.Tests/bin/Release/net${{ matrix.dotnet-version }}
+              cp ./build/integration/c/libotterbrix.so ./integration/csharp/src/Duckstax.Otterbrix/bin/Release/net${{ matrix.dotnet-version }}/libotterbrix.so
+              cp ./build/integration/c/libotterbrix.so ./integration/csharp/tests/Duckstax.Otterbrix.Tests/bin/Release/net${{ matrix.dotnet-version }}/libotterbrix.so
               cd integration/csharp/
               dotnet test ./tests/Duckstax.Otterbrix.Tests/Duckstax.Otterbrix.Tests.csproj --logger trx --results-directory "TestResults-${{ matrix.dotnet-version }}" -c Release
 

@@ -18,9 +18,15 @@ struct collection_full_name_t {
 
     inline std::string to_string() const {
         std::stringstream s;
-        s << database << "." << collection;
+        if (empty()) {
+            s << "NonCollectionData";
+        } else {
+            s << database << "." << collection;
+        }
         return s.str();
     }
+
+    bool empty() const noexcept { return database.empty() && collection.empty(); }
 };
 
 inline bool operator==(const collection_full_name_t& c1, const collection_full_name_t& c2) {
