@@ -241,14 +241,12 @@ TEST_CASE("logical_plan::update") {
         auto ql_update = components::ql::update_many_t(database_name, collection_name, match, parameters, update, true);
         components::planner::planner_t planner;
         auto node_update = planner.create_plan(&resource, &ql_update);
-        REQUIRE(node_update->to_string() ==
-                R"_($update: {$upsert: 1, $match: {"key": {$eq: #1}}, $limit: -1})_");
+        REQUIRE(node_update->to_string() == R"_($update: {$upsert: 1, $match: {"key": {$eq: #1}}, $limit: -1})_");
     }
     {
         auto ql_update = components::ql::update_one_t(database_name, collection_name, match, parameters, update, false);
         components::planner::planner_t planner;
         auto node_update = planner.create_plan(&resource, &ql_update);
-        REQUIRE(node_update->to_string() ==
-                R"_($update: {$upsert: 0, $match: {"key": {$eq: #1}}, $limit: 1})_");
+        REQUIRE(node_update->to_string() == R"_($update: {$upsert: 0, $match: {"key": {$eq: #1}}, $limit: 1})_");
     }
 }
