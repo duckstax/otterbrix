@@ -33,6 +33,11 @@ ext_to_format = [
     ".inc",
 ]
 
+files_to_skip = [
+  "components/sql_new/parser/gram.hpp",
+  "components/sql_new/parser/gram.cpp",
+]
+
 class Clang:
   def __init__(self):
     self.clang = self.resolve_clang()
@@ -66,7 +71,7 @@ class Clang:
       if not os.path.exists(d):
         continue
       if os.path.isdir(d):
-        files.extend(collect_files_by_ext(d, ext_to_format))
+        files.extend(collect_files_by_ext(d, ext_to_format, files_to_skip))
       elif os.path.splitext(d)[1] in ext_to_format:
         files.append(d)
     return files
