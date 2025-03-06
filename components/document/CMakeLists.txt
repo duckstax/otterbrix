@@ -34,6 +34,7 @@ target_link_libraries(
         Boost::boost
         absl::flat_hash_map
         absl::node_hash_map
+        absl::int128
         msgpackc-cxx
 )
 
