@@ -91,12 +91,11 @@ TEST_CASE("sql_new::update_where") {
                        vec({new_value(10l)}),
                        fields({{"is_doc", new_value(false)}}));
 
-    TEST_SIMPLE_UPDATE(
-        "UPDATE TestDatabase.TestCollection SET count = 10, name = 'new name', is_doc = true "
-        "WHERE id > 10 AND name = 'old_name' AND is_doc = false;",
-        R"_($update: {$upsert: 0, $match: {$and: ["id": {$gt: #0}, "name": {$eq: #1}, "is_doc": {$eq: #2}]}, $limit: -1})_",
-        vec({new_value(10l), new_value(std::string_view("old_name")), new_value(false)}),
-        fields({{"count", new_value(10ul)},
-                {"name", new_value(std::string_view("new name"))},
-                {"is_doc", new_value(true)}}));
+    TEST_SIMPLE_UPDATE("UPDATE TestDatabase.TestCollection SET count = 10, name = 'new name', is_doc = true "
+                       "WHERE id > 10 AND name = 'old_name' AND is_doc = false;",
+                       R"_($update: {$upsert: 0, $match: {$and: ["id": {$gt: #0}, "name": {$eq: #1}, "is_doc": {$eq: #2}]}, $limit: -1})_",
+                       vec({new_value(10l), new_value(std::string_view("old_name")), new_value(false)}),
+                       fields({{"count", new_value(10ul)},
+                               {"name", new_value(std::string_view("new name"))},
+                               {"is_doc", new_value(true)}}));
 }

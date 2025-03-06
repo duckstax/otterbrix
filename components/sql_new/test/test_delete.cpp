@@ -11,9 +11,9 @@ using namespace components::sql_new;
         auto resource = std::pmr::synchronized_pool_resource();                                                        \
         transform::transformer transformer(&resource);                                                                 \
         components::ql::ql_param_statement_t agg(&resource);                                                           \
-        auto select = raw_parser(QUERY)->lst.front().data;                                                             \
+        auto select = raw_parser(QUERY)->lst.front().data;                                                      \
         auto node = transformer.transform(transform::pg_cell_to_node_cast(select), &agg);                              \
-        REQUIRE(node->type() == components::logical_plan::node_type::delete_t);                                        \
+        REQUIRE(node->type() == components::logical_plan::node_type::delete_t);                                                    \
         REQUIRE(node->to_string() == RESULT);                                                                          \
         REQUIRE(agg.parameters().parameters.size() == PARAMS.size());                                                  \
         for (auto i = 0ul; i < PARAMS.size(); ++i) {                                                                   \

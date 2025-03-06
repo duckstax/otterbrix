@@ -72,10 +72,11 @@ namespace components::sql_new::transform::impl {
                     auto key_left = strVal(pg_ptr_cast<ColumnRef>(node->lexpr)->fields->lst.back().data);
                     if (nodeTag(node->rexpr) == T_ColumnRef) {
                         auto key_right = strVal(pg_ptr_cast<ColumnRef>(node->rexpr)->fields->lst.back().data);
-                        return make_compare_expression(statement->parameters().resource(),
-                                                       get_compare_type(strVal(node->name->lst.front().data)),
-                                                       components::expressions::key_t{key_left},
-                                                       components::expressions::key_t{key_right});
+                        return make_compare_expression(
+                            statement->parameters().resource(),
+                            get_compare_type(strVal(node->name->lst.front().data)),
+                            components::expressions::key_t{key_left},
+                            components::expressions::key_t{key_right});
                     }
                     return make_compare_expression(
                         statement->parameters().resource(),
@@ -99,7 +100,8 @@ namespace components::sql_new::transform::impl {
                 } else {
                     right = transform_a_indirection(statement, pg_ptr_cast<A_Indirection>(node->rexpr));
                 }
-                auto expr = make_compare_union_expression(statement->parameters().resource(), compare_type::union_not);
+                auto expr = make_compare_union_expression(statement->parameters().resource(),
+                                                                             compare_type::union_not);
                 if (expr->type() == right->type()) {
                     for (auto& child : right->children()) {
                         expr->append_child(child);

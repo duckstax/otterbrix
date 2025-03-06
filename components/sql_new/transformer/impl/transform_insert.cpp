@@ -7,6 +7,7 @@
 using namespace components::expressions;
 
 namespace components::sql_new::transform {
+    // seems to be working, didn't have time for tests
     logical_plan::node_ptr transformer::transform_insert(InsertStmt& node) {
         auto fields = pg_ptr_cast<List>(node.cols)->lst;
         auto vals = pg_ptr_cast<List>(pg_ptr_cast<SelectStmt>(node.selectStmt)->valuesLists)->lst;
