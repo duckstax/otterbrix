@@ -1,7 +1,7 @@
 #include "sql_new/parser/parser.h"
 #include <catch2/catch.hpp>
 
-TEST_CASE("parser::base") {
+TEST_CASE("sql_new::base") {
     auto test = raw_parser("select * from tbl1 join tbl2 on tbl1.id = tbl2.id_tbl1;");
     PGListCell a = test->lst.front();
     if (nodeTag(a.data) == T_SelectStmt) {

@@ -6,6 +6,10 @@ set(${PROJECT_NAME}_SOURCES
         test_primitive.cpp
         test_create_drop.cpp
         test_select.cpp
+        test_delete.cpp
+        test_insert.cpp
+        test_join.cpp
+        test_update.cpp
 )
 
 add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})

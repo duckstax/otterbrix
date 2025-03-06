@@ -41,6 +41,7 @@ target_link_libraries(
     otterbrix::logical_plan
     magic_enum::magic_enum
     msgpackc-cxx
+    absl::int128
 )
 
 target_include_directories(

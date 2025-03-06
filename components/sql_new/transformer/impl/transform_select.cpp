@@ -3,7 +3,6 @@
 #include "transfrom_common.hpp"
 #include <expressions/aggregate_expression.hpp>
 #include <expressions/expression.hpp>
-#include <expressions/join_expression.hpp>
 #include <expressions/sort_expression.hpp>
 #include <logical_plan/node_aggregate.hpp>
 #include <logical_plan/node_group.hpp>
@@ -15,12 +14,14 @@ using namespace components::expressions;
 
 namespace components::sql_new::transform {
     namespace {
+
         void join_dfs(std::pmr::memory_resource* resource,
                       JoinExpr* join,
                       logical_plan::node_aggregate_t*& node_agg,
-                      logical_plan::node_join_t*& node_join) {
+                      logical_plan::node_join_t*& node_join,
+                      ql::ql_param_statement_t* statement) {
             if (nodeTag(join->larg) == T_JoinExpr) {
-                join_dfs(resource, pg_ptr_cast<JoinExpr>(join->larg), node_agg, node_join);
+                join_dfs(resource, pg_ptr_cast<JoinExpr>(join->larg), node_agg, node_join, statement);
                 // right nodes are always tables
                 auto table_r = pg_ptr_cast<RangeVar>(join->rarg);
                 auto prev = node_join;
@@ -47,35 +48,12 @@ namespace components::sql_new::transform {
                 // should always be A_Expr
                 assert(nodeTag(join->quals) == T_A_Expr);
                 auto a_expr = pg_ptr_cast<A_Expr>(join->quals);
-                join_expression_field left, right;
-                auto columnref_to_expr = [&](ColumnRef* cref, join_expression_field& expr) {
-                    const auto& lst = cref->fields->lst;
-                    assert(lst.size() == 2 || lst.size() == 3);
-                    if (lst.size() == 2) {
-                        expr.collection.collection = strVal(lst.front().data);
-                    } else {
-                        auto it = lst.begin();
-                        expr.collection.database = strVal((it++)->data);
-                        expr.collection.collection = strVal((it)->data);
-                    }
-
-                    expr.expr = make_scalar_expression(resource,
-                                                       scalar_type::get_field,
-                                                       components::expressions::key_t{strVal(lst.back().data)});
-                };
-
-                columnref_to_expr(pg_ptr_cast<ColumnRef>(a_expr->lexpr), left);
-                columnref_to_expr(pg_ptr_cast<ColumnRef>(a_expr->rexpr), right);
-                node_join->append_expression(
-                    make_join_expression(resource,
-                                         get_compare_type(strVal(a_expr->name->lst.front().data)),
-                                         std::move(left),
-                                         std::move(right)));
+                node_join->append_expression(impl::transform_a_expr(statement, a_expr));
             }
         }
     } // namespace
 
-    logical_plan::node_ptr transformer::transform_select(SelectStmt& node, document::impl::base_document* tape) {
+    logical_plan::node_ptr transformer::transform_select(SelectStmt& node, ql::ql_param_statement_t* statement) {
         logical_plan::node_aggregate_t* agg = nullptr;
         logical_plan::node_join_t* join = nullptr;
 
@@ -89,7 +67,7 @@ namespace components::sql_new::transform {
             }
             if (nodeTag(from_first) == T_JoinExpr) {
                 // from table_1 join table_2 on cond
-                join_dfs(resource, pg_ptr_cast<JoinExpr>(from_first), agg, join);
+                join_dfs(resource, pg_ptr_cast<JoinExpr>(from_first), agg, join, statement);
             }
         }
 
@@ -147,13 +125,12 @@ namespace components::sql_new::transform {
                     case T_TypeCast: // fall-through
                     case T_A_Const: {
                         // constant
-                        auto value = impl::get_value(res->val, tape);
+                        auto value = impl::get_value(res->val, statement->parameters().tape());
                         auto expr = make_scalar_expression(
                             resource,
                             scalar_type::get_field,
                             components::expressions::key_t{res->name ? res->name : value.second});
-                        // commented: no statement to add_parameter to
-                        // expr->append_param(agg->add_parameter(value.first));
+                        expr->append_param(statement->add_parameter(value.first));
                         group->append_expression(expr);
                         break;
                     }
@@ -167,7 +144,7 @@ namespace components::sql_new::transform {
         if (node.whereClause) {
             auto match = new logical_plan::node_match_t{resource, agg->collection_full_name()};
             auto where = pg_ptr_cast<A_Expr>(node.whereClause);
-            auto expr = impl::transform_a_expr(resource, where);
+            auto expr = impl::transform_a_expr(statement, where);
             if (expr) {
                 match->append_expression(expr);
             }
@@ -195,6 +172,7 @@ namespace components::sql_new::transform {
                     new sort_expression_t{components::expressions::key_t{field},
                                           sortby->sortby_dir == SORTBY_DESC ? sort_order::desc : sort_order::asc});
             }
+            agg->append_child(sort);
         }
 
         if (join) {

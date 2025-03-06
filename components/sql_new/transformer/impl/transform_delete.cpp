@@ -7,12 +7,11 @@
 using namespace components::expressions;
 
 namespace components::sql_new::transform {
-    logical_plan::node_ptr transformer::transform_delete(DeleteStmt& node) {
+    logical_plan::node_ptr transformer::transform_delete(DeleteStmt& node, ql::ql_param_statement_t* statement) {
         components::ql::aggregate::match_t match;
 
         if (node.whereClause) {
-            // (not working due to tape & expr problem)
-            match.query = impl::transform_a_expr(resource, pg_ptr_cast<A_Expr>(node.whereClause));
+            match.query = impl::transform_a_expr(statement, pg_ptr_cast<A_Expr>(node.whereClause));
         }
 
         return new logical_plan::node_delete_t{resource,

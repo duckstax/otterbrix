@@ -119,4 +119,31 @@ namespace components::sql_new::transform {
                 return "unknown";
         }
     }
+
+    std::string expr_kind_to_string(A_Expr_Kind type) {
+        switch (type) {
+            case AEXPR_OP:
+                return "AEXPR_OP";
+            case AEXPR_AND:
+                return "AEXPR_AND";
+            case AEXPR_OR:
+                return "AEXPR_OR";
+            case AEXPR_NOT:
+                return "AEXPR_NOT";
+            case AEXPR_OP_ANY:
+                return "AEXPR_OP_ANY";
+            case AEXPR_OP_ALL:
+                return "AEXPR_OP_ALL";
+            case AEXPR_DISTINCT:
+                return "AEXPR_DISTINCT";
+            case AEXPR_NULLIF:
+                return "AEXPR_NULLIF";
+            case AEXPR_OF:
+                return "AEXPR_OF";
+            case AEXPR_IN:
+                return "AEXPR_IN";
+            default:
+                return "unknown";
+        }
+    }
 } // namespace components::sql_new::transform

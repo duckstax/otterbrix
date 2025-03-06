@@ -7,7 +7,7 @@
 using namespace components::expressions;
 
 namespace components::sql_new::transform {
-    logical_plan::node_ptr transformer::transform_update(UpdateStmt& node) {
+    logical_plan::node_ptr transformer::transform_update(UpdateStmt& node, ql::ql_param_statement_t* statement) {
         components::ql::aggregate::match_t match;
         components::document::document_ptr update = document::make_document(resource);
         // set
@@ -24,8 +24,7 @@ namespace components::sql_new::transform {
 
         // where
         if (node.whereClause) {
-            // (not working due to tape & expr problem)
-            match.query = impl::transform_a_expr(resource, pg_ptr_cast<A_Expr>(node.whereClause));
+            match.query = impl::transform_a_expr(statement, pg_ptr_cast<A_Expr>(node.whereClause));
         } else {
             match.query = make_compare_expression(resource, compare_type::all_true);
         };

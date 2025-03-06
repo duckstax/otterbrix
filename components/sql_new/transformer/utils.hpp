@@ -45,11 +45,13 @@ namespace components::sql_new::transform {
             {"==", components::expressions::compare_type::eq},
             {"=", components::expressions::compare_type::eq},
             {"!=", components::expressions::compare_type::ne},
+            {"<>", components::expressions::compare_type::ne},
             {"<", components::expressions::compare_type::lt},
             {"<=", components::expressions::compare_type::lte},
             {">", components::expressions::compare_type::gt},
             {">=", components::expressions::compare_type::gte},
-            {"regexp", components::expressions::compare_type::regex}};
+            {"regexp", components::expressions::compare_type::regex},
+            {"~~", components::expressions::compare_type::regex}};
 
         if (auto it = lookup.find(str); it != lookup.end()) {
             return it->second;
@@ -75,4 +77,5 @@ namespace components::sql_new::transform {
     }
 
     std::string node_tag_to_string(NodeTag type);
+    std::string expr_kind_to_string(A_Expr_Kind type);
 } // namespace components::sql_new::transform
