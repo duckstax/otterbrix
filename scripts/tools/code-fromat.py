@@ -91,6 +91,7 @@ class Clang:
     non_formatted_files = []
 
     for f in files:
+      print(f'Look into {f}')
       print('Check {}'.format(f))
       cmd = "{} --output-replacements-xml {}".format(self.clang, f)
       result, output = sys_call(cmd,
