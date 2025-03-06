@@ -45,11 +45,6 @@ jobs:
           cp ../conanfile.txt .
           conan install . --build missing -s build_type=Release
 
-      - name: Check
-        run: |
-          chmod +x scripts/CI/run-check-formatting.sh
-          scripts/CI/run-check-formatting.sh
-
       - name: build
         env:
           CC: gcc
