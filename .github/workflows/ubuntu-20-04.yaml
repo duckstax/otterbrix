@@ -46,6 +46,7 @@ jobs:
           conan install . --build missing -s build_type=Release
 
       - name: Check
+        if: "!contains(github.event.head_commit.message, 'ci:no-format-check')"
         run: |
           chmod +x scripts/CI/run-check-formatting.sh
           scripts/CI/run-check-formatting.sh
