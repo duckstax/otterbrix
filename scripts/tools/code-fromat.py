@@ -34,8 +34,8 @@ ext_to_format = [
 ]
 
 files_to_skip = [
-  "components/sql_new/parser/gram.hpp",
-  "components/sql_new/parser/gram.cpp",
+  "gram.hpp",
+  "gram.cpp",
 ]
 
 class Clang:
