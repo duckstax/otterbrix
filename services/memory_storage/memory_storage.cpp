@@ -5,6 +5,7 @@
 #include <core/system_command.hpp>
 #include <core/tracy/tracy.hpp>
 #include <services/collection/collection.hpp>
+#include <utility>
 
 using namespace components::cursor;
 

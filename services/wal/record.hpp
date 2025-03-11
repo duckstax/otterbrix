@@ -16,7 +16,7 @@ namespace services::wal {
         components::logical_plan::ql_param_statement_ptr params;
 
         bool is_valid() const;
-        void set_data(msgpack::object& object, std::pmr::memory_resource* resource);
+        void set_data(msgpack::object& node_obj, msgpack::object& params_obj, std::pmr::memory_resource* resource);
     };
 
 } // namespace services::wal

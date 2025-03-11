@@ -10,23 +10,24 @@ namespace services::wal {
 
     bool record_t::is_valid() const { return size > 0; }
 
-    void record_t::set_data(msgpack::object& object, std::pmr::memory_resource* resource) {
+    void
+    record_t::set_data(msgpack::object& node_obj, msgpack::object& params_obj, std::pmr::memory_resource* resource) {
         using namespace components::logical_plan;
         switch (type) {
             case node_type::insert_t:
-                data = to_node_insert(object.via.array.ptr[0], resource);
+                data = to_node_insert(node_obj, resource);
                 params = nullptr;
                 break;
             case node_type::delete_t:
-                data = to_node_delete(object.via.array.ptr[0], resource);
-                params = to_storage_parameters(object.via.array.ptr[1], resource);
+                data = to_node_delete(node_obj, resource);
+                params = to_storage_parameters(params_obj, resource);
                 break;
             case node_type::update_t:
-                data = to_node_update(object, resource);
-                params = to_storage_parameters(object.via.array.ptr[1], resource);
+                data = to_node_update(node_obj, resource);
+                params = to_storage_parameters(params_obj, resource);
                 break;
             default:
-                data = to_node_default(object.via.array.ptr[0], type, resource);
+                data = to_node_default(node_obj, type, resource);
                 params = nullptr;
                 break;
         }

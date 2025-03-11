@@ -187,8 +187,7 @@ TEST_CASE("logical_plan::insert") {
         REQUIRE(node->to_string() == R"_($insert: {$documents: 5})_");
     }
     {
-        std::pmr::vector<components::document::document_ptr> documents = {};
-        auto plan = make_node_insert(&resource, {database_name, collection_name}, std::move(documents));
+        auto plan = make_node_insert(&resource, {database_name, collection_name}, gen_doc(1, &resource));
         components::planner::planner_t planner;
         auto node = planner.create_plan(&resource, plan);
         REQUIRE(node->to_string() == R"_($insert: {$documents: 1})_");
@@ -250,7 +249,7 @@ TEST_CASE("logical_plan::update") {
         REQUIRE(node_update->to_string() == R"_($update: {$upsert: 1, $match: {"key": {$eq: #1}}, $limit: -1})_");
     }
     {
-        auto node = make_node_update_many(&resource, {database_name, collection_name}, match, update, true);
+        auto node = make_node_update_one(&resource, {database_name, collection_name}, match, update, false);
         components::planner::planner_t planner;
         auto node_update = planner.create_plan(&resource, node);
         REQUIRE(node_update->to_string() == R"_($update: {$upsert: 0, $match: {"key": {$eq: #1}}, $limit: 1})_");

@@ -23,8 +23,8 @@ TEST_CASE("integration::cpp::test_join") {
         auto session = otterbrix::session_id_t();
         {
             dispatcher->execute_sql(session, "CREATE DATABASE " + database_name + ";");
-            dispatcher->execute_sql(session, "CREATE TABLE " + database_name + "." + collection_name_1 + ";");
-            dispatcher->execute_sql(session, "CREATE TABLE " + database_name + "." + collection_name_2 + ";");
+            dispatcher->execute_sql(session, "CREATE TABLE " + database_name + "." + collection_name_1 + "();");
+            dispatcher->execute_sql(session, "CREATE TABLE " + database_name + "." + collection_name_2 + "();");
         }
         {
             std::stringstream query;
@@ -207,8 +207,7 @@ TEST_CASE("integration::cpp::test_join") {
         {
             std::stringstream query;
             query << "SELECT * FROM " << database_name + "." << collection_name_1 << " CROSS JOIN " << database_name
-                  << "." << collection_name_2 << " ON " << database_name << "." << collection_name_1 << ".key_1"
-                  << " = " << database_name << "." << collection_name_2 + ".key;";
+                  << "." << collection_name_2 << ";";
             auto cur = dispatcher->execute_sql(session, query.str());
             REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 10100);

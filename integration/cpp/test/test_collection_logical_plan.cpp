@@ -167,7 +167,7 @@ TEST_CASE("integration::cpp::test_collection::logical_plan") {
                                                             {database_name, collection_name},
                                                             std::move(expr)));
             auto params = logical_plan::make_ql_param_statement(dispatcher->resource());
-            params->add_parameter(id_par{1}, new_value(90));
+            params->add_parameter(id_par{1}, new_value(20));
             auto cur = dispatcher->execute_plan(session, agg, params);
             REQUIRE(cur->size() == 20);
         }
@@ -182,7 +182,7 @@ TEST_CASE("integration::cpp::test_collection::logical_plan") {
             doc->get_dict("$set")->set("count", 1000);
             auto upd = make_node_update_many(dispatcher->resource(), {database_name, collection_name}, match, doc);
             auto params = logical_plan::make_ql_param_statement(dispatcher->resource());
-            params->add_parameter(id_par{1}, new_value(90));
+            params->add_parameter(id_par{1}, new_value(20));
             auto cur = dispatcher->execute_plan(session, upd, params);
             REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 20);

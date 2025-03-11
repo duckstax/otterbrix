@@ -42,8 +42,10 @@ namespace components::logical_plan {
     node_delete_ptr make_node_delete_one(std::pmr::memory_resource* resource,
                                          const collection_full_name_t& collection,
                                          const node_match_ptr& match) {
-        return {
-            new node_delete_t{resource, collection, match, make_node_limit(resource, collection, limit_t::unlimit())}};
+        return {new node_delete_t{resource,
+                                  collection,
+                                  match,
+                                  make_node_limit(resource, collection, limit_t::limit_one())}};
     }
     node_delete_ptr make_node_delete(std::pmr::memory_resource* resource,
                                      const collection_full_name_t& collection,

@@ -210,7 +210,7 @@ namespace services::wal {
               "wal_replicate_t::create_database {}, session: {}",
               data->collection_full_name().database,
               session.data());
-        write_data_(data);
+        write_data_(reinterpret_cast<const components::logical_plan::node_ptr&>(data));
         send_success(session, sender);
     }
 
@@ -221,7 +221,7 @@ namespace services::wal {
               "wal_replicate_t::drop_database {}, session: {}",
               data->collection_full_name().database,
               session.data());
-        write_data_(data);
+        write_data_(reinterpret_cast<const components::logical_plan::node_ptr&>(data));
         send_success(session, sender);
     }
 
@@ -233,7 +233,7 @@ namespace services::wal {
               data->collection_full_name().database,
               data->collection_full_name().collection,
               session.data());
-        write_data_(data);
+        write_data_(reinterpret_cast<const components::logical_plan::node_ptr&>(data));
         send_success(session, sender);
     }
 
@@ -245,7 +245,7 @@ namespace services::wal {
               data->collection_full_name().database,
               data->collection_full_name().collection,
               session.data());
-        write_data_(data);
+        write_data_(reinterpret_cast<const components::logical_plan::node_ptr&>(data));
         send_success(session, sender);
     }
 
@@ -282,7 +282,7 @@ namespace services::wal {
               data->collection_full_name().database,
               data->collection_full_name().collection,
               session.data());
-        write_data_(data);
+        write_data_(data, std::move(params));
         send_success(session, sender);
     }
 
@@ -295,7 +295,7 @@ namespace services::wal {
               data->collection_full_name().database,
               data->collection_full_name().collection,
               session.data());
-        write_data_(data);
+        write_data_(data, std::move(params));
         send_success(session, sender);
     }
 
@@ -308,7 +308,7 @@ namespace services::wal {
               data->collection_full_name().database,
               data->collection_full_name().collection,
               session.data());
-        write_data_(data);
+        write_data_(data, std::move(params));
         send_success(session, sender);
     }
 
@@ -321,7 +321,7 @@ namespace services::wal {
               data->collection_full_name().database,
               data->collection_full_name().collection,
               session.data());
-        write_data_(data);
+        write_data_(data, std::move(params));
         send_success(session, sender);
     }
 
@@ -338,10 +338,10 @@ namespace services::wal {
     }
 
     template<class T>
-    void wal_replicate_t::write_data_(T& data) {
+    void wal_replicate_t::write_data_(T& data, components::logical_plan::ql_param_statement_ptr params) {
         next_id(id_);
         buffer_t buffer;
-        last_crc32_ = pack(buffer, last_crc32_, id_, data);
+        last_crc32_ = pack(buffer, last_crc32_, id_, data, params);
         write_buffer(buffer);
     }
 
@@ -398,7 +398,7 @@ namespace services::wal {
                 record.last_crc32 = o.via.array.ptr[0].as<crc32_t>();
                 record.id = o.via.array.ptr[1].as<services::wal::id_t>();
                 record.type = static_cast<components::logical_plan::node_type>(o.via.array.ptr[2].as<char>());
-                record.set_data(o.via.array.ptr[3], resource());
+                record.set_data(o.via.array.ptr[3], o.via.array.ptr[4], resource());
             } else {
                 record.type = components::logical_plan::node_type::unused;
                 //todo: error wal content

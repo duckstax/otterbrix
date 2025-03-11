@@ -91,7 +91,7 @@ namespace services::wal {
         virtual void read_buffer(buffer_t& buffer, size_t start_index, size_t size) const;
 
         template<class T>
-        void write_data_(T& data);
+        void write_data_(T& data, components::logical_plan::ql_param_statement_ptr params = nullptr);
 
         void init_id();
         bool find_start_record(services::wal::id_t wal_id, std::size_t& start_index) const;

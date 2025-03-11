@@ -49,6 +49,8 @@ namespace components::sql::transform {
                 assert(nodeTag(join->quals) == T_A_Expr);
                 auto a_expr = pg_ptr_cast<A_Expr>(join->quals);
                 node_join->append_expression(impl::transform_a_expr(statement, a_expr));
+            } else {
+                node_join->append_expression(make_compare_expression(resource, compare_type::all_true));
             }
         }
     } // namespace

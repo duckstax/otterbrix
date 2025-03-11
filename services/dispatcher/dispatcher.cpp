@@ -260,7 +260,7 @@ namespace services::dispatcher {
                          memory_storage::handler_id(memory_storage::route::execute_plan),
                          session,
                          std::move(logic_plan),
-                         std::move(params));
+                         params ? params->take_parameters() : storage_parameters(resource()));
     }
 
     void dispatcher_t::execute_plan_finish(const components::session::session_id_t& session, cursor_t_ptr result) {

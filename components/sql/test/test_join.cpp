@@ -48,7 +48,7 @@ TEST_CASE("sql::join") {
                   vec());
 
         TEST_JOIN(R"_(select * from col1 cross join col2;)_",
-                  R"_($join: {$type: cross, $aggregate: {}, $aggregate: {}})_",
+                  R"_($join: {$type: cross, $aggregate: {}, $aggregate: {}, $all_true})_",
                   vec());
     }
 

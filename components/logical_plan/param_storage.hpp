@@ -113,13 +113,11 @@ namespace components::logical_plan {
         if (msg_object.type != msgpack::type::MAP) {
             throw msgpack::type_error();
         }
-        storage_parameters storage(resource);
         for (uint32_t i = 0; i < msg_object.via.map.size; ++i) {
             auto key = msg_object.via.map.ptr[i].key.as<core::parameter_id_t>();
-            auto value = to_structure_(msg_object.via.map.ptr[i].val, storage.tape());
-            storage.parameters.emplace(key, value);
+            auto value = to_structure_(msg_object.via.map.ptr[i].val, result->parameters().tape());
+            result->add_parameter(key, value);
         }
-        result->set_parameters(storage);
         return result;
     }
 } // namespace components::logical_plan
@@ -130,12 +128,12 @@ namespace msgpack {
         namespace adaptor {
 
             template<>
-            struct pack<components::logical_plan::storage_parameters> final {
+            struct pack<components::logical_plan::ql_param_statement_ptr> final {
                 template<typename Stream>
                 packer<Stream>& operator()(msgpack::packer<Stream>& o,
-                                           components::logical_plan::storage_parameters const& v) const {
-                    o.pack_map(v.parameters.size());
-                    for (auto it : v.parameters) {
+                                           components::logical_plan::ql_param_statement_ptr const& v) const {
+                    o.pack_map(v->parameters().parameters.size());
+                    for (auto it : v->parameters().parameters) {
                         o.pack(it.first);
                         to_msgpack_(o, it.second.get_element());
                     }
@@ -144,16 +142,16 @@ namespace msgpack {
             };
 
             template<>
-            struct object_with_zone<components::logical_plan::storage_parameters> final {
+            struct object_with_zone<components::logical_plan::ql_param_statement_ptr> final {
                 void operator()(msgpack::object::with_zone& o,
-                                components::logical_plan::storage_parameters const& v) const {
+                                components::logical_plan::ql_param_statement_ptr const& v) const {
                     o.type = type::MAP;
-                    o.via.array.size = static_cast<uint32_t>(v.parameters.size());
+                    o.via.array.size = static_cast<uint32_t>(v->parameters().parameters.size());
                     o.via.array.ptr =
                         static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size,
                                                                             MSGPACK_ZONE_ALIGNOF(msgpack::object)));
                     uint32_t i = 0;
-                    for (auto it : v.parameters) {
+                    for (auto it : v->parameters().parameters) {
                         o.via.map.ptr[i].key = msgpack::object(it.first, o.zone);
                         to_msgpack_(it.second.get_element(), o.via.map.ptr[i].val);
                         ++i;

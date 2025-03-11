@@ -7,6 +7,7 @@
 #include <logical_plan/node_delete.hpp>
 #include <logical_plan/node_insert.hpp>
 #include <logical_plan/node_update.hpp>
+#include <logical_plan/param_storage.hpp>
 #include <msgpack.hpp>
 #include <vector>
 
@@ -23,6 +24,7 @@ namespace services::wal {
     struct wal_entry_t final {
         size_tt size_{};
         T entry_ = nullptr;
+        components::logical_plan::ql_param_statement_ptr params_ = nullptr;
         crc32_t last_crc32_{};
         id_t id_{};
         node_type type_{};
@@ -35,21 +37,28 @@ namespace services::wal {
     size_tt read_size_impl(buffer_t& input, int index_start);
 
     template<class T>
-    crc32_t pack(buffer_t& storage, crc32_t last_crc32, id_t id, T& data) {
+    crc32_t pack(buffer_t& storage,
+                 crc32_t last_crc32,
+                 id_t id,
+                 T& data,
+                 components::logical_plan::ql_param_statement_ptr params = nullptr) {
         msgpack::sbuffer buffer;
         msgpack::packer<msgpack::sbuffer> packer(buffer);
 
-        packer.pack_array(4);
+        packer.pack_array(params ? 5 : 4);
         packer.pack_fix_uint32(last_crc32);
         packer.pack_fix_uint64(id);
         packer.pack_char(static_cast<char>(data->type()));
-        packer.pack(reinterpret_cast<const components::logical_plan::node_ptr&>(data));
+        packer.pack(data);
+        if (params) {
+            packer.pack(params);
+        }
 
         return pack(storage, buffer.data(), buffer.size());
     }
 
     template<class T>
-    inline void unpack(buffer_t& storage, wal_entry_t<T>& entry, std::pmr::memory_resource*) {
+    inline void unpack(buffer_t& storage, wal_entry_t<T>& entry, std::pmr::memory_resource* resource) {
         msgpack::unpacked msg;
         msgpack::unpack(msg, storage.data(), storage.size());
         const auto& o = msg.get();
@@ -71,6 +80,7 @@ namespace services::wal {
         entry.type_ = static_cast<node_type>(o.via.array.ptr[2].as<char>());
         assert(entry.type_ == node_type::update_t);
         entry.entry_ = std::move(components::logical_plan::to_node_update(o.via.array.ptr[3], resource));
+        entry.params_ = components::logical_plan::to_storage_parameters(o.via.array.ptr[4], resource);
     }
 
     template<>
@@ -99,6 +109,7 @@ namespace services::wal {
         entry.type_ = static_cast<node_type>(o.via.array.ptr[2].as<char>());
         assert(entry.type_ == node_type::delete_t);
         entry.entry_ = std::move(components::logical_plan::to_node_delete(o.via.array.ptr[3], resource));
+        entry.params_ = components::logical_plan::to_storage_parameters(o.via.array.ptr[4], resource);
     }
 
     id_t unpack_wal_id(buffer_t& storage);
