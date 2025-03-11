@@ -4,13 +4,12 @@
 #include <components/logical_plan/node_join.hpp>
 #include <components/physical_plan/collection/operators/operator_join.hpp>
 #include <components/physical_plan_generator/create_plan.hpp>
-#include <components/ql/aggregate/limit.hpp>
 
 namespace services::collection::planner::impl {
 
     operators::operator_ptr create_plan_join(const context_storage_t& context,
                                              const components::logical_plan::node_ptr& node,
-                                             components::ql::limit_t limit) {
+                                             components::logical_plan::limit_t limit) {
         const auto* join_node = static_cast<const components::logical_plan::node_join_t*>(node.get());
         // assign left collection as actor for join
         auto expr = reinterpret_cast<const components::expressions::compare_expression_ptr*>(&node->expressions()[0]);

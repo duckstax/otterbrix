@@ -3,7 +3,6 @@
 #include <components/document/document.hpp>
 #include <components/document/document_id.hpp>
 #include <components/document/value.hpp>
-#include <components/ql/index.hpp>
 #include <filesystem>
 #include <memory_resource>
 

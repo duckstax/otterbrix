@@ -10,7 +10,7 @@ namespace services::collection::operators::predicates {
         simple_predicate(context_collection_t* context,
                          std::function<bool(const components::document::document_ptr&,
                                             const components::document::document_ptr&,
-                                            const components::ql::storage_parameters*)> func);
+                                            const components::logical_plan::storage_parameters*)> func);
         simple_predicate(context_collection_t* context,
                          std::vector<predicate_ptr>&& nested,
                          components::expressions::compare_type nested_type);
@@ -18,11 +18,11 @@ namespace services::collection::operators::predicates {
     private:
         bool check_impl(const components::document::document_ptr& document_left,
                         const components::document::document_ptr& document_right,
-                        const components::ql::storage_parameters* parameters) final;
+                        const components::logical_plan::storage_parameters* parameters) final;
 
         std::function<bool(const components::document::document_ptr&,
                            const components::document::document_ptr&,
-                           const components::ql::storage_parameters*)>
+                           const components::logical_plan::storage_parameters*)>
             func_;
         std::vector<predicate_ptr> nested_;
         components::expressions::compare_type nested_type_ = components::expressions::compare_type::invalid;

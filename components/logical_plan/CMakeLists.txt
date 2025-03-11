@@ -18,6 +18,7 @@ set(SOURCE_${PROJECT_NAME}
         node_match.cpp
         node_sort.cpp
         node_update.cpp
+        param_storage.cpp
 )
 
 add_library(otterbrix_${PROJECT_NAME}
@@ -30,7 +31,12 @@ set_property(TARGET otterbrix_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 
 target_link_libraries(
         otterbrix_${PROJECT_NAME} PRIVATE
-        otterbrix::ql
+        otterbrix::document
+        otterbrix::types
+        otterbrix::expressions
+        magic_enum::magic_enum
+        msgpackc-cxx
+        absl::int128
         otterbrix::types
         Boost::boost
 )

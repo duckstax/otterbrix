@@ -1,7 +1,6 @@
 #include "aggregation.hpp"
 
 #include <components/physical_plan/collection/operators/scan/transfer_scan.hpp>
-#include <components/ql/aggregate/limit.hpp>
 
 namespace services::collection::operators {
 
@@ -27,7 +26,7 @@ namespace services::collection::operators {
         } else {
             executor = match_ ? std::move(match_)
                               : static_cast<operator_ptr>(boost::intrusive_ptr(
-                                    new transfer_scan(context_, components::ql::limit_t::unlimit())));
+                                    new transfer_scan(context_, components::logical_plan::limit_t::unlimit())));
         }
         if (group_) {
             group_->set_children(std::move(executor));

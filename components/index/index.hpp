@@ -2,7 +2,6 @@
 
 #include "core/pmr.hpp"
 #include "forward.hpp"
-#include <components/ql/index.hpp>
 
 namespace components::index {
 
@@ -71,7 +70,7 @@ namespace components::index {
         iterator cend() const;
         auto keys() -> std::pair<keys_base_storage_t::iterator, keys_base_storage_t::iterator>;
         std::pmr::memory_resource* resource() const noexcept;
-        ql::index_type type() const noexcept;
+        index_type type() const noexcept;
         const std::string& name() const noexcept;
 
         bool is_disk() const noexcept;

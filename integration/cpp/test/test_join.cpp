@@ -1,11 +1,9 @@
 #include "test_config.hpp"
 #include <catch2/catch.hpp>
-#include <components/ql/statements.hpp>
 #include <variant>
 
 using namespace components;
 using expressions::compare_type;
-using ql::aggregate::operator_type;
 using key = components::expressions::key_t;
 using id_par = core::parameter_id_t;
 

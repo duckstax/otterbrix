@@ -7,7 +7,9 @@
 #include <components/document/document.hpp>
 #include <components/physical_plan/collection/operators/sort/sort.hpp>
 
-#include "components/ql/aggregate.hpp"
+#include <logical_plan/node.hpp>
+#include <logical_plan/node_aggregate.hpp>
+#include <logical_plan/param_storage.hpp>
 
 namespace py = pybind11;
 
@@ -36,8 +38,10 @@ auto to_pylist(const std::pmr::vector<components::document::document_id_t>& src)
 auto to_sorter(const py::handle& sort_dict) -> services::storage::sort::sorter_t;
 auto to_order(const py::object& order) -> services::storage::sort::order;
 
-auto to_statement(const py::handle& source, components::ql::aggregate_statement*, std::pmr::memory_resource* resource)
-    -> void;
+auto to_statement(std::pmr::memory_resource* resource,
+                  const py::handle& source,
+                  components::logical_plan::node_aggregate_t*,
+                  components::logical_plan::ql_param_statement_t* params) -> void;
 auto test_to_statement(const py::handle& source) -> py::str;
 
 auto pack_to_match(const py::object& object) -> py::list;

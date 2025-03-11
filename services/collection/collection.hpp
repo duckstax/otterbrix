@@ -12,8 +12,6 @@
 #include <components/index/index_engine.hpp>
 #include <components/log/log.hpp>
 #include <components/logical_plan/node.hpp>
-#include <components/ql/aggregate/limit.hpp>
-#include <components/ql/index.hpp>
 #include <components/session/session.hpp>
 
 #include <utility>

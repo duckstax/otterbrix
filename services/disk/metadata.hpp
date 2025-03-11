@@ -1,12 +1,12 @@
 #pragma once
-#include <boost/filesystem.hpp>
-#include <components/ql/ql_statement.hpp>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 #include "core/file/local_file_system.hpp"
+
+#include <base/collection_full_name.hpp>
 
 namespace services::disk {
 

@@ -22,7 +22,7 @@ namespace services::collection::planner::impl {
 
     operators::operator_ptr create_plan_match_(context_collection_t* context_,
                                                const components::expressions::compare_expression_ptr& expr,
-                                               components::ql::limit_t limit) {
+                                               components::logical_plan::limit_t limit) {
         //if (is_can_primary_key_find_by_predicate(expr->type()) && expr->key().as_string() == "_id") {
         //return boost::intrusive_ptr(new operators::primary_key_scan(context_));
         //}
@@ -41,7 +41,7 @@ namespace services::collection::planner::impl {
 
     operators::operator_ptr create_plan_match(const context_storage_t& context,
                                               const components::logical_plan::node_ptr& node,
-                                              components::ql::limit_t limit) {
+                                              components::logical_plan::limit_t limit) {
         if (node->expressions().empty()) {
             return boost::intrusive_ptr(new operators::transfer_scan(context.at(node->collection_full_name()), limit));
         } else { //todo: other kinds scan

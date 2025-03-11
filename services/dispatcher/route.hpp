@@ -7,8 +7,8 @@ namespace services::dispatcher {
     enum class route : uint64_t
     {
         create,
-        execute_ql,
-        execute_ql_finish
+        execute_plan,
+        execute_plan_finish
     };
 
     constexpr auto handler_id(route type) { return handler_id(group_id_t::dispatcher, type); }

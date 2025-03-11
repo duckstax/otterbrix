@@ -2,7 +2,7 @@
 
 #include <components/document/document.hpp>
 #include <components/expressions/compare_expression.hpp>
-#include <components/ql/ql_param_statement.hpp>
+#include <components/logical_plan/param_storage.hpp>
 #include <services/collection/collection.hpp>
 
 namespace services::collection::operators::predicates {
@@ -17,10 +17,10 @@ namespace services::collection::operators::predicates {
         virtual ~predicate() = default;
 
         bool check(const components::document::document_ptr& document,
-                   const components::ql::storage_parameters* parameters);
+                   const components::logical_plan::storage_parameters* parameters);
         bool check(const components::document::document_ptr& document_left,
                    const components::document::document_ptr& document_right,
-                   const components::ql::storage_parameters* parameters);
+                   const components::logical_plan::storage_parameters* parameters);
 
     protected:
         context_collection_t* context_;
@@ -28,7 +28,7 @@ namespace services::collection::operators::predicates {
     private:
         virtual bool check_impl(const components::document::document_ptr& document_left,
                                 const components::document::document_ptr& document_right,
-                                const components::ql::storage_parameters* parameters) = 0;
+                                const components::logical_plan::storage_parameters* parameters) = 0;
     };
 
     using predicate_ptr = boost::intrusive_ptr<predicate>;

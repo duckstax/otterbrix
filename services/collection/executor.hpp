@@ -7,11 +7,11 @@ namespace services::collection::executor {
 
     struct plan_t {
         std::stack<collection::operators::operator_ptr> sub_plans;
-        components::ql::storage_parameters parameters;
+        components::logical_plan::storage_parameters parameters;
         services::context_storage_t context_storage_;
 
         explicit plan_t(std::stack<collection::operators::operator_ptr>&& sub_plans,
-                        components::ql::storage_parameters parameters,
+                        components::logical_plan::storage_parameters parameters,
                         services::context_storage_t&& context_storage);
     };
     using plan_storage_t = core::pmr::btree::btree_t<components::session::session_id_t, plan_t>;
@@ -23,7 +23,7 @@ namespace services::collection::executor {
 
         void execute_plan(const components::session::session_id_t& session,
                           components::logical_plan::node_ptr logical_plan,
-                          components::ql::storage_parameters parameters,
+                          components::logical_plan::storage_parameters parameters,
                           services::context_storage_t&& context_storage);
 
         void create_documents(const session_id_t& session,
@@ -48,12 +48,12 @@ namespace services::collection::executor {
     private:
         void traverse_plan_(const components::session::session_id_t& session,
                             collection::operators::operator_ptr&& plan,
-                            components::ql::storage_parameters&& parameters,
+                            components::logical_plan::storage_parameters&& parameters,
                             services::context_storage_t&& context_storage);
 
         void execute_sub_plan_(const components::session::session_id_t& session,
                                collection::operators::operator_ptr plan,
-                               components::ql::storage_parameters parameters);
+                               components::logical_plan::storage_parameters parameters);
 
         void execute_sub_plan_finish_(const components::session::session_id_t& session,
                                       components::cursor::cursor_t_ptr cursor);

@@ -1,8 +1,8 @@
 #pragma once
 
 #include <actor-zeta.hpp>
+#include <base/collection_full_name.hpp>
 #include <components/document/document.hpp>
-#include <components/ql/ql_statement.hpp>
 #include <list>
 #include <services/wal/base.hpp>
 #include <vector>

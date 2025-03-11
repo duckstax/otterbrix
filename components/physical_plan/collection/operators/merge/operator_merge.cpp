@@ -5,7 +5,7 @@
 
 namespace services::collection::operators::merge {
 
-    operator_merge_t::operator_merge_t(context_collection_t* context, components::ql::limit_t limit)
+    operator_merge_t::operator_merge_t(context_collection_t* context, components::logical_plan::limit_t limit)
         : read_only_operator_t(context, operator_type::match)
         , limit_(limit) {}
 
@@ -19,7 +19,7 @@ namespace services::collection::operators::merge {
 
     operator_merge_ptr create_operator_merge(context_collection_t* context,
                                              const components::expressions::compare_type& type,
-                                             components::ql::limit_t limit) {
+                                             components::logical_plan::limit_t limit) {
         using components::expressions::compare_type;
         switch (type) {
             case compare_type::union_and:
@@ -36,7 +36,7 @@ namespace services::collection::operators::merge {
 
     operator_merge_ptr create_operator_merge(context_collection_t* context,
                                              const components::expressions::compare_expression_ptr& expr,
-                                             components::ql::limit_t limit) {
+                                             components::logical_plan::limit_t limit) {
         return create_operator_merge(context, expr->type(), limit);
     }
 

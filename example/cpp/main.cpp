@@ -7,7 +7,7 @@
 using namespace components;
 using namespace components::cursor;
 using expressions::compare_type;
-using ql::aggregate::operator_type;
+using logical_plan::aggregate::operator_type;
 using key = components::expressions::key_t;
 using id_par = core::parameter_id_t;
 

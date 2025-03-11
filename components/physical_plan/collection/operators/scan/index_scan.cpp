@@ -8,9 +8,9 @@ namespace services::collection::operators {
 
     std::vector<range> search_range_by_index(components::index::index_t* index,
                                              const components::expressions::compare_expression_ptr& expr,
-                                             const components::ql::storage_parameters* parameters) {
+                                             const components::logical_plan::storage_parameters* parameters) {
         using components::expressions::compare_type;
-        using components::ql::get_parameter;
+        using components::logical_plan::get_parameter;
         auto value = get_parameter(parameters, expr->value());
         switch (expr->type()) {
             case compare_type::eq:
@@ -33,8 +33,8 @@ namespace services::collection::operators {
 
     void search_by_index(components::index::index_t* index,
                          const components::expressions::compare_expression_ptr& expr,
-                         const components::ql::limit_t& limit,
-                         const components::ql::storage_parameters* parameters,
+                         const components::logical_plan::limit_t& limit,
+                         const components::logical_plan::storage_parameters* parameters,
                          operator_data_ptr& result) {
         auto ranges = search_range_by_index(index, expr, parameters);
         int count = 0;
@@ -51,7 +51,7 @@ namespace services::collection::operators {
 
     index_scan::index_scan(context_collection_t* context,
                            components::expressions::compare_expression_ptr expr,
-                           components::ql::limit_t limit)
+                           components::logical_plan::limit_t limit)
         : read_only_operator_t(context, operator_type::match)
         , expr_(std::move(expr))
         , limit_(limit) {}
@@ -61,7 +61,7 @@ namespace services::collection::operators {
         auto* index = components::index::search_index(context_->index_engine(), {expr_->key_left()});
         if (index && index->is_disk()) {
             trace(context_->log(), "index_scan: send query into disk");
-            auto value = components::ql::get_parameter(&pipeline_context->parameters, expr_->value());
+            auto value = components::logical_plan::get_parameter(&pipeline_context->parameters, expr_->value());
             pipeline_context->send(index->disk_agent(), index::handler_id(index::route::find), value, expr_->type());
             async_wait();
         } else {

@@ -15,9 +15,9 @@ namespace components::logical_plan {
         return stream.str();
     }
 
-    node_ptr make_node_drop_database(std::pmr::memory_resource* resource, ql::drop_database_t* ql) {
-        auto node = new node_drop_database_t{resource, {ql->database_, ql->collection_}};
-        return node;
+    node_drop_database_ptr make_node_drop_database(std::pmr::memory_resource* resource,
+                                                   const collection_full_name_t& collection) {
+        return {new node_drop_database_t{resource, collection}};
     }
 
 } // namespace components::logical_plan

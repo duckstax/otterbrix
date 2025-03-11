@@ -7,7 +7,7 @@ using namespace components::index;
 class dummy final : public index_t {
 public:
     explicit dummy(std::pmr::memory_resource* resource, const std::string& name, const keys_base_storage_t& keys)
-        : index_t(resource, components::ql::index_type::single, name, keys) {}
+        : index_t(resource, components::logical_plan::index_type::single, name, keys) {}
 
 private:
     void insert_impl(value_t, document_ptr) {}

@@ -21,12 +21,15 @@ set_property(TARGET otterbrix_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 target_link_libraries(
         otterbrix_${PROJECT_NAME} PRIVATE
         otterbrix::log
+        otterbrix::logical_plan
         otterbrix::cursor
         otterbrix::session
-        otterbrix::ql
         otterbrix::planner
         spdlog::spdlog
         actor-zeta::actor-zeta
+        absl::int128
+        magic_enum::magic_enum
+        msgpackc-cxx
 )
 
 target_include_directories(otterbrix_${PROJECT_NAME} PUBLIC

@@ -24,11 +24,15 @@ namespace components::logical_plan {
         return stream.str();
     }
 
-    node_ptr make_node_group(std::pmr::memory_resource* resource,
-                             const collection_full_name_t& collection,
-                             const ql::aggregate::group_t& group) {
+    node_group_ptr make_node_group(std::pmr::memory_resource* resource, const collection_full_name_t& collection) {
+        return {new node_group_t{resource, collection}};
+    }
+
+    node_group_ptr make_node_group(std::pmr::memory_resource* resource,
+                                   const collection_full_name_t& collection,
+                                   const std::vector<expression_ptr>& expressions) {
         auto node = new node_group_t{resource, collection};
-        node->append_expressions(group.fields);
+        node->append_expressions(expressions);
         return node;
     }
 

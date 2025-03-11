@@ -19,21 +19,21 @@ TEST_CASE("create_plan::match") {
     auto resource = std::pmr::synchronized_pool_resource();
     auto collection = init_collection(&resource);
     {
-        auto match = components::ql::aggregate::make_match(nullptr);
-        auto node_match = make_node_match(&resource, get_name(), match);
+        auto node_match = make_node_match(&resource, get_name(), nullptr);
         context_storage_t context;
         context.emplace(get_name(), d(collection));
-        auto plan = create_plan(context, node_match, components::ql::limit_t::unlimit());
+        auto plan = create_plan(context, node_match, components::logical_plan::limit_t::unlimit());
         plan->on_execute(nullptr);
         REQUIRE(plan->output()->size() == 100);
     }
     {
-        auto match = components::ql::aggregate::make_match(
-            make_compare_expression(&resource, compare_type::eq, key("key"), core::parameter_id_t(1)));
-        auto node_match = make_node_match(&resource, get_name(), match);
+        auto node_match =
+            make_node_match(&resource,
+                            get_name(),
+                            make_compare_expression(&resource, compare_type::eq, key("key"), core::parameter_id_t(1)));
         context_storage_t context;
         context.emplace(get_name(), d(collection));
-        auto plan = create_plan(context, node_match, components::ql::limit_t::unlimit());
-        //REQUIRE(node_match->to_string() == R"_($match: {"key": {$eq: #1}})_");
+        auto plan = create_plan(context, node_match, components::logical_plan::limit_t::unlimit());
+        REQUIRE(node_match->to_string() == R"_($match: {"key": {$eq: #1}})_");
     }
 }

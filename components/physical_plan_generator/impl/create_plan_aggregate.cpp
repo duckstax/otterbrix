@@ -2,7 +2,6 @@
 
 #include <components/physical_plan/collection/operators/aggregation.hpp>
 #include <components/physical_plan_generator/create_plan.hpp>
-#include <components/ql/aggregate/limit.hpp>
 
 namespace services::collection::planner::impl {
 
@@ -10,7 +9,7 @@ namespace services::collection::planner::impl {
 
     operators::operator_ptr create_plan_aggregate(const context_storage_t& context,
                                                   const components::logical_plan::node_ptr& node,
-                                                  components::ql::limit_t limit) {
+                                                  components::logical_plan::limit_t limit) {
         auto op = boost::intrusive_ptr(new operators::aggregation(context.at(node->collection_full_name())));
         for (const components::logical_plan::node_ptr& child : node->children()) {
             switch (child->type()) {

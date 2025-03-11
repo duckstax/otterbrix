@@ -4,35 +4,39 @@
 
 #include <actor-zeta.hpp>
 
-#include <components/ql/statements.hpp>
 #include <components/session/session.hpp>
+#include <logical_plan/forward.hpp>
+#include <logical_plan/node.hpp>
+#include <logical_plan/param_storage.hpp>
 
 class session_t {
 public:
     explicit session_t(actor_zeta::address_t address);
 
-    template<class T>
-    session_t(actor_zeta::address_t address, T statement)
+    session_t(actor_zeta::address_t address,
+              components::logical_plan::node_ptr node,
+              components::logical_plan::ql_param_statement_ptr params)
         : address_(std::move(address))
-        , data_(std::forward<T>(statement)) {}
+        , data_(std::move(node))
+        , params_(std::move(params)) {}
 
     actor_zeta::address_t address() { return address_; }
 
-    template<class T>
-    T& get() {
-        return std::get<T>(data_);
-    }
+    components::logical_plan::node_ptr node() { return data_; }
+
+    components::logical_plan::ql_param_statement_ptr params() { return params_; }
 
     template<typename T>
     bool is_type() const {
         return std::holds_alternative<T>(data_);
     }
 
-    components::ql::statement_type type() const;
+    components::logical_plan::node_type type() const;
 
 private:
     actor_zeta::address_t address_;
-    components::ql::variant_statement_t data_;
+    components::logical_plan::node_ptr data_;
+    components::logical_plan::ql_param_statement_ptr params_;
     ///components::session::session_id_t session_;
 };
 
