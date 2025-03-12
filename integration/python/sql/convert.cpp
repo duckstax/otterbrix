@@ -246,12 +246,14 @@ void parse_find_condition_dict_(std::pmr::memory_resource* resource,
                                 compare_expression_t* parent_condition,
                                 const py::handle& condition,
                                 const std::string& prev_key,
-                                node_aggregate_t* aggregate);
+                                node_aggregate_t* aggregate,
+                                ql_param_statement_t* params);
 void parse_find_condition_array_(std::pmr::memory_resource* resource,
                                  compare_expression_t* parent_condition,
                                  const py::handle& condition,
                                  const std::string& prev_key,
-                                 node_aggregate_t* aggregate);
+                                 node_aggregate_t* aggregate,
+                                 ql_param_statement_t* params);
 
 void parse_find_condition_(std::pmr::memory_resource* resource,
                            compare_expression_t* parent_condition,
@@ -269,9 +271,9 @@ void parse_find_condition_(std::pmr::memory_resource* resource,
         }
     }
     if (py::isinstance<py::dict>(condition)) {
-        parse_find_condition_dict_(resource, parent_condition, condition, real_key, aggregate);
+        parse_find_condition_dict_(resource, parent_condition, condition, real_key, aggregate, params);
     } else if (py::isinstance<py::list>(condition) || py::isinstance<py::tuple>(condition)) {
-        parse_find_condition_array_(resource, parent_condition, condition, real_key, aggregate);
+        parse_find_condition_array_(resource, parent_condition, condition, real_key, aggregate, params);
     } else {
         auto value = params->add_parameter(to_value(condition, params->parameters().tape()));
         auto sub_condition = make_compare_expression(resource, type, ex_key_t(real_key), value);

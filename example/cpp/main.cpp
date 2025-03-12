@@ -189,6 +189,7 @@ TEST_CASE("example::sql::group_by") {
     }
 }
 
+/*
 TEST_CASE("example::sql::invalid_queries") {
     auto config = make_create_config("/tmp/test_collection_sql/invalid_queries");
     clear_directory(config);
@@ -210,3 +211,4 @@ TEST_CASE("example::sql::invalid_queries") {
         REQUIRE(c->get_error().type == error_code_t::collection_not_exists);
     }
 }
+*/

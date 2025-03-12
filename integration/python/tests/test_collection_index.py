@@ -3,8 +3,8 @@ import pytest
 from otterbrix import Client, DataBase, Collection, TypeIndex
 
 
-database_name = "TestDatabase_1"
-collection_name = "TestCollection_1"
+database_name = "testdatabase_1"
+collection_name = "testcollection_1"
 
 client = Client(os.getcwd() + "/test_collection_index")
 database = client[database_name]

@@ -4,8 +4,8 @@ import pytest
 from otterbrix import Client, DataBase, Collection
 
 client = Client(os.getcwd() + "/test_collection")
-friedrich_database = client["FriedrichDatabase"]
-friedrich_collection = friedrich_database["FriedrichCollection"]
+friedrich_database = client["friedrichdatabase"]
+friedrich_collection = friedrich_database["friedrichcollection"]
 
 def gen_id(num):
     res = str(num)
@@ -63,7 +63,7 @@ friedrich_collection.insert(list_doc) # not inserted (not unique id)
 
 def test_collection_len():
     assert len(friedrich_collection) == 100
-    assert len(friedrich_database['FriedrichCollection']) == 100
+    assert len(friedrich_database['friedrichcollection']) == 100
 
 def test_collection_find():
     c = friedrich_collection.find({})

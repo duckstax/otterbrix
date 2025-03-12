@@ -16,13 +16,6 @@
 
 #include "context_storage.hpp"
 
-namespace components::ql {
-    struct create_database_t;
-    struct drop_database_t;
-    struct create_collection_t;
-    struct drop_collection_t;
-} // namespace components::ql
-
 namespace services {
 
     class memory_storage_t final : public actor_zeta::cooperative_supervisor<memory_storage_t> {

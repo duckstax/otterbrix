@@ -324,10 +324,9 @@ namespace services::dispatcher {
                         wal_success(session, last_wal_id_);
                     } else {
                         assert(s.node() && "Doesn't holds logical_plan");
-                        auto plan = s.node();
                         actor_zeta::send(manager_wal_,
                                          dispatcher_t::address(),
-                                         wal::handler_id(wal::route::insert_one),
+                                         wal::handler_id(wal::route::insert_many),
                                          session,
                                          std::move(plan));
                         return;
@@ -340,13 +339,13 @@ namespace services::dispatcher {
                     if (s.address().get() == manager_wal_.get()) {
                         wal_success(session, last_wal_id_);
                     } else {
-                        assert(s.node() && "Doesn't holds ql_statement_t*");
-                        auto plan = s.node();
+                        assert(s.node() && "Doesn't holds correct plan*");
                         actor_zeta::send(manager_wal_,
                                          dispatcher_t::address(),
-                                         wal::handler_id(wal::route::update_one),
+                                         wal::handler_id(wal::route::update_many),
                                          session,
-                                         std::move(plan));
+                                         std::move(plan),
+                                         s.params());
                         return;
                     }
                     break;
@@ -357,13 +356,13 @@ namespace services::dispatcher {
                     if (s.address().get() == manager_wal_.get()) {
                         wal_success(session, last_wal_id_);
                     } else {
-                        assert(s.node() && "Doesn't holds ql_statement_t*");
-                        auto plan = s.node();
+                        assert(s.node() && "Doesn't holds correct plan*");
                         actor_zeta::send(manager_wal_,
                                          dispatcher_t::address(),
-                                         wal::handler_id(wal::route::delete_one),
+                                         wal::handler_id(wal::route::delete_many),
                                          session,
-                                         std::move(plan));
+                                         std::move(plan),
+                                         s.params());
                         return;
                     }
                     break;

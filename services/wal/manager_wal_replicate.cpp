@@ -281,7 +281,8 @@ namespace services::wal {
                          handler_id(route::delete_many),
                          session,
                          current_message()->sender(),
-                         std::move(data));
+                         std::move(data),
+                         std::move(params));
     }
 
     void manager_wal_replicate_t::update_one(const session_id_t& session,
