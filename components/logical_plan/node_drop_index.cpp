@@ -9,11 +9,7 @@ namespace components::logical_plan {
         : node_t(resource, node_type::drop_index_t, collection)
         , name_(name) {}
 
-    std::string node_drop_index_t::name() const {
-        std::stringstream s;
-        s << collection_.collection << "_" << name_;
-        return s.str();
-    }
+    const std::string& node_drop_index_t::name() const noexcept { return name_; }
 
     hash_t node_drop_index_t::hash_impl() const { return 0; }
 

@@ -1,6 +1,5 @@
 #include "wrapper_dispatcher.hpp"
 #include "route.hpp"
-#include <boost/algorithm/string.hpp>
 #include <core/system_command.hpp>
 #include <logical_plan/node_create_collection.hpp>
 #include <logical_plan/node_create_database.hpp>
@@ -70,34 +69,27 @@ namespace otterbrix {
 
     auto wrapper_dispatcher_t::create_database(const session_id_t& session, const database_name_t& database)
         -> cursor_t_ptr {
-        auto plan =
-            components::logical_plan::make_node_create_database(resource(),
-                                                                {boost::algorithm::to_lower_copy(database), {}});
+        auto plan = components::logical_plan::make_node_create_database(resource(), {database, {}});
         return send_plan(session, plan);
     }
 
     auto wrapper_dispatcher_t::drop_database(const components::session::session_id_t& session,
                                              const database_name_t& database) -> cursor_t_ptr {
-        auto plan = components::logical_plan::make_node_drop_database(resource(),
-                                                                      {boost::algorithm::to_lower_copy(database), {}});
+        auto plan = components::logical_plan::make_node_drop_database(resource(), {database, {}});
         return send_plan(session, plan);
     }
 
     auto wrapper_dispatcher_t::create_collection(const session_id_t& session,
                                                  const database_name_t& database,
                                                  const collection_name_t& collection) -> cursor_t_ptr {
-        auto plan = components::logical_plan::make_node_create_collection(
-            resource(),
-            {boost::algorithm::to_lower_copy(database), boost::algorithm::to_lower_copy(collection)});
+        auto plan = components::logical_plan::make_node_create_collection(resource(), {database, collection});
         return send_plan(session, plan);
     }
 
     auto wrapper_dispatcher_t::drop_collection(const components::session::session_id_t& session,
                                                const database_name_t& database,
                                                const collection_name_t& collection) -> cursor_t_ptr {
-        auto plan = components::logical_plan::make_node_drop_collection(
-            resource(),
-            {boost::algorithm::to_lower_copy(database), boost::algorithm::to_lower_copy(collection)});
+        auto plan = components::logical_plan::make_node_drop_collection(resource(), {database, collection});
         return send_plan(session, plan);
     }
 
@@ -107,10 +99,7 @@ namespace otterbrix {
                                           document_ptr document) -> cursor_t_ptr {
         trace(log_, "wrapper_dispatcher_t::insert_one session: {}, collection name: {} ", session.data(), collection);
         init(session);
-        auto plan = components::logical_plan::make_node_insert(
-            resource(),
-            {boost::algorithm::to_lower_copy(database), boost::algorithm::to_lower_copy(collection)},
-            document);
+        auto plan = components::logical_plan::make_node_insert(resource(), {database, collection}, document);
         actor_zeta::send(manager_dispatcher_,
                          address(),
                          dispatcher::handler_id(dispatcher::route::execute_plan),
@@ -127,10 +116,7 @@ namespace otterbrix {
                                            const std::pmr::vector<document_ptr>& documents) -> cursor_t_ptr {
         trace(log_, "wrapper_dispatcher_t::insert_many session: {}, collection name: {} ", session.data(), collection);
         init(session);
-        auto plan = components::logical_plan::make_node_insert(
-            resource(),
-            {boost::algorithm::to_lower_copy(database), boost::algorithm::to_lower_copy(collection)},
-            documents);
+        auto plan = components::logical_plan::make_node_insert(resource(), {database, collection}, documents);
         actor_zeta::send(manager_dispatcher_,
                          address(),
                          dispatcher::handler_id(dispatcher::route::execute_plan),
@@ -266,8 +252,8 @@ namespace otterbrix {
                          address(),
                          collection::handler_id(collection::route::size),
                          session,
-                         boost::algorithm::to_lower_copy(database),
-                         boost::algorithm::to_lower_copy(collection));
+                         database,
+                         collection);
         wait(session);
         return std::move(size_store_);
     }

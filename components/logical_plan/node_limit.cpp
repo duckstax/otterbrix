@@ -45,7 +45,7 @@ namespace components::logical_plan {
         }
         auto database = msg_object.via.array.ptr[0].as<std::string>();
         auto collection = msg_object.via.array.ptr[1].as<std::string>();
-        auto limit = msg_object.via.i64;
+        auto limit = msg_object.via.array.ptr[2].as<int>();
         return make_node_limit(resource, {database, collection}, limit_t(limit));
     }
 } // namespace components::logical_plan

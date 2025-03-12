@@ -24,7 +24,7 @@ namespace components::logical_plan {
                                      const std::string& name = "unnamed",
                                      index_type type = index_type::single);
 
-        std::string name() const;
+        const std::string& name() const noexcept;
         index_type type() const noexcept;
         keys_base_storage_t& keys() noexcept;
 

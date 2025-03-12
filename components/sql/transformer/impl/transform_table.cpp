@@ -26,9 +26,10 @@ namespace components::sql::transform {
                 assert(drop_name.size() == 3);
 
                 auto it = drop_name.begin();
-                return logical_plan::make_node_drop_index(resource,
-                                                          {strVal((it++)->data), strVal((it++)->data)},
-                                                          strVal(it->data));
+                auto database = strVal(it++->data);
+                auto collection = strVal(it++->data);
+                auto name = strVal(it->data);
+                return logical_plan::make_node_drop_index(resource, {database, collection}, name);
             }
             default:
                 throw std::runtime_error("Unsupported removeType");

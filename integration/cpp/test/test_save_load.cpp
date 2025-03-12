@@ -10,8 +10,8 @@ constexpr uint count_databases = 2;
 constexpr uint count_collections = 4;
 constexpr uint count_documents = 8;
 
-static const database_name_t database_name = "TestDatabase";
-static const collection_name_t collection_name = "TestCollection";
+static const database_name_t database_name = "testdatabase";
+static const collection_name_t collection_name = "testcollection";
 
 using namespace components::cursor;
 using components::expressions::compare_type;

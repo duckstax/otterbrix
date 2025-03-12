@@ -40,7 +40,7 @@ namespace services::dispatcher {
         void load(const components::session::session_id_t& session, actor_zeta::address_t sender);
         void load_from_disk_result(const components::session::session_id_t& session,
                                    const services::disk::result_load_t& result);
-        void load_from_memory_resource_result(const components::session::session_id_t& session);
+        void load_from_memory_storage_result(const components::session::session_id_t& session);
         void load_from_wal_result(const components::session::session_id_t& session,
                                   std::vector<services::wal::record_t>& records);
         void execute_plan(const components::session::session_id_t& session,
@@ -62,7 +62,7 @@ namespace services::dispatcher {
         // Behaviors
         actor_zeta::behavior_t load_;
         actor_zeta::behavior_t load_from_disk_result_;
-        actor_zeta::behavior_t load_from_memory_resource_result_;
+        actor_zeta::behavior_t load_from_memory_storage_result_;
         actor_zeta::behavior_t load_from_wal_result_;
         actor_zeta::behavior_t execute_plan_;
         actor_zeta::behavior_t execute_plan_finish_;

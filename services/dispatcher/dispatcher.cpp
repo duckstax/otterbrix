@@ -28,11 +28,11 @@ namespace services::dispatcher {
                                                            disk::handler_id(disk::route::load_finish),
                                                            this,
                                                            &dispatcher_t::load_from_disk_result))
-        , load_from_memory_resource_result_(
+        , load_from_memory_storage_result_(
               actor_zeta::make_behavior(resource(),
                                         memory_storage::handler_id(memory_storage::route::load_finish),
                                         this,
-                                        &dispatcher_t::load_from_memory_resource_result))
+                                        &dispatcher_t::load_from_memory_storage_result))
         , load_from_wal_result_(actor_zeta::make_behavior(resource(),
                                                           wal::handler_id(wal::route::load_finish),
                                                           this,
@@ -85,7 +85,7 @@ namespace services::dispatcher {
                     break;
                 }
                 case memory_storage::handler_id(memory_storage::route::load_finish): {
-                    load_from_memory_resource_result_(msg);
+                    load_from_memory_storage_result_(msg);
                     break;
                 }
                 case wal::handler_id(wal::route::load_finish): {
@@ -147,8 +147,8 @@ namespace services::dispatcher {
         }
     }
 
-    void dispatcher_t::load_from_memory_resource_result(const components::session::session_id_t& session) {
-        trace(log_, "dispatcher_t::load_from_memory_resource_result, session: {}", session.data());
+    void dispatcher_t::load_from_memory_storage_result(const components::session::session_id_t& session) {
+        trace(log_, "dispatcher_t::load_from_memory_storage_result, session: {}", session.data());
         actor_zeta::send(manager_disk_, address(), disk::handler_id(disk::route::load_indexes), session);
         actor_zeta::send(manager_wal_, address(), wal::handler_id(wal::route::load), session, load_result_.wal_id());
         load_result_.clear();

@@ -3,8 +3,8 @@
 #include <collection/collection.hpp>
 #include <components/expressions/compare_expression.hpp>
 
-static const database_name_t database_name = "TestDatabase";
-static const collection_name_t collection_name = "TestCollection";
+static const database_name_t database_name = "testdatabase";
+static const collection_name_t collection_name = "testcollection";
 
 using components::expressions::compare_type;
 using key = components::expressions::key_t;

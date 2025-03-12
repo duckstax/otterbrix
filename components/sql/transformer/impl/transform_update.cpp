@@ -28,11 +28,12 @@ namespace components::sql::transform {
         if (node.whereClause) {
             match =
                 logical_plan::make_node_match(resource,
-                                              {},
+                                              rangevar_to_collection(node.relation),
                                               impl::transform_a_expr(statement, pg_ptr_cast<A_Expr>(node.whereClause)));
         } else {
-            match =
-                logical_plan::make_node_match(resource, {}, make_compare_expression(resource, compare_type::all_true));
+            match = logical_plan::make_node_match(resource,
+                                                  rangevar_to_collection(node.relation),
+                                                  make_compare_expression(resource, compare_type::all_true));
         };
 
         return logical_plan::make_node_update_many(resource,

@@ -6,8 +6,8 @@ using components::expressions::compare_type;
 using key = components::expressions::key_t;
 using id_par = core::parameter_id_t;
 
-static const database_name_t database_name = "TestDatabase";
-static const collection_name_t collection_name = "TestCollection";
+static const database_name_t database_name = "testdatabase";
+static const collection_name_t collection_name = "testcollection";
 
 constexpr int kDocuments = 100;
 
@@ -112,8 +112,7 @@ constexpr int kDocuments = 100;
 
 #define CHECK_EXISTS_INDEX(NAME, EXISTS)                                                                               \
     do {                                                                                                               \
-        auto index_name = collection_name + "_" + NAME;                                                                \
-        auto path = config.disk.path / database_name / collection_name / index_name;                                   \
+        auto path = config.disk.path / database_name / collection_name / NAME;                                         \
         REQUIRE(std::filesystem::exists(path) == EXISTS);                                                              \
         REQUIRE(std::filesystem::is_directory(path) == EXISTS);                                                        \
     } while (false)

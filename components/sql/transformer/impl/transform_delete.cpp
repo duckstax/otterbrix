@@ -9,7 +9,12 @@ namespace components::sql::transform {
     logical_plan::node_ptr transformer::transform_delete(DeleteStmt& node,
                                                          logical_plan::ql_param_statement_t* statement) {
         if (!node.whereClause) {
-            return logical_plan::make_node_delete_many(resource, rangevar_to_collection(node.relation), {});
+            return logical_plan::make_node_delete_many(
+                resource,
+                rangevar_to_collection(node.relation),
+                logical_plan::make_node_match(resource,
+                                              rangevar_to_collection(node.relation),
+                                              make_compare_expression(resource, compare_type::all_true)));
         }
         auto collection = rangevar_to_collection(node.relation);
         return logical_plan::make_node_delete_many(

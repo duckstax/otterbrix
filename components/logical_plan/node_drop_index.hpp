@@ -11,7 +11,7 @@ namespace components::logical_plan {
                                    const collection_full_name_t& collection,
                                    const std::string& name);
 
-        std::string name() const;
+        const std::string& name() const noexcept;
 
     private:
         hash_t hash_impl() const final;

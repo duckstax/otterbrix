@@ -2,8 +2,8 @@
 #include <catch2/catch.hpp>
 #include <variant>
 
-static const database_name_t database_name = "TestDatabase";
-static const collection_name_t collection_name = "TestCollection";
+static const database_name_t database_name = "testdatabase";
+static const collection_name_t collection_name = "testcollection";
 
 using namespace components;
 using namespace components::cursor;

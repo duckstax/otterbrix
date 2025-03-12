@@ -7,9 +7,9 @@ using expressions::compare_type;
 using key = components::expressions::key_t;
 using id_par = core::parameter_id_t;
 
-static const std::string database_name = "TestDatabase";
-static const std::string collection_name_1 = "TestCollection_1";
-static const std::string collection_name_2 = "TestCollection_2";
+static const std::string database_name = "testdatabase";
+static const std::string collection_name_1 = "testcollection_1";
+static const std::string collection_name_2 = "testcollection_2";
 
 TEST_CASE("integration::cpp::test_join") {
     auto config = test_create_config("/tmp/test_join/base");

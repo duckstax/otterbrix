@@ -12,11 +12,7 @@ namespace components::logical_plan {
         , name_(name)
         , index_type_(type) {}
 
-    std::string node_create_index_t::name() const {
-        std::stringstream s;
-        s << collection_.collection << "_" << name_;
-        return s.str();
-    }
+    const std::string& node_create_index_t::name() const noexcept { return name_; }
 
     index_type node_create_index_t::type() const noexcept { return index_type_; }
     keys_base_storage_t& node_create_index_t::keys() noexcept { return keys_; }

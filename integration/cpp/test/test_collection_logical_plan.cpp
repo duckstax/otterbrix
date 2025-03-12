@@ -14,10 +14,10 @@
 #include <logical_plan/node_update.hpp>
 #include <variant>
 
-static const database_name_t database_name = "TestDatabase";
-static const collection_name_t collection_name = "TestCollection";
-static const collection_name_t collection_left = "TestCollectionLeftJoin";
-static const collection_name_t collection_right = "TestCollectionRightJoin";
+static const database_name_t database_name = "testdatabase";
+static const collection_name_t collection_name = "testcollection";
+static const collection_name_t collection_left = "testcollection_left_join";
+static const collection_name_t collection_right = "testcollection_right_join";
 
 using namespace components;
 using namespace components::cursor;
