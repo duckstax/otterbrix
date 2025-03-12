@@ -15,7 +15,7 @@ public:
 
     session_t(actor_zeta::address_t address,
               components::logical_plan::node_ptr node,
-              components::logical_plan::ql_param_statement_ptr params)
+              components::logical_plan::parameter_node_ptr params)
         : address_(std::move(address))
         , data_(std::move(node))
         , params_(std::move(params)) {}
@@ -24,7 +24,7 @@ public:
 
     components::logical_plan::node_ptr node() { return data_; }
 
-    components::logical_plan::ql_param_statement_ptr params() { return params_; }
+    components::logical_plan::parameter_node_ptr params() { return params_; }
 
     template<typename T>
     bool is_type() const {
@@ -36,7 +36,7 @@ public:
 private:
     actor_zeta::address_t address_;
     components::logical_plan::node_ptr data_;
-    components::logical_plan::ql_param_statement_ptr params_;
+    components::logical_plan::parameter_node_ptr params_;
     ///components::session::session_id_t session_;
 };
 

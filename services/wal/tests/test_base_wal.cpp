@@ -22,7 +22,7 @@ TEST_CASE("pack and unpack") {
 
     buffer_t buffer;
 
-    pack(buffer, last_crc32, wal_id, data);
+    pack(buffer, last_crc32, wal_id, data, make_parameter_node(&resource));
     wal_entry_t<node_insert_ptr> entry;
     entry.size_ = read_size_impl(buffer, 0);
 

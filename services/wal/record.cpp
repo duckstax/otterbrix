@@ -16,21 +16,18 @@ namespace services::wal {
         switch (type) {
             case node_type::insert_t:
                 data = to_node_insert(node_obj, resource);
-                params = nullptr;
                 break;
             case node_type::delete_t:
                 data = to_node_delete(node_obj, resource);
-                params = to_storage_parameters(params_obj, resource);
                 break;
             case node_type::update_t:
                 data = to_node_update(node_obj, resource);
-                params = to_storage_parameters(params_obj, resource);
                 break;
             default:
                 data = to_node_default(node_obj, type, resource);
-                params = nullptr;
                 break;
         }
+        params = to_storage_parameters(params_obj, resource);
     }
 
 } // namespace services::wal

@@ -51,9 +51,9 @@ namespace components::logical_plan {
 
     const expr_value_t& get_parameter(const storage_parameters* storage, core::parameter_id_t id);
 
-    class ql_param_statement_t : public boost::intrusive_ref_counter<ql_param_statement_t> {
+    class parameter_node_t : public boost::intrusive_ref_counter<parameter_node_t> {
     public:
-        ql_param_statement_t(std::pmr::memory_resource* resource)
+        parameter_node_t(std::pmr::memory_resource* resource)
             : values_(resource) {}
 
         auto parameters() const -> const storage_parameters&;
@@ -81,9 +81,9 @@ namespace components::logical_plan {
         storage_parameters values_;
     };
 
-    using ql_param_statement_ptr = boost::intrusive_ptr<ql_param_statement_t>;
+    using parameter_node_ptr = boost::intrusive_ptr<parameter_node_t>;
 
-    ql_param_statement_ptr make_ql_param_statement(std::pmr::memory_resource* resource);
+    parameter_node_ptr make_parameter_node(std::pmr::memory_resource* resource);
 
     inline components::document::value_t to_structure_(const msgpack::object& msg_object,
                                                        components::document::impl::base_document* tape) {
@@ -107,9 +107,9 @@ namespace components::logical_plan {
         }
     }
 
-    inline ql_param_statement_ptr to_storage_parameters(const msgpack::object& msg_object,
-                                                        std::pmr::memory_resource* resource) {
-        auto result = make_ql_param_statement(resource);
+    inline parameter_node_ptr to_storage_parameters(const msgpack::object& msg_object,
+                                                    std::pmr::memory_resource* resource) {
+        auto result = make_parameter_node(resource);
         if (msg_object.type != msgpack::type::MAP) {
             throw msgpack::type_error();
         }
@@ -128,10 +128,10 @@ namespace msgpack {
         namespace adaptor {
 
             template<>
-            struct pack<components::logical_plan::ql_param_statement_ptr> final {
+            struct pack<components::logical_plan::parameter_node_ptr> final {
                 template<typename Stream>
                 packer<Stream>& operator()(msgpack::packer<Stream>& o,
-                                           components::logical_plan::ql_param_statement_ptr const& v) const {
+                                           components::logical_plan::parameter_node_ptr const& v) const {
                     o.pack_map(v->parameters().parameters.size());
                     for (auto it : v->parameters().parameters) {
                         o.pack(it.first);
@@ -142,9 +142,9 @@ namespace msgpack {
             };
 
             template<>
-            struct object_with_zone<components::logical_plan::ql_param_statement_ptr> final {
+            struct object_with_zone<components::logical_plan::parameter_node_ptr> final {
                 void operator()(msgpack::object::with_zone& o,
-                                components::logical_plan::ql_param_statement_ptr const& v) const {
+                                components::logical_plan::parameter_node_ptr const& v) const {
                     o.type = type::MAP;
                     o.via.array.size = static_cast<uint32_t>(v->parameters().parameters.size());
                     o.via.array.ptr =

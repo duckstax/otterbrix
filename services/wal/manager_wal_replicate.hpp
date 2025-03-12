@@ -56,16 +56,16 @@ namespace services::wal {
         void insert_many(const session_id_t& session, components::logical_plan::node_insert_ptr data);
         void delete_one(const session_id_t& session,
                         components::logical_plan::node_delete_ptr data,
-                        components::logical_plan::ql_param_statement_ptr params);
+                        components::logical_plan::parameter_node_ptr params);
         void delete_many(const session_id_t& session,
                          components::logical_plan::node_delete_ptr data,
-                         components::logical_plan::ql_param_statement_ptr params);
+                         components::logical_plan::parameter_node_ptr params);
         void update_one(const session_id_t& session,
                         components::logical_plan::node_update_ptr data,
-                        components::logical_plan::ql_param_statement_ptr params);
+                        components::logical_plan::parameter_node_ptr params);
         void update_many(const session_id_t& session,
                          components::logical_plan::node_update_ptr data,
-                         components::logical_plan::ql_param_statement_ptr params);
+                         components::logical_plan::parameter_node_ptr params);
         void create_index(const session_id_t& session, components::logical_plan::node_create_index_ptr data);
 
     private:

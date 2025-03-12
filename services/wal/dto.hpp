@@ -24,7 +24,7 @@ namespace services::wal {
     struct wal_entry_t final {
         size_tt size_{};
         T entry_ = nullptr;
-        components::logical_plan::ql_param_statement_ptr params_ = nullptr;
+        components::logical_plan::parameter_node_ptr params_ = nullptr;
         crc32_t last_crc32_{};
         id_t id_{};
         node_type type_{};
@@ -37,22 +37,17 @@ namespace services::wal {
     size_tt read_size_impl(buffer_t& input, int index_start);
 
     template<class T>
-    crc32_t pack(buffer_t& storage,
-                 crc32_t last_crc32,
-                 id_t id,
-                 T& data,
-                 components::logical_plan::ql_param_statement_ptr params = nullptr) {
+    crc32_t
+    pack(buffer_t& storage, crc32_t last_crc32, id_t id, T& data, components::logical_plan::parameter_node_ptr params) {
         msgpack::sbuffer buffer;
         msgpack::packer<msgpack::sbuffer> packer(buffer);
 
-        packer.pack_array(params ? 5 : 4);
+        packer.pack_array(5);
         packer.pack_fix_uint32(last_crc32);
         packer.pack_fix_uint64(id);
         packer.pack_char(static_cast<char>(data->type()));
         packer.pack(data);
-        if (params) {
-            packer.pack(params);
-        }
+        packer.pack(params);
 
         return pack(storage, buffer.data(), buffer.size());
     }
@@ -66,6 +61,7 @@ namespace services::wal {
         entry.id_ = o.via.array.ptr[1].as<id_t>();
         entry.type_ = static_cast<node_type>(o.via.array.ptr[2].as<char>());
         entry.entry_ = std::move(o.via.array.ptr[3].as<T>());
+        entry.params_ = components::logical_plan::to_storage_parameters(o.via.array.ptr[4], resource);
     }
 
     template<>
@@ -95,6 +91,7 @@ namespace services::wal {
         entry.type_ = static_cast<node_type>(o.via.array.ptr[2].as<char>());
         assert(entry.type_ == node_type::insert_t);
         entry.entry_ = std::move(components::logical_plan::to_node_insert(o.via.array.ptr[3], resource));
+        entry.params_ = components::logical_plan::to_storage_parameters(o.via.array.ptr[4], resource);
     }
 
     template<>

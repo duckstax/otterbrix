@@ -108,7 +108,7 @@ namespace otterbrix {
         trace(log_, "wrapper_collection::update_one");
         if (py::isinstance<py::dict>(cond) && py::isinstance<py::dict>(fields)) {
             auto plan = components::logical_plan::make_node_aggregate(ptr_->resource(), {database_, name_});
-            auto params = components::logical_plan::make_ql_param_statement(ptr_->resource());
+            auto params = components::logical_plan::make_parameter_node(ptr_->resource());
             to_statement(ptr_->resource(), pack_to_match(cond), plan.get(), params.get());
             auto update = to_document(fields, ptr_->resource());
             auto session_tmp = otterbrix::session_id_t();
@@ -135,7 +135,7 @@ namespace otterbrix {
         trace(log_, "wrapper_collection::update_many");
         if (py::isinstance<py::dict>(cond) && py::isinstance<py::dict>(fields)) {
             auto plan = components::logical_plan::make_node_aggregate(ptr_->resource(), {database_, name_});
-            auto params = components::logical_plan::make_ql_param_statement(ptr_->resource());
+            auto params = components::logical_plan::make_parameter_node(ptr_->resource());
             to_statement(ptr_->resource(), pack_to_match(cond), plan.get(), params.get());
             auto update = to_document(fields, ptr_->resource());
             auto session_tmp = otterbrix::session_id_t();
@@ -162,7 +162,7 @@ namespace otterbrix {
         trace(log_, "wrapper_collection::find");
         if (py::isinstance<py::dict>(cond)) {
             auto plan = components::logical_plan::make_node_aggregate(ptr_->resource(), {database_, name_});
-            auto params = components::logical_plan::make_ql_param_statement(ptr_->resource());
+            auto params = components::logical_plan::make_parameter_node(ptr_->resource());
             to_statement(ptr_->resource(), pack_to_match(cond), plan.get(), params.get());
             auto session_tmp = otterbrix::session_id_t();
             auto cur = ptr_->find(session_tmp, plan, params);
@@ -177,7 +177,7 @@ namespace otterbrix {
         trace(log_, "wrapper_collection::find_one");
         if (py::isinstance<py::dict>(cond)) {
             auto plan = components::logical_plan::make_node_aggregate(ptr_->resource(), {database_, name_});
-            auto params = components::logical_plan::make_ql_param_statement(ptr_->resource());
+            auto params = components::logical_plan::make_parameter_node(ptr_->resource());
             to_statement(ptr_->resource(), pack_to_match(cond), plan.get(), params.get());
             auto session_tmp = otterbrix::session_id_t();
             auto cur = ptr_->find_one(session_tmp, plan, params);
@@ -195,7 +195,7 @@ namespace otterbrix {
         trace(log_, "wrapper_collection::delete_one");
         if (py::isinstance<py::dict>(cond)) {
             auto plan = components::logical_plan::make_node_aggregate(ptr_->resource(), {database_, name_});
-            auto params = components::logical_plan::make_ql_param_statement(ptr_->resource());
+            auto params = components::logical_plan::make_parameter_node(ptr_->resource());
             to_statement(ptr_->resource(), pack_to_match(cond), plan.get(), params.get());
             auto session_tmp = otterbrix::session_id_t();
             auto cur = ptr_->delete_one(
@@ -216,7 +216,7 @@ namespace otterbrix {
         trace(log_, "wrapper_collection::delete_many");
         if (py::isinstance<py::dict>(cond)) {
             auto plan = components::logical_plan::make_node_aggregate(ptr_->resource(), {database_, name_});
-            auto params = components::logical_plan::make_ql_param_statement(ptr_->resource());
+            auto params = components::logical_plan::make_parameter_node(ptr_->resource());
             to_statement(ptr_->resource(), pack_to_match(cond), plan.get(), params.get());
             auto session_tmp = otterbrix::session_id_t();
             auto cur = ptr_->delete_many(

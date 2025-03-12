@@ -13,7 +13,7 @@ namespace services::wal {
         id_t id;
         components::logical_plan::node_type type;
         components::logical_plan::node_ptr data;
-        components::logical_plan::ql_param_statement_ptr params;
+        components::logical_plan::parameter_node_ptr params;
 
         bool is_valid() const;
         void set_data(msgpack::object& node_obj, msgpack::object& params_obj, std::pmr::memory_resource* resource);

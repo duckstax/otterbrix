@@ -88,7 +88,8 @@ constexpr int kDocuments = 100;
         auto session = otterbrix::session_id_t();                                                                      \
         auto plan =                                                                                                    \
             components::logical_plan::make_node_aggregate(dispatcher->resource(), {database_name, collection_name});   \
-        auto c = dispatcher->find(session, plan, nullptr);                                                             \
+        auto c =                                                                                                       \
+            dispatcher->find(session, plan, components::logical_plan::make_parameter_node(dispatcher->resource()));    \
         REQUIRE(c->size() == kDocuments);                                                                              \
     } while (false)
 
@@ -102,7 +103,7 @@ constexpr int kDocuments = 100;
         plan->append_child(components::logical_plan::make_node_match(dispatcher->resource(),                           \
                                                                      {database_name, collection_name},                 \
                                                                      std::move(expr)));                                \
-        auto params = components::logical_plan::make_ql_param_statement(dispatcher->resource());                       \
+        auto params = components::logical_plan::make_parameter_node(dispatcher->resource());                           \
         params->add_parameter(id_par{1}, VALUE);                                                                       \
         auto c = dispatcher->find(session, plan, params);                                                              \
         REQUIRE(c->size() == COUNT);                                                                                   \
@@ -145,7 +146,7 @@ TEST_CASE("integration::test_index::base") {
             plan->append_child(components::logical_plan::make_node_match(dispatcher->resource(),
                                                                          {database_name, collection_name},
                                                                          std::move(expr)));
-            auto params = components::logical_plan::make_ql_param_statement(dispatcher->resource());
+            auto params = components::logical_plan::make_parameter_node(dispatcher->resource());
             params->add_parameter(id_par{1}, new_value(10));
             auto c = dispatcher->find(session, plan, params);
             REQUIRE(c->size() == 1);

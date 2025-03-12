@@ -41,7 +41,7 @@ auto to_order(const py::object& order) -> services::storage::sort::order;
 auto to_statement(std::pmr::memory_resource* resource,
                   const py::handle& source,
                   components::logical_plan::node_aggregate_t*,
-                  components::logical_plan::ql_param_statement_t* params) -> void;
+                  components::logical_plan::parameter_node_t* params) -> void;
 auto test_to_statement(const py::handle& source) -> py::str;
 
 auto pack_to_match(const py::object& object) -> py::list;

@@ -250,7 +250,7 @@ namespace services::dispatcher {
 
     void dispatcher_t::execute_plan(const components::session::session_id_t& session,
                                     components::logical_plan::node_ptr plan,
-                                    ql_param_statement_ptr params,
+                                    parameter_node_ptr params,
                                     actor_zeta::base::address_t address) {
         trace(log_, "dispatcher_t::execute_plan: session {}, {}", session.data(), plan->to_string());
         make_session(session_to_address_, session, session_t(address, plan, params));
@@ -260,7 +260,7 @@ namespace services::dispatcher {
                          memory_storage::handler_id(memory_storage::route::execute_plan),
                          session,
                          std::move(logic_plan),
-                         params ? params->take_parameters() : storage_parameters(resource()));
+                         params->take_parameters());
     }
 
     void dispatcher_t::execute_plan_finish(const components::session::session_id_t& session, cursor_t_ptr result) {
@@ -614,7 +614,7 @@ namespace services::dispatcher {
 
     void manager_dispatcher_t::execute_plan(const components::session::session_id_t& session,
                                             node_ptr plan,
-                                            ql_param_statement_ptr params) {
+                                            parameter_node_ptr params) {
         trace(log_, "manager_dispatcher_t::execute_plan session: {}, {}", session.data(), plan->to_string());
         return actor_zeta::send(dispatcher(),
                                 address(),

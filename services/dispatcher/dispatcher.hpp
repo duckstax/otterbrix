@@ -45,7 +45,7 @@ namespace services::dispatcher {
                                   std::vector<services::wal::record_t>& records);
         void execute_plan(const components::session::session_id_t& session,
                           components::logical_plan::node_ptr plan,
-                          components::logical_plan::ql_param_statement_ptr params,
+                          components::logical_plan::parameter_node_ptr params,
                           actor_zeta::address_t address);
         void execute_plan_finish(const components::session::session_id_t& session,
                                  components::cursor::cursor_t_ptr cursor);
@@ -128,7 +128,7 @@ namespace services::dispatcher {
         void load(const components::session::session_id_t& session);
         void execute_plan(const components::session::session_id_t& session,
                           components::logical_plan::node_ptr plan,
-                          components::logical_plan::ql_param_statement_ptr params);
+                          components::logical_plan::parameter_node_ptr params);
         void
         size(const components::session::session_id_t& session, std::string& database_name, std::string& collection);
         void close_cursor(const components::session::session_id_t& session);

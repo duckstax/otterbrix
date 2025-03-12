@@ -392,7 +392,7 @@ namespace services::disk {
                              dispatcher::handler_id(dispatcher::route::execute_plan),
                              session_id_t::generate_uid(),
                              index,
-                             nullptr,
+                             components::logical_plan::make_parameter_node(resource()),
                              dispatcher);
         }
     }

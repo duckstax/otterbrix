@@ -50,19 +50,19 @@ namespace services::wal {
         void delete_one(const session_id_t& session,
                         address_t& sender,
                         components::logical_plan::node_delete_ptr data,
-                        components::logical_plan::ql_param_statement_ptr params);
+                        components::logical_plan::parameter_node_ptr params);
         void delete_many(const session_id_t& session,
                          address_t& sender,
                          components::logical_plan::node_delete_ptr data,
-                         components::logical_plan::ql_param_statement_ptr params);
+                         components::logical_plan::parameter_node_ptr params);
         void update_one(const session_id_t& session,
                         address_t& sender,
                         components::logical_plan::node_update_ptr data,
-                        components::logical_plan::ql_param_statement_ptr params);
+                        components::logical_plan::parameter_node_ptr params);
         void update_many(const session_id_t& session,
                          address_t& sender,
                          components::logical_plan::node_update_ptr data,
-                         components::logical_plan::ql_param_statement_ptr params);
+                         components::logical_plan::parameter_node_ptr params);
         void create_index(const session_id_t& session,
                           address_t& sender,
                           components::logical_plan::node_create_index_ptr data);
@@ -91,7 +91,7 @@ namespace services::wal {
         virtual void read_buffer(buffer_t& buffer, size_t start_index, size_t size) const;
 
         template<class T>
-        void write_data_(T& data, components::logical_plan::ql_param_statement_ptr params = nullptr);
+        void write_data_(T& data, components::logical_plan::parameter_node_ptr params);
 
         void init_id();
         bool find_start_record(services::wal::id_t wal_id, std::size_t& start_index) const;

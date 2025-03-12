@@ -10,7 +10,7 @@ using namespace components::sql;
     SECTION(QUERY) {                                                                                                   \
         auto resource = std::pmr::synchronized_pool_resource();                                                        \
         transform::transformer transformer(&resource);                                                                 \
-        components::logical_plan::ql_param_statement_t agg(&resource);                                                 \
+        components::logical_plan::parameter_node_t agg(&resource);                                                     \
         auto select = raw_parser(QUERY)->lst.front().data;                                                             \
         auto node = transformer.transform(transform::pg_cell_to_node_cast(select), &agg);                              \
         REQUIRE(node->type() == components::logical_plan::node_type::delete_t);                                        \

@@ -204,7 +204,7 @@ auto to_order(const py::object& order) -> services::storage::sort::order {
 }
 
 using components::logical_plan::node_aggregate_t;
-using components::logical_plan::ql_param_statement_t;
+using components::logical_plan::parameter_node_t;
 using components::logical_plan::aggregate::operator_type;
 
 using ex_key_t = components::expressions::key_t;
@@ -247,13 +247,13 @@ void parse_find_condition_dict_(std::pmr::memory_resource* resource,
                                 const py::handle& condition,
                                 const std::string& prev_key,
                                 node_aggregate_t* aggregate,
-                                ql_param_statement_t* params);
+                                parameter_node_t* params);
 void parse_find_condition_array_(std::pmr::memory_resource* resource,
                                  compare_expression_t* parent_condition,
                                  const py::handle& condition,
                                  const std::string& prev_key,
                                  node_aggregate_t* aggregate,
-                                 ql_param_statement_t* params);
+                                 parameter_node_t* params);
 
 void parse_find_condition_(std::pmr::memory_resource* resource,
                            compare_expression_t* parent_condition,
@@ -261,7 +261,7 @@ void parse_find_condition_(std::pmr::memory_resource* resource,
                            const std::string& prev_key,
                            const std::string& key_word,
                            node_aggregate_t* aggregate,
-                           ql_param_statement_t* params) {
+                           parameter_node_t* params) {
     auto real_key = prev_key;
     auto type = get_compare_type(key_word);
     if (type == compare_type::invalid) {
@@ -290,7 +290,7 @@ void parse_find_condition_dict_(std::pmr::memory_resource* resource,
                                 const py::handle& condition,
                                 const std::string& prev_key,
                                 node_aggregate_t* aggregate,
-                                ql_param_statement_t* params) {
+                                parameter_node_t* params) {
     for (const auto& it : condition) {
         auto key = py::str(it).cast<std::string>();
         auto type = get_compare_type(key);
@@ -312,7 +312,7 @@ void parse_find_condition_array_(std::pmr::memory_resource* resource,
                                  const py::handle& condition,
                                  const std::string& prev_key,
                                  node_aggregate_t* aggregate,
-                                 ql_param_statement_t* params) {
+                                 parameter_node_t* params) {
     for (const auto& it : condition) {
         parse_find_condition_(resource, parent_condition, it, prev_key, std::string(), aggregate, params);
     }
@@ -321,7 +321,7 @@ void parse_find_condition_array_(std::pmr::memory_resource* resource,
 expression_ptr parse_find_condition_(std::pmr::memory_resource* resource,
                                      const py::handle& condition,
                                      node_aggregate_t* aggregate,
-                                     ql_param_statement_t* params) {
+                                     parameter_node_t* params) {
     auto res_condition = make_compare_union_expression(resource, compare_type::union_and);
     for (const auto& it : condition) {
         if (py::len(condition) == 1) {
@@ -344,7 +344,7 @@ expression_ptr parse_find_condition_(std::pmr::memory_resource* resource,
     return res_condition;
 }
 
-aggregate_expression_t::param_storage parse_aggregate_param(const py::handle& condition, ql_param_statement_t* parms) {
+aggregate_expression_t::param_storage parse_aggregate_param(const py::handle& condition, parameter_node_t* parms) {
     auto value = to_value(condition, parms->parameters().tape());
     if (value.physical_type() == components::types::physical_type::STRING && !value.as_string().empty() &&
         value.as_string().at(0) == '$') {
@@ -354,7 +354,7 @@ aggregate_expression_t::param_storage parse_aggregate_param(const py::handle& co
     }
 }
 
-scalar_expression_t::param_storage parse_scalar_param(const py::handle& condition, ql_param_statement_t* params) {
+scalar_expression_t::param_storage parse_scalar_param(const py::handle& condition, parameter_node_t* params) {
     auto value = to_value(condition, params->parameters().tape());
     if (value.physical_type() == components::types::physical_type::STRING && !value.as_string().empty() &&
         value.as_string().at(0) == '$') {
@@ -368,7 +368,7 @@ expression_ptr parse_group_expr(std::pmr::memory_resource* resource,
                                 const std::string& key,
                                 const py::handle& condition,
                                 node_aggregate_t* aggregate,
-                                ql_param_statement_t* params) {
+                                parameter_node_t* params) {
     if (py::isinstance<py::dict>(condition)) {
         for (const auto& it : condition) {
             auto key_type = py::str(it).cast<std::string>().substr(1);
@@ -411,7 +411,7 @@ expression_ptr parse_group_expr(std::pmr::memory_resource* resource,
 components::logical_plan::node_group_ptr parse_group(std::pmr::memory_resource* resource,
                                                      const py::handle& condition,
                                                      node_aggregate_t* aggregate,
-                                                     ql_param_statement_t* params) {
+                                                     parameter_node_t* params) {
     std::vector<expression_ptr> expressions;
     for (const auto& it : condition) {
         expressions.emplace_back(
@@ -434,7 +434,7 @@ components::logical_plan::node_sort_ptr parse_sort(std::pmr::memory_resource* re
 auto to_statement(std::pmr::memory_resource* resource,
                   const py::handle& source,
                   node_aggregate_t* aggregate,
-                  ql_param_statement_t* params) -> void {
+                  parameter_node_t* params) -> void {
     auto is_sequence = py::isinstance<py::sequence>(source);
 
     if (!is_sequence) {
@@ -511,7 +511,7 @@ auto to_statement(std::pmr::memory_resource* resource,
 auto test_to_statement(const py::handle& source) -> py::str {
     auto resource = std::pmr::synchronized_pool_resource();
     node_aggregate_t aggregate(&resource, {"database", "collection"});
-    ql_param_statement_t params(&resource);
+    parameter_node_t params(&resource);
     to_statement(&resource, source, &aggregate, &params);
     std::stringstream stream;
     stream << aggregate.to_string();

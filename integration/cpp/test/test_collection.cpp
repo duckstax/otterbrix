@@ -92,7 +92,8 @@ TEST_CASE("integration::cpp::test_collection") {
             auto session = otterbrix::session_id_t();
             auto plan =
                 components::logical_plan::make_node_aggregate(dispatcher->resource(), {database_name, collection_name});
-            auto cur = dispatcher->find(session, plan, nullptr);
+            auto cur =
+                dispatcher->find(session, plan, components::logical_plan::make_parameter_node(dispatcher->resource()));
             REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 100);
         }
@@ -107,7 +108,7 @@ TEST_CASE("integration::cpp::test_collection") {
             plan->append_child(components::logical_plan::make_node_match(dispatcher->resource(),
                                                                          {database_name, collection_name},
                                                                          std::move(expr)));
-            auto params = components::logical_plan::make_ql_param_statement(dispatcher->resource());
+            auto params = components::logical_plan::make_parameter_node(dispatcher->resource());
             params->add_parameter(id_par{1}, new_value(90));
             auto cur = dispatcher->find(session, plan, params);
             REQUIRE(cur->is_success());
@@ -125,7 +126,7 @@ TEST_CASE("integration::cpp::test_collection") {
             plan->append_child(components::logical_plan::make_node_match(dispatcher->resource(),
                                                                          {database_name, collection_name},
                                                                          std::move(expr)));
-            auto params = components::logical_plan::make_ql_param_statement(dispatcher->resource());
+            auto params = components::logical_plan::make_parameter_node(dispatcher->resource());
             params->add_parameter(id_par{1}, new_value("9$"));
             auto cur = dispatcher->find(session, plan, params);
             REQUIRE(cur->is_success());
@@ -149,7 +150,7 @@ TEST_CASE("integration::cpp::test_collection") {
             plan->append_child(components::logical_plan::make_node_match(dispatcher->resource(),
                                                                          {database_name, collection_name},
                                                                          std::move(expr)));
-            auto params = components::logical_plan::make_ql_param_statement(dispatcher->resource());
+            auto params = components::logical_plan::make_parameter_node(dispatcher->resource());
             params->add_parameter(id_par{1}, new_value(90));
             params->add_parameter(id_par{2}, new_value(std::string_view{"9$"}));
             auto cur = dispatcher->find(session, plan, params);
@@ -182,7 +183,7 @@ TEST_CASE("integration::cpp::test_collection") {
             plan->append_child(components::logical_plan::make_node_match(dispatcher->resource(),
                                                                          {database_name, collection_name},
                                                                          std::move(expr_and)));
-            auto params = components::logical_plan::make_ql_param_statement(dispatcher->resource());
+            auto params = components::logical_plan::make_parameter_node(dispatcher->resource());
             params->add_parameter(id_par{1}, new_value(90));
             params->add_parameter(id_par{2}, new_value(std::string_view{"9$"}));
             params->add_parameter(id_par{3}, new_value(30));
@@ -195,7 +196,8 @@ TEST_CASE("integration::cpp::test_collection") {
         auto session = otterbrix::session_id_t();
         auto plan =
             components::logical_plan::make_node_aggregate(dispatcher->resource(), {database_name, collection_name});
-        auto cur = dispatcher->find(session, plan, nullptr);
+        auto cur =
+            dispatcher->find(session, plan, components::logical_plan::make_parameter_node(dispatcher->resource()));
         REQUIRE(cur->is_success());
         REQUIRE(cur->size() == 100);
         int count = 0;
@@ -217,7 +219,7 @@ TEST_CASE("integration::cpp::test_collection") {
             plan->append_child(components::logical_plan::make_node_match(dispatcher->resource(),
                                                                          {database_name, collection_name},
                                                                          std::move(expr)));
-            auto params = components::logical_plan::make_ql_param_statement(dispatcher->resource());
+            auto params = components::logical_plan::make_parameter_node(dispatcher->resource());
             params->add_parameter(id_par{1}, new_value(gen_id(1, dispatcher->resource())));
             auto cur = dispatcher->find_one(session, plan, params);
             REQUIRE(cur->next()->get_long("count") == 1);
@@ -233,7 +235,7 @@ TEST_CASE("integration::cpp::test_collection") {
             plan->append_child(components::logical_plan::make_node_match(dispatcher->resource(),
                                                                          {database_name, collection_name},
                                                                          std::move(expr)));
-            auto params = components::logical_plan::make_ql_param_statement(dispatcher->resource());
+            auto params = components::logical_plan::make_parameter_node(dispatcher->resource());
             params->add_parameter(id_par{1}, new_value(10));
             auto cur = dispatcher->find_one(session, plan, params);
             REQUIRE(cur->is_success());
@@ -256,7 +258,7 @@ TEST_CASE("integration::cpp::test_collection") {
             plan->append_child(components::logical_plan::make_node_match(dispatcher->resource(),
                                                                          {database_name, collection_name},
                                                                          std::move(expr)));
-            auto params = components::logical_plan::make_ql_param_statement(dispatcher->resource());
+            auto params = components::logical_plan::make_parameter_node(dispatcher->resource());
             params->add_parameter(id_par{1}, new_value(90));
             params->add_parameter(id_par{2}, new_value(std::string_view{"9$"}));
             auto cur = dispatcher->find_one(session, plan, params);

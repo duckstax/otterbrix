@@ -30,7 +30,7 @@ namespace components::sql::transform::impl {
         return {document::value_t(tape, nullptr), {}};
     }
 
-    compare_expression_ptr transform_a_expr(logical_plan::ql_param_statement_t* statement, A_Expr* node) {
+    compare_expression_ptr transform_a_expr(logical_plan::parameter_node_t* statement, A_Expr* node) {
         switch (node->kind) {
             case AEXPR_AND: // fall-through
             case AEXPR_OR: {
@@ -113,8 +113,8 @@ namespace components::sql::transform::impl {
                 throw std::runtime_error("Unsupported node type: " + expr_kind_to_string(node->kind));
         }
     }
-    components::expressions::compare_expression_ptr
-    transform_a_indirection(logical_plan::ql_param_statement_t* statement, A_Indirection* node) {
+    components::expressions::compare_expression_ptr transform_a_indirection(logical_plan::parameter_node_t* statement,
+                                                                            A_Indirection* node) {
         if (node->arg->type == T_A_Expr) {
             return transform_a_expr(statement, pg_ptr_cast<A_Expr>(node->arg));
         } else {

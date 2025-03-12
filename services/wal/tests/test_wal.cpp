@@ -198,7 +198,7 @@ TEST_CASE("delete one test") {
                                                                               compare_type::eq,
                                                                               components::expressions::key_t{"count"},
                                                                               core::parameter_id_t{1}));
-        auto params = make_ql_param_statement(&resource);
+        auto params = make_parameter_node(&resource);
         params->add_parameter(core::parameter_id_t{1}, num);
         auto data = components::logical_plan::make_node_delete_one(&resource, {database_name, collection_name}, match);
         auto session = components::session::session_id_t();
@@ -237,7 +237,7 @@ TEST_CASE("delete many test") {
                                                                               compare_type::eq,
                                                                               components::expressions::key_t{"count"},
                                                                               core::parameter_id_t{1}));
-        auto params = make_ql_param_statement(&resource);
+        auto params = make_parameter_node(&resource);
         params->add_parameter(core::parameter_id_t{1}, num);
         auto data = components::logical_plan::make_node_delete_many(&resource, {database_name, collection_name}, match);
         auto session = components::session::session_id_t();
@@ -276,7 +276,7 @@ TEST_CASE("update one test") {
                                                                               compare_type::eq,
                                                                               components::expressions::key_t{"count"},
                                                                               core::parameter_id_t{1}));
-        auto params = make_ql_param_statement(&resource);
+        auto params = make_parameter_node(&resource);
         params->add_parameter(core::parameter_id_t{1}, num);
         auto update = components::document::document_t::document_from_json(R"({"$set": {"count": )" +
                                                                                std::to_string(num + 10) + "}}",
@@ -326,7 +326,7 @@ TEST_CASE("update many test") {
                                                                               compare_type::eq,
                                                                               components::expressions::key_t{"count"},
                                                                               core::parameter_id_t{1}));
-        auto params = make_ql_param_statement(&resource);
+        auto params = make_parameter_node(&resource);
         params->add_parameter(core::parameter_id_t{1}, num);
         auto update =
             document_t::document_from_json(R"({"$set": {"count": )" + std::to_string(num + 10) + "}}", &resource);

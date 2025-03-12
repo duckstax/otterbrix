@@ -9,7 +9,7 @@ using namespace components::sql;
 TEST_CASE("sql::create_database") {
     auto resource = std::pmr::synchronized_pool_resource();
     components::sql::transform::transformer transformer(&resource);
-    components::logical_plan::ql_param_statement_t statement(&resource);
+    components::logical_plan::parameter_node_t statement(&resource);
 
     SECTION("create") {
         auto create = raw_parser("CREATE DATABASE db_name")->lst.front().data;
@@ -53,7 +53,7 @@ TEST_CASE("sql::create_database") {
 
 TEST_CASE("sql::drop_database") {
     auto resource = std::pmr::synchronized_pool_resource();
-    components::logical_plan::ql_param_statement_t statement(&resource);
+    components::logical_plan::parameter_node_t statement(&resource);
 
     auto drop = raw_parser("DROP DATABASE db_name;")->lst.front().data;
     transform::transformer transformer(&resource);
@@ -65,7 +65,7 @@ TEST_CASE("sql::drop_database") {
 TEST_CASE("sql::table") {
     auto resource = std::pmr::synchronized_pool_resource();
     transform::transformer transformer(&resource);
-    components::logical_plan::ql_param_statement_t statement(&resource);
+    components::logical_plan::parameter_node_t statement(&resource);
 
     SECTION("create") {
         auto create = raw_parser("CREATE TABLE db_name.table_name()")->lst.front().data;

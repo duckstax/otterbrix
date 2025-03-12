@@ -53,28 +53,28 @@ namespace otterbrix {
             -> components::cursor::cursor_t_ptr;
         [[deprecated]] auto find(const session_id_t& session,
                                  components::logical_plan::node_aggregate_ptr condition,
-                                 components::logical_plan::ql_param_statement_ptr params)
+                                 components::logical_plan::parameter_node_ptr params)
             -> components::cursor::cursor_t_ptr;
         [[deprecated]] auto find_one(const session_id_t& session,
                                      components::logical_plan::node_aggregate_ptr condition,
-                                     components::logical_plan::ql_param_statement_ptr params)
+                                     components::logical_plan::parameter_node_ptr params)
             -> components::cursor::cursor_t_ptr;
         [[deprecated]] auto delete_one(const session_id_t& session,
                                        components::logical_plan::node_match_ptr condition,
-                                       components::logical_plan::ql_param_statement_ptr params)
+                                       components::logical_plan::parameter_node_ptr params)
             -> components::cursor::cursor_t_ptr;
         [[deprecated]] auto delete_many(const session_id_t& session,
                                         components::logical_plan::node_match_ptr condition,
-                                        components::logical_plan::ql_param_statement_ptr params)
+                                        components::logical_plan::parameter_node_ptr params)
             -> components::cursor::cursor_t_ptr;
         [[deprecated]] auto update_one(const session_id_t& session,
                                        components::logical_plan::node_match_ptr condition,
-                                       components::logical_plan::ql_param_statement_ptr params,
+                                       components::logical_plan::parameter_node_ptr params,
                                        document_ptr update,
                                        bool upsert) -> components::cursor::cursor_t_ptr;
         [[deprecated]] auto update_many(const session_id_t& session,
                                         components::logical_plan::node_match_ptr condition,
-                                        components::logical_plan::ql_param_statement_ptr params,
+                                        components::logical_plan::parameter_node_ptr params,
                                         document_ptr update,
                                         bool upsert) -> components::cursor::cursor_t_ptr;
         [[deprecated]] auto size(const session_id_t& session,
@@ -86,7 +86,7 @@ namespace otterbrix {
             -> components::cursor::cursor_t_ptr;
         auto execute_plan(const session_id_t& session,
                           components::logical_plan::node_ptr plan,
-                          components::logical_plan::ql_param_statement_ptr params = nullptr)
+                          components::logical_plan::parameter_node_ptr params = nullptr)
             -> components::cursor::cursor_t_ptr;
         auto execute_sql(const session_id_t& session, const std::string& query) -> components::cursor::cursor_t_ptr;
 
@@ -113,8 +113,7 @@ namespace otterbrix {
 
         auto send_plan(const session_id_t& session,
                        components::logical_plan::node_ptr node,
-                       components::logical_plan::ql_param_statement_ptr params = nullptr)
-            -> components::cursor::cursor_t_ptr;
+                       components::logical_plan::parameter_node_ptr params) -> components::cursor::cursor_t_ptr;
 
         actor_zeta::address_t manager_dispatcher_;
         components::sql::transform::transformer transformer_;

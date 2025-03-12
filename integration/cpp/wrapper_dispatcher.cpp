@@ -70,27 +70,27 @@ namespace otterbrix {
     auto wrapper_dispatcher_t::create_database(const session_id_t& session, const database_name_t& database)
         -> cursor_t_ptr {
         auto plan = components::logical_plan::make_node_create_database(resource(), {database, {}});
-        return send_plan(session, plan);
+        return send_plan(session, plan, components::logical_plan::make_parameter_node(resource()));
     }
 
     auto wrapper_dispatcher_t::drop_database(const components::session::session_id_t& session,
                                              const database_name_t& database) -> cursor_t_ptr {
         auto plan = components::logical_plan::make_node_drop_database(resource(), {database, {}});
-        return send_plan(session, plan);
+        return send_plan(session, plan, components::logical_plan::make_parameter_node(resource()));
     }
 
     auto wrapper_dispatcher_t::create_collection(const session_id_t& session,
                                                  const database_name_t& database,
                                                  const collection_name_t& collection) -> cursor_t_ptr {
         auto plan = components::logical_plan::make_node_create_collection(resource(), {database, collection});
-        return send_plan(session, plan);
+        return send_plan(session, plan, components::logical_plan::make_parameter_node(resource()));
     }
 
     auto wrapper_dispatcher_t::drop_collection(const components::session::session_id_t& session,
                                                const database_name_t& database,
                                                const collection_name_t& collection) -> cursor_t_ptr {
         auto plan = components::logical_plan::make_node_drop_collection(resource(), {database, collection});
-        return send_plan(session, plan);
+        return send_plan(session, plan, components::logical_plan::make_parameter_node(resource()));
     }
 
     auto wrapper_dispatcher_t::insert_one(const session_id_t& session,
@@ -105,7 +105,7 @@ namespace otterbrix {
                          dispatcher::handler_id(dispatcher::route::execute_plan),
                          session,
                          plan,
-                         nullptr);
+                         components::logical_plan::make_parameter_node(resource()));
         wait(session);
         return std::move(cursor_store_);
     }
@@ -122,14 +122,14 @@ namespace otterbrix {
                          dispatcher::handler_id(dispatcher::route::execute_plan),
                          session,
                          plan,
-                         nullptr);
+                         components::logical_plan::make_parameter_node(resource()));
         wait(session);
         return std::move(cursor_store_);
     }
 
     auto wrapper_dispatcher_t::find(const session_id_t& session,
                                     components::logical_plan::node_aggregate_ptr condition,
-                                    components::logical_plan::ql_param_statement_ptr params) -> cursor_t_ptr {
+                                    components::logical_plan::parameter_node_ptr params) -> cursor_t_ptr {
         trace(log_,
               "wrapper_dispatcher_t::find session: {}, database: {} collection: {} ",
               session.data(),
@@ -140,7 +140,7 @@ namespace otterbrix {
 
     auto wrapper_dispatcher_t::find_one(const components::session::session_id_t& session,
                                         components::logical_plan::node_aggregate_ptr condition,
-                                        components::logical_plan::ql_param_statement_ptr params) -> cursor_t_ptr {
+                                        components::logical_plan::parameter_node_ptr params) -> cursor_t_ptr {
         trace(log_,
               "wrapper_dispatcher_t::find_one session: {}, database: {} collection: {} ",
               session.data(),
@@ -151,7 +151,7 @@ namespace otterbrix {
 
     auto wrapper_dispatcher_t::delete_one(const components::session::session_id_t& session,
                                           components::logical_plan::node_match_ptr condition,
-                                          components::logical_plan::ql_param_statement_ptr params) -> cursor_t_ptr {
+                                          components::logical_plan::parameter_node_ptr params) -> cursor_t_ptr {
         trace(log_,
               "wrapper_dispatcher_t::delete_one session: {}, database: {} collection: {} ",
               session.data(),
@@ -172,7 +172,7 @@ namespace otterbrix {
 
     auto wrapper_dispatcher_t::delete_many(const components::session::session_id_t& session,
                                            components::logical_plan::node_match_ptr condition,
-                                           components::logical_plan::ql_param_statement_ptr params) -> cursor_t_ptr {
+                                           components::logical_plan::parameter_node_ptr params) -> cursor_t_ptr {
         trace(log_,
               "wrapper_dispatcher_t::delete_many session: {}, database: {} collection: {} ",
               session.data(),
@@ -193,7 +193,7 @@ namespace otterbrix {
 
     auto wrapper_dispatcher_t::update_one(const components::session::session_id_t& session,
                                           components::logical_plan::node_match_ptr condition,
-                                          components::logical_plan::ql_param_statement_ptr params,
+                                          components::logical_plan::parameter_node_ptr params,
                                           document_ptr update,
                                           bool upsert) -> cursor_t_ptr {
         trace(log_,
@@ -219,7 +219,7 @@ namespace otterbrix {
 
     auto wrapper_dispatcher_t::update_many(const components::session::session_id_t& session,
                                            components::logical_plan::node_match_ptr condition,
-                                           components::logical_plan::ql_param_statement_ptr params,
+                                           components::logical_plan::parameter_node_ptr params,
                                            document_ptr update,
                                            bool upsert) -> cursor_t_ptr {
         trace(log_,
@@ -262,21 +262,23 @@ namespace otterbrix {
                                             components::logical_plan::node_create_index_ptr node)
         -> components::cursor::cursor_t_ptr {
         trace(log_, "wrapper_dispatcher_t::create_index session: {}, index: {}", session.data(), node->name());
-        return send_plan(session, node);
+        return send_plan(session, node, components::logical_plan::make_parameter_node(resource()));
     }
 
     auto wrapper_dispatcher_t::drop_index(const session_id_t& session,
                                           components::logical_plan::node_drop_index_ptr node)
         -> components::cursor::cursor_t_ptr {
         trace(log_, "wrapper_dispatcher_t::create_index session: {}, index: {}", session.data(), node->name());
-        return send_plan(session, node);
+        return send_plan(session, node, components::logical_plan::make_parameter_node(resource()));
     }
 
     auto wrapper_dispatcher_t::execute_plan(const session_id_t& session,
                                             components::logical_plan::node_ptr plan,
-                                            components::logical_plan::ql_param_statement_ptr params) -> cursor_t_ptr {
+                                            components::logical_plan::parameter_node_ptr params) -> cursor_t_ptr {
         using namespace components::logical_plan;
-
+        if (!params) {
+            params = make_parameter_node(resource());
+        }
         trace(log_, "wrapper_dispatcher_t::execute session: {}", session.data());
         return send_plan(session, std::move(plan), std::move(params));
     }
@@ -284,7 +286,7 @@ namespace otterbrix {
     cursor_t_ptr wrapper_dispatcher_t::execute_sql(const components::session::session_id_t& session,
                                                    const std::string& query) {
         trace(log_, "wrapper_dispatcher_t::execute sql session: {}", session.data());
-        auto params = components::logical_plan::make_ql_param_statement(resource());
+        auto params = components::logical_plan::make_parameter_node(resource());
         auto parse_result = raw_parser(query.c_str())->lst.front().data;
         auto node =
             transformer_.transform(components::sql::transform::pg_cell_to_node_cast(parse_result), params.get());
@@ -335,9 +337,10 @@ namespace otterbrix {
 
     cursor_t_ptr wrapper_dispatcher_t::send_plan(const session_id_t& session,
                                                  components::logical_plan::node_ptr node,
-                                                 components::logical_plan::ql_param_statement_ptr params) {
+                                                 components::logical_plan::parameter_node_ptr params) {
         trace(log_, "wrapper_dispatcher_t::send_plan session: {}, {} ", session.data(), node->to_string());
         init(session);
+        assert(params);
         actor_zeta::send(manager_dispatcher_,
                          address(),
                          dispatcher::handler_id(dispatcher::route::execute_plan),

@@ -19,7 +19,7 @@ namespace components::sql::transform {
                       JoinExpr* join,
                       logical_plan::node_aggregate_ptr& node_agg,
                       logical_plan::node_join_ptr& node_join,
-                      logical_plan::ql_param_statement_t* statement) {
+                      logical_plan::parameter_node_t* statement) {
             if (nodeTag(join->larg) == T_JoinExpr) {
                 join_dfs(resource, pg_ptr_cast<JoinExpr>(join->larg), node_agg, node_join, statement);
                 // right nodes are always tables
@@ -55,8 +55,7 @@ namespace components::sql::transform {
         }
     } // namespace
 
-    logical_plan::node_ptr transformer::transform_select(SelectStmt& node,
-                                                         logical_plan::ql_param_statement_t* statement) {
+    logical_plan::node_ptr transformer::transform_select(SelectStmt& node, logical_plan::parameter_node_t* statement) {
         logical_plan::node_aggregate_ptr agg = nullptr;
         logical_plan::node_join_ptr join = nullptr;
 

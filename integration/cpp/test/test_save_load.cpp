@@ -34,7 +34,7 @@ cursor_t_ptr find_doc(otterbrix::wrapper_dispatcher_t* dispatcher,
                                                                  id_par{1});
     aggregate->append_child(
         components::logical_plan::make_node_match(dispatcher->resource(), {db_name, col_name}, std::move(expr)));
-    auto params = components::logical_plan::make_ql_param_statement(dispatcher->resource());
+    auto params = components::logical_plan::make_parameter_node(dispatcher->resource());
     params->add_parameter(id_par{1}, new_value(gen_id(n_doc, dispatcher->resource())));
     auto cur = dispatcher->find_one(session_doc, aggregate, params);
     if (cur->is_success()) {
@@ -145,7 +145,7 @@ TEST_CASE("integration::cpp::test_save_load::disk+wal") {
                                                                          compare_type::eq,
                                                                          key{"count"},
                                                                          core::parameter_id_t{1}));
-                    auto params = components::logical_plan::make_ql_param_statement(dispatcher->resource());
+                    auto params = components::logical_plan::make_parameter_node(dispatcher->resource());
                     params->add_parameter(core::parameter_id_t{1}, new_value(1));
                     auto delete_one = components::logical_plan::make_node_delete_one(dispatcher->resource(),
                                                                                      {db_name, col_name},
@@ -167,7 +167,7 @@ TEST_CASE("integration::cpp::test_save_load::disk+wal") {
                     auto match = components::logical_plan::make_node_match(dispatcher->resource(),
                                                                            {db_name, col_name},
                                                                            std::move(expr));
-                    auto params = components::logical_plan::make_ql_param_statement(dispatcher->resource());
+                    auto params = components::logical_plan::make_parameter_node(dispatcher->resource());
                     params->add_parameter(core::parameter_id_t{1}, new_value(2));
                     params->add_parameter(core::parameter_id_t{2}, new_value(4));
                     auto delete_many = components::logical_plan::make_node_delete_many(dispatcher->resource(),
@@ -184,7 +184,7 @@ TEST_CASE("integration::cpp::test_save_load::disk+wal") {
                                                                          compare_type::eq,
                                                                          key{"count"},
                                                                          core::parameter_id_t{1}));
-                    auto params = components::logical_plan::make_ql_param_statement(dispatcher->resource());
+                    auto params = components::logical_plan::make_parameter_node(dispatcher->resource());
                     params->add_parameter(core::parameter_id_t{1}, new_value(5));
                     auto update_one = components::logical_plan::make_node_update_one(
                         dispatcher->resource(),
@@ -204,7 +204,7 @@ TEST_CASE("integration::cpp::test_save_load::disk+wal") {
                                                                          compare_type::gt,
                                                                          key{"count"},
                                                                          core::parameter_id_t{1}));
-                    auto params = components::logical_plan::make_ql_param_statement(dispatcher->resource());
+                    auto params = components::logical_plan::make_parameter_node(dispatcher->resource());
                     params->add_parameter(core::parameter_id_t{1}, new_value(5));
                     auto update_many = components::logical_plan::make_node_update_many(
                         dispatcher->resource(),

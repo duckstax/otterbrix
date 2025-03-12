@@ -8,8 +8,7 @@
 using namespace components::expressions;
 
 namespace components::sql::transform {
-    logical_plan::node_ptr transformer::transform_update(UpdateStmt& node,
-                                                         logical_plan::ql_param_statement_t* statement) {
+    logical_plan::node_ptr transformer::transform_update(UpdateStmt& node, logical_plan::parameter_node_t* statement) {
         logical_plan::node_match_ptr match;
         components::document::document_ptr update = document::make_document(resource);
         // set

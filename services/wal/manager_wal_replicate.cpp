@@ -261,7 +261,7 @@ namespace services::wal {
 
     void manager_wal_replicate_t::delete_one(const session_id_t& session,
                                              components::logical_plan::node_delete_ptr data,
-                                             components::logical_plan::ql_param_statement_ptr params) {
+                                             components::logical_plan::parameter_node_ptr params) {
         trace(log_, "manager_wal_replicate_t::delete_one");
         actor_zeta::send(dispatchers_[0]->address(),
                          address(),
@@ -274,7 +274,7 @@ namespace services::wal {
 
     void manager_wal_replicate_t::delete_many(const session_id_t& session,
                                               components::logical_plan::node_delete_ptr data,
-                                              components::logical_plan::ql_param_statement_ptr params) {
+                                              components::logical_plan::parameter_node_ptr params) {
         trace(log_, "manager_wal_replicate_t::delete_many");
         actor_zeta::send(dispatchers_[0]->address(),
                          address(),
@@ -287,7 +287,7 @@ namespace services::wal {
 
     void manager_wal_replicate_t::update_one(const session_id_t& session,
                                              components::logical_plan::node_update_ptr data,
-                                             components::logical_plan::ql_param_statement_ptr params) {
+                                             components::logical_plan::parameter_node_ptr params) {
         trace(log_, "manager_wal_replicate_t::update_one");
         actor_zeta::send(dispatchers_[0]->address(),
                          address(),
@@ -300,7 +300,7 @@ namespace services::wal {
 
     void manager_wal_replicate_t::update_many(const session_id_t& session,
                                               components::logical_plan::node_update_ptr data,
-                                              components::logical_plan::ql_param_statement_ptr params) {
+                                              components::logical_plan::parameter_node_ptr params) {
         trace(log_, "manager_wal_replicate_t::update_many");
         actor_zeta::send(dispatchers_[0]->address(),
                          address(),

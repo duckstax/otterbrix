@@ -12,7 +12,7 @@ TEST_CASE("sql::insert_into") {
     transform::transformer transformer(&resource);
 
     SECTION("insert into with TestDatabase") {
-        components::logical_plan::ql_param_statement_t agg(&resource);
+        components::logical_plan::parameter_node_t agg(&resource);
         auto select = raw_parser("INSERT INTO TestDatabase.TestCollection (id, name, count) VALUES (1, 'Name', 1);")
                           ->lst.front()
                           .data;
@@ -28,7 +28,7 @@ TEST_CASE("sql::insert_into") {
     }
 
     SECTION("insert into without TestDatabase") {
-        components::logical_plan::ql_param_statement_t agg(&resource);
+        components::logical_plan::parameter_node_t agg(&resource);
         auto select =
             raw_parser("INSERT INTO TestCollection (id, name, count) VALUES (1, 'Name', 1);")->lst.front().data;
         auto node = transformer.transform(transform::pg_cell_to_node_cast(select), &agg);
@@ -43,7 +43,7 @@ TEST_CASE("sql::insert_into") {
     }
 
     SECTION("insert into with quoted") {
-        components::logical_plan::ql_param_statement_t agg(&resource);
+        components::logical_plan::parameter_node_t agg(&resource);
         auto select =
             raw_parser(R"(INSERT INTO TestCollection (id, "name", "count") VALUES (1, 'Name', 1);)")->lst.front().data;
         auto node = transformer.transform(transform::pg_cell_to_node_cast(select), &agg);
@@ -58,7 +58,7 @@ TEST_CASE("sql::insert_into") {
     }
 
     SECTION("insert into multi-documents") {
-        components::logical_plan::ql_param_statement_t agg(&resource);
+        components::logical_plan::parameter_node_t agg(&resource);
         auto select = raw_parser("INSERT INTO TestCollection (id, name, count) VALUES "
                                  "(1, 'Name1', 1), "
                                  "(2, 'Name2', 2), "

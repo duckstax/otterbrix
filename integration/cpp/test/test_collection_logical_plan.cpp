@@ -97,7 +97,7 @@ TEST_CASE("integration::cpp::test_collection::logical_plan") {
             agg->append_child(logical_plan::make_node_match(dispatcher->resource(),
                                                             {database_name, collection_name},
                                                             std::move(expr)));
-            auto params = logical_plan::make_ql_param_statement(dispatcher->resource());
+            auto params = logical_plan::make_parameter_node(dispatcher->resource());
             params->add_parameter(id_par{1}, new_value(90));
             auto cur = dispatcher->execute_plan(session, agg, params);
             REQUIRE(cur->is_success());
@@ -116,7 +116,7 @@ TEST_CASE("integration::cpp::test_collection::logical_plan") {
             agg->append_child(logical_plan::make_node_match(dispatcher->resource(),
                                                             {database_name, collection_name},
                                                             std::move(expr)));
-            auto params = logical_plan::make_ql_param_statement(dispatcher->resource());
+            auto params = logical_plan::make_parameter_node(dispatcher->resource());
             params->add_parameter(id_par{1}, new_value(90));
             auto cur = dispatcher->execute_plan(session, agg, params);
             REQUIRE(cur->is_success());
@@ -131,7 +131,7 @@ TEST_CASE("integration::cpp::test_collection::logical_plan") {
                     dispatcher->resource(),
                     {database_name, collection_name},
                     make_compare_expression(dispatcher->resource(), compare_type::gt, key{"count"}, id_par{1})));
-            auto params = logical_plan::make_ql_param_statement(dispatcher->resource());
+            auto params = logical_plan::make_parameter_node(dispatcher->resource());
             params->add_parameter(id_par{1}, new_value(90));
             auto cur = dispatcher->execute_plan(session, del, params);
             REQUIRE(cur->is_success());
@@ -147,7 +147,7 @@ TEST_CASE("integration::cpp::test_collection::logical_plan") {
             agg->append_child(logical_plan::make_node_match(dispatcher->resource(),
                                                             {database_name, collection_name},
                                                             std::move(expr)));
-            auto params = logical_plan::make_ql_param_statement(dispatcher->resource());
+            auto params = logical_plan::make_parameter_node(dispatcher->resource());
             params->add_parameter(id_par{1}, new_value(90));
             auto cur = dispatcher->execute_plan(session, agg, params);
             REQUIRE_FALSE(cur->is_success());
@@ -166,7 +166,7 @@ TEST_CASE("integration::cpp::test_collection::logical_plan") {
             agg->append_child(logical_plan::make_node_match(dispatcher->resource(),
                                                             {database_name, collection_name},
                                                             std::move(expr)));
-            auto params = logical_plan::make_ql_param_statement(dispatcher->resource());
+            auto params = logical_plan::make_parameter_node(dispatcher->resource());
             params->add_parameter(id_par{1}, new_value(20));
             auto cur = dispatcher->execute_plan(session, agg, params);
             REQUIRE(cur->size() == 20);
@@ -181,7 +181,7 @@ TEST_CASE("integration::cpp::test_collection::logical_plan") {
             doc->set_dict("$set");
             doc->get_dict("$set")->set("count", 1000);
             auto upd = make_node_update_many(dispatcher->resource(), {database_name, collection_name}, match, doc);
-            auto params = logical_plan::make_ql_param_statement(dispatcher->resource());
+            auto params = logical_plan::make_parameter_node(dispatcher->resource());
             params->add_parameter(id_par{1}, new_value(20));
             auto cur = dispatcher->execute_plan(session, upd, params);
             REQUIRE(cur->is_success());
@@ -197,7 +197,7 @@ TEST_CASE("integration::cpp::test_collection::logical_plan") {
             agg->append_child(logical_plan::make_node_match(dispatcher->resource(),
                                                             {database_name, collection_name},
                                                             std::move(expr)));
-            auto params = logical_plan::make_ql_param_statement(dispatcher->resource());
+            auto params = logical_plan::make_parameter_node(dispatcher->resource());
             params->add_parameter(id_par{1}, new_value(20));
             auto cur = dispatcher->execute_plan(session, agg, params);
             REQUIRE_FALSE(cur->is_success());
@@ -213,7 +213,7 @@ TEST_CASE("integration::cpp::test_collection::logical_plan") {
             agg->append_child(logical_plan::make_node_match(dispatcher->resource(),
                                                             {database_name, collection_name},
                                                             std::move(expr)));
-            auto params = logical_plan::make_ql_param_statement(dispatcher->resource());
+            auto params = logical_plan::make_parameter_node(dispatcher->resource());
             params->add_parameter(id_par{1}, new_value(1000));
             auto cur = dispatcher->execute_plan(session, agg, params);
             REQUIRE(cur->is_success());
@@ -329,7 +329,7 @@ TEST_CASE("integration::cpp::test_collection::logical_plan") {
         INFO("join raw data with aggregate") {
             auto session = otterbrix::session_id_t();
             auto aggregate = logical_plan::make_node_aggregate(dispatcher->resource(), {});
-            auto params = logical_plan::make_ql_param_statement(dispatcher->resource());
+            auto params = logical_plan::make_parameter_node(dispatcher->resource());
             {
                 {
                     std::vector<expressions::expression_ptr> sort = {
