@@ -7,18 +7,25 @@ void update_one(benchmark::State& state) {
     state.ResumeTiming();
     for (auto _ : state) {
         for (int i = 0; i < state.range(0); ++i) {
+            auto p = create_aggregate(database_name, collection_name, compare_type::eq, "_id", std::to_string(i));
             dispatcher->update_one(session,
-                                   database_name,
-                                   collection_name,
-                                   make_condition("id_", "$eq", std::to_string(i)),
-                                   make_condition("$set", "count", 0),
+                                   p.first,
+                                   p.second,
+                                   document_t::document_from_json("{\"$set\": {\"count\": " + std::to_string(0) + "}}",
+                                                                  dispatcher->resource()),
                                    false);
-            dispatcher->update_one(session,
-                                   database_name,
-                                   collection_name,
-                                   make_condition("id_", "$eq", std::to_string(size_collection - i)),
-                                   make_condition("$set", "count", size_collection),
-                                   false);
+            p = create_aggregate(database_name,
+                                 collection_name,
+                                 compare_type::eq,
+                                 "_id",
+                                 std::to_string(size_collection - i));
+            dispatcher->update_one(
+                session,
+                p.first,
+                p.second,
+                document_t::document_from_json("{\"$set\": {\"count\": " + std::to_string(size_collection) + "}}",
+                                               dispatcher->resource()),
+                false);
         }
     }
 }

@@ -25,7 +25,8 @@ void only_find_all(benchmark::State& state) {
     state.ResumeTiming();
     for (auto _ : state) {
         for (int i = 0; i < state.range(0); ++i) {
-            dispatcher->find(session, create_aggregate(collection_name));
+            auto p = create_aggregate(database_name, collection_name);
+            dispatcher->find(session, p.first, p.second);
         }
     }
 }
@@ -39,7 +40,8 @@ void only_find_eq(benchmark::State& state) {
     state.ResumeTiming();
     for (auto _ : state) {
         for (int i = 0; i < state.range(0); ++i) {
-            dispatcher->find(session, create_aggregate(collection_name, compare_type::eq, "count", 115));
+            auto p = create_aggregate(database_name, collection_name, compare_type::eq, "count", 115);
+            dispatcher->find(session, p.first, p.second);
         }
     }
 }
@@ -53,8 +55,8 @@ void only_find_gt(benchmark::State& state) {
     state.ResumeTiming();
     for (auto _ : state) {
         for (int i = 0; i < state.range(0); ++i) {
-            dispatcher->find(session,
-                             create_aggregate(collection_name, compare_type::gt, "count", size_collection - 100));
+            auto p = create_aggregate(database_name, collection_name, compare_type::gt, "count", size_collection - 100);
+            dispatcher->find(session, p.first, p.second);
         }
     }
 }
@@ -68,22 +70,30 @@ void delete_insert_update_one(benchmark::State& state) {
     state.ResumeTiming();
     for (auto _ : state) {
         for (int i = 1; i <= 50; ++i) {
-            dispatcher->delete_one(session, create_aggregate(collection_name, compare_type::gt, "count", i));
+            auto p = create_aggregate(database_name, collection_name, compare_type::gt, "count", i);
+            dispatcher->delte_one(session, p.first, p.second);
         }
         for (int i = 1; i <= 50; ++i) {
-            auto doc = gen_doc(i);
+            auto doc = gen_doc(i, dispatcher->resource());
             dispatcher->insert_one(session, database_name, collection_name, doc);
         }
         for (int i = 1; i <= 50; ++i) {
-            dispatcher->update_one(session,
-                                   create_aggregate(collection_name, compare_type::gt, "count", i),
-                                   gen_update("count", size_collection + i),
-                                   false);
+            auto p = create_aggregate(database_name, collection_name, compare_type::gt, "count", i);
+            dispatcher->update_one(
+                session,
+                p.first,
+                p.second,
+                document_t::document_from_json("{\"$set\": {\"count\": " + std::to_string(size_collection + i) + "}}",
+                                               dispatcher->resource()),
+                false);
         }
         for (int i = 1; i <= 50; ++i) {
+            auto p = create_aggregate(database_name, collection_name, compare_type::gt, "count", i);
             dispatcher->update_one(session,
-                                   create_aggregate(collection_name, compare_type::gt, "count", i),
-                                   gen_update("count", i),
+                                   p.first,
+                                   p.second,
+                                   document_t::document_from_json("{\"$set\": {\"count\": " + std::to_string(i) + "}}",
+                                                                  dispatcher->resource()),
                                    false);
         }
     }

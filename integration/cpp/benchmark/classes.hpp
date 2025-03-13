@@ -3,12 +3,12 @@
 #include <components/tests/generaty.hpp>
 #include <integration/cpp/base_spaces.hpp>
 
-using namespace components::ql;
+using namespace components::logical_plan;
 using namespace components::expressions;
 
-static const database_name_t database_name = "TestDatabase";
-static const collection_name_t collection_name_without_index = "TestCollectionWithoutIndex";
-static const collection_name_t collection_name_with_index = "TestCollectionWithIndex";
+static const database_name_t database_name = "testdatabase";
+static const collection_name_t collection_name_without_index = "testcollection_without_index";
+static const collection_name_t collection_name_with_index = "testcollection_with_index";
 constexpr int size_collection = 10000;
 
 template<bool on_wal, bool on_disk>
@@ -36,14 +36,13 @@ private:
 
 template<bool on_wal, bool on_disk>
 void init_collection(const collection_name_t& collection_name) {
-    auto resource = std::pmr::synchronized_pool_resource();
     auto* dispatcher = test_spaces<on_wal, on_disk>::get().dispatcher();
     auto session = otterbrix::session_id_t();
     dispatcher->create_database(session, database_name);
     dispatcher->create_collection(session, database_name, collection_name);
-    std::pmr::vector<document_ptr> docs(resource);
+    std::pmr::vector<document_ptr> docs(dispatcher->resource());
     for (int i = 1; i <= size_collection; ++i) {
-        docs.push_back(gen_doc(i));
+        docs.push_back(gen_doc(i, dispatcher->resource()));
     }
     dispatcher->insert_many(session, database_name, collection_name, docs);
 }
@@ -52,9 +51,9 @@ template<bool on_wal, bool on_disk>
 void create_index(const collection_name_t& collection_name) {
     auto* dispatcher = test_spaces<on_wal, on_disk>::get().dispatcher();
     auto session = otterbrix::session_id_t();
-    create_index_t ql{database_name, collection_name, index_type::single, index_compare::int64};
-    ql.keys_.emplace_back("count");
-    dispatcher->create_index(session, &ql);
+    auto plan = make_node_create_index(dispatcher->resource(), {database_name, collection_name});
+    plan->keys().emplace_back("count");
+    dispatcher->create_index(session, plan);
 }
 
 template<bool on_wal, bool on_disk>
@@ -79,28 +78,27 @@ collection_name_t get_collection_name() {
 }
 
 template<typename T = int>
-aggregate_statement_raw_ptr create_aggregate(const collection_name_t& collection_name,
-                                             compare_type compare = compare_type::eq,
-                                             const std::string& key = {},
-                                             T value = T()) {
-    auto* aggregate = new aggregate_statement(database_name, collection_name);
-    aggregate::match_t match;
-    if (!key.empty()) {
-        aggregate->add_parameter(core::parameter_id_t{1}, value);
-        match.query = make_compare_expression(std::pmr::synchronized_pool_resource(),
-                                              compare,
-                                              components::expressions::key_t{key},
-                                              core::parameter_id_t{1});
+std::pair<node_aggregate_ptr, parameter_node_ptr> create_aggregate(const collection_name_t& database_name,
+                                                                   const collection_name_t& collection_name,
+                                                                   compare_type compare = compare_type::eq,
+                                                                   const std::string& key = {},
+                                                                   T value = T()) {
+    auto aggregate = make_node_aggregate(std::pmr::get_default_resource(), {database_name, collection_name});
+    auto params = make_parameter_node(std::pmr::get_default_resource());
+    if (key.empty()) {
+        params->add_parameter(core::parameter_id_t{1}, value);
+        aggregate->append_child(
+            make_node_match(std::pmr::get_default_resource(),
+                            {database_name, collection_name},
+                            make_compare_expression(std::pmr::get_default_resource(), compare_type::all_true)));
+    } else {
+        params->add_parameter(core::parameter_id_t{1}, value);
+        aggregate->append_child(make_node_match(std::pmr::get_default_resource(),
+                                                {database_name, collection_name},
+                                                make_compare_expression(std::pmr::get_default_resource(),
+                                                                        compare,
+                                                                        components::expressions::key_t{key},
+                                                                        core::parameter_id_t{1})));
     }
-    aggregate->append(aggregate::operator_type::match, match);
-    return aggregate;
-}
-
-template<typename T = int>
-document_ptr gen_update(const std::string& key = {}, T value = T()) {
-    auto doc = document::impl::mutable_dict_t::new_dict();
-    auto val = document::impl::mutable_dict_t::new_dict();
-    val->set(key, value);
-    doc->set("$set", val);
-    return make_document(doc);
+    return {aggregate, params};
 }

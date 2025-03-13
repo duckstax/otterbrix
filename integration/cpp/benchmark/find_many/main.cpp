@@ -7,12 +7,40 @@ void find_many(benchmark::State& state) {
     state.ResumeTiming();
     for (auto _ : state) {
         for (int i = 0; i < state.range(0); ++i) {
-            dispatcher->find(session, database_name, collection_name, make_document());
-            dispatcher->find(session, database_name, collection_name, make_condition("id_", "$eq", std::to_string(i)));
-            dispatcher->find(session,
-                             database_name,
-                             collection_name,
-                             make_condition("id_", "$eq", std::to_string(size_collection - i)));
+            auto params = components::logical_plan::make_parameter_node(dispatcher->resource());
+            {
+                auto plan = components::logical_plan::make_node_aggregate(dispatcher->resource(),
+                                                                          {database_name, collection_name});
+                plan->append_child(
+                    make_node_match(std::pmr::get_default_resource(),
+                                    {database_name, collection_name},
+                                    make_compare_expression(std::pmr::get_default_resource(), compare_type::all_true)));
+                dispatcher->find(session, plan, params);
+            }
+            {
+                auto plan = components::logical_plan::make_node_aggregate(dispatcher->resource(),
+                                                                          {database_name, collection_name});
+                plan->append_child(make_node_match(std::pmr::get_default_resource(),
+                                                   {database_name, collection_name},
+                                                   make_compare_expression(std::pmr::get_default_resource(),
+                                                                           compare_type::eq,
+                                                                           components::expressions::key_t{"_id"},
+                                                                           core::parameter_id_t{1})));
+                params->add_parameter(core::parameter_id_t{1}, std::to_string(i));
+                dispatcher->find(session, plan, params);
+            }
+            {
+                auto plan = components::logical_plan::make_node_aggregate(dispatcher->resource(),
+                                                                          {database_name, collection_name});
+                plan->append_child(make_node_match(std::pmr::get_default_resource(),
+                                                   {database_name, collection_name},
+                                                   make_compare_expression(std::pmr::get_default_resource(),
+                                                                           compare_type::eq,
+                                                                           components::expressions::key_t{"_id"},
+                                                                           core::parameter_id_t{2})));
+                params->add_parameter(core::parameter_id_t{2}, std::to_string(size_collection - i));
+                dispatcher->find(session, plan, params);
+            }
         }
     }
 }
@@ -23,7 +51,7 @@ int main(int argc, char** argv) {
     if (::benchmark::ReportUnrecognizedArguments(argc, argv)) {
         return 1;
     }
-    init_collection();
+    init_collection(resource);
     ::benchmark::RunSpecifiedBenchmarks();
     ::benchmark::Shutdown();
     return 0;
