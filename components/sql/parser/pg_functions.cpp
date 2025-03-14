@@ -3,38 +3,55 @@
 #include <cstdarg>
 #include <cstring>
 #include <iostream>
+#include <utility>
 
-int ereport(int code, ...) {
-    if (code >= ERROR) {
-        std::cerr << "error" << std::endl;
-        pg_unreachable();
+parser_exception_t::parser_exception_t(int main_code,
+                                       int support_code,
+                                       std::string message,
+                                       std::string detail,
+                                       int pos)
+    : main_error_code(main_code)
+    , support_error_code(support_code)
+    , message(std::move(message))
+    , detail(std::move(detail))
+    , query_pos(pos) {}
+
+parser_exception_t::parser_exception_t(std::string message, std::string detail)
+    : message(std::move(message))
+    , detail(std::move(detail)) {}
+
+const char* parser_exception_t::what() const noexcept { return message.c_str(); }
+
+int ereport(int code, std::string message) { return ereport(code, -1, std::move(message), "", -1); }
+int ereport(int code, std::string message, int pos) { return ereport(code, -1, std::move(message), "", pos); }
+int ereport(int main_code, int support_code, std::string message) {
+    return ereport(main_code, support_code, std::move(message), "", -1);
+}
+int ereport(int main_code, int support_code, std::string message, int pos) {
+    return ereport(main_code, support_code, std::move(message), "", pos);
+}
+int ereport(int main_code, int support_code, std::string message, std::string detail) {
+    return ereport(main_code, support_code, std::move(message), std::move(detail), -1);
+}
+int ereport(int main_code, int support_code, std::string message, std::string detail, int pos) {
+    if (main_code >= ERROR) {
+        throw parser_exception_t(main_code, support_code, std::move(message), std::move(detail), pos);
     }
 
     return 0;
 }
 
-void elog(int code, const char* fmt, ...) { ereport(code); }
+void elog(int code, const char* message, ...) { ereport(code, message); }
 
-int errcode(int sqlerrcode) {
-    std::cerr << "errcode:" << sqlerrcode << std::endl;
-    return 0;
-}
+int errcode(int sqlerrcode) { return sqlerrcode; }
 
-int errmsg(const char* fmt, ...) { return 0; }
+const char* errhint(const char* msg) { return msg; }
 
-int errhint(const char* msg) {
-    std::cerr << msg << std::endl;
-    return 0;
-}
+const char* errmsg_internal(const char* fmt, ...) { fmt; }
 
-int errmsg_internal(const char* fmt, ...) { return 0; }
+const char* errdetail(const char* fmt, ...) { return fmt; }
 
-int errdetail(const char* fmt, ...) { return 0; }
-
-int errposition(int cursorpos) {
-    std::cerr << "ERROR AT " << cursorpos << " POS" << std::endl;
-    return 0;
-}
+int errposition(int cursorpos) { return cursorpos; }
 
 char* psprintf(const char* fmt, ...) {
     size_t len = 128; /* initial assumption about buffer size */
@@ -206,7 +223,6 @@ bool pg_verifymbstr(const char* mbstr, int len, bool noError) {
             if (noError)
                 return -1;
             //            report_invalid_encoding(encoding, mbstr, len);
-            std::cerr << "INVALID ENCODING" << std::endl;
             return -1;
         }
 
@@ -216,7 +232,6 @@ bool pg_verifymbstr(const char* mbstr, int len, bool noError) {
             if (noError)
                 return -1;
             //            report_invalid_encoding(encoding, mbstr, len);
-            std::cerr << "INVALID ENCODING" << std::endl;
             return -1;
         }
 

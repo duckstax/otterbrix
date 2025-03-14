@@ -1655,9 +1655,9 @@ AlterOptRoleElem:
 					}
 					else
 						ereport(ERROR,
-								(errcode(ERRCODE_SYNTAX_ERROR),
+								errcode(ERRCODE_SYNTAX_ERROR),
 								 errmsg("unrecognized role option \"%s\"", $1),
-									 parser_errposition(@1)));
+									 parser_errposition(@1));
 				}
 		;
 
@@ -1992,9 +1992,9 @@ CreateSchemaStmt:
 					n->authid = $8;
 					if ($9 != NIL)
 						ereport(ERROR,
-								(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+								errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 								 errmsg("CREATE SCHEMA IF NOT EXISTS cannot include schema elements"),
-								 parser_errposition(@9)));
+								 parser_errposition(@9));
 					n->schemaElts = $9;
 					n->if_not_exists = true;
 					$$ = (Node *)n;
@@ -2007,9 +2007,9 @@ CreateSchemaStmt:
 					n->authid = NULL;
 					if ($7 != NIL)
 						ereport(ERROR,
-								(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+								errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 								 errmsg("CREATE SCHEMA IF NOT EXISTS cannot include schema elements"),
-								 parser_errposition(@7)));
+								 parser_errposition(@7));
 					n->schemaElts = $7;
 					n->if_not_exists = true;
 					$$ = (Node *)n;
@@ -2153,9 +2153,9 @@ set_rest_more:	/* Generic SET syntaxes: */
 			| CATALOG_P Sconst
 				{
 					ereport(ERROR,
-							(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+							errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 							 errmsg("current database cannot be changed"),
-							 parser_errposition(@2)));
+							 parser_errposition(@2));
 					$$ = NULL; /*not reached*/
 				}
 			| SCHEMA Sconst
@@ -2292,14 +2292,14 @@ zone_value:
 						A_Const *n = (A_Const *) linitial($6);
 						if ((n->val.val.ival & ~(INTERVAL_MASK(HOUR) | INTERVAL_MASK(MINUTE))) != 0)
 							ereport(ERROR,
-									(errcode(ERRCODE_SYNTAX_ERROR),
+									errcode(ERRCODE_SYNTAX_ERROR),
 									 errmsg("time zone interval must be HOUR or HOUR TO MINUTE"),
-									 parser_errposition(@6)));
+									 parser_errposition(@6));
 						if (list_length($6) != 1)
 							ereport(ERROR,
-									(errcode(ERRCODE_SYNTAX_ERROR),
+									errcode(ERRCODE_SYNTAX_ERROR),
 									 errmsg("interval precision specified twice"),
-									 parser_errposition(@1)));
+									 parser_errposition(@1));
 						t->typmods = lappend($6, makeIntConst($3, @3));
 					}
 					else
@@ -3316,8 +3316,8 @@ alter_table_partition_id_spec_with_opt_default:
 			| DEFAULT PARTITION alter_table_partition_id_spec
 				{
 					ereport(ERROR,
-							(errcode(ERRCODE_SYNTAX_ERROR),
-							 errmsg("cannot specify a name, rank, or value for a DEFAULT partition in this context")));
+							errcode(ERRCODE_SYNTAX_ERROR),
+							 errmsg("cannot specify a name, rank, or value for a DEFAULT partition in this context"));
 				}
 			| DEFAULT PARTITION 
 				{
@@ -3375,8 +3375,8 @@ alter_table_partition_cmd:
 
                     if (pid->idtype != AT_AP_IDName)
 						ereport(ERROR,
-								(errcode(ERRCODE_SYNTAX_ERROR),
-								 errmsg("can only ADD a partition by name")));
+								errcode(ERRCODE_SYNTAX_ERROR),
+								 errmsg("can only ADD a partition by name"));
 
                     pc->partid = (Node *) pid;
 
@@ -3407,8 +3407,8 @@ alter_table_partition_cmd:
 
                     if (pid->idtype != AT_AP_IDName)
 						ereport(ERROR,
-								(errcode(ERRCODE_SYNTAX_ERROR),
-								 errmsg("can only ADD a partition by name")));
+								errcode(ERRCODE_SYNTAX_ERROR),
+								 errmsg("can only ADD a partition by name"));
 
                     pc->partid = (Node *) pid;
 
@@ -3642,10 +3642,10 @@ alter_table_partition_cmd:
 
 							if (e->subSpec)
 								ereport(ERROR,
-										(errcode(ERRCODE_SYNTAX_ERROR),
+										errcode(ERRCODE_SYNTAX_ERROR),
 										 errmsg("template cannot contain "
 												"specification for child "
-												"partition")));
+												"partition"));
 						}
 					}
 
@@ -3877,9 +3877,9 @@ CopyStmt:	COPY opt_binary qualified_name opt_column_list opt_oids
 
 					if (n->is_program && n->filename == NULL)
 						ereport(ERROR,
-								(errcode(ERRCODE_SYNTAX_ERROR),
+								errcode(ERRCODE_SYNTAX_ERROR),
 								 errmsg("STDIN/STDOUT not allowed with PROGRAM"),
-								 parser_errposition(@8)));
+								 parser_errposition(@8));
 
 // -- non-upstream patch begin
 					if (n->is_program) {
@@ -3887,10 +3887,10 @@ CopyStmt:	COPY opt_binary qualified_name opt_column_list opt_oids
 						* MDB-21297: forbit usage of COPY TO PROGRAM and COPY FROM PROGRAM at all
 						*/
 						// ereport(ERROR,
-						// 	(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
+						// 	errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
 						// 		errmsg("forbidden to COPY to or from an external program or file in Yandex Cloud"),
 						// 		errhint("Anyone can COPY to stdout or from stdin. "
-						// 				"psql's \\copy command also works for anyone.")));
+						// 				"psql's \\copy command also works for anyone."));
 					}
 // --- non-upstream patch end
 
@@ -3928,9 +3928,9 @@ CopyStmt:	COPY opt_binary qualified_name opt_column_list opt_oids
 
 					if (n->is_program && n->filename == NULL)
 						ereport(ERROR,
-								(errcode(ERRCODE_SYNTAX_ERROR),
+								errcode(ERRCODE_SYNTAX_ERROR),
 								 errmsg("STDIN/STDOUT not allowed with PROGRAM"),
-								 parser_errposition(@5)));
+								 parser_errposition(@5));
 
 // -- non-upstream patch begin
 					if (n->is_program) {
@@ -3938,10 +3938,10 @@ CopyStmt:	COPY opt_binary qualified_name opt_column_list opt_oids
 						* MDB-21297: forbit usage of COPY TO PROGRAM and COPY FROM PROGRAM at all
 						*/
 						// ereport(ERROR,
-						// 	(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
+						// 	errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
 						// 		errmsg("forbidden to COPY to or from an external program or file in Yandex Cloud"),
 						// 		errhint("Anyone can COPY to stdout or from stdin. "
-						// 				"psql's \\copy command also works for anyone.")));
+						// 				"psql's \\copy command also works for anyone."));
 					}
 // --- non-upstream patch end
 
@@ -4238,15 +4238,15 @@ OptTemp:	TEMPORARY					{ $$ = RELPERSISTENCE_TEMP; }
 			| GLOBAL TEMPORARY
 				{
 					ereport(WARNING,
-							(errmsg("GLOBAL is deprecated in temporary table creation"),
-							 parser_errposition(@1)));
+							errmsg("GLOBAL is deprecated in temporary table creation"),
+							 parser_errposition(@1));
 					$$ = RELPERSISTENCE_TEMP;
 				}
 			| GLOBAL TEMP
 				{
 					ereport(WARNING,
-							(errmsg("GLOBAL is deprecated in temporary table creation"),
-							 parser_errposition(@1)));
+							errmsg("GLOBAL is deprecated in temporary table creation"),
+							 parser_errposition(@1));
 					$$ = RELPERSISTENCE_TEMP;
 				}
 			| UNLOGGED					{ $$ = RELPERSISTENCE_UNLOGGED; }
@@ -4717,9 +4717,9 @@ distributed_by_list:
 
 						if (strcmp(oldelem->name, newelem->name) == 0)
 							ereport(ERROR,
-									(errcode(ERRCODE_DUPLICATE_COLUMN),
+									errcode(ERRCODE_DUPLICATE_COLUMN),
 									 errmsg("duplicate column in DISTRIBUTED BY clause"),
-									 parser_errposition(@3)));
+									 parser_errposition(@3));
 					}
 
 					$$ = lappend($1, newelem);
@@ -4744,9 +4744,9 @@ key_match:  MATCH FULL
 		| MATCH PARTIAL
 			{
 				ereport(ERROR,
-						(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+						errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 						 errmsg("MATCH PARTIAL not yet implemented"),
-						 parser_errposition(@1)));
+						 parser_errposition(@1));
 				$$ = FKCONSTR_MATCH_PARTIAL;
 			}
 		| MATCH SIMPLE
@@ -5289,8 +5289,8 @@ TabPartitionByType:
 					$$ = PARTTYP_RANGE; 
 
 					ereport(ERROR,
-							(errcode(ERRCODE_SYNTAX_ERROR),
-							 errmsg("PARTITION BY must specify RANGE or LIST")));
+							errcode(ERRCODE_SYNTAX_ERROR),
+							 errmsg("PARTITION BY must specify RANGE or LIST"));
 				}
 		;
 
@@ -5346,10 +5346,10 @@ TabSubPartitionTemplate:
 
 							if (e->subSpec)
 								ereport(ERROR,
-										(errcode(ERRCODE_SYNTAX_ERROR),
+										errcode(ERRCODE_SYNTAX_ERROR),
 										 errmsg("template cannot contain "
 												"specification for child "
-												"partition")));
+												"partition"));
 						}
 
 					}
@@ -5428,9 +5428,9 @@ CreateAsStmt:
 
 					if ($9)
 						ereport(ERROR,
-                                (errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+                                errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 								 errmsg("Cannot create a partitioned table using CREATE TABLE AS SELECT"),
-                                 errhint("Use CREATE TABLE...LIKE (followed by INSERT...SELECT) instead")));
+                                 errhint("Use CREATE TABLE...LIKE (followed by INSERT...SELECT) instead"));
 
 					$4->skipData = !($7);
 					$$ = (Node *) ctas;
@@ -5488,9 +5488,9 @@ CreateExternalStmt:	CREATE OptWritable EXTERNAL OptWeb OptTemp TABLE qualified_n
 								
 								if(!n->isweb)
 									ereport(ERROR,
-											(errcode(ERRCODE_SYNTAX_ERROR),
+											errcode(ERRCODE_SYNTAX_ERROR),
 										 	 errmsg("EXECUTE may not be used with a regular external table"),
-										 	 errhint("Use CREATE EXTERNAL WEB TABLE instead")));							
+										 	 errhint("Use CREATE EXTERNAL WEB TABLE instead"));
 								
 								/* if no ON clause specified, default to "ON ALL" */
 								if(extdesc->on_clause == NIL)
@@ -5501,8 +5501,8 @@ CreateExternalStmt:	CREATE OptWritable EXTERNAL OptWeb OptTemp TABLE qualified_n
 								else if(n->iswritable)
 								{
 									ereport(ERROR,
-											(errcode(ERRCODE_SYNTAX_ERROR),
-									 		 errmsg("ON clause may not be used with a writable external table")));							
+											errcode(ERRCODE_SYNTAX_ERROR),
+									 		 errmsg("ON clause may not be used with a writable external table"));
 								}
 							}
 
@@ -5510,8 +5510,8 @@ CreateExternalStmt:	CREATE OptWritable EXTERNAL OptWeb OptTemp TABLE qualified_n
 							{
 								if (n->iswritable)
 									ereport(ERROR,
-										(errcode(ERRCODE_SYNTAX_ERROR),
-										 errmsg("Single row error handling may not be used with a writable external table")));
+										errcode(ERRCODE_SYNTAX_ERROR),
+										 errmsg("Single row error handling may not be used with a writable external table"));
 
 								if (((SingleRowErrorDesc *)n->sreh)->log_errors_type == LOG_ERRORS_PERSISTENTLY)
 								{
@@ -5752,14 +5752,14 @@ OptSingleRowErrorHandling:
 			/* PERCENT value check */
 			if(!n->is_limit_in_rows && (n->rejectlimit < 1 || n->rejectlimit > 100))
 				ereport(ERROR,
-						(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-						 errmsg("invalid PERCENT value. Should be (1 - 100)")));
+						errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+						 errmsg("invalid PERCENT value. Should be (1 - 100)"));
 			
 			/* ROW values check */
 			if(n->is_limit_in_rows && n->rejectlimit < 2)
 			   ereport(ERROR,
-					   (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-						errmsg("invalid (ROWS) reject limit. Should be 2 or larger")));
+					   errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+						errmsg("invalid (ROWS) reject limit. Should be 2 or larger"));
 
 			$$ = lappend(NULL, makeDefElem("sreh", (Node *) n));
 		}
@@ -5772,17 +5772,17 @@ OptLogErrorTable:
 			if (gp_ignore_error_table) /* ignore the [INTO error-table] clause for backward compatibility */
 			{
 			ereport(WARNING,
-					(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+					errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 					 errmsg("error table is not supported"),
-					 errhint("Use gp_read_error_log() and gp_truncate_error_log() to view and manage the internal error log associated with your table.")));
+					 errhint("Use gp_read_error_log() and gp_truncate_error_log() to view and manage the internal error log associated with your table."));
 			}
 			else
 			{
 			ereport(ERROR,
-					(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+					errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 					 errmsg("error table is not supported"),
 					 errhint("Set gp_ignore_error_table to ignore the [INTO error-table] clause for backward compatibility."),
-					 parser_errposition(@3)));
+					 parser_errposition(@3));
 			}
 			$$ = LOG_ERRORS_ENABLE;
 		}
@@ -5801,14 +5801,14 @@ ExtSingleRowErrorHandling:
 			/* PERCENT value check */
 			if(!n->is_limit_in_rows && (n->rejectlimit < 1 || n->rejectlimit > 100))
 				ereport(ERROR,
-						(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-						 errmsg("invalid PERCENT value. Should be (1 - 100)")));
+						errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+						 errmsg("invalid PERCENT value. Should be (1 - 100)"));
 
 			/* ROW values check */
 			if(n->is_limit_in_rows && n->rejectlimit < 2)
 			   ereport(ERROR,
-					   (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-						errmsg("invalid (ROWS) reject limit. Should be 2 or larger")));
+					   errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+						errmsg("invalid (ROWS) reject limit. Should be 2 or larger"));
 
 			$$ = (Node *)n;
 		}
@@ -7031,16 +7031,16 @@ ConstraintAttributeSpec:
 					/* special message for this case */
 					if ((newspec & (CAS_NOT_DEFERRABLE | CAS_INITIALLY_DEFERRED)) == (CAS_NOT_DEFERRABLE | CAS_INITIALLY_DEFERRED))
 						ereport(ERROR,
-								(errcode(ERRCODE_SYNTAX_ERROR),
+								errcode(ERRCODE_SYNTAX_ERROR),
 								 errmsg("constraint declared INITIALLY DEFERRED must be DEFERRABLE"),
-								 parser_errposition(@2)));
+								 parser_errposition(@2));
 					/* generic message for other conflicts */
 					if ((newspec & (CAS_NOT_DEFERRABLE | CAS_DEFERRABLE)) == (CAS_NOT_DEFERRABLE | CAS_DEFERRABLE) ||
 						(newspec & (CAS_INITIALLY_IMMEDIATE | CAS_INITIALLY_DEFERRED)) == (CAS_INITIALLY_IMMEDIATE | CAS_INITIALLY_DEFERRED))
 						ereport(ERROR,
-								(errcode(ERRCODE_SYNTAX_ERROR),
+								errcode(ERRCODE_SYNTAX_ERROR),
 								 errmsg("conflicting constraint properties"),
-								 parser_errposition(@2)));
+								 parser_errposition(@2));
 					$$ = newspec;
 				}
 		;
@@ -7170,8 +7170,8 @@ CreateAssertStmt:
 								   NULL, yyscanner);
 
 					ereport(ERROR,
-							(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-							 errmsg("CREATE ASSERTION is not yet implemented")));
+							errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+							 errmsg("CREATE ASSERTION is not yet implemented"));
 
 					$$ = (Node *)n;
 				}
@@ -7186,8 +7186,8 @@ DropAssertStmt:
 					n->behavior = $4;
 					n->removeType = OBJECT_TRIGGER; /* XXX */
 					ereport(ERROR,
-							(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-							 errmsg("DROP ASSERTION is not yet implemented")));
+							errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+							 errmsg("DROP ASSERTION is not yet implemented"));
 					$$ = (Node *) n;
 				}
 		;
@@ -7270,9 +7270,9 @@ DefineStmt:
 					 */
 					if ($2)
 						ereport(ERROR,
-								(errcode(ERRCODE_SYNTAX_ERROR),
+								errcode(ERRCODE_SYNTAX_ERROR),
 								 errmsg("syntax error"),
-								 parser_errposition(@2)));
+								 parser_errposition(@2));
 
 					DefineStmt *n = makeNode(DefineStmt);
 					n->kind = OBJECT_EXTPROTOCOL;
@@ -7576,10 +7576,10 @@ opt_recheck:	RECHECK
 					 * dumps.
 					 */
 					ereport(NOTICE,
-							(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+							errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 							 errmsg("RECHECK is no longer required"),
 							 errhint("Update your data type."),
-							 parser_errposition(@1)));
+							 parser_errposition(@1));
 					$$ = TRUE;
 				}
 			| /*EMPTY*/						{ $$ = FALSE; }
@@ -8760,8 +8760,8 @@ IndexStmt:	CREATE opt_unique INDEX opt_concurrently opt_index_name
                     if (n->concurrent)
 					{
 						ereport(ERROR,
-								(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-								 errmsg("CREATE INDEX CONCURRENTLY is not supported")));
+								errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+								 errmsg("CREATE INDEX CONCURRENTLY is not supported"));
 
 					}
 
@@ -9060,9 +9060,9 @@ aggr_arg:	func_arg
 					if (!($1->mode == FUNC_PARAM_IN ||
 						  $1->mode == FUNC_PARAM_VARIADIC))
 						ereport(ERROR,
-								(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+								errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 								 errmsg("aggregates cannot have output arguments"),
-								 parser_errposition(@1)));
+								 parser_errposition(@1));
 					$$ = $1;
 				}
 		;
@@ -9398,10 +9398,10 @@ oper_argtypes:
 			'(' Typename ')'
 				{
 				   ereport(ERROR,
-						   (errcode(ERRCODE_SYNTAX_ERROR),
+						   errcode(ERRCODE_SYNTAX_ERROR),
 							errmsg("missing argument"),
 							errhint("Use NONE to denote the missing argument of a unary operator."),
-							parser_errposition(@3)));
+							parser_errposition(@3));
 				}
 			| '(' Typename ',' Typename ')'
 					{ $$ = list_make2($2, $4); }
@@ -10818,9 +10818,9 @@ ViewStmt: CREATE OptTemp VIEW qualified_name opt_column_list opt_reloptions
 					n->withCheckOption = static_cast<ViewCheckOption>($12);
 					if (n->withCheckOption != NO_CHECK_OPTION)
 						ereport(ERROR,
-								(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+								errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 								 errmsg("WITH CHECK OPTION not supported on recursive views"),
-								 parser_errposition(@12)));
+								 parser_errposition(@12));
 					$$ = (Node *) n;
 				}
 		| CREATE OR REPLACE OptTemp RECURSIVE VIEW qualified_name '(' columnList ')' opt_reloptions
@@ -10836,9 +10836,9 @@ ViewStmt: CREATE OptTemp VIEW qualified_name opt_column_list opt_reloptions
 					n->withCheckOption = static_cast<ViewCheckOption>($14);
 					if (n->withCheckOption != NO_CHECK_OPTION)
 						ereport(ERROR,
-								(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+								errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 								 errmsg("WITH CHECK OPTION not supported on recursive views"),
-								 parser_errposition(@14)));
+								 parser_errposition(@14));
 					$$ = (Node *) n;
 				}
 		;
@@ -11555,9 +11555,9 @@ ExplainableStmt:
 			| CreateStmt
 				{
 					ereport(ERROR,
-							(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+							errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 							 errmsg("cannot EXPLAIN CREATE TABLE without AS "
-							 		"clause")));
+							 		"clause"));
 				}
 		;
 
@@ -11704,9 +11704,9 @@ cdb_string_list:
 				{
 					if (list_member($1, $3))
 						ereport(ERROR,
-								(errcode(ERRCODE_INVALID_TABLE_DEFINITION),
+								errcode(ERRCODE_INVALID_TABLE_DEFINITION),
 								 errmsg("duplicate location uri"),
-								 parser_errposition(@3)));
+								 parser_errposition(@3));
 					$$ = lappend($1, $3);
 				}
 		;
@@ -11825,10 +11825,10 @@ LockStmt:	LOCK_P opt_table relation_expr_list opt_lock opt_nowait opt_masteronly
 					if (n->masteronly && n->mode != AccessShareLock)
 					{
 						ereport(ERROR,
-								(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+								errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 								errmsg("provided lock mode is not supported for MASTER ONLY"),
 							 	errhint("Only ACCESS SHARE mode is supported for MASTER ONLY."),
-								parser_errposition(@4)));
+								parser_errposition(@4));
 					}
 					$$ = (Node *)n;
 				}
@@ -11911,9 +11911,9 @@ multiple_set_clause:
 					 */
 					if (list_length($2) != list_length($5))
 						ereport(ERROR,
-								(errcode(ERRCODE_SYNTAX_ERROR),
+								errcode(ERRCODE_SYNTAX_ERROR),
 								 errmsg("number of columns does not match number of values"),
-								 parser_errposition(@1)));
+								 parser_errposition(@1));
 					forboth(col_cell, $2, val_cell, $5)
 					{
 						ResTarget *res_col = (ResTarget *) lfirst(col_cell);
@@ -12286,16 +12286,16 @@ OptTempTableName:
 			| GLOBAL TEMPORARY opt_table qualified_name
 				{
 					ereport(WARNING,
-							(errmsg("GLOBAL is deprecated in temporary table creation"),
-							 parser_errposition(@1)));
+							errmsg("GLOBAL is deprecated in temporary table creation"),
+							 parser_errposition(@1));
 					$$ = $4;
 					$$->relpersistence = RELPERSISTENCE_TEMP;
 				}
 			| GLOBAL TEMP opt_table qualified_name
 				{
 					ereport(WARNING,
-							(errmsg("GLOBAL is deprecated in temporary table creation"),
-							 parser_errposition(@1)));
+							errmsg("GLOBAL is deprecated in temporary table creation"),
+							 parser_errposition(@1));
 					$$ = $4;
 					$$->relpersistence = RELPERSISTENCE_TEMP;
 				}
@@ -12389,10 +12389,10 @@ limit_clause:
 				{
 					/* Disabled because it was too confusing, bjm 2002-02-18 */
 					ereport(ERROR,
-							(errcode(ERRCODE_SYNTAX_ERROR),
+							errcode(ERRCODE_SYNTAX_ERROR),
 							 errmsg("LIMIT #,# syntax is not supported"),
 							 errhint("Use separate LIMIT and OFFSET clauses."),
-							 parser_errposition(@1)));
+							 parser_errposition(@1));
 				}
 			/* SQL:2008 syntax */
 			/* to avoid shift/reduce conflicts, handle the optional value with
@@ -12630,16 +12630,16 @@ table_ref:	relation_expr opt_alias_clause
 						if (IsA($1, SelectStmt) &&
 							((SelectStmt *) $1)->valuesLists)
 							ereport(ERROR,
-									(errcode(ERRCODE_SYNTAX_ERROR),
+									errcode(ERRCODE_SYNTAX_ERROR),
 									 errmsg("VALUES in FROM must have an alias"),
 									 errhint("For example, FROM (VALUES ...) [AS] foo."),
-									 parser_errposition(@1)));
+									 parser_errposition(@1));
 						else
 							ereport(ERROR,
-									(errcode(ERRCODE_SYNTAX_ERROR),
+									errcode(ERRCODE_SYNTAX_ERROR),
 									 errmsg("subquery in FROM must have an alias"),
 									 errhint("For example, FROM (SELECT ...) [AS] foo."),
-									 parser_errposition(@1)));
+									 parser_errposition(@1));
 					}
 					$$ = (Node *) n;
 				}
@@ -12655,16 +12655,16 @@ table_ref:	relation_expr opt_alias_clause
 						if (IsA($2, SelectStmt) &&
 							((SelectStmt *) $2)->valuesLists)
 							ereport(ERROR,
-									(errcode(ERRCODE_SYNTAX_ERROR),
+									errcode(ERRCODE_SYNTAX_ERROR),
 									 errmsg("VALUES in FROM must have an alias"),
 									 errhint("For example, FROM (VALUES ...) [AS] foo."),
-									 parser_errposition(@2)));
+									 parser_errposition(@2));
 						else
 							ereport(ERROR,
-									(errcode(ERRCODE_SYNTAX_ERROR),
+									errcode(ERRCODE_SYNTAX_ERROR),
 									 errmsg("subquery in FROM must have an alias"),
 									 errhint("For example, FROM (SELECT ...) [AS] foo."),
-									 parser_errposition(@2)));
+									 parser_errposition(@2));
 					}
 					$$ = (Node *) n;
 				}
@@ -13099,9 +13099,9 @@ SimpleTypename:
 					{
 						if (list_length($5) != 1)
 							ereport(ERROR,
-									(errcode(ERRCODE_SYNTAX_ERROR),
+									errcode(ERRCODE_SYNTAX_ERROR),
 									 errmsg("interval precision specified twice"),
-									 parser_errposition(@1)));
+									 parser_errposition(@1));
 						$$->typmods = lappend($5, makeIntConst($3, @3));
 					}
 					else
@@ -13225,18 +13225,18 @@ opt_float:	'(' Iconst ')'
 					 */
 					if ($2 < 1)
 						ereport(ERROR,
-								(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+								errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 								 errmsg("precision for type float must be at least 1 bit"),
-								 parser_errposition(@2)));
+								 parser_errposition(@2));
 					else if ($2 <= 24)
 						$$ = SystemTypeName("float4");
 					else if ($2 <= 53)
 						$$ = SystemTypeName("float8");
 					else
 						ereport(ERROR,
-								(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+								errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 								 errmsg("precision for type float must be less than 54 bits"),
-								 parser_errposition(@2)));
+								 parser_errposition(@2));
 				}
 			| /*EMPTY*/
 				{
@@ -13700,14 +13700,14 @@ a_expr:		c_expr									{ $$ = $1; }
 				{
 					if (list_length($1) != 2)
 						ereport(ERROR,
-								(errcode(ERRCODE_SYNTAX_ERROR),
+								errcode(ERRCODE_SYNTAX_ERROR),
 								 errmsg("wrong number of parameters on left side of OVERLAPS expression"),
-								 parser_errposition(@1)));
+								 parser_errposition(@1));
 					if (list_length($3) != 2)
 						ereport(ERROR,
-								(errcode(ERRCODE_SYNTAX_ERROR),
+								errcode(ERRCODE_SYNTAX_ERROR),
 								 errmsg("wrong number of parameters on right side of OVERLAPS expression"),
-								 parser_errposition(@3)));
+								 parser_errposition(@3));
 					$$ = (Node *) makeFuncCall(SystemFuncName("overlaps"),
 											   list_concat($1, $3),
 											   @2);
@@ -13889,9 +13889,9 @@ a_expr:		c_expr									{ $$ = $1; }
 					 * But, will probably implement a separate node in the executor.
 					 */
 					ereport(ERROR,
-							(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+							errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 							 errmsg("UNIQUE predicate is not yet implemented"),
-							 parser_errposition(@1)));
+							 parser_errposition(@1));
 				}
 			| a_expr IS DOCUMENT_P					%prec IS
 				{
@@ -14203,19 +14203,19 @@ func_expr: func_application within_group_clause filter_clause over_clause
 					{
 						if (n->agg_order != NIL)
 							ereport(ERROR,
-									(errcode(ERRCODE_SYNTAX_ERROR),
+									errcode(ERRCODE_SYNTAX_ERROR),
 									 errmsg("cannot use multiple ORDER BY clauses with WITHIN GROUP"),
-									 parser_errposition(@2)));
+									 parser_errposition(@2));
 						if (n->agg_distinct)
 							ereport(ERROR,
-									(errcode(ERRCODE_SYNTAX_ERROR),
+									errcode(ERRCODE_SYNTAX_ERROR),
 									 errmsg("cannot use DISTINCT with WITHIN GROUP"),
-									 parser_errposition(@2)));
+									 parser_errposition(@2));
 						if (n->func_variadic)
 							ereport(ERROR,
-									(errcode(ERRCODE_SYNTAX_ERROR),
+									errcode(ERRCODE_SYNTAX_ERROR),
 									 errmsg("cannot use VARIADIC with WITHIN GROUP"),
-									 parser_errposition(@2)));
+									 parser_errposition(@2));
 						n->agg_order = $2;
 						n->agg_within_group = TRUE;
 					}
@@ -14796,15 +14796,15 @@ opt_frame_clause:
 					if (n->frameOptions & (FRAMEOPTION_START_VALUE_PRECEDING |
 										   FRAMEOPTION_END_VALUE_PRECEDING))
 						ereport(ERROR,
-								(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+								errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 								 errmsg("RANGE PRECEDING is only supported with UNBOUNDED"),
-								 parser_errposition(@1)));
+								 parser_errposition(@1));
 					if (n->frameOptions & (FRAMEOPTION_START_VALUE_FOLLOWING |
 										   FRAMEOPTION_END_VALUE_FOLLOWING))
 						ereport(ERROR,
-								(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+								errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 								 errmsg("RANGE FOLLOWING is only supported with UNBOUNDED"),
-								 parser_errposition(@1)));
+								 parser_errposition(@1));
 #endif
 					$$ = n;
 				}
@@ -14831,14 +14831,14 @@ frame_extent: frame_bound
 					/* reject invalid cases */
 					if (n->frameOptions & FRAMEOPTION_START_UNBOUNDED_FOLLOWING)
 						ereport(ERROR,
-								(errcode(ERRCODE_WINDOWING_ERROR),
+								errcode(ERRCODE_WINDOWING_ERROR),
 								 errmsg("frame start cannot be UNBOUNDED FOLLOWING"),
-								 parser_errposition(@1)));
+								 parser_errposition(@1));
 					if (n->frameOptions & FRAMEOPTION_START_VALUE_FOLLOWING)
 						ereport(ERROR,
-								(errcode(ERRCODE_WINDOWING_ERROR),
+								errcode(ERRCODE_WINDOWING_ERROR),
 								 errmsg("frame starting from following row cannot end with current row"),
-								 parser_errposition(@1)));
+								 parser_errposition(@1));
 					n->frameOptions |= FRAMEOPTION_END_CURRENT_ROW;
 					$$ = n;
 				}
@@ -14854,27 +14854,27 @@ frame_extent: frame_bound
 					/* reject invalid cases */
 					if (frameOptions & FRAMEOPTION_START_UNBOUNDED_FOLLOWING)
 						ereport(ERROR,
-								(errcode(ERRCODE_WINDOWING_ERROR),
+								errcode(ERRCODE_WINDOWING_ERROR),
 								 errmsg("frame start cannot be UNBOUNDED FOLLOWING"),
-								 parser_errposition(@2)));
+								 parser_errposition(@2));
 					if (frameOptions & FRAMEOPTION_END_UNBOUNDED_PRECEDING)
 						ereport(ERROR,
-								(errcode(ERRCODE_WINDOWING_ERROR),
+								errcode(ERRCODE_WINDOWING_ERROR),
 								 errmsg("frame end cannot be UNBOUNDED PRECEDING"),
-								 parser_errposition(@4)));
+								 parser_errposition(@4));
 					if ((frameOptions & FRAMEOPTION_START_CURRENT_ROW) &&
 						(frameOptions & FRAMEOPTION_END_VALUE_PRECEDING))
 						ereport(ERROR,
-								(errcode(ERRCODE_WINDOWING_ERROR),
+								errcode(ERRCODE_WINDOWING_ERROR),
 								 errmsg("frame starting from current row cannot have preceding rows"),
-								 parser_errposition(@4)));
+								 parser_errposition(@4));
 					if ((frameOptions & FRAMEOPTION_START_VALUE_FOLLOWING) &&
 						(frameOptions & (FRAMEOPTION_END_VALUE_PRECEDING |
 										 FRAMEOPTION_END_CURRENT_ROW)))
 						ereport(ERROR,
-								(errcode(ERRCODE_WINDOWING_ERROR),
+								errcode(ERRCODE_WINDOWING_ERROR),
 								 errmsg("frame starting from following row cannot have preceding rows"),
-								 parser_errposition(@4)));
+								 parser_errposition(@4));
 					n1->frameOptions = frameOptions;
 					n1->endOffset = n2->startOffset;
 					$$ = n1;
@@ -15480,10 +15480,10 @@ qualified_name:
 							break;
 						default:
 							//ereport(ERROR, mdxn: ereport NameListToString
-							//		(errcode(ERRCODE_SYNTAX_ERROR),
+							//		errcode(ERRCODE_SYNTAX_ERROR),
 							//		 errmsg("improper qualified name (too many dotted names): %s",
 							//				NameListToString(lcons(makeString($1), $2))),
-							//		 parser_errposition(@1)));
+							//		 parser_errposition(@1));
 							break;
 					}
 				}
@@ -15581,15 +15581,15 @@ AexprConst: Iconst
 
 						if (IsA(arg, NamedArgExpr))
 							ereport(ERROR,
-									(errcode(ERRCODE_SYNTAX_ERROR),
+									errcode(ERRCODE_SYNTAX_ERROR),
 									 errmsg("type modifier cannot have parameter name"),
-									 parser_errposition(arg->location)));
+									 parser_errposition(arg->location));
 					}
 					if ($4 != NIL)
 							ereport(ERROR,
-									(errcode(ERRCODE_SYNTAX_ERROR),
+									errcode(ERRCODE_SYNTAX_ERROR),
 									 errmsg("type modifier cannot have ORDER BY"),
-									 parser_errposition(@4)));
+									 parser_errposition(@4));
 
 					t->typmods = $3;
 					t->location = @1;
@@ -15612,9 +15612,9 @@ AexprConst: Iconst
 					{
 						if (list_length($6) != 1)
 							ereport(ERROR,
-									(errcode(ERRCODE_SYNTAX_ERROR),
+									errcode(ERRCODE_SYNTAX_ERROR),
 									 errmsg("interval precision specified twice"),
-									 parser_errposition(@1)));
+									 parser_errposition(@1));
 						t->typmods = lappend($6, makeIntConst($3, @3));
 					}
 					else
@@ -16823,9 +16823,9 @@ makeOrderedSetArgs(List *directargs, List *orderedargs,
 			firsto->mode != FUNC_PARAM_VARIADIC ||
 			!equal(lastd->argType, firsto->argType))
 			ereport(ERROR,
-					(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+					errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 					 errmsg("an ordered-set aggregate with a VARIADIC direct argument must have one VARIADIC aggregated argument of the same data type"),
-					 parser_errposition(exprLocation(reinterpret_cast<Node *>(firsto)))));
+					 parser_errposition(exprLocation(reinterpret_cast<Node *>(firsto))));
 
 		/* OK, drop the duplicate VARIADIC argument from the internal form */
 		orderedargs = NIL;
@@ -16860,9 +16860,9 @@ insertSelectOptions(SelectStmt *stmt,
 	{
 		if (stmt->sortClause)
 			ereport(ERROR,
-					(errcode(ERRCODE_SYNTAX_ERROR),
+					errcode(ERRCODE_SYNTAX_ERROR),
 					 errmsg("multiple ORDER BY clauses not allowed"),
-					 parser_errposition(exprLocation(reinterpret_cast<Node *>(sortClause)))));
+					 parser_errposition(exprLocation(reinterpret_cast<Node *>(sortClause))));
 		stmt->sortClause = sortClause;
 	}
 	/* We can handle multiple locking clauses, though */
@@ -16871,27 +16871,27 @@ insertSelectOptions(SelectStmt *stmt,
 	{
 		if (stmt->limitOffset)
 			ereport(ERROR,
-					(errcode(ERRCODE_SYNTAX_ERROR),
+					errcode(ERRCODE_SYNTAX_ERROR),
 					 errmsg("multiple OFFSET clauses not allowed"),
-					 parser_errposition(exprLocation(limitOffset))));
+					 parser_errposition(exprLocation(limitOffset)));
 		stmt->limitOffset = limitOffset;
 	}
 	if (limitCount)
 	{
 		if (stmt->limitCount)
 			ereport(ERROR,
-					(errcode(ERRCODE_SYNTAX_ERROR),
+					errcode(ERRCODE_SYNTAX_ERROR),
 					 errmsg("multiple LIMIT clauses not allowed"),
-					 parser_errposition(exprLocation(limitCount))));
+					 parser_errposition(exprLocation(limitCount)));
 		stmt->limitCount = limitCount;
 	}
 	if (withClause)
 	{
 		if (stmt->withClause)
 			ereport(ERROR,
-					(errcode(ERRCODE_SYNTAX_ERROR),
+					errcode(ERRCODE_SYNTAX_ERROR),
 					 errmsg("multiple WITH clauses not allowed"),
-					 parser_errposition(exprLocation(reinterpret_cast<Node *>(withClause)))));
+					 parser_errposition(exprLocation(reinterpret_cast<Node *>(withClause))));
 		stmt->withClause = withClause;
 	}
 }
@@ -17040,13 +17040,13 @@ mergeTableFuncParameters(List *func_args, List *columns)
 				break;
 			case FUNC_PARAM_OUT:
 				ereport(ERROR,
-						(errcode(ERRCODE_SYNTAX_ERROR),
-						 errmsg("OUT arguments aren't allowed in TABLE functions")));
+						errcode(ERRCODE_SYNTAX_ERROR),
+						 errmsg("OUT arguments aren't allowed in TABLE functions"));
 				break;
 			case FUNC_PARAM_INOUT:
 				ereport(ERROR,
-						(errcode(ERRCODE_SYNTAX_ERROR),
-						 errmsg("INOUT arguments aren't allowed in TABLE functions")));
+						errcode(ERRCODE_SYNTAX_ERROR),
+						 errmsg("INOUT arguments aren't allowed in TABLE functions"));
 				break;
 		}
 	}
@@ -17090,8 +17090,8 @@ checkWindowExclude(void)
 
 	/* MPP-13628 */
 	ereport(ERROR,
-			(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-			 errmsg("window EXCLUDE clause not yet implemented")));
+			errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+			 errmsg("window EXCLUDE clause not yet implemented"));
 }
 
 /*
@@ -17136,10 +17136,10 @@ makeRangeVarFromAnyName(List *names, int position, core_yyscan_t yyscanner)
 			break;
 		default:
 			//ereport(ERROR, mdxn: ereport NameListToString
-			//		(errcode(ERRCODE_SYNTAX_ERROR),
+			//		errcode(ERRCODE_SYNTAX_ERROR),
 			//		 errmsg("improper qualified name (too many dotted names): %s",
 			//				NameListToString(names)),
-			//		 parser_errposition(position)));
+			//		 parser_errposition(position));
 			break;
 	}
 
@@ -17171,9 +17171,9 @@ SplitColQualList(List *qualList,
 
 			if (*collClause)
 				ereport(ERROR,
-						(errcode(ERRCODE_SYNTAX_ERROR),
+						errcode(ERRCODE_SYNTAX_ERROR),
 						 errmsg("multiple COLLATE clauses not allowed"),
-						 parser_errposition(c->location)));
+						 parser_errposition(c->location));
 			*collClause = c;
 		}
 		else
@@ -17208,11 +17208,11 @@ processCASbits(int cas_bits, int location, const char *constrType,
 			*deferrable = true;
 		else
 			ereport(ERROR,
-					(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+					errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 					 /* translator: %s is CHECK, UNIQUE, or similar */
 					 errmsg("%s constraints cannot be marked DEFERRABLE",
 							constrType),
-					 parser_errposition(location)));
+					 parser_errposition(location));
 	}
 
 	if (cas_bits & CAS_INITIALLY_DEFERRED)
@@ -17221,11 +17221,11 @@ processCASbits(int cas_bits, int location, const char *constrType,
 			*initdeferred = true;
 		else
 			ereport(ERROR,
-					(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+					errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 					 /* translator: %s is CHECK, UNIQUE, or similar */
 					 errmsg("%s constraints cannot be marked DEFERRABLE",
 							constrType),
-					 parser_errposition(location)));
+					 parser_errposition(location));
 	}
 
 	if (cas_bits & CAS_NOT_VALID)
@@ -17234,11 +17234,11 @@ processCASbits(int cas_bits, int location, const char *constrType,
 			*not_valid = true;
 		else
 			ereport(ERROR,
-					(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+					errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 					 /* translator: %s is CHECK, UNIQUE, or similar */
 					 errmsg("%s constraints cannot be marked NOT VALID",
 							constrType),
-					 parser_errposition(location)));
+					 parser_errposition(location));
 	}
 
 	if (cas_bits & CAS_NO_INHERIT)
@@ -17247,11 +17247,11 @@ processCASbits(int cas_bits, int location, const char *constrType,
 			*no_inherit = true;
 		else
 			ereport(ERROR,
-					(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+					errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 					 /* translator: %s is CHECK, UNIQUE, or similar */
 					 errmsg("%s constraints cannot be marked NO INHERIT",
 							constrType),
-					 parser_errposition(location)));
+					 parser_errposition(location));
 	}
 }
 

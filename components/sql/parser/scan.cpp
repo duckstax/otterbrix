@@ -1610,11 +1610,11 @@ YY_DECL {
                         SET_YYLLOC();
                         if (!standard_conforming_strings)
                             ereport(ERROR,
-                                    (errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-                                     errmsg("unsafe use of string constant with Unicode escapes"),
-                                     errdetail("String constants with Unicode escapes cannot be used when "
-                                               "standard_conforming_strings is off."),
-                                     lexer_errposition()));
+                                    errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+                                    errmsg("unsafe use of string constant with Unicode escapes"),
+                                    errdetail("String constants with Unicode escapes cannot be used when "
+                                              "standard_conforming_strings is off."),
+                                    lexer_errposition());
                         BEGIN(xus);
                         startlit();
                     }
@@ -1774,10 +1774,10 @@ YY_DECL {
 #line 615 "scan.l"
                     {
                         ereport(ERROR,
-                                (errcode(ERRCODE_INVALID_ESCAPE_SEQUENCE),
-                                 errmsg("invalid Unicode escape"),
-                                 errhint("Unicode escapes must be \\uXXXX or \\UXXXXXXXX."),
-                                 lexer_errposition()));
+                                errcode(ERRCODE_INVALID_ESCAPE_SEQUENCE),
+                                errmsg("invalid Unicode escape"),
+                                errhint("Unicode escapes must be \\uXXXX or \\UXXXXXXXX."),
+                                lexer_errposition());
                     }
                     YY_BREAK
                 case 38:
@@ -1790,11 +1790,11 @@ YY_DECL {
                                 (backslash_quote == BACKSLASH_QUOTE_SAFE_ENCODING &&
                                  PG_ENCODING_IS_CLIENT_ONLY(pg_get_client_encoding())))
                                 ereport(ERROR,
-                                        (errcode(ERRCODE_NONSTANDARD_USE_OF_ESCAPE_CHARACTER),
-                                         errmsg("unsafe use of \\' in a string literal"),
-                                         errhint("Use '' to write quotes in strings. \\' is insecure in client-only "
-                                                 "encodings."),
-                                         lexer_errposition()));
+                                        errcode(ERRCODE_NONSTANDARD_USE_OF_ESCAPE_CHARACTER),
+                                        errmsg("unsafe use of \\' in a string literal"),
+                                        errhint("Use '' to write quotes in strings. \\' is insecure in client-only "
+                                                "encodings."),
+                                        lexer_errposition());
                         }
                         check_string_escape_warning(yytext[1], yyscanner);
                         addlitchar(unescape_single_char(yytext[1], yyscanner), yyscanner);
@@ -3377,20 +3377,17 @@ void scanner_yyerror(const char* message, core_yyscan_t yyscanner) {
     const char* loc = yyextra->scanbuf + *yylloc;
 
     if (*loc == YY_END_OF_BUFFER_CHAR) {
-        ereport(
-            ERROR,
-            (errcode(ERRCODE_SYNTAX_ERROR),
-             /* translator: %s is typically the translation of "syntax error" */
-             errmsg(
-                 "%s at end of input"), // mdxn: originally  errmsg("%s at end of input", _(message)), gettext from c.h
-             lexer_errposition()));
+        ereport(ERROR,
+                errcode(ERRCODE_SYNTAX_ERROR),
+                /* translator: %s is typically the translation of "syntax error" */
+                errmsg("%s at end of input", message),
+                lexer_errposition());
     } else {
         ereport(ERROR,
-                (errcode(ERRCODE_SYNTAX_ERROR),
-                 /* translator: first %s is typically the translation of "syntax error" */
-                 errmsg("%s at or near \"%s\"",
-                        loc), // mdxn: originally  errmsg("%s at end of input", _(message)), gettext from c.h
-                 lexer_errposition()));
+                errcode(ERRCODE_SYNTAX_ERROR),
+                /* translator: first %s is typically the translation of "syntax error" */
+                errmsg("%s at or near \"%s\"", message, loc),
+                lexer_errposition());
     }
 }
 
@@ -3689,18 +3686,18 @@ static void check_string_escape_warning(unsigned char ychar, core_yyscan_t yysca
     if (ychar == '\'') {
         if (yyextra->warn_on_first_escape && escape_string_warning)
             ereport(WARNING,
-                    (errcode(ERRCODE_NONSTANDARD_USE_OF_ESCAPE_CHARACTER),
-                     errmsg("nonstandard use of \\' in a string literal"),
-                     errhint("Use '' to write quotes in strings, or use the escape string syntax (E'...')."),
-                     lexer_errposition()));
+                    errcode(ERRCODE_NONSTANDARD_USE_OF_ESCAPE_CHARACTER),
+                    errmsg("nonstandard use of \\' in a string literal"),
+                    errhint("Use '' to write quotes in strings, or use the escape string syntax (E'...')."),
+                    lexer_errposition());
         yyextra->warn_on_first_escape = false; /* warn only once per string */
     } else if (ychar == '\\') {
         if (yyextra->warn_on_first_escape && escape_string_warning)
             ereport(WARNING,
-                    (errcode(ERRCODE_NONSTANDARD_USE_OF_ESCAPE_CHARACTER),
-                     errmsg("nonstandard use of \\\\ in a string literal"),
-                     errhint("Use the escape string syntax for backslashes, e.g., E'\\\\'."),
-                     lexer_errposition()));
+                    errcode(ERRCODE_NONSTANDARD_USE_OF_ESCAPE_CHARACTER),
+                    errmsg("nonstandard use of \\\\ in a string literal"),
+                    errhint("Use the escape string syntax for backslashes, e.g., E'\\\\'."),
+                    lexer_errposition());
         yyextra->warn_on_first_escape = false; /* warn only once per string */
     } else
         check_escape_warning(yyscanner);
@@ -3709,10 +3706,10 @@ static void check_string_escape_warning(unsigned char ychar, core_yyscan_t yysca
 static void check_escape_warning(core_yyscan_t yyscanner) {
     if (yyextra->warn_on_first_escape && escape_string_warning)
         ereport(WARNING,
-                (errcode(ERRCODE_NONSTANDARD_USE_OF_ESCAPE_CHARACTER),
-                 errmsg("nonstandard use of escape in a string literal"),
-                 errhint("Use the escape string syntax for escapes, e.g., E'\\r\\n'."),
-                 lexer_errposition()));
+                errcode(ERRCODE_NONSTANDARD_USE_OF_ESCAPE_CHARACTER),
+                errmsg("nonstandard use of escape in a string literal"),
+                errhint("Use the escape string syntax for escapes, e.g., E'\\r\\n'."),
+                lexer_errposition());
     yyextra->warn_on_first_escape = false; /* warn only once per string */
 }
 
