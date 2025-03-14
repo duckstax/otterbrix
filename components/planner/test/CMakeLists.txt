@@ -9,12 +9,15 @@ add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         otterbrix::expressions
-        otterbrix::ql
         otterbrix::logical_plan
         otterbrix::test_generaty
         otterbrix::planner
         Catch2::Catch2
         actor-zeta::actor-zeta
+        absl::int128
+        Boost::boost
+        magic_enum::magic_enum
+        msgpackc-cxx
 )
 
 include(CTest)

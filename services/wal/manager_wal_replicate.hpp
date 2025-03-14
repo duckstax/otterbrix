@@ -5,7 +5,6 @@
 #include <boost/filesystem.hpp>
 #include <log/log.hpp>
 
-#include <components/ql/statements.hpp>
 #include <components/session/session.hpp>
 #include <configuration/configuration.hpp>
 #include <core/excutor.hpp>
@@ -15,6 +14,8 @@
 #include "base.hpp"
 #include "route.hpp"
 #include "wal.hpp"
+
+#include <logical_plan/param_storage.hpp>
 
 namespace services::wal {
 
@@ -47,17 +48,25 @@ namespace services::wal {
 
         void create_wal_worker();
         void load(const session_id_t& session, services::wal::id_t wal_id);
-        void create_database(const session_id_t& session, components::ql::create_database_t& data);
-        void drop_database(const session_id_t& session, components::ql::drop_database_t& data);
-        void create_collection(const session_id_t& session, components::ql::create_collection_t& data);
-        void drop_collection(const session_id_t& session, components::ql::drop_collection_t& data);
-        void insert_one(const session_id_t& session, components::ql::insert_one_t& data);
-        void insert_many(const session_id_t& session, components::ql::insert_many_t& data);
-        void delete_one(const session_id_t& session, components::ql::delete_one_t& data);
-        void delete_many(const session_id_t& session, components::ql::delete_many_t& data);
-        void update_one(const session_id_t& session, components::ql::update_one_t& data);
-        void update_many(const session_id_t& session, components::ql::update_many_t& data);
-        void create_index(const session_id_t& session, components::ql::create_index_t& data);
+        void create_database(const session_id_t& session, components::logical_plan::node_create_database_ptr data);
+        void drop_database(const session_id_t& session, components::logical_plan::node_drop_database_ptr data);
+        void create_collection(const session_id_t& session, components::logical_plan::node_create_collection_ptr data);
+        void drop_collection(const session_id_t& session, components::logical_plan::node_drop_collection_ptr data);
+        void insert_one(const session_id_t& session, components::logical_plan::node_insert_ptr data);
+        void insert_many(const session_id_t& session, components::logical_plan::node_insert_ptr data);
+        void delete_one(const session_id_t& session,
+                        components::logical_plan::node_delete_ptr data,
+                        components::logical_plan::parameter_node_ptr params);
+        void delete_many(const session_id_t& session,
+                         components::logical_plan::node_delete_ptr data,
+                         components::logical_plan::parameter_node_ptr params);
+        void update_one(const session_id_t& session,
+                        components::logical_plan::node_update_ptr data,
+                        components::logical_plan::parameter_node_ptr params);
+        void update_many(const session_id_t& session,
+                         components::logical_plan::node_update_ptr data,
+                         components::logical_plan::parameter_node_ptr params);
+        void create_index(const session_id_t& session, components::logical_plan::node_create_index_ptr data);
 
     private:
         auto enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void final;
@@ -108,7 +117,7 @@ namespace services::wal {
         actor_zeta::scheduler_raw e_;
         spin_lock lock_;
 
-        auto always_success(const session_id_t& session, components::ql::ql_statement_t&) -> void {
+        auto always_success(const session_id_t& session, components::logical_plan::node_ptr&) -> void {
             actor_zeta::send(current_message()->sender(),
                              address(),
                              services::wal::handler_id(services::wal::route::success),

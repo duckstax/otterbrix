@@ -21,8 +21,12 @@ set_property(TARGET otterbrix_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 target_link_libraries(
         otterbrix_${PROJECT_NAME} PUBLIC
         otterbrix::session
-        otterbrix::ql
+        otterbrix::logical_plan
         actor-zeta::actor-zeta
+        absl::int128
+        Boost::boost
+        msgpackc-cxx
+        magic_enum::magic_enum
 )
 
 target_include_directories( otterbrix_${PROJECT_NAME} PUBLIC )

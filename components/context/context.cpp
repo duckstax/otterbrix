@@ -2,7 +2,7 @@
 
 namespace components::pipeline {
 
-    context_t::context_t(ql::storage_parameters init_parameters)
+    context_t::context_t(logical_plan::storage_parameters init_parameters)
         : parameters(std::move(init_parameters)) {}
 
     context_t::context_t(context_t&& context)
@@ -14,7 +14,7 @@ namespace components::pipeline {
     context_t::context_t(session::session_id_t session,
                          actor_zeta::address_t address,
                          actor_zeta::address_t sender,
-                         ql::storage_parameters init_parameters)
+                         logical_plan::storage_parameters init_parameters)
         : session(session)
         , current_message_sender(std::move(sender))
         , parameters(std::move(init_parameters))

@@ -3,7 +3,7 @@
 
 namespace services::collection::operators::merge {
 
-    operator_or_t::operator_or_t(context_collection_t* context, components::ql::limit_t limit)
+    operator_or_t::operator_or_t(context_collection_t* context, components::logical_plan::limit_t limit)
         : operator_merge_t(context, limit) {}
 
     void operator_or_t::on_merge_impl(components::pipeline::context_t*) {

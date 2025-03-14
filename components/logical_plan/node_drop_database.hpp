@@ -1,7 +1,6 @@
 #pragma once
 
 #include "node.hpp"
-#include <components/ql/statements/drop_database.hpp>
 
 namespace components::logical_plan {
 
@@ -14,6 +13,8 @@ namespace components::logical_plan {
         std::string to_string_impl() const final;
     };
 
-    node_ptr make_node_drop_database(std::pmr::memory_resource* resource, ql::drop_database_t* ql);
+    using node_drop_database_ptr = boost::intrusive_ptr<node_drop_database_t>;
+    node_drop_database_ptr make_node_drop_database(std::pmr::memory_resource* resource,
+                                                   const collection_full_name_t& collection);
 
 } // namespace components::logical_plan

@@ -48,6 +48,17 @@ namespace components::expressions {
         return nullptr;
     }
 
+    inline std::pmr::vector<expression_ptr> to_expressions(const msgpack::object& msg_object,
+                                                           std::pmr::memory_resource* resource) {
+        std::pmr::vector<expression_ptr> result(resource);
+        if (msg_object.type != msgpack::type::ARRAY) {
+            throw msgpack::type_error();
+        }
+        for (const auto& expr : msg_object.via.array) {
+            result.emplace_back(to_expression(expr, resource));
+        }
+        return result;
+    }
 } // namespace components::expressions
 
 // User defined class template specialization
@@ -195,6 +206,34 @@ namespace msgpack {
                         default:
                             //todo: error not valid expression
                             break;
+                    }
+                }
+            };
+
+            template<>
+            struct pack<std::pmr::vector<components::expressions::expression_ptr>> final {
+                template<typename Stream>
+                packer<Stream>& operator()(msgpack::packer<Stream>& o,
+                                           std::pmr::vector<components::expressions::expression_ptr> const& v) const {
+                    o.pack_array(v.size());
+                    for (const auto& expr : v) {
+                        o.pack(expr);
+                    }
+                    return o;
+                }
+            };
+
+            template<>
+            struct object_with_zone<std::pmr::vector<components::expressions::expression_ptr>> final {
+                void operator()(msgpack::object::with_zone& o,
+                                std::pmr::vector<components::expressions::expression_ptr> const& v) const {
+                    o.type = type::ARRAY;
+                    o.via.array.size = v.size();
+                    o.via.array.ptr =
+                        static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size,
+                                                                            MSGPACK_ZONE_ALIGNOF(msgpack::object)));
+                    for (size_t i = 0; i < v.size(); i++) {
+                        o.via.array.ptr[i] = msgpack::object(v.at(i), o.zone);
                     }
                 }
             };

@@ -1,8 +1,20 @@
 #include "node.hpp"
+
+#include "node_create_collection.hpp"
+#include "node_create_database.hpp"
+#include "node_drop_collection.hpp"
+#include "node_drop_database.hpp"
+
 #include <algorithm>
 #include <boost/container_hash/hash.hpp>
 
 namespace components::logical_plan {
+
+    node_t::node_t(std::pmr::memory_resource* resource, node_type type, const collection_full_name_t& collection)
+        : type_(type)
+        , collection_(collection)
+        , children_(resource)
+        , expressions_(resource) {}
 
     node_type node_t::type() const { return type_; }
 
@@ -23,6 +35,10 @@ namespace components::logical_plan {
     void node_t::append_expression(const expression_ptr& expression) { expressions_.push_back(expression); }
 
     void node_t::append_expressions(const std::vector<expression_ptr>& expressions) {
+        expressions_.reserve(expressions_.size() + expressions.size());
+        std::copy(expressions.begin(), expressions.end(), std::back_inserter(expressions_));
+    }
+    void node_t::append_expressions(const std::pmr::vector<expression_ptr>& expressions) {
         expressions_.reserve(expressions_.size() + expressions.size());
         std::copy(expressions.begin(), expressions.end(), std::back_inserter(expressions_));
     }
@@ -73,17 +89,34 @@ namespace components::logical_plan {
 
     bool node_t::operator!=(const node_t& rhs) const { return !operator==(rhs); }
 
-    node_t::node_t(std::pmr::memory_resource* resource, node_type type, const collection_full_name_t& collection)
-        : type_(type)
-        , collection_(collection)
-        , children_(resource)
-        , expressions_(resource) {}
-
     void node_t::collection_dependencies_(
         std::unordered_set<collection_full_name_t, collection_name_hash>& upper_dependencies) {
         upper_dependencies.insert(collection_full_name());
         for (const auto& child : children_) {
             child->collection_dependencies_(upper_dependencies);
+        }
+    }
+    node_ptr to_node_default(const msgpack::object& msg_object, node_type type, std::pmr::memory_resource* resource) {
+        if (msg_object.type != msgpack::type::ARRAY) {
+            throw msgpack::type_error();
+        }
+        if (msg_object.via.array.size != 2) {
+            throw msgpack::type_error();
+        }
+        auto database = msg_object.via.array.ptr[0].as<std::string>();
+        auto collection = msg_object.via.array.ptr[1].as<std::string>();
+        switch (type) {
+            case node_type::create_collection_t:
+                return make_node_create_collection(resource, {database, collection});
+            case node_type::create_database_t:
+                return make_node_create_database(resource, {database, collection});
+            case node_type::drop_collection_t:
+                return make_node_drop_collection(resource, {database, collection});
+            case node_type::drop_database_t:
+                return make_node_drop_database(resource, {database, collection});
+            default:
+                assert(false && "unsupported node_type for to_node_default()");
+                return nullptr;
         }
     }
 

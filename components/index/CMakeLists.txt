@@ -20,10 +20,11 @@ target_link_libraries(
         otterbrix_${PROJECT_NAME} PUBLIC
         otterbrix::document
         otterbrix::cursor
-        otterbrix::ql
         otterbrix::context
+        otterbrix::logical_plan
         dl
         Boost::boost
+        magic_enum::magic_enum
 )
 
 target_include_directories(

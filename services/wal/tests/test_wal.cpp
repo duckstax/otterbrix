@@ -7,16 +7,16 @@
 #include <thread>
 
 #include <components/document/document.hpp>
-#include <components/ql/statements.hpp>
 #include <components/tests/generaty.hpp>
 #include <core/non_thread_scheduler/scheduler_test.hpp>
+#include <logical_plan/node_group.hpp>
 #include <services/wal/manager_wal_replicate.hpp>
 #include <services/wal/wal.hpp>
 
 using namespace std::chrono_literals;
 
 using namespace services::wal;
-using namespace components::ql;
+using namespace components::logical_plan;
 using namespace components::expressions;
 
 constexpr auto database_name = "test_database";
@@ -26,7 +26,8 @@ constexpr std::size_t count_documents = 5;
 void test_insert_one(wal_replicate_t* wal, std::pmr::memory_resource* resource) {
     for (int num = 1; num <= 5; ++num) {
         auto document = gen_doc(num, resource);
-        insert_one_t data(database_name, collection_name, std::move(document));
+        auto data =
+            components::logical_plan::make_node_insert(resource, {database_name, collection_name}, std::move(document));
         auto session = components::session::session_id_t();
         auto address = actor_zeta::base::address_t::address_t::empty_address();
         wal->insert_one(session, address, data);
@@ -81,7 +82,7 @@ TEST_CASE("insert one test") {
 
     std::size_t read_index = 0;
     for (int num = 1; num <= 5; ++num) {
-        wal_entry_t<insert_one_t> entry(&resource);
+        wal_entry_t<components::logical_plan::node_insert_ptr> entry;
 
         entry.size_ = test_wal.wal->test_read_size(read_index);
 
@@ -96,9 +97,9 @@ TEST_CASE("insert one test") {
         entry.crc32_ = read_crc32(output, entry.size_);
         test_wal.scheduler->run();
         REQUIRE(entry.crc32_ == crc32);
-        REQUIRE(entry.entry_.database_ == database_name);
-        REQUIRE(entry.entry_.collection_ == collection_name);
-        auto doc = entry.entry_.document_;
+        REQUIRE(entry.entry_->database_name() == database_name);
+        REQUIRE(entry.entry_->collection_name() == collection_name);
+        auto doc = entry.entry_->documents().front();
         REQUIRE(doc->get_string("/_id") == gen_id(num, &resource));
         REQUIRE(doc->get_long("/count") == num);
         REQUIRE(doc->get_string("/countStr") == std::pmr::string(std::to_string(num), &resource));
@@ -112,13 +113,14 @@ TEST_CASE("insert many empty test") {
     auto test_wal = create_test_wal("/tmp/wal/insert_many_empty", &resource);
 
     std::pmr::vector<components::document::document_ptr> documents(&resource);
-    insert_many_t data(database_name, collection_name, std::move(documents));
+    auto data =
+        components::logical_plan::make_node_insert(&resource, {database_name, collection_name}, std::move(documents));
 
     auto session = components::session::session_id_t();
     auto address = actor_zeta::base::address_t::address_t::empty_address();
     test_wal.wal->insert_many(session, address, data);
 
-    wal_entry_t<insert_many_t> entry(&resource);
+    wal_entry_t<components::logical_plan::node_insert_ptr> entry;
 
     entry.size_ = test_wal.wal->test_read_size(0);
 
@@ -144,7 +146,9 @@ TEST_CASE("insert many test") {
         for (int num = 1; num <= 5; ++num) {
             documents.push_back(gen_doc(num, &resource));
         }
-        insert_many_t data(database_name, collection_name, std::move(documents));
+        auto data = components::logical_plan::make_node_insert(&resource,
+                                                               {database_name, collection_name},
+                                                               std::move(documents));
         auto session = components::session::session_id_t();
         auto address = actor_zeta::base::address_t::address_t::empty_address();
         test_wal.wal->insert_many(session, address, data);
@@ -152,7 +156,7 @@ TEST_CASE("insert many test") {
 
     std::size_t read_index = 0;
     for (int i = 0; i <= 3; ++i) {
-        wal_entry_t<insert_many_t> entry(&resource);
+        wal_entry_t<components::logical_plan::node_insert_ptr> entry;
 
         entry.size_ = test_wal.wal->test_read_size(read_index);
 
@@ -167,11 +171,11 @@ TEST_CASE("insert many test") {
         entry.crc32_ = read_crc32(output, entry.size_);
         test_wal.scheduler->run();
         REQUIRE(entry.crc32_ == crc32);
-        REQUIRE(entry.entry_.database_ == database_name);
-        REQUIRE(entry.entry_.collection_ == collection_name);
-        REQUIRE(entry.entry_.documents_.size() == 5);
+        REQUIRE(entry.entry_->database_name() == database_name);
+        REQUIRE(entry.entry_->collection_name() == collection_name);
+        REQUIRE(entry.entry_->documents().size() == 5);
         int num = 0;
-        for (const auto& doc : entry.entry_.documents_) {
+        for (const auto& doc : entry.entry_->documents()) {
             ++num;
             REQUIRE(doc->get_string("/_id") == gen_id(num, &resource));
             REQUIRE(doc->get_long("/count") == num);
@@ -187,33 +191,36 @@ TEST_CASE("delete one test") {
     auto test_wal = create_test_wal("/tmp/wal/delete_one", &resource);
 
     for (int num = 1; num <= 5; ++num) {
-        auto match = aggregate::make_match(make_compare_expression(&resource,
-                                                                   compare_type::eq,
-                                                                   components::expressions::key_t{"count"},
-                                                                   core::parameter_id_t{1}));
-        storage_parameters parameters(&resource);
-        add_parameter(parameters, core::parameter_id_t{1}, num);
-        delete_one_t data(database_name, collection_name, match, parameters);
+        auto match =
+            components::logical_plan::make_node_match(&resource,
+                                                      {database_name, collection_name},
+                                                      make_compare_expression(&resource,
+                                                                              compare_type::eq,
+                                                                              components::expressions::key_t{"count"},
+                                                                              core::parameter_id_t{1}));
+        auto params = make_parameter_node(&resource);
+        params->add_parameter(core::parameter_id_t{1}, num);
+        auto data = components::logical_plan::make_node_delete_one(&resource, {database_name, collection_name}, match);
         auto session = components::session::session_id_t();
         auto address = actor_zeta::base::address_t::address_t::empty_address();
-        test_wal.wal->delete_one(session, address, data);
+        test_wal.wal->delete_one(session, address, data, params);
     }
 
     std::size_t index = 0;
     for (int num = 1; num <= 5; ++num) {
         auto record = test_wal.wal->test_read_record(index);
-        REQUIRE(record.type == statement_type::delete_one);
+        REQUIRE(record.type == node_type::delete_t);
         REQUIRE(record.id == services::wal::id_t(num));
-        REQUIRE(std::get<delete_one_t>(record.data).database_ == database_name);
-        REQUIRE(std::get<delete_one_t>(record.data).collection_ == collection_name);
-        REQUIRE(std::get<delete_one_t>(record.data).match_.query->group() == expression_group::compare);
-        auto match = reinterpret_cast<const compare_expression_ptr&>(std::get<delete_one_t>(record.data).match_.query);
+        REQUIRE(record.data->database_name() == database_name);
+        REQUIRE(record.data->collection_name() == collection_name);
+        REQUIRE(record.data->children().front()->expressions().front()->group() == expression_group::compare);
+        auto match =
+            reinterpret_cast<const compare_expression_ptr&>(record.data->children().front()->expressions().front());
         REQUIRE(match->type() == compare_type::eq);
         REQUIRE(match->key_left() == components::expressions::key_t{"count"});
         REQUIRE(match->value() == core::parameter_id_t{1});
-        REQUIRE(std::get<delete_one_t>(record.data).parameters().parameters.size() == 1);
-        REQUIRE(get_parameter(&std::get<delete_one_t>(record.data).parameters(), core::parameter_id_t{1}).as_int() ==
-                num);
+        REQUIRE(record.params->parameters().parameters.size() == 1);
+        REQUIRE(get_parameter(&record.params->parameters(), core::parameter_id_t{1}).as_int() == num);
         index = test_wal.wal->test_next_record(index);
     }
 }
@@ -223,33 +230,36 @@ TEST_CASE("delete many test") {
     auto test_wal = create_test_wal("/tmp/wal/delete_many", &resource);
 
     for (int num = 1; num <= 5; ++num) {
-        auto match = aggregate::make_match(make_compare_expression(&resource,
-                                                                   compare_type::eq,
-                                                                   components::expressions::key_t{"count"},
-                                                                   core::parameter_id_t{1}));
-        storage_parameters parameters(&resource);
-        add_parameter(parameters, core::parameter_id_t{1}, num);
-        delete_many_t data(database_name, collection_name, match, parameters);
+        auto match =
+            components::logical_plan::make_node_match(&resource,
+                                                      {database_name, collection_name},
+                                                      make_compare_expression(&resource,
+                                                                              compare_type::eq,
+                                                                              components::expressions::key_t{"count"},
+                                                                              core::parameter_id_t{1}));
+        auto params = make_parameter_node(&resource);
+        params->add_parameter(core::parameter_id_t{1}, num);
+        auto data = components::logical_plan::make_node_delete_many(&resource, {database_name, collection_name}, match);
         auto session = components::session::session_id_t();
         auto address = actor_zeta::base::address_t::address_t::empty_address();
-        test_wal.wal->delete_many(session, address, data);
+        test_wal.wal->delete_many(session, address, data, params);
     }
 
     std::size_t index = 0;
     for (int num = 1; num <= 5; ++num) {
         auto record = test_wal.wal->test_read_record(index);
-        REQUIRE(record.type == statement_type::delete_many);
+        REQUIRE(record.type == node_type::delete_t);
         REQUIRE(record.id == services::wal::id_t(num));
-        REQUIRE(std::get<delete_many_t>(record.data).database_ == database_name);
-        REQUIRE(std::get<delete_many_t>(record.data).collection_ == collection_name);
-        REQUIRE(std::get<delete_many_t>(record.data).match_.query->group() == expression_group::compare);
-        auto match = reinterpret_cast<const compare_expression_ptr&>(std::get<delete_many_t>(record.data).match_.query);
+        REQUIRE(record.data->database_name() == database_name);
+        REQUIRE(record.data->collection_name() == collection_name);
+        REQUIRE(record.data->children().front()->expressions().front()->group() == expression_group::compare);
+        auto match =
+            reinterpret_cast<const compare_expression_ptr&>(record.data->children().front()->expressions().front());
         REQUIRE(match->type() == compare_type::eq);
         REQUIRE(match->key_left() == components::expressions::key_t{"count"});
         REQUIRE(match->value() == core::parameter_id_t{1});
-        REQUIRE(std::get<delete_many_t>(record.data).parameters().parameters.size() == 1);
-        REQUIRE(get_parameter(&std::get<delete_many_t>(record.data).parameters(), core::parameter_id_t{1}).as_int() ==
-                num);
+        REQUIRE(record.params->parameters().parameters.size() == 1);
+        REQUIRE(get_parameter(&record.params->parameters(), core::parameter_id_t{1}).as_int() == num);
         index = test_wal.wal->test_next_record(index);
     }
 }
@@ -259,39 +269,47 @@ TEST_CASE("update one test") {
     auto test_wal = create_test_wal("/tmp/wal/update_one", &resource);
 
     for (int num = 1; num <= 5; ++num) {
-        auto match = aggregate::make_match(make_compare_expression(&resource,
-                                                                   compare_type::eq,
-                                                                   components::expressions::key_t{"count"},
-                                                                   core::parameter_id_t{1}));
-        storage_parameters parameters(&resource);
-        add_parameter(parameters, core::parameter_id_t{1}, num);
+        auto match =
+            components::logical_plan::make_node_match(&resource,
+                                                      {database_name, collection_name},
+                                                      make_compare_expression(&resource,
+                                                                              compare_type::eq,
+                                                                              components::expressions::key_t{"count"},
+                                                                              core::parameter_id_t{1}));
+        auto params = make_parameter_node(&resource);
+        params->add_parameter(core::parameter_id_t{1}, num);
         auto update = components::document::document_t::document_from_json(R"({"$set": {"count": )" +
                                                                                std::to_string(num + 10) + "}}",
                                                                            &resource);
-        update_one_t data(database_name, collection_name, match, parameters, update, num % 2 == 0);
+        auto data = components::logical_plan::make_node_update_one(&resource,
+                                                                   {database_name, collection_name},
+                                                                   match,
+                                                                   update,
+                                                                   num % 2 == 0);
         auto session = components::session::session_id_t();
         auto address = actor_zeta::base::address_t::address_t::empty_address();
-        test_wal.wal->update_one(session, address, data);
+        test_wal.wal->update_one(session, address, data, params);
     }
 
     std::size_t index = 0;
     for (int num = 1; num <= 5; ++num) {
         auto record = test_wal.wal->test_read_record(index);
-        REQUIRE(record.type == statement_type::update_one);
+        REQUIRE(record.type == node_type::update_t);
         REQUIRE(record.id == services::wal::id_t(num));
-        REQUIRE(std::get<update_one_t>(record.data).database_ == database_name);
-        REQUIRE(std::get<update_one_t>(record.data).collection_ == collection_name);
-        REQUIRE(std::get<update_one_t>(record.data).match_.query->group() == expression_group::compare);
-        auto match = reinterpret_cast<const compare_expression_ptr&>(std::get<update_one_t>(record.data).match_.query);
+        REQUIRE(record.data->database_name() == database_name);
+        REQUIRE(record.data->collection_name() == collection_name);
+        REQUIRE(record.data->children().front()->expressions().front()->group() == expression_group::compare);
+        auto match =
+            reinterpret_cast<const compare_expression_ptr&>(record.data->children().front()->expressions().front());
         REQUIRE(match->type() == compare_type::eq);
         REQUIRE(match->key_left() == components::expressions::key_t{"count"});
         REQUIRE(match->value() == core::parameter_id_t{1});
-        REQUIRE(std::get<update_one_t>(record.data).parameters().parameters.size() == 1);
-        REQUIRE(get_parameter(&std::get<update_one_t>(record.data).parameters(), core::parameter_id_t{1}).as_int() ==
-                num);
-        auto doc = std::get<update_one_t>(record.data).update_;
+        REQUIRE(record.params->parameters().parameters.size() == 1);
+        REQUIRE(get_parameter(&record.params->parameters(), core::parameter_id_t{1}).as_int() == num);
+        auto doc = reinterpret_cast<const components::logical_plan::node_update_ptr&>(record.data)->update();
         REQUIRE(doc->get_dict("$set")->get_long("count") == num + 10);
-        REQUIRE(std::get<update_one_t>(record.data).upsert_ == (num % 2 == 0));
+        REQUIRE(reinterpret_cast<const components::logical_plan::node_update_ptr&>(record.data)->upsert() ==
+                (num % 2 == 0));
         index = test_wal.wal->test_next_record(index);
     }
 }
@@ -301,38 +319,46 @@ TEST_CASE("update many test") {
     auto test_wal = create_test_wal("/tmp/wal/update_many", &resource);
 
     for (int num = 1; num <= 5; ++num) {
-        auto match = aggregate::make_match(make_compare_expression(&resource,
-                                                                   compare_type::eq,
-                                                                   components::expressions::key_t{"count"},
-                                                                   core::parameter_id_t{1}));
-        storage_parameters parameters(&resource);
-        add_parameter(parameters, core::parameter_id_t{1}, num);
+        auto match =
+            components::logical_plan::make_node_match(&resource,
+                                                      {database_name, collection_name},
+                                                      make_compare_expression(&resource,
+                                                                              compare_type::eq,
+                                                                              components::expressions::key_t{"count"},
+                                                                              core::parameter_id_t{1}));
+        auto params = make_parameter_node(&resource);
+        params->add_parameter(core::parameter_id_t{1}, num);
         auto update =
             document_t::document_from_json(R"({"$set": {"count": )" + std::to_string(num + 10) + "}}", &resource);
-        update_many_t data(database_name, collection_name, match, parameters, update, num % 2 == 0);
+        auto data = components::logical_plan::make_node_update_many(&resource,
+                                                                    {database_name, collection_name},
+                                                                    match,
+                                                                    update,
+                                                                    num % 2 == 0);
         auto session = components::session::session_id_t();
         auto address = actor_zeta::base::address_t::address_t::empty_address();
-        test_wal.wal->update_many(session, address, data);
+        test_wal.wal->update_many(session, address, data, params);
     }
 
     std::size_t index = 0;
     for (int num = 1; num <= 5; ++num) {
         auto record = test_wal.wal->test_read_record(index);
-        REQUIRE(record.type == statement_type::update_many);
+        REQUIRE(record.type == node_type::update_t);
         REQUIRE(record.id == services::wal::id_t(num));
-        REQUIRE(std::get<update_many_t>(record.data).database_ == database_name);
-        REQUIRE(std::get<update_many_t>(record.data).collection_ == collection_name);
-        REQUIRE(std::get<update_many_t>(record.data).match_.query->group() == expression_group::compare);
-        auto match = reinterpret_cast<const compare_expression_ptr&>(std::get<update_many_t>(record.data).match_.query);
+        REQUIRE(record.data->database_name() == database_name);
+        REQUIRE(record.data->collection_name() == collection_name);
+        REQUIRE(record.data->children().front()->expressions().front()->group() == expression_group::compare);
+        auto match =
+            reinterpret_cast<const compare_expression_ptr&>(record.data->children().front()->expressions().front());
         REQUIRE(match->type() == compare_type::eq);
         REQUIRE(match->key_left() == components::expressions::key_t{"count"});
         REQUIRE(match->value() == core::parameter_id_t{1});
-        REQUIRE(std::get<update_many_t>(record.data).parameters().parameters.size() == 1);
-        REQUIRE(get_parameter(&std::get<update_many_t>(record.data).parameters(), core::parameter_id_t{1}).as_int() ==
-                num);
-        auto doc = std::get<update_many_t>(record.data).update_;
+        REQUIRE(record.params->parameters().parameters.size() == 1);
+        REQUIRE(get_parameter(&record.params->parameters(), core::parameter_id_t{1}).as_int() == num);
+        auto doc = reinterpret_cast<const components::logical_plan::node_update_ptr&>(record.data)->update();
         REQUIRE(doc->get_dict("$set")->get_long("count") == num + 10);
-        REQUIRE(std::get<update_many_t>(record.data).upsert_ == (num % 2 == 0));
+        REQUIRE(reinterpret_cast<const components::logical_plan::node_update_ptr&>(record.data)->upsert() ==
+                (num % 2 == 0));
         index = test_wal.wal->test_next_record(index);
     }
 }
@@ -370,14 +396,14 @@ TEST_CASE("test read record") {
     std::size_t index = 0;
     for (int num = 1; num <= 5; ++num) {
         auto record = test_wal.wal->test_read_record(index);
-        REQUIRE(record.type == statement_type::insert_one);
-        REQUIRE(std::get<insert_one_t>(record.data).database_ == database_name);
-        REQUIRE(std::get<insert_one_t>(record.data).collection_ == collection_name);
-        auto doc = std::get<insert_one_t>(record.data).document_;
+        REQUIRE(record.type == node_type::insert_t);
+        REQUIRE(record.data->database_name() == database_name);
+        REQUIRE(record.data->collection_name() == collection_name);
+        auto doc = reinterpret_cast<const components::logical_plan::node_insert_ptr&>(record.data)->documents().front();
         REQUIRE(doc->get_string("/_id") == gen_id(num, &resource));
         REQUIRE(doc->get_long("/count") == num);
         REQUIRE(doc->get_string("/countStr") == std::pmr::string(std::to_string(num), &resource));
         index = test_wal.wal->test_next_record(index);
     }
-    REQUIRE(test_wal.wal->test_read_record(index).type == statement_type::unused);
+    REQUIRE(test_wal.wal->test_read_record(index).type == node_type::unused);
 }

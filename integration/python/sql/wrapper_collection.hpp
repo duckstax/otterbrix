@@ -13,8 +13,6 @@
 
 #include <log/log.hpp>
 
-#include <components/ql/index.hpp>
-
 #include "forward.hpp"
 #include "integration/cpp/wrapper_dispatcher.hpp"
 #include "wrapper_cursor.hpp"
@@ -22,7 +20,7 @@
 namespace py = pybind11;
 namespace otterbrix {
 
-    using components::ql::index_type;
+    using components::logical_plan::index_type;
 
     class PYBIND11_EXPORT wrapper_collection final : public boost::intrusive_ref_counter<wrapper_collection> {
     public:

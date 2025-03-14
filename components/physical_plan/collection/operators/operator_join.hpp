@@ -2,15 +2,14 @@
 
 #include "predicates/predicate.hpp"
 
+#include <components/logical_plan/node_join.hpp>
 #include <components/physical_plan/collection/operators/operator.hpp>
-#include <components/ql/join/join.hpp>
-#include <components/ql/join/join_types.hpp>
 
 namespace services::collection::operators {
 
     class operator_join_t final : public read_only_operator_t {
     public:
-        using type = components::ql::join_type;
+        using type = components::logical_plan::join_type;
 
         explicit operator_join_t(context_collection_t* context, type join_type, predicates::predicate_ptr&& predicate);
 

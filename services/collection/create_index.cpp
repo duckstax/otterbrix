@@ -2,15 +2,13 @@
 
 #include <components/index/disk/route.hpp>
 #include <components/index/single_field_index.hpp>
-#include <components/ql/index.hpp>
 #include <services/disk/index_disk.hpp>
 
 #include <components/physical_plan_generator/create_plan.hpp>
 #include <services/disk/route.hpp>
 #include <services/memory_storage/memory_storage.hpp>
 
-using components::ql::create_index_t;
-using components::ql::index_type;
+using components::logical_plan::index_type;
 
 using components::index::make_index;
 using components::index::single_field_index_t;
@@ -20,7 +18,7 @@ using namespace core::pmr;
 
 namespace services::collection::executor {
 
-    std::string keys_index(const components::ql::keys_base_storage_t& keys) {
+    std::string keys_index(const components::logical_plan::keys_base_storage_t& keys) {
         std::string result;
         for (const auto& key : keys) {
             if (!result.empty()) {

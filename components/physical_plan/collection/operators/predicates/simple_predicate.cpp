@@ -7,7 +7,7 @@ namespace services::collection::operators::predicates {
     simple_predicate::simple_predicate(context_collection_t* context,
                                        std::function<bool(const components::document::document_ptr&,
                                                           const components::document::document_ptr&,
-                                                          const components::ql::storage_parameters*)> func)
+                                                          const components::logical_plan::storage_parameters*)> func)
         : predicate(context)
         , func_(std::move(func)) {}
 
@@ -20,7 +20,7 @@ namespace services::collection::operators::predicates {
 
     bool simple_predicate::check_impl(const components::document::document_ptr& document_left,
                                       const components::document::document_ptr& document_right,
-                                      const components::ql::storage_parameters* parameters) {
+                                      const components::logical_plan::storage_parameters* parameters) {
         switch (nested_type_) {
             case components::expressions::compare_type::union_and:
                 for (const auto& predicate : nested_) {
@@ -64,7 +64,7 @@ namespace services::collection::operators::predicates {
                     context,
                     [&expr](const components::document::document_ptr& document_left,
                             const components::document::document_ptr& document_right,
-                            const components::ql::storage_parameters* parameters) {
+                            const components::logical_plan::storage_parameters* parameters) {
                         if (expr->key_right().is_null()) {
                             auto it = parameters->parameters.find(expr->value());
                             if (it == parameters->parameters.end()) {
@@ -88,7 +88,7 @@ namespace services::collection::operators::predicates {
                     context,
                     [&expr](const components::document::document_ptr& document_left,
                             const components::document::document_ptr& document_right,
-                            const components::ql::storage_parameters* parameters) {
+                            const components::logical_plan::storage_parameters* parameters) {
                         if (expr->key_right().is_null()) {
                             auto it = parameters->parameters.find(expr->value());
                             if (it == parameters->parameters.end()) {
@@ -112,7 +112,7 @@ namespace services::collection::operators::predicates {
                     context,
                     [&expr](const components::document::document_ptr& document_left,
                             const components::document::document_ptr& document_right,
-                            const components::ql::storage_parameters* parameters) {
+                            const components::logical_plan::storage_parameters* parameters) {
                         if (expr->key_right().is_null()) {
                             auto it = parameters->parameters.find(expr->value());
                             if (it == parameters->parameters.end()) {
@@ -136,7 +136,7 @@ namespace services::collection::operators::predicates {
                     context,
                     [&expr](const components::document::document_ptr& document_left,
                             const components::document::document_ptr& document_right,
-                            const components::ql::storage_parameters* parameters) {
+                            const components::logical_plan::storage_parameters* parameters) {
                         if (expr->key_right().is_null()) {
                             auto it = parameters->parameters.find(expr->value());
                             if (it == parameters->parameters.end()) {
@@ -162,7 +162,7 @@ namespace services::collection::operators::predicates {
                     context,
                     [&expr](const components::document::document_ptr& document_left,
                             const components::document::document_ptr& document_right,
-                            const components::ql::storage_parameters* parameters) {
+                            const components::logical_plan::storage_parameters* parameters) {
                         if (expr->key_right().is_null()) {
                             auto it = parameters->parameters.find(expr->value());
                             if (it == parameters->parameters.end()) {
@@ -186,7 +186,7 @@ namespace services::collection::operators::predicates {
                     context,
                     [&expr](const components::document::document_ptr& document_left,
                             const components::document::document_ptr& document_right,
-                            const components::ql::storage_parameters* parameters) {
+                            const components::logical_plan::storage_parameters* parameters) {
                         if (expr->key_right().is_null()) {
                             auto it = parameters->parameters.find(expr->value());
                             if (it == parameters->parameters.end()) {
@@ -212,7 +212,7 @@ namespace services::collection::operators::predicates {
                     context,
                     [&expr](const components::document::document_ptr& document_left,
                             const components::document::document_ptr& document_right,
-                            const components::ql::storage_parameters* parameters) {
+                            const components::logical_plan::storage_parameters* parameters) {
                         if (expr->key_right().is_null()) {
                             auto it = parameters->parameters.find(expr->value());
                             if (it == parameters->parameters.end()) {
@@ -247,19 +247,20 @@ namespace services::collection::operators::predicates {
                 return {new simple_predicate(context,
                                              [](const components::document::document_ptr&,
                                                 const components::document::document_ptr&,
-                                                const components::ql::storage_parameters*) { return true; })};
+                                                const components::logical_plan::storage_parameters*) { return true; })};
             case compare_type::all_false:
-                return {new simple_predicate(context,
-                                             [](const components::document::document_ptr&,
-                                                const components::document::document_ptr&,
-                                                const components::ql::storage_parameters*) { return false; })};
+                return {
+                    new simple_predicate(context,
+                                         [](const components::document::document_ptr&,
+                                            const components::document::document_ptr&,
+                                            const components::logical_plan::storage_parameters*) { return false; })};
             default:
                 break;
         }
         return {new simple_predicate(context,
                                      [](const components::document::document_ptr&,
                                         const components::document::document_ptr&,
-                                        const components::ql::storage_parameters*) { return true; })};
+                                        const components::logical_plan::storage_parameters*) { return true; })};
     }
 
 } // namespace services::collection::operators::predicates

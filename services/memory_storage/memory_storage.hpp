@@ -3,8 +3,8 @@
 #include <components/cursor/cursor.hpp>
 #include <components/log/log.hpp>
 #include <components/logical_plan/node.hpp>
+#include <components/logical_plan/param_storage.hpp>
 #include <components/physical_plan/collection/operators/operator.hpp>
-#include <components/ql/ql_param_statement.hpp>
 #include <components/session/session.hpp>
 #include <core/btree/btree.hpp>
 #include <core/excutor.hpp>
@@ -15,13 +15,6 @@
 #include <stack>
 
 #include "context_storage.hpp"
-
-namespace components::ql {
-    struct create_database_t;
-    struct drop_database_t;
-    struct create_collection_t;
-    struct drop_collection_t;
-} // namespace components::ql
 
 namespace services {
 
@@ -57,7 +50,7 @@ namespace services {
         void sync(const address_pack& pack);
         void execute_plan(const components::session::session_id_t& session,
                           components::logical_plan::node_ptr logical_plan,
-                          components::ql::storage_parameters parameters);
+                          components::logical_plan::storage_parameters parameters);
 
         void size(const components::session::session_id_t& session, collection_full_name_t&& name);
         void close_cursor(const components::session::session_id_t& session,
@@ -111,7 +104,7 @@ namespace services {
 
         void execute_plan_impl(const components::session::session_id_t& session,
                                components::logical_plan::node_ptr logical_plan,
-                               components::ql::storage_parameters parameters);
+                               components::logical_plan::storage_parameters parameters);
 
         void execute_plan_finish(const components::session::session_id_t& session,
                                  components::cursor::cursor_t_ptr cursor);

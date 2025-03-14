@@ -13,11 +13,13 @@
 #include <components/cursor/cursor.hpp>
 #include <components/document/document.hpp>
 #include <components/log/log.hpp>
-#include <components/ql/aggregate.hpp>
-#include <components/ql/index.hpp>
-#include <components/ql/statements.hpp>
 #include <components/session/session.hpp>
 #include <integration/cpp/impl/session_blocker.hpp>
+#include <logical_plan/node_aggregate.hpp>
+#include <logical_plan/node_create_index.hpp>
+#include <logical_plan/node_drop_index.hpp>
+#include <logical_plan/node_match.hpp>
+#include <sql/transformer/transformer.hpp>
 
 namespace otterbrix {
 
@@ -43,37 +45,48 @@ namespace otterbrix {
         [[deprecated]] auto insert_one(const session_id_t& session,
                                        const database_name_t& database,
                                        const collection_name_t& collection,
-                                       document_ptr& document) -> components::cursor::cursor_t_ptr;
+                                       document_ptr document) -> components::cursor::cursor_t_ptr;
         [[deprecated]] auto insert_many(const session_id_t& session,
                                         const database_name_t& database,
                                         const collection_name_t& collection,
-                                        std::pmr::vector<document_ptr>& documents) -> components::cursor::cursor_t_ptr;
-        [[deprecated]] auto find(const session_id_t& session, components::ql::aggregate_statement_raw_ptr condition)
+                                        const std::pmr::vector<document_ptr>& documents)
             -> components::cursor::cursor_t_ptr;
-        [[deprecated]] auto find_one(const session_id_t& session, components::ql::aggregate_statement_raw_ptr condition)
+        [[deprecated]] auto find(const session_id_t& session,
+                                 components::logical_plan::node_aggregate_ptr condition,
+                                 components::logical_plan::parameter_node_ptr params)
+            -> components::cursor::cursor_t_ptr;
+        [[deprecated]] auto find_one(const session_id_t& session,
+                                     components::logical_plan::node_aggregate_ptr condition,
+                                     components::logical_plan::parameter_node_ptr params)
             -> components::cursor::cursor_t_ptr;
         [[deprecated]] auto delete_one(const session_id_t& session,
-                                       components::ql::aggregate_statement_raw_ptr condition)
+                                       components::logical_plan::node_match_ptr condition,
+                                       components::logical_plan::parameter_node_ptr params)
             -> components::cursor::cursor_t_ptr;
         [[deprecated]] auto delete_many(const session_id_t& session,
-                                        components::ql::aggregate_statement_raw_ptr condition)
+                                        components::logical_plan::node_match_ptr condition,
+                                        components::logical_plan::parameter_node_ptr params)
             -> components::cursor::cursor_t_ptr;
         [[deprecated]] auto update_one(const session_id_t& session,
-                                       components::ql::aggregate_statement_raw_ptr condition,
+                                       components::logical_plan::node_match_ptr condition,
+                                       components::logical_plan::parameter_node_ptr params,
                                        document_ptr update,
                                        bool upsert) -> components::cursor::cursor_t_ptr;
         [[deprecated]] auto update_many(const session_id_t& session,
-                                        components::ql::aggregate_statement_raw_ptr condition,
+                                        components::logical_plan::node_match_ptr condition,
+                                        components::logical_plan::parameter_node_ptr params,
                                         document_ptr update,
                                         bool upsert) -> components::cursor::cursor_t_ptr;
         [[deprecated]] auto size(const session_id_t& session,
                                  const database_name_t& database,
                                  const collection_name_t& collection) -> size_t;
-        auto create_index(const session_id_t& session, components::ql::create_index_t* ql)
+        auto create_index(const session_id_t& session, components::logical_plan::node_create_index_ptr node)
             -> components::cursor::cursor_t_ptr;
-        auto drop_index(const session_id_t& session, components::ql::drop_index_t* ql)
+        auto drop_index(const session_id_t& session, components::logical_plan::node_drop_index_ptr node)
             -> components::cursor::cursor_t_ptr;
-        auto execute_ql(const session_id_t& session, components::ql::variant_statement_t& query)
+        auto execute_plan(const session_id_t& session,
+                          components::logical_plan::node_ptr plan,
+                          components::logical_plan::parameter_node_ptr params = nullptr)
             -> components::cursor::cursor_t_ptr;
         auto execute_sql(const session_id_t& session, const std::string& query) -> components::cursor::cursor_t_ptr;
 
@@ -87,25 +100,23 @@ namespace otterbrix {
     private:
         // Behaviors
         actor_zeta::behavior_t load_finish_;
-        actor_zeta::behavior_t execute_ql_finish_;
+        actor_zeta::behavior_t execute_plan_finish_;
         actor_zeta::behavior_t size_finish_;
         /// async method
         auto load_finish(const session_id_t& session) -> void;
-        auto execute_ql_finish(const session_id_t& session, components::cursor::cursor_t_ptr cursor) -> void;
+        auto execute_plan_finish(const session_id_t& session, components::cursor::cursor_t_ptr cursor) -> void;
         auto size_finish(const session_id_t& session, size_t size) -> void;
 
         void init(const session_id_t& session);
         void wait(const session_id_t& session);
         void notify(const session_id_t& session);
 
-        template<typename Tql>
-        auto send_ql(const session_id_t& session, Tql& ql, std::string_view title, uint64_t handle)
-            -> components::cursor::cursor_t_ptr;
-
-        auto send_ql_new(const session_id_t& session, components::ql::ql_statement_t* ql)
-            -> components::cursor::cursor_t_ptr;
+        auto send_plan(const session_id_t& session,
+                       components::logical_plan::node_ptr node,
+                       components::logical_plan::parameter_node_ptr params) -> components::cursor::cursor_t_ptr;
 
         actor_zeta::address_t manager_dispatcher_;
+        components::sql::transform::transformer transformer_;
         log_t log_;
         std::atomic_int i = 0;
         std::mutex output_mtx_;

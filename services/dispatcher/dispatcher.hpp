@@ -13,11 +13,6 @@
 #include <components/document/document.hpp>
 #include <components/log/log.hpp>
 #include <components/logical_plan/node.hpp>
-#include <components/ql/aggregate.hpp>
-#include <components/ql/index.hpp>
-#include <components/ql/statements/insert_many.hpp>
-#include <components/ql/statements/insert_one.hpp>
-
 #include <services/disk/result.hpp>
 #include <services/wal/base.hpp>
 #include <services/wal/record.hpp>
@@ -45,14 +40,15 @@ namespace services::dispatcher {
         void load(const components::session::session_id_t& session, actor_zeta::address_t sender);
         void load_from_disk_result(const components::session::session_id_t& session,
                                    const services::disk::result_load_t& result);
-        void load_from_memory_resource_result(const components::session::session_id_t& session);
+        void load_from_memory_storage_result(const components::session::session_id_t& session);
         void load_from_wal_result(const components::session::session_id_t& session,
                                   std::vector<services::wal::record_t>& records);
-        void execute_ql(const components::session::session_id_t& session,
-                        components::ql::ql_statement_t* ql,
-                        actor_zeta::address_t address);
-        void execute_ql_finish(const components::session::session_id_t& session,
-                               components::cursor::cursor_t_ptr cursor);
+        void execute_plan(const components::session::session_id_t& session,
+                          components::logical_plan::node_ptr plan,
+                          components::logical_plan::parameter_node_ptr params,
+                          actor_zeta::address_t address);
+        void execute_plan_finish(const components::session::session_id_t& session,
+                                 components::cursor::cursor_t_ptr cursor);
         void size(const components::session::session_id_t& session,
                   std::string& database_name,
                   std::string& collection,
@@ -66,10 +62,10 @@ namespace services::dispatcher {
         // Behaviors
         actor_zeta::behavior_t load_;
         actor_zeta::behavior_t load_from_disk_result_;
-        actor_zeta::behavior_t load_from_memory_resource_result_;
+        actor_zeta::behavior_t load_from_memory_storage_result_;
         actor_zeta::behavior_t load_from_wal_result_;
-        actor_zeta::behavior_t execute_ql_;
-        actor_zeta::behavior_t execute_ql_finish_;
+        actor_zeta::behavior_t execute_plan_;
+        actor_zeta::behavior_t execute_plan_finish_;
         actor_zeta::behavior_t size_;
         actor_zeta::behavior_t size_finish_;
         actor_zeta::behavior_t close_cursor_;
@@ -89,8 +85,7 @@ namespace services::dispatcher {
         services::wal::id_t last_wal_id_{0};
         std::size_t load_count_answers_{0};
 
-        std::pair<components::logical_plan::node_ptr, components::ql::storage_parameters>
-        create_logic_plan(components::ql::ql_statement_t* statement);
+        components::logical_plan::node_ptr create_logic_plan(components::logical_plan::node_ptr plan);
         // TODO figure out what to do with records
         std::vector<services::wal::record_t> records_;
     };
@@ -131,7 +126,9 @@ namespace services::dispatcher {
         ///------
         void create(const components::session::session_id_t& session);
         void load(const components::session::session_id_t& session);
-        void execute_ql(const components::session::session_id_t& session, components::ql::ql_statement_t* ql);
+        void execute_plan(const components::session::session_id_t& session,
+                          components::logical_plan::node_ptr plan,
+                          components::logical_plan::parameter_node_ptr params);
         void
         size(const components::session::session_id_t& session, std::string& database_name, std::string& collection);
         void close_cursor(const components::session::session_id_t& session);
@@ -143,7 +140,7 @@ namespace services::dispatcher {
         // Behaviors
         actor_zeta::behavior_t create_;
         actor_zeta::behavior_t load_;
-        actor_zeta::behavior_t execute_ql_;
+        actor_zeta::behavior_t execute_plan_;
         actor_zeta::behavior_t size_;
         actor_zeta::behavior_t close_cursor_;
         actor_zeta::behavior_t sync_;

@@ -4,7 +4,7 @@ namespace services::collection::operators {
 
     operator_match_t::operator_match_t(context_collection_t* context,
                                        predicates::predicate_ptr predicate,
-                                       components::ql::limit_t limit)
+                                       components::logical_plan::limit_t limit)
         : read_only_operator_t(context, operator_type::match)
         , predicate_(std::move(predicate))
         , limit_(limit) {}

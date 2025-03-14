@@ -3,7 +3,7 @@
 namespace components::index {
 
     index_t::index_t(std::pmr::memory_resource* resource,
-                     components::ql::index_type type,
+                     components::logical_plan::index_type type,
                      std::string name,
                      const keys_base_storage_t& keys)
         : resource_(resource)
@@ -46,7 +46,7 @@ namespace components::index {
 
     std::pmr::memory_resource* index_t::resource() const noexcept { return resource_; }
 
-    ql::index_type index_t::type() const noexcept { return type_; }
+    logical_plan::index_type index_t::type() const noexcept { return type_; }
 
     const std::string& index_t::name() const noexcept { return name_; }
 

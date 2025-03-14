@@ -1,7 +1,7 @@
 #pragma once
 
 #include <components/physical_plan/collection/operators/operator.hpp>
-#include <components/ql/aggregate/limit.hpp>
+#include <logical_plan/node_limit.hpp>
 
 namespace services::collection::operators {
 
@@ -9,14 +9,14 @@ namespace services::collection::operators {
     public:
         index_scan(context_collection_t* collection,
                    components::expressions::compare_expression_ptr expr,
-                   components::ql::limit_t limit);
+                   components::logical_plan::limit_t limit);
 
     private:
         void on_execute_impl(components::pipeline::context_t* pipeline_context) final;
         void on_resume_impl(components::pipeline::context_t* pipeline_context) final;
 
         const components::expressions::compare_expression_ptr expr_;
-        const components::ql::limit_t limit_;
+        const components::logical_plan::limit_t limit_;
     };
 
 } // namespace services::collection::operators

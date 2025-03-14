@@ -1,13 +1,12 @@
 #include <benchmark/benchmark.h>
-#include <components/document/document_view.hpp>
+#include <components/document/document.hpp>
 #include <components/tests/generaty.hpp>
 
 using namespace components::document;
 
 void document_read(benchmark::State& state) {
     state.PauseTiming();
-    auto doc = gen_doc(1000);
-    document_view_t view{doc};
+    auto doc = gen_doc(1000, wr_dispatcher()->resource());
     std::string key_int{"count"};
     std::string key_str{"countStr"};
     std::string key_double{"countDouble"};
@@ -15,25 +14,25 @@ void document_read(benchmark::State& state) {
     std::string key_array{"countArray"};
     std::string key_dict{"countDict"};
 
-    auto f = [&view](const std::string& key) {
-        view.is_exists(key);
-        view.is_null(key);
-        view.is_bool(key);
-        view.is_ulong(key);
-        view.is_long(key);
-        view.is_double(key);
-        view.is_string(key);
-        view.is_array(key);
-        view.is_dict(key);
+    auto f = [&doc](const std::string& key) {
+        doc->is_exists(key);
+        doc->is_null(key);
+        doc->is_bool(key);
+        doc->is_ulong(key);
+        doc->is_long(key);
+        doc->is_double(key);
+        doc->is_string(key);
+        doc->is_array(key);
+        doc->is_dict(key);
 
-        view.get(key);
-        view.get_bool(key);
-        view.get_ulong(key);
-        view.get_long(key);
-        view.get_double(key);
-        view.get_string(key);
-        view.get_array(key);
-        view.get_dict(key);
+        doc->get_value(key);
+        doc->get_bool(key);
+        doc->get_ulong(key);
+        doc->get_long(key);
+        doc->get_double(key);
+        doc->get_string(key);
+        doc->get_array(key);
+        doc->get_dict(key);
     };
 
     state.ResumeTiming();

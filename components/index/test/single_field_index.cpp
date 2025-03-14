@@ -99,7 +99,7 @@ TEST_CASE("single_field_index:engine") {
 
     std::string value = R"({"count": {"$gt": 10}})";
     auto d = components::document::document_t::document_from_json(value, &resource);
-    //auto condition = components::ql::parse_find_condition(d);
+    //auto condition = components::logical_plan::parse_find_condition(d);
     ///condition->type_
     /// find(index_engine, query, &set);
 }

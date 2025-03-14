@@ -8,12 +8,12 @@ namespace services::collection::operators::predicates {
         : context_(context) {}
 
     bool predicate::check(const components::document::document_ptr& document,
-                          const components::ql::storage_parameters* parameters) {
+                          const components::logical_plan::storage_parameters* parameters) {
         return check_impl(document, nullptr, parameters);
     }
     bool predicate::check(const components::document::document_ptr& document_left,
                           const components::document::document_ptr& document_right,
-                          const components::ql::storage_parameters* parameters) {
+                          const components::logical_plan::storage_parameters* parameters) {
         return check_impl(document_left, document_right, parameters);
     }
 

@@ -5,7 +5,6 @@
 #include <boost/filesystem.hpp>
 #include <log/log.hpp>
 
-#include <components/ql/statements.hpp>
 #include <components/session/session.hpp>
 #include <configuration/configuration.hpp>
 #include <core/file/file_system.hpp>
@@ -13,6 +12,15 @@
 #include "dto.hpp"
 #include "forward.hpp"
 #include "record.hpp"
+
+#include <logical_plan/node_create_collection.hpp>
+#include <logical_plan/node_create_database.hpp>
+#include <logical_plan/node_create_index.hpp>
+#include <logical_plan/node_delete.hpp>
+#include <logical_plan/node_drop_collection.hpp>
+#include <logical_plan/node_drop_database.hpp>
+#include <logical_plan/node_insert.hpp>
+#include <logical_plan/node_update.hpp>
 
 namespace services::wal {
 
@@ -24,18 +32,40 @@ namespace services::wal {
     public:
         wal_replicate_t(manager_wal_replicate_t* manager, log_t& log, configuration::config_wal config);
         void load(const session_id_t& session, address_t& sender, services::wal::id_t wal_id);
-        void create_database(const session_id_t& session, address_t& sender, components::ql::create_database_t& data);
-        void drop_database(const session_id_t& session, address_t& sender, components::ql::drop_database_t& data);
+        void create_database(const session_id_t& session,
+                             address_t& sender,
+                             components::logical_plan::node_create_database_ptr data);
+        void drop_database(const session_id_t& session,
+                           address_t& sender,
+                           components::logical_plan::node_drop_database_ptr data);
+        void create_collection(const session_id_t& session,
+                               address_t& sender,
+                               components::logical_plan::node_create_collection_ptr data);
+        void drop_collection(const session_id_t& session,
+                             address_t& sender,
+                             components::logical_plan::node_drop_collection_ptr data);
+        void insert_one(const session_id_t& session, address_t& sender, components::logical_plan::node_insert_ptr data);
         void
-        create_collection(const session_id_t& session, address_t& sender, components::ql::create_collection_t& data);
-        void drop_collection(const session_id_t& session, address_t& sender, components::ql::drop_collection_t& data);
-        void insert_one(const session_id_t& session, address_t& sender, components::ql::insert_one_t& data);
-        void insert_many(const session_id_t& session, address_t& sender, components::ql::insert_many_t& data);
-        void delete_one(const session_id_t& session, address_t& sender, components::ql::delete_one_t& data);
-        void delete_many(const session_id_t& session, address_t& sender, components::ql::delete_many_t& data);
-        void update_one(const session_id_t& session, address_t& sender, components::ql::update_one_t& data);
-        void update_many(const session_id_t& session, address_t& sender, components::ql::update_many_t& data);
-        void create_index(const session_id_t& session, address_t& sender, components::ql::create_index_t& data);
+        insert_many(const session_id_t& session, address_t& sender, components::logical_plan::node_insert_ptr data);
+        void delete_one(const session_id_t& session,
+                        address_t& sender,
+                        components::logical_plan::node_delete_ptr data,
+                        components::logical_plan::parameter_node_ptr params);
+        void delete_many(const session_id_t& session,
+                         address_t& sender,
+                         components::logical_plan::node_delete_ptr data,
+                         components::logical_plan::parameter_node_ptr params);
+        void update_one(const session_id_t& session,
+                        address_t& sender,
+                        components::logical_plan::node_update_ptr data,
+                        components::logical_plan::parameter_node_ptr params);
+        void update_many(const session_id_t& session,
+                         address_t& sender,
+                         components::logical_plan::node_update_ptr data,
+                         components::logical_plan::parameter_node_ptr params);
+        void create_index(const session_id_t& session,
+                          address_t& sender,
+                          components::logical_plan::node_create_index_ptr data);
         ~wal_replicate_t() override;
 
         auto make_type() const noexcept -> const char* const;
@@ -61,7 +91,7 @@ namespace services::wal {
         virtual void read_buffer(buffer_t& buffer, size_t start_index, size_t size) const;
 
         template<class T>
-        void write_data_(T& data);
+        void write_data_(T& data, components::logical_plan::parameter_node_ptr params);
 
         void init_id();
         bool find_start_record(services::wal::id_t wal_id, std::size_t& start_index) const;

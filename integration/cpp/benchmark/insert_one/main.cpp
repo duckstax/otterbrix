@@ -9,7 +9,7 @@ void insert_one(benchmark::State& state) {
     state.ResumeTiming();
     for (auto _ : state) {
         for (int i = 0; i < state.range(0); ++i) {
-            auto doc = gen_doc(int(10000 * state.range(0) + i));
+            auto doc = gen_doc(int(10000 * state.range(0) + i), dispatcher->resource());
             dispatcher->insert_one(session, database_name, collection_name, doc);
         }
     }

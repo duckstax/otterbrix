@@ -7,6 +7,16 @@
 #include "manager_wal_replicate.hpp"
 #include "route.hpp"
 
+#include <logical_plan/node.hpp>
+#include <logical_plan/node_create_collection.hpp>
+#include <logical_plan/node_create_database.hpp>
+#include <logical_plan/node_create_index.hpp>
+#include <logical_plan/node_delete.hpp>
+#include <logical_plan/node_drop_collection.hpp>
+#include <logical_plan/node_drop_database.hpp>
+#include <logical_plan/node_insert.hpp>
+#include <logical_plan/node_update.hpp>
+
 namespace services::wal {
 
     constexpr static auto wal_name = ".wal";
@@ -195,127 +205,147 @@ namespace services::wal {
 
     void wal_replicate_t::create_database(const session_id_t& session,
                                           address_t& sender,
-                                          components::ql::create_database_t& data) {
-        trace(log_, "wal_replicate_t::create_database {}, session: {}", data.database_, session.data());
-        write_data_(data);
+                                          components::logical_plan::node_create_database_ptr data) {
+        trace(log_,
+              "wal_replicate_t::create_database {}, session: {}",
+              data->collection_full_name().database,
+              session.data());
+        write_data_(reinterpret_cast<const components::logical_plan::node_ptr&>(data),
+                    components::logical_plan::make_parameter_node(resource()));
         send_success(session, sender);
     }
 
     void wal_replicate_t::drop_database(const session_id_t& session,
                                         address_t& sender,
-                                        components::ql::drop_database_t& data) {
-        trace(log_, "wal_replicate_t::drop_database {}, session: {}", data.database_, session.data());
-        write_data_(data);
+                                        components::logical_plan::node_drop_database_ptr data) {
+        trace(log_,
+              "wal_replicate_t::drop_database {}, session: {}",
+              data->collection_full_name().database,
+              session.data());
+        write_data_(reinterpret_cast<const components::logical_plan::node_ptr&>(data),
+                    components::logical_plan::make_parameter_node(resource()));
         send_success(session, sender);
     }
 
     void wal_replicate_t::create_collection(const session_id_t& session,
                                             address_t& sender,
-                                            components::ql::create_collection_t& data) {
+                                            components::logical_plan::node_create_collection_ptr data) {
         trace(log_,
               "wal_replicate_t::create_collection {}::{}, session: {}",
-              data.database_,
-              data.collection_,
+              data->collection_full_name().database,
+              data->collection_full_name().collection,
               session.data());
-        write_data_(data);
+        write_data_(reinterpret_cast<const components::logical_plan::node_ptr&>(data),
+                    components::logical_plan::make_parameter_node(resource()));
         send_success(session, sender);
     }
 
     void wal_replicate_t::drop_collection(const session_id_t& session,
                                           address_t& sender,
-                                          components::ql::drop_collection_t& data) {
+                                          components::logical_plan::node_drop_collection_ptr data) {
         trace(log_,
               "wal_replicate_t::drop_collection {}::{}, session: {}",
-              data.database_,
-              data.collection_,
+              data->collection_full_name().database,
+              data->collection_full_name().collection,
               session.data());
-        write_data_(data);
+        write_data_(reinterpret_cast<const components::logical_plan::node_ptr&>(data),
+                    components::logical_plan::make_parameter_node(resource()));
         send_success(session, sender);
     }
 
-    void
-    wal_replicate_t::insert_one(const session_id_t& session, address_t& sender, components::ql::insert_one_t& data) {
+    void wal_replicate_t::insert_one(const session_id_t& session,
+                                     address_t& sender,
+                                     components::logical_plan::node_insert_ptr data) {
         trace(log_,
               "wal_replicate_t::insert_one {}::{}, session: {}",
-              data.database_,
-              data.collection_,
+              data->collection_full_name().database,
+              data->collection_full_name().collection,
               session.data());
-        write_data_(data);
+        write_data_(data, components::logical_plan::make_parameter_node(resource()));
         send_success(session, sender);
     }
 
-    void
-    wal_replicate_t::insert_many(const session_id_t& session, address_t& sender, components::ql::insert_many_t& data) {
+    void wal_replicate_t::insert_many(const session_id_t& session,
+                                      address_t& sender,
+                                      components::logical_plan::node_insert_ptr data) {
         trace(log_,
               "wal_replicate_t::insert_many {}::{}, session: {}",
-              data.database_,
-              data.collection_,
+              data->collection_full_name().database,
+              data->collection_full_name().collection,
               session.data());
-        write_data_(data);
+        write_data_(data, components::logical_plan::make_parameter_node(resource()));
         send_success(session, sender);
     }
 
-    void
-    wal_replicate_t::delete_one(const session_id_t& session, address_t& sender, components::ql::delete_one_t& data) {
+    void wal_replicate_t::delete_one(const session_id_t& session,
+                                     address_t& sender,
+                                     components::logical_plan::node_delete_ptr data,
+                                     components::logical_plan::parameter_node_ptr params) {
         trace(log_,
               "wal_replicate_t::delete_one {}::{}, session: {}",
-              data.database_,
-              data.collection_,
+              data->collection_full_name().database,
+              data->collection_full_name().collection,
               session.data());
-        write_data_(data);
+        write_data_(data, std::move(params));
         send_success(session, sender);
     }
 
-    void
-    wal_replicate_t::delete_many(const session_id_t& session, address_t& sender, components::ql::delete_many_t& data) {
+    void wal_replicate_t::delete_many(const session_id_t& session,
+                                      address_t& sender,
+                                      components::logical_plan::node_delete_ptr data,
+                                      components::logical_plan::parameter_node_ptr params) {
         trace(log_,
               "wal_replicate_t::delete_many {}::{}, session: {}",
-              data.database_,
-              data.collection_,
+              data->collection_full_name().database,
+              data->collection_full_name().collection,
               session.data());
-        write_data_(data);
+        write_data_(data, std::move(params));
         send_success(session, sender);
     }
 
-    void
-    wal_replicate_t::update_one(const session_id_t& session, address_t& sender, components::ql::update_one_t& data) {
+    void wal_replicate_t::update_one(const session_id_t& session,
+                                     address_t& sender,
+                                     components::logical_plan::node_update_ptr data,
+                                     components::logical_plan::parameter_node_ptr params) {
         trace(log_,
               "wal_replicate_t::update_one {}::{}, session: {}",
-              data.database_,
-              data.collection_,
+              data->collection_full_name().database,
+              data->collection_full_name().collection,
               session.data());
-        write_data_(data);
+        write_data_(data, std::move(params));
         send_success(session, sender);
     }
 
-    void
-    wal_replicate_t::update_many(const session_id_t& session, address_t& sender, components::ql::update_many_t& data) {
+    void wal_replicate_t::update_many(const session_id_t& session,
+                                      address_t& sender,
+                                      components::logical_plan::node_update_ptr data,
+                                      components::logical_plan::parameter_node_ptr params) {
         trace(log_,
               "wal_replicate_t::update_many {}::{}, session: {}",
-              data.database_,
-              data.collection_,
+              data->collection_full_name().database,
+              data->collection_full_name().collection,
               session.data());
-        write_data_(data);
+        write_data_(data, std::move(params));
         send_success(session, sender);
     }
 
     void wal_replicate_t::create_index(const session_id_t& session,
                                        address_t& sender,
-                                       components::ql::create_index_t& data) {
+                                       components::logical_plan::node_create_index_ptr data) {
         trace(log_,
               "wal_replicate_t::create_index {}::{}, session: {}",
-              data.database_,
-              data.collection_,
+              data->collection_full_name().database,
+              data->collection_full_name().collection,
               session.data());
-        write_data_(data);
+        write_data_(data, components::logical_plan::make_parameter_node(resource()));
         send_success(session, sender);
     }
 
     template<class T>
-    void wal_replicate_t::write_data_(T& data) {
+    void wal_replicate_t::write_data_(T& data, components::logical_plan::parameter_node_ptr params) {
         next_id(id_);
         buffer_t buffer;
-        last_crc32_ = pack(buffer, last_crc32_, id_, data);
+        last_crc32_ = pack(buffer, last_crc32_, id_, data, params);
         write_buffer(buffer);
     }
 
@@ -371,14 +401,14 @@ namespace services::wal {
                 const auto& o = msg.get();
                 record.last_crc32 = o.via.array.ptr[0].as<crc32_t>();
                 record.id = o.via.array.ptr[1].as<services::wal::id_t>();
-                record.type = static_cast<components::ql::statement_type>(o.via.array.ptr[2].as<char>());
-                record.set_data(o.via.array.ptr[3], resource());
+                record.type = static_cast<components::logical_plan::node_type>(o.via.array.ptr[2].as<char>());
+                record.set_data(o.via.array.ptr[3], o.via.array.ptr[4], resource());
             } else {
-                record.type = components::ql::statement_type::unused;
+                record.type = components::logical_plan::node_type::unused;
                 //todo: error wal content
             }
         } else {
-            record.type = components::ql::statement_type::unused;
+            record.type = components::logical_plan::node_type::unused;
         }
         return record;
     }

@@ -2,13 +2,10 @@
 #include "route.hpp"
 #include <cassert>
 #include <components/physical_plan_generator/create_plan.hpp>
-#include <components/ql/statements/create_collection.hpp>
-#include <components/ql/statements/create_database.hpp>
-#include <components/ql/statements/drop_collection.hpp>
-#include <components/ql/statements/drop_database.hpp>
 #include <core/system_command.hpp>
 #include <core/tracy/tracy.hpp>
 #include <services/collection/collection.hpp>
+#include <utility>
 
 using namespace components::cursor;
 
@@ -104,7 +101,7 @@ namespace services {
 
     void memory_storage_t::execute_plan(const components::session::session_id_t& session,
                                         components::logical_plan::node_ptr logical_plan,
-                                        components::ql::storage_parameters parameters) {
+                                        components::logical_plan::storage_parameters parameters) {
         using components::logical_plan::node_type;
 
         switch (logical_plan->type()) {
@@ -311,7 +308,7 @@ namespace services {
 
     void memory_storage_t::execute_plan_impl(const components::session::session_id_t& session,
                                              components::logical_plan::node_ptr logical_plan,
-                                             components::ql::storage_parameters parameters) {
+                                             components::logical_plan::storage_parameters parameters) {
         trace(log_,
               "memory_storage_t:execute_plan_impl: collection: {}, sesion: {}",
               logical_plan->collection_full_name().to_string(),

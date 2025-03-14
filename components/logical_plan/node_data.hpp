@@ -1,7 +1,8 @@
 #pragma once
 
 #include "node.hpp"
-#include <components/ql/statements/raw_data.hpp>
+
+#include <components/document/document.hpp>
 
 namespace components::logical_plan {
 
@@ -9,6 +10,9 @@ namespace components::logical_plan {
     public:
         explicit node_data_t(std::pmr::memory_resource* resource,
                              std::pmr::vector<components::document::document_ptr>&& documents);
+
+        explicit node_data_t(std::pmr::memory_resource* resource,
+                             const std::pmr::vector<components::document::document_ptr>& documents);
 
         const std::pmr::vector<components::document::document_ptr>& documents() const;
 
@@ -19,6 +23,12 @@ namespace components::logical_plan {
         std::string to_string_impl() const final;
     };
 
-    node_ptr make_node_data(std::pmr::memory_resource* resource, ql::raw_data_t* data);
+    using node_data_ptr = boost::intrusive_ptr<node_data_t>;
+
+    node_data_ptr make_node_raw_data(std::pmr::memory_resource* resource,
+                                     std::pmr::vector<components::document::document_ptr>&& documents);
+
+    node_data_ptr make_node_raw_data(std::pmr::memory_resource* resource,
+                                     const std::pmr::vector<components::document::document_ptr>& documents);
 
 } // namespace components::logical_plan

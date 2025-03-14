@@ -107,11 +107,17 @@ namespace otterbrix {
     wrapper_cursor_ptr wrapper_collection::update_one(py::object cond, py::object fields, bool upsert) {
         trace(log_, "wrapper_collection::update_one");
         if (py::isinstance<py::dict>(cond) && py::isinstance<py::dict>(fields)) {
-            auto statement = components::ql::make_aggregate(database_, name_, ptr_->resource());
-            to_statement(pack_to_match(cond), statement.get(), ptr_->resource());
+            auto plan = components::logical_plan::make_node_aggregate(ptr_->resource(), {database_, name_});
+            auto params = components::logical_plan::make_parameter_node(ptr_->resource());
+            to_statement(ptr_->resource(), pack_to_match(cond), plan.get(), params.get());
             auto update = to_document(fields, ptr_->resource());
             auto session_tmp = otterbrix::session_id_t();
-            auto cur = ptr_->update_one(session_tmp, statement.get(), std::move(update), upsert);
+            auto cur = ptr_->update_one(
+                session_tmp,
+                reinterpret_cast<const components::logical_plan::node_match_ptr&>(plan->children().front()),
+                params,
+                std::move(update),
+                upsert);
             if (cur->is_error()) {
                 debug(log_, "wrapper_collection::update_one has result error while update");
                 throw std::runtime_error("wrapper_collection::update_one error_result");
@@ -128,11 +134,17 @@ namespace otterbrix {
     wrapper_cursor_ptr wrapper_collection::update_many(py::object cond, py::object fields, bool upsert) {
         trace(log_, "wrapper_collection::update_many");
         if (py::isinstance<py::dict>(cond) && py::isinstance<py::dict>(fields)) {
-            auto statement = components::ql::make_aggregate(database_, name_, ptr_->resource());
-            to_statement(pack_to_match(cond), statement.get(), ptr_->resource());
+            auto plan = components::logical_plan::make_node_aggregate(ptr_->resource(), {database_, name_});
+            auto params = components::logical_plan::make_parameter_node(ptr_->resource());
+            to_statement(ptr_->resource(), pack_to_match(cond), plan.get(), params.get());
             auto update = to_document(fields, ptr_->resource());
             auto session_tmp = otterbrix::session_id_t();
-            auto cur = ptr_->update_many(session_tmp, statement.get(), std::move(update), upsert);
+            auto cur = ptr_->update_many(
+                session_tmp,
+                reinterpret_cast<const components::logical_plan::node_match_ptr&>(plan->children().front()),
+                params,
+                std::move(update),
+                upsert);
             if (cur->is_error()) {
                 debug(log_, "wrapper_collection::update_many has result error while update");
                 throw std::runtime_error("wrapper_collection::update_many error_result");
@@ -149,10 +161,11 @@ namespace otterbrix {
     auto wrapper_collection::find(py::object cond) -> wrapper_cursor_ptr {
         trace(log_, "wrapper_collection::find");
         if (py::isinstance<py::dict>(cond)) {
-            auto statement = components::ql::make_aggregate(database_, name_, ptr_->resource());
-            to_statement(pack_to_match(cond), statement.get(), ptr_->resource());
+            auto plan = components::logical_plan::make_node_aggregate(ptr_->resource(), {database_, name_});
+            auto params = components::logical_plan::make_parameter_node(ptr_->resource());
+            to_statement(ptr_->resource(), pack_to_match(cond), plan.get(), params.get());
             auto session_tmp = otterbrix::session_id_t();
-            auto cur = ptr_->find(session_tmp, statement.get());
+            auto cur = ptr_->find(session_tmp, plan, params);
             debug(log_, "wrapper_collection::find {} records", cur->size());
             return wrapper_cursor_ptr(new wrapper_cursor(cur, ptr_));
         }
@@ -163,10 +176,11 @@ namespace otterbrix {
     auto wrapper_collection::find_one(py::object cond) -> py::dict {
         trace(log_, "wrapper_collection::find_one");
         if (py::isinstance<py::dict>(cond)) {
-            auto statement = components::ql::make_aggregate(database_, name_, ptr_->resource());
-            to_statement(pack_to_match(cond), statement.get(), ptr_->resource());
+            auto plan = components::logical_plan::make_node_aggregate(ptr_->resource(), {database_, name_});
+            auto params = components::logical_plan::make_parameter_node(ptr_->resource());
+            to_statement(ptr_->resource(), pack_to_match(cond), plan.get(), params.get());
             auto session_tmp = otterbrix::session_id_t();
-            auto cur = ptr_->find_one(session_tmp, statement.get());
+            auto cur = ptr_->find_one(session_tmp, plan, params);
             debug(log_, "wrapper_collection::find_one {}", cur->size() > 0);
             if (cur->size() > 0) {
                 return from_document(cur->next()).cast<py::dict>();
@@ -180,10 +194,14 @@ namespace otterbrix {
     wrapper_cursor_ptr wrapper_collection::delete_one(py::object cond) {
         trace(log_, "wrapper_collection::delete_one");
         if (py::isinstance<py::dict>(cond)) {
-            auto statement = components::ql::make_aggregate(database_, name_, ptr_->resource());
-            to_statement(pack_to_match(cond), statement.get(), ptr_->resource());
+            auto plan = components::logical_plan::make_node_aggregate(ptr_->resource(), {database_, name_});
+            auto params = components::logical_plan::make_parameter_node(ptr_->resource());
+            to_statement(ptr_->resource(), pack_to_match(cond), plan.get(), params.get());
             auto session_tmp = otterbrix::session_id_t();
-            auto cur = ptr_->delete_one(session_tmp, statement.get());
+            auto cur = ptr_->delete_one(
+                session_tmp,
+                reinterpret_cast<const components::logical_plan::node_match_ptr&>(plan->children().front()),
+                params);
             if (cur->is_error()) {
                 debug(log_, "wrapper_collection::delete_one has result error while delete");
                 throw std::runtime_error("wrapper_collection::delete_one error_result");
@@ -197,10 +215,14 @@ namespace otterbrix {
     wrapper_cursor_ptr wrapper_collection::delete_many(py::object cond) {
         trace(log_, "wrapper_collection::delete_many");
         if (py::isinstance<py::dict>(cond)) {
-            auto statement = components::ql::make_aggregate(database_, name_, ptr_->resource());
-            to_statement(pack_to_match(cond), statement.get(), ptr_->resource());
+            auto plan = components::logical_plan::make_node_aggregate(ptr_->resource(), {database_, name_});
+            auto params = components::logical_plan::make_parameter_node(ptr_->resource());
+            to_statement(ptr_->resource(), pack_to_match(cond), plan.get(), params.get());
             auto session_tmp = otterbrix::session_id_t();
-            auto cur = ptr_->delete_many(session_tmp, statement.get());
+            auto cur = ptr_->delete_many(
+                session_tmp,
+                reinterpret_cast<const components::logical_plan::node_match_ptr&>(plan->children().front()),
+                params);
             if (cur->is_error()) {
                 debug(log_, "wrapper_collection::delete_many has result error while delete");
                 throw std::runtime_error("wrapper_collection::delete_many error_result");
@@ -235,11 +257,12 @@ namespace otterbrix {
     bool wrapper_collection::create_index(const py::list& keys, index_type type) {
         debug(log_, "wrapper_collection::create_index: {}", name_);
         auto session_tmp = otterbrix::session_id_t();
-        components::ql::create_index_t index(database_, name_, name_, type);
+        auto index =
+            components::logical_plan::make_node_create_index(ptr_->resource(), {database_, name_}, name_, type);
         for (const auto& key : keys) {
-            index.keys_.emplace_back(key.cast<std::string>());
+            index->keys().emplace_back(key.cast<std::string>());
         }
-        auto cur = ptr_->create_index(session_tmp, &index);
+        auto cur = ptr_->create_index(session_tmp, index);
         debug(log_, "wrapper_collection::create_index {}", cur->is_success());
         return cur->is_success();
     }

@@ -12,6 +12,7 @@ target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         non_thread_scheduler
         otterbrix::log
+        otterbrix::logical_plan
         otterbrix::collection
         otterbrix::memory_storage
         otterbrix::physical_plan

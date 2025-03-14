@@ -3,11 +3,10 @@
 #include <collection/collection.hpp>
 #include <components/expressions/compare_expression.hpp>
 
-static const database_name_t database_name = "TestDatabase";
-static const collection_name_t collection_name = "TestCollection";
+static const database_name_t database_name = "testdatabase";
+static const collection_name_t collection_name = "testcollection";
 
 using components::expressions::compare_type;
-using components::ql::aggregate::operator_type;
 using key = components::expressions::key_t;
 using id_par = core::parameter_id_t;
 using services::collection::context_collection_t;
@@ -91,42 +90,53 @@ TEST_CASE("integration::cpp::test_collection") {
     INFO("find") {
         {
             auto session = otterbrix::session_id_t();
-            auto* ql = new components::ql::aggregate_statement{database_name, collection_name, dispatcher->resource()};
-            auto cur = dispatcher->find(session, ql);
+            auto plan =
+                components::logical_plan::make_node_aggregate(dispatcher->resource(), {database_name, collection_name});
+            auto cur =
+                dispatcher->find(session, plan, components::logical_plan::make_parameter_node(dispatcher->resource()));
             REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 100);
         }
         {
             auto session = otterbrix::session_id_t();
-            auto* ql = new components::ql::aggregate_statement{database_name, collection_name, dispatcher->resource()};
+            auto plan =
+                components::logical_plan::make_node_aggregate(dispatcher->resource(), {database_name, collection_name});
             auto expr = components::expressions::make_compare_expression(dispatcher->resource(),
                                                                          compare_type::gt,
                                                                          key{"count"},
                                                                          id_par{1});
-            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            ql->add_parameter(id_par{1}, new_value(90));
-            auto cur = dispatcher->find(session, ql);
+            plan->append_child(components::logical_plan::make_node_match(dispatcher->resource(),
+                                                                         {database_name, collection_name},
+                                                                         std::move(expr)));
+            auto params = components::logical_plan::make_parameter_node(dispatcher->resource());
+            params->add_parameter(id_par{1}, new_value(90));
+            auto cur = dispatcher->find(session, plan, params);
             REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 9);
         }
 
         {
             auto session = otterbrix::session_id_t();
-            auto* ql = new components::ql::aggregate_statement{database_name, collection_name, dispatcher->resource()};
+            auto plan =
+                components::logical_plan::make_node_aggregate(dispatcher->resource(), {database_name, collection_name});
             auto expr = components::expressions::make_compare_expression(dispatcher->resource(),
                                                                          compare_type::regex,
                                                                          key{"countStr"},
                                                                          id_par{1});
-            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            ql->add_parameter(id_par{1}, new_value(std::string_view{"9$"}));
-            auto cur = dispatcher->find(session, ql);
+            plan->append_child(components::logical_plan::make_node_match(dispatcher->resource(),
+                                                                         {database_name, collection_name},
+                                                                         std::move(expr)));
+            auto params = components::logical_plan::make_parameter_node(dispatcher->resource());
+            params->add_parameter(id_par{1}, new_value("9$"));
+            auto cur = dispatcher->find(session, plan, params);
             REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 10);
         }
 
         {
             auto session = otterbrix::session_id_t();
-            auto* ql = new components::ql::aggregate_statement{database_name, collection_name, dispatcher->resource()};
+            auto plan =
+                components::logical_plan::make_node_aggregate(dispatcher->resource(), {database_name, collection_name});
             auto expr =
                 components::expressions::make_compare_union_expression(dispatcher->resource(), compare_type::union_or);
             expr->append_child(components::expressions::make_compare_expression(dispatcher->resource(),
@@ -137,17 +147,21 @@ TEST_CASE("integration::cpp::test_collection") {
                                                                                 compare_type::regex,
                                                                                 key{"countStr"},
                                                                                 id_par{2}));
-            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            ql->add_parameter(id_par{1}, new_value(90));
-            ql->add_parameter(id_par{2}, new_value(std::string_view{"9$"}));
-            auto cur = dispatcher->find(session, ql);
+            plan->append_child(components::logical_plan::make_node_match(dispatcher->resource(),
+                                                                         {database_name, collection_name},
+                                                                         std::move(expr)));
+            auto params = components::logical_plan::make_parameter_node(dispatcher->resource());
+            params->add_parameter(id_par{1}, new_value(90));
+            params->add_parameter(id_par{2}, new_value(std::string_view{"9$"}));
+            auto cur = dispatcher->find(session, plan, params);
             REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 18);
         }
 
         {
             auto session = otterbrix::session_id_t();
-            auto* ql = new components::ql::aggregate_statement{database_name, collection_name, dispatcher->resource()};
+            auto plan =
+                components::logical_plan::make_node_aggregate(dispatcher->resource(), {database_name, collection_name});
             auto expr_and =
                 components::expressions::make_compare_union_expression(dispatcher->resource(), compare_type::union_and);
             auto expr_or =
@@ -165,19 +179,25 @@ TEST_CASE("integration::cpp::test_collection") {
                                                                                     compare_type::lte,
                                                                                     key{"count"},
                                                                                     id_par{3}));
-            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr_and)));
-            ql->add_parameter(id_par{1}, new_value(90));
-            ql->add_parameter(id_par{2}, new_value(std::string_view{"9$"}));
-            ql->add_parameter(id_par{3}, new_value(30));
-            auto cur = dispatcher->find(session, ql);
+
+            plan->append_child(components::logical_plan::make_node_match(dispatcher->resource(),
+                                                                         {database_name, collection_name},
+                                                                         std::move(expr_and)));
+            auto params = components::logical_plan::make_parameter_node(dispatcher->resource());
+            params->add_parameter(id_par{1}, new_value(90));
+            params->add_parameter(id_par{2}, new_value(std::string_view{"9$"}));
+            params->add_parameter(id_par{3}, new_value(30));
+            auto cur = dispatcher->find(session, plan, params);
             REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 3);
         }
     }
     INFO("cursor") {
         auto session = otterbrix::session_id_t();
-        auto* ql = new components::ql::aggregate_statement{database_name, collection_name, dispatcher->resource()};
-        auto cur = dispatcher->find(session, ql);
+        auto plan =
+            components::logical_plan::make_node_aggregate(dispatcher->resource(), {database_name, collection_name});
+        auto cur =
+            dispatcher->find(session, plan, components::logical_plan::make_parameter_node(dispatcher->resource()));
         REQUIRE(cur->is_success());
         REQUIRE(cur->size() == 100);
         int count = 0;
@@ -190,32 +210,41 @@ TEST_CASE("integration::cpp::test_collection") {
     INFO("find_one") {
         {
             auto session = otterbrix::session_id_t();
-            auto* ql = new components::ql::aggregate_statement{database_name, collection_name, dispatcher->resource()};
+            auto plan =
+                components::logical_plan::make_node_aggregate(dispatcher->resource(), {database_name, collection_name});
             auto expr = components::expressions::make_compare_expression(dispatcher->resource(),
                                                                          compare_type::eq,
                                                                          key{"_id"},
                                                                          id_par{1});
-            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            ql->add_parameter(id_par{1}, new_value(gen_id(1, dispatcher->resource())));
-            auto cur = dispatcher->find_one(session, ql);
+            plan->append_child(components::logical_plan::make_node_match(dispatcher->resource(),
+                                                                         {database_name, collection_name},
+                                                                         std::move(expr)));
+            auto params = components::logical_plan::make_parameter_node(dispatcher->resource());
+            params->add_parameter(id_par{1}, new_value(gen_id(1, dispatcher->resource())));
+            auto cur = dispatcher->find_one(session, plan, params);
             REQUIRE(cur->next()->get_long("count") == 1);
         }
         {
             auto session = otterbrix::session_id_t();
-            auto* ql = new components::ql::aggregate_statement{database_name, collection_name, dispatcher->resource()};
+            auto plan =
+                components::logical_plan::make_node_aggregate(dispatcher->resource(), {database_name, collection_name});
             auto expr = components::expressions::make_compare_expression(dispatcher->resource(),
                                                                          compare_type::eq,
                                                                          key{"count"},
                                                                          id_par{1});
-            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            ql->add_parameter(id_par{1}, new_value(10));
-            auto cur = dispatcher->find_one(session, ql);
+            plan->append_child(components::logical_plan::make_node_match(dispatcher->resource(),
+                                                                         {database_name, collection_name},
+                                                                         std::move(expr)));
+            auto params = components::logical_plan::make_parameter_node(dispatcher->resource());
+            params->add_parameter(id_par{1}, new_value(10));
+            auto cur = dispatcher->find_one(session, plan, params);
             REQUIRE(cur->is_success());
             REQUIRE(cur->next()->get_long("count") == 10);
         }
         {
             auto session = otterbrix::session_id_t();
-            auto* ql = new components::ql::aggregate_statement{database_name, collection_name, dispatcher->resource()};
+            auto plan =
+                components::logical_plan::make_node_aggregate(dispatcher->resource(), {database_name, collection_name});
             auto expr =
                 components::expressions::make_compare_union_expression(dispatcher->resource(), compare_type::union_and);
             expr->append_child(components::expressions::make_compare_expression(dispatcher->resource(),
@@ -226,10 +255,13 @@ TEST_CASE("integration::cpp::test_collection") {
                                                                                 compare_type::regex,
                                                                                 key{"countStr"},
                                                                                 id_par{2}));
-            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            ql->add_parameter(id_par{1}, new_value(90));
-            ql->add_parameter(id_par{2}, new_value(std::string_view{"9$"}));
-            auto cur = dispatcher->find_one(session, ql);
+            plan->append_child(components::logical_plan::make_node_match(dispatcher->resource(),
+                                                                         {database_name, collection_name},
+                                                                         std::move(expr)));
+            auto params = components::logical_plan::make_parameter_node(dispatcher->resource());
+            params->add_parameter(id_par{1}, new_value(90));
+            params->add_parameter(id_par{2}, new_value(std::string_view{"9$"}));
+            auto cur = dispatcher->find_one(session, plan, params);
             REQUIRE(cur->is_success());
             REQUIRE(cur->next()->get_long("count") == 99);
         }

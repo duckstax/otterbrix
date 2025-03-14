@@ -15,7 +15,7 @@ using namespace components::cursor;
 namespace services::collection::executor {
 
     plan_t::plan_t(std::stack<collection::operators::operator_ptr>&& sub_plans,
-                   components::ql::storage_parameters parameters,
+                   components::logical_plan::storage_parameters parameters,
                    services::context_storage_t&& context_storage)
         : sub_plans(std::move(sub_plans))
         , parameters(parameters)
@@ -84,10 +84,12 @@ namespace services::collection::executor {
 
     void executor_t::execute_plan(const components::session::session_id_t& session,
                                   components::logical_plan::node_ptr logical_plan,
-                                  components::ql::storage_parameters parameters,
+                                  components::logical_plan::storage_parameters parameters,
                                   services::context_storage_t&& context_storage) {
         trace(log_, "executor::execute_plan, session: {}", session.data());
-        auto plan = collection::planner::create_plan(context_storage, logical_plan, components::ql::limit_t::unlimit());
+        auto plan = collection::planner::create_plan(context_storage,
+                                                     logical_plan,
+                                                     components::logical_plan::limit_t::unlimit());
         if (!plan) {
             actor_zeta::send(memory_storage_,
                              address(),
@@ -108,7 +110,7 @@ namespace services::collection::executor {
               collection->name().database,
               collection->name().collection,
               documents.size());
-        //components::pipeline::context_t pipeline_context{session, address(), components::ql::storage_parameters{}};
+        //components::pipeline::context_t pipeline_context{session, address(), components::logical_plan::storage_parameters{}};
         //insert_(&pipeline_context, documents);
         for (const auto& doc : documents) {
             collection->storage().emplace(components::document::get_document_id(doc), doc);
@@ -118,7 +120,7 @@ namespace services::collection::executor {
 
     void executor_t::traverse_plan_(const components::session::session_id_t& session,
                                     collection::operators::operator_ptr&& plan,
-                                    components::ql::storage_parameters&& parameters,
+                                    components::logical_plan::storage_parameters&& parameters,
                                     services::context_storage_t&& context_storage) {
         std::stack<collection::operators::operator_ptr> look_up;
         std::stack<collection::operators::operator_ptr> sub_plans;
@@ -149,7 +151,7 @@ namespace services::collection::executor {
 
     void executor_t::execute_sub_plan_(const components::session::session_id_t& session,
                                        collection::operators::operator_ptr plan,
-                                       components::ql::storage_parameters parameters) {
+                                       components::logical_plan::storage_parameters parameters) {
         trace(log_, "executor::execute_sub_plan, session: {}", session.data());
         if (!plan) {
             execute_sub_plan_finish_(

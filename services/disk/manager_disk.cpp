@@ -13,13 +13,13 @@ namespace services::disk {
     using namespace core::filesystem;
 
     namespace {
-        std::vector<std::unique_ptr<components::ql::create_index_t>>
-        make_unique(std::vector<components::ql::create_index_t> indexes) {
-            std::vector<std::unique_ptr<components::ql::create_index_t>> result;
+        std::vector<components::logical_plan::node_create_index_ptr>
+        make_unique(std::vector<components::logical_plan::node_create_index_ptr> indexes) {
+            std::vector<components::logical_plan::node_create_index_ptr> result;
             result.reserve(indexes.size());
 
             for (auto&& index : indexes) {
-                result.push_back(std::make_unique<components::ql::create_index_t>(std::move(index)));
+                result.emplace_back(std::move(index));
             }
             return result;
         }
@@ -287,9 +287,9 @@ namespace services::disk {
     }
 
     void manager_disk_t::create_index_agent(const session_id_t& session,
-                                            const components::ql::create_index_t& index,
+                                            const components::logical_plan::node_create_index_ptr& index,
                                             services::collection::context_collection_t* collection) {
-        auto name = index.name();
+        auto name = index->name();
         trace(log_, "manager_disk: create_index_agent : {}", name);
         if (index_agents_.contains(name) && !index_agents_.at(name)->is_dropped()) {
             error(log_, "manager_disk: index {} already exists", name);
@@ -369,7 +369,7 @@ namespace services::disk {
 
     auto manager_disk_t::agent() -> actor_zeta::address_t { return agents_[0]->address(); }
 
-    void manager_disk_t::write_index_impl(const components::ql::create_index_t& index) {
+    void manager_disk_t::write_index_impl(const components::logical_plan::node_create_index_ptr& index) {
         if (metafile_indexes_) {
             msgpack::sbuffer buf;
             msgpack::pack(buf, index);
@@ -389,16 +389,17 @@ namespace services::disk {
             // For each index create we need to generate unique session id.
             actor_zeta::send(dispatcher,
                              address(),
-                             dispatcher::handler_id(dispatcher::route::execute_ql),
+                             dispatcher::handler_id(dispatcher::route::execute_plan),
                              session_id_t::generate_uid(),
-                             index.release(),
+                             index,
+                             components::logical_plan::make_parameter_node(resource()),
                              dispatcher);
         }
     }
 
-    std::vector<components::ql::create_index_t>
+    std::vector<components::logical_plan::node_create_index_ptr>
     manager_disk_t::read_indexes_impl(const collection_name_t& collection) const {
-        std::vector<components::ql::create_index_t> res;
+        std::vector<components::logical_plan::node_create_index_ptr> res;
         if (metafile_indexes_) {
             constexpr auto count_byte_by_size = sizeof(size_t);
             size_t size;
@@ -415,8 +416,8 @@ namespace services::disk {
                     offset += std::int64_t(size);
                     msgpack::unpacked msg;
                     msgpack::unpack(msg, buf.get(), size);
-                    auto index = msg.get().as<components::ql::create_index_t>();
-                    if (collection.empty() || index.collection_ == collection) {
+                    auto index = components::logical_plan::to_node_create_index(msg.get(), resource());
+                    if (collection.empty() || index->collection_name() == collection) {
                         res.push_back(index);
                     }
                 } else {
@@ -427,7 +428,7 @@ namespace services::disk {
         return res;
     }
 
-    std::vector<components::ql::create_index_t> manager_disk_t::read_indexes_impl() const {
+    std::vector<components::logical_plan::node_create_index_ptr> manager_disk_t::read_indexes_impl() const {
         return read_indexes_impl("");
     }
 
@@ -436,8 +437,8 @@ namespace services::disk {
             auto indexes = read_indexes_impl();
             indexes.erase(std::remove_if(indexes.begin(),
                                          indexes.end(),
-                                         [&index_name](const components::ql::create_index_t& index) {
-                                             return index.name() == index_name;
+                                         [&index_name](const components::logical_plan::node_create_index_ptr& index) {
+                                             return index->name() == index_name;
                                          }),
                           indexes.end());
             metafile_indexes_->truncate(0);
@@ -452,8 +453,8 @@ namespace services::disk {
             auto indexes = read_indexes_impl();
             indexes.erase(std::remove_if(indexes.begin(),
                                          indexes.end(),
-                                         [&collection](const components::ql::create_index_t& index) {
-                                             return index.collection_ == collection;
+                                         [&collection](const components::logical_plan::node_create_index_ptr& index) {
+                                             return index->collection_name() == collection;
                                          }),
                           indexes.end());
             metafile_indexes_->truncate(0);
@@ -518,9 +519,9 @@ namespace services::disk {
     }
 
     void manager_disk_empty_t::create_index_agent(const session_id_t& session,
-                                                  const components::ql::create_index_t& index,
+                                                  const components::logical_plan::node_create_index_ptr& index,
                                                   services::collection::context_collection_t* collection) {
-        auto name = index.name();
+        auto name = index->name();
         actor_zeta::send(current_message()->sender(),
                          address(),
                          handler_id(index::route::success_create),

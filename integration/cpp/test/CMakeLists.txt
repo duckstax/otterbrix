@@ -5,7 +5,7 @@ add_definitions(-DDEV_MODE)
 set( ${PROJECT_NAME}_SOURCES
         test_instances.cpp
         test_collection.cpp
-        test_collection_ql.cpp
+        test_collection_logical_plan.cpp
         test_collection_sql.cpp
         test_save_load.cpp
         test_index.cpp

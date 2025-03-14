@@ -13,7 +13,7 @@
 using namespace components::expressions;
 using namespace services::collection::operators;
 using key = components::expressions::key_t;
-using components::ql::add_parameter;
+using components::logical_plan::add_parameter;
 
 TEST_CASE("operator::insert") {
     auto resource = std::pmr::synchronized_pool_resource();
@@ -31,8 +31,8 @@ TEST_CASE("operator::full_scan") {
         auto cond = make_compare_expression(&resource, compare_type::eq, key("count"), core::parameter_id_t(1));
         full_scan scan(d(collection),
                        predicates::create_predicate(d(collection), cond),
-                       components::ql::limit_t::unlimit());
-        components::ql::storage_parameters parameters(&resource);
+                       components::logical_plan::limit_t::unlimit());
+        components::logical_plan::storage_parameters parameters(&resource);
         add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         scan.on_execute(&pipeline_context);
@@ -43,8 +43,8 @@ TEST_CASE("operator::full_scan") {
         auto cond = make_compare_expression(&resource, compare_type::ne, key("count"), core::parameter_id_t(1));
         full_scan scan(d(collection),
                        predicates::create_predicate(d(collection), cond),
-                       components::ql::limit_t::unlimit());
-        components::ql::storage_parameters parameters(&resource);
+                       components::logical_plan::limit_t::unlimit());
+        components::logical_plan::storage_parameters parameters(&resource);
         add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         scan.on_execute(&pipeline_context);
@@ -55,8 +55,8 @@ TEST_CASE("operator::full_scan") {
         auto cond = make_compare_expression(&resource, compare_type::gt, key("count"), core::parameter_id_t(1));
         full_scan scan(d(collection),
                        predicates::create_predicate(d(collection), cond),
-                       components::ql::limit_t::unlimit());
-        components::ql::storage_parameters parameters(&resource);
+                       components::logical_plan::limit_t::unlimit());
+        components::logical_plan::storage_parameters parameters(&resource);
         add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         scan.on_execute(&pipeline_context);
@@ -67,8 +67,8 @@ TEST_CASE("operator::full_scan") {
         auto cond = make_compare_expression(&resource, compare_type::gte, key("count"), core::parameter_id_t(1));
         full_scan scan(d(collection),
                        predicates::create_predicate(d(collection), cond),
-                       components::ql::limit_t::unlimit());
-        components::ql::storage_parameters parameters(&resource);
+                       components::logical_plan::limit_t::unlimit());
+        components::logical_plan::storage_parameters parameters(&resource);
         add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         scan.on_execute(&pipeline_context);
@@ -79,8 +79,8 @@ TEST_CASE("operator::full_scan") {
         auto cond = make_compare_expression(&resource, compare_type::lt, key("count"), core::parameter_id_t(1));
         full_scan scan(d(collection),
                        predicates::create_predicate(d(collection), cond),
-                       components::ql::limit_t::unlimit());
-        components::ql::storage_parameters parameters(&resource);
+                       components::logical_plan::limit_t::unlimit());
+        components::logical_plan::storage_parameters parameters(&resource);
         add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         scan.on_execute(&pipeline_context);
@@ -91,8 +91,8 @@ TEST_CASE("operator::full_scan") {
         auto cond = make_compare_expression(&resource, compare_type::lte, key("count"), core::parameter_id_t(1));
         full_scan scan(d(collection),
                        predicates::create_predicate(d(collection), cond),
-                       components::ql::limit_t::unlimit());
-        components::ql::storage_parameters parameters(&resource);
+                       components::logical_plan::limit_t::unlimit());
+        components::logical_plan::storage_parameters parameters(&resource);
         add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         scan.on_execute(&pipeline_context);
@@ -103,8 +103,8 @@ TEST_CASE("operator::full_scan") {
         auto cond = make_compare_expression(&resource, compare_type::gt, key("count"), core::parameter_id_t(1));
         full_scan scan(d(collection),
                        predicates::create_predicate(d(collection), cond),
-                       components::ql::limit_t::limit_one());
-        components::ql::storage_parameters parameters(&resource);
+                       components::logical_plan::limit_t::limit_one());
+        components::logical_plan::storage_parameters parameters(&resource);
         add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         scan.on_execute(&pipeline_context);
@@ -124,8 +124,8 @@ TEST_CASE("operator::delete") {
         operator_delete delete_(d(collection));
         delete_.set_children(boost::intrusive_ptr(new full_scan(d(collection),
                                                                 predicates::create_predicate(d(collection), cond),
-                                                                components::ql::limit_t::unlimit())));
-        components::ql::storage_parameters parameters(&resource);
+                                                                components::logical_plan::limit_t::unlimit())));
+        components::logical_plan::storage_parameters parameters(&resource);
         add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         delete_.on_execute(&pipeline_context);
@@ -138,8 +138,8 @@ TEST_CASE("operator::delete") {
         operator_delete delete_(d(collection));
         delete_.set_children(boost::intrusive_ptr(new full_scan(d(collection),
                                                                 predicates::create_predicate(d(collection), cond),
-                                                                components::ql::limit_t::limit_one())));
-        components::ql::storage_parameters parameters(&resource);
+                                                                components::logical_plan::limit_t::limit_one())));
+        components::logical_plan::storage_parameters parameters(&resource);
         add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         delete_.on_execute(&pipeline_context);
@@ -152,8 +152,8 @@ TEST_CASE("operator::delete") {
         operator_delete delete_(d(collection));
         delete_.set_children(boost::intrusive_ptr(new full_scan(d(collection),
                                                                 predicates::create_predicate(d(collection), cond),
-                                                                components::ql::limit_t(5))));
-        components::ql::storage_parameters parameters(&resource);
+                                                                components::logical_plan::limit_t(5))));
+        components::logical_plan::storage_parameters parameters(&resource);
         add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         delete_.on_execute(&pipeline_context);
@@ -168,7 +168,7 @@ TEST_CASE("operator::update") {
     auto collection = init_collection(&resource);
 
     SECTION("find::update") {
-        components::ql::storage_parameters parameters(&resource);
+        components::logical_plan::storage_parameters parameters(&resource);
         add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         add_parameter(parameters, core::parameter_id_t(2), new_value(999));
         components::pipeline::context_t pipeline_context(std::move(parameters));
@@ -180,7 +180,7 @@ TEST_CASE("operator::update") {
         {
             full_scan scan(d(collection),
                            predicates::create_predicate(d(collection), cond_check),
-                           components::ql::limit_t::unlimit());
+                           components::logical_plan::limit_t::unlimit());
             scan.on_execute(&pipeline_context);
             REQUIRE(scan.output()->size() == 0);
         }
@@ -188,19 +188,19 @@ TEST_CASE("operator::update") {
         operator_update update_(d(collection), std::move(script_update), false);
         update_.set_children(boost::intrusive_ptr(new full_scan(d(collection),
                                                                 predicates::create_predicate(d(collection), cond),
-                                                                components::ql::limit_t::unlimit())));
+                                                                components::logical_plan::limit_t::unlimit())));
         update_.on_execute(&pipeline_context);
         {
             full_scan scan(d(collection),
                            predicates::create_predicate(d(collection), cond_check),
-                           components::ql::limit_t::unlimit());
+                           components::logical_plan::limit_t::unlimit());
             scan.on_execute(&pipeline_context);
             REQUIRE(scan.output()->size() == 10);
         }
     }
 
     SECTION("find::update_one") {
-        components::ql::storage_parameters parameters(&resource);
+        components::logical_plan::storage_parameters parameters(&resource);
         add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         add_parameter(parameters, core::parameter_id_t(2), new_value(999));
         components::pipeline::context_t pipeline_context(std::move(parameters));
@@ -212,7 +212,7 @@ TEST_CASE("operator::update") {
         {
             full_scan scan(d(collection),
                            predicates::create_predicate(d(collection), cond_check),
-                           components::ql::limit_t::unlimit());
+                           components::logical_plan::limit_t::unlimit());
             scan.on_execute(&pipeline_context);
             REQUIRE(scan.output()->size() == 0);
         }
@@ -220,19 +220,19 @@ TEST_CASE("operator::update") {
         operator_update update_(d(collection), std::move(script_update), false);
         update_.set_children(boost::intrusive_ptr(new full_scan(d(collection),
                                                                 predicates::create_predicate(d(collection), cond),
-                                                                components::ql::limit_t(1))));
+                                                                components::logical_plan::limit_t(1))));
         update_.on_execute(&pipeline_context);
         {
             full_scan scan(d(collection),
                            predicates::create_predicate(d(collection), cond_check),
-                           components::ql::limit_t::unlimit());
+                           components::logical_plan::limit_t::unlimit());
             scan.on_execute(&pipeline_context);
             REQUIRE(scan.output()->size() == 1);
         }
     }
 
     SECTION("find::update_limit") {
-        components::ql::storage_parameters parameters(&resource);
+        components::logical_plan::storage_parameters parameters(&resource);
         add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         add_parameter(parameters, core::parameter_id_t(2), new_value(999));
         components::pipeline::context_t pipeline_context(std::move(parameters));
@@ -244,7 +244,7 @@ TEST_CASE("operator::update") {
         {
             full_scan scan(d(collection),
                            predicates::create_predicate(d(collection), cond_check),
-                           components::ql::limit_t::unlimit());
+                           components::logical_plan::limit_t::unlimit());
             scan.on_execute(&pipeline_context);
             REQUIRE(scan.output()->size() == 0);
         }
@@ -252,12 +252,12 @@ TEST_CASE("operator::update") {
         operator_update update_(d(collection), std::move(script_update), false);
         update_.set_children(boost::intrusive_ptr(new full_scan(d(collection),
                                                                 predicates::create_predicate(d(collection), cond),
-                                                                components::ql::limit_t(5))));
+                                                                components::logical_plan::limit_t(5))));
         update_.on_execute(&pipeline_context);
         {
             full_scan scan(d(collection),
                            predicates::create_predicate(d(collection), cond_check),
-                           components::ql::limit_t::unlimit());
+                           components::logical_plan::limit_t::unlimit());
             scan.on_execute(&pipeline_context);
             REQUIRE(scan.output()->size() == 5);
         }
@@ -279,8 +279,8 @@ TEST_CASE("operator::index_scan") {
 
     SECTION("find::eq") {
         auto cond = make_compare_expression(&resource, compare_type::eq, key("count"), core::parameter_id_t(1));
-        index_scan scan(d(collection), cond, components::ql::limit_t::unlimit());
-        components::ql::storage_parameters parameters(&resource);
+        index_scan scan(d(collection), cond, components::logical_plan::limit_t::unlimit());
+        components::logical_plan::storage_parameters parameters(&resource);
         add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         scan.on_execute(&pipeline_context);
@@ -289,8 +289,8 @@ TEST_CASE("operator::index_scan") {
 
     SECTION("find::ne") {
         auto cond = make_compare_expression(&resource, compare_type::ne, key("count"), core::parameter_id_t(1));
-        index_scan scan(d(collection), cond, components::ql::limit_t::unlimit());
-        components::ql::storage_parameters parameters(&resource);
+        index_scan scan(d(collection), cond, components::logical_plan::limit_t::unlimit());
+        components::logical_plan::storage_parameters parameters(&resource);
         add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         scan.on_execute(&pipeline_context);
@@ -299,8 +299,8 @@ TEST_CASE("operator::index_scan") {
 
     SECTION("find::gt") {
         auto cond = make_compare_expression(&resource, compare_type::gt, key("count"), core::parameter_id_t(1));
-        index_scan scan(d(collection), cond, components::ql::limit_t::unlimit());
-        components::ql::storage_parameters parameters(&resource);
+        index_scan scan(d(collection), cond, components::logical_plan::limit_t::unlimit());
+        components::logical_plan::storage_parameters parameters(&resource);
         add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         scan.on_execute(&pipeline_context);
@@ -309,8 +309,8 @@ TEST_CASE("operator::index_scan") {
 
     SECTION("find::gte") {
         auto cond = make_compare_expression(&resource, compare_type::gte, key("count"), core::parameter_id_t(1));
-        index_scan scan(d(collection), cond, components::ql::limit_t::unlimit());
-        components::ql::storage_parameters parameters(&resource);
+        index_scan scan(d(collection), cond, components::logical_plan::limit_t::unlimit());
+        components::logical_plan::storage_parameters parameters(&resource);
         add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         scan.on_execute(&pipeline_context);
@@ -319,8 +319,8 @@ TEST_CASE("operator::index_scan") {
 
     SECTION("find::lt") {
         auto cond = make_compare_expression(&resource, compare_type::lt, key("count"), core::parameter_id_t(1));
-        index_scan scan(d(collection), cond, components::ql::limit_t::unlimit());
-        components::ql::storage_parameters parameters(&resource);
+        index_scan scan(d(collection), cond, components::logical_plan::limit_t::unlimit());
+        components::logical_plan::storage_parameters parameters(&resource);
         add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         scan.on_execute(&pipeline_context);
@@ -329,8 +329,8 @@ TEST_CASE("operator::index_scan") {
 
     SECTION("find::lte") {
         auto cond = make_compare_expression(&resource, compare_type::lte, key("count"), core::parameter_id_t(1));
-        index_scan scan(d(collection), cond, components::ql::limit_t::unlimit());
-        components::ql::storage_parameters parameters(&resource);
+        index_scan scan(d(collection), cond, components::logical_plan::limit_t::unlimit());
+        components::logical_plan::storage_parameters parameters(&resource);
         add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         scan.on_execute(&pipeline_context);
@@ -339,8 +339,8 @@ TEST_CASE("operator::index_scan") {
 
     SECTION("find_one") {
         auto cond = make_compare_expression(&resource, compare_type::gt, key("count"), core::parameter_id_t(1));
-        index_scan scan(d(collection), cond, components::ql::limit_t::limit_one());
-        components::ql::storage_parameters parameters(&resource);
+        index_scan scan(d(collection), cond, components::logical_plan::limit_t::limit_one());
+        components::logical_plan::storage_parameters parameters(&resource);
         add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         scan.on_execute(&pipeline_context);
@@ -349,8 +349,8 @@ TEST_CASE("operator::index_scan") {
 
     SECTION("find_limit") {
         auto cond = make_compare_expression(&resource, compare_type::gt, key("count"), core::parameter_id_t(1));
-        index_scan scan(d(collection), cond, components::ql::limit_t(3));
-        components::ql::storage_parameters parameters(&resource);
+        index_scan scan(d(collection), cond, components::logical_plan::limit_t(3));
+        components::logical_plan::storage_parameters parameters(&resource);
         add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         scan.on_execute(&pipeline_context);
@@ -363,19 +363,19 @@ TEST_CASE("operator::transfer_scan") {
     auto collection = init_collection(&resource);
 
     SECTION("all") {
-        transfer_scan scan(d(collection), components::ql::limit_t::unlimit());
+        transfer_scan scan(d(collection), components::logical_plan::limit_t::unlimit());
         scan.on_execute(nullptr);
         REQUIRE(scan.output()->size() == 100);
     }
 
     SECTION("limit") {
-        transfer_scan scan(d(collection), components::ql::limit_t(50));
+        transfer_scan scan(d(collection), components::logical_plan::limit_t(50));
         scan.on_execute(nullptr);
         REQUIRE(scan.output()->size() == 50);
     }
 
     SECTION("one") {
-        transfer_scan scan(d(collection), components::ql::limit_t(1));
+        transfer_scan scan(d(collection), components::logical_plan::limit_t(1));
         scan.on_execute(nullptr);
         REQUIRE(scan.output()->size() == 1);
     }
@@ -396,26 +396,26 @@ TEST_CASE("operator::index::delete_and_update") {
 
     SECTION("index_scan after delete") {
         auto cond_check = make_compare_expression(&resource, compare_type::gt, key("count"), core::parameter_id_t(1));
-        components::ql::storage_parameters parameters_check(&resource);
+        components::logical_plan::storage_parameters parameters_check(&resource);
         add_parameter(parameters_check, core::parameter_id_t(1), new_value(50));
         components::pipeline::context_t pipeline_context_check(std::move(parameters_check));
         {
-            index_scan scan(d(collection), cond_check, components::ql::limit_t::unlimit());
+            index_scan scan(d(collection), cond_check, components::logical_plan::limit_t::unlimit());
             scan.on_execute(&pipeline_context_check);
             REQUIRE(scan.output()->size() == 50);
         }
         {
             auto cond = make_compare_expression(&resource, compare_type::gt, key("count"), core::parameter_id_t(1));
-            components::ql::storage_parameters parameters(&resource);
+            components::logical_plan::storage_parameters parameters(&resource);
             add_parameter(parameters, core::parameter_id_t(1), new_value(60));
             components::pipeline::context_t pipeline_context(std::move(parameters));
             operator_delete delete_(d(collection));
-            delete_.set_children(
-                boost::intrusive_ptr(new index_scan(d(collection), cond, components::ql::limit_t::unlimit())));
+            delete_.set_children(boost::intrusive_ptr(
+                new index_scan(d(collection), cond, components::logical_plan::limit_t::unlimit())));
             delete_.on_execute(&pipeline_context);
             REQUIRE(delete_.modified()->size() == 40);
 
-            index_scan scan(d(collection), cond_check, components::ql::limit_t::unlimit());
+            index_scan scan(d(collection), cond_check, components::logical_plan::limit_t::unlimit());
             scan.on_execute(&pipeline_context_check);
             REQUIRE(scan.output()->size() == 10);
         }
@@ -423,11 +423,11 @@ TEST_CASE("operator::index::delete_and_update") {
 
     SECTION("index_scan after update") {
         auto cond_check = make_compare_expression(&resource, compare_type::eq, key("count"), core::parameter_id_t(1));
-        components::ql::storage_parameters parameters_check(&resource);
+        components::logical_plan::storage_parameters parameters_check(&resource);
         add_parameter(parameters_check, core::parameter_id_t(1), new_value(50));
         components::pipeline::context_t pipeline_context_check(std::move(parameters_check));
         {
-            index_scan scan(d(collection), cond_check, components::ql::limit_t::unlimit());
+            index_scan scan(d(collection), cond_check, components::logical_plan::limit_t::unlimit());
             scan.on_execute(&pipeline_context_check);
             REQUIRE(scan.output()->size() == 1);
         }
@@ -435,11 +435,11 @@ TEST_CASE("operator::index::delete_and_update") {
             auto script_update =
                 components::document::document_t::document_from_json(R"({"$set": {"count": 0}})", &resource);
             operator_update update(d(collection), script_update, false);
-            update.set_children(
-                boost::intrusive_ptr(new index_scan(d(collection), cond_check, components::ql::limit_t::unlimit())));
+            update.set_children(boost::intrusive_ptr(
+                new index_scan(d(collection), cond_check, components::logical_plan::limit_t::unlimit())));
             update.on_execute(&pipeline_context_check);
 
-            index_scan scan(d(collection), cond_check, components::ql::limit_t::unlimit());
+            index_scan scan(d(collection), cond_check, components::logical_plan::limit_t::unlimit());
             scan.on_execute(&pipeline_context_check);
             REQUIRE(scan.output()->size() == 0);
         }

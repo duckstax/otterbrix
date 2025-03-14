@@ -4,7 +4,7 @@
 
 namespace services::collection::operators {
 
-    transfer_scan::transfer_scan(context_collection_t* context, components::ql::limit_t limit)
+    transfer_scan::transfer_scan(context_collection_t* context, components::logical_plan::limit_t limit)
         : read_only_operator_t(context, operator_type::match)
         , limit_(limit) {}
 

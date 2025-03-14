@@ -7,24 +7,28 @@ void update_many(benchmark::State& state) {
     state.ResumeTiming();
     for (auto _ : state) {
         for (int i = 0; i < state.range(0); ++i) {
+            auto p = create_aggregate(database_name, collection_name, compare_type::lt, "count", 100 * i);
             dispatcher->update_many(session,
-                                    database_name,
-                                    collection_name,
-                                    make_condition("count", "$lt", 100 * i),
-                                    make_condition("$set", "count", 0),
+                                    p.first,
+                                    p.second,
+                                    document_t::document_from_json("{\"$set\": {\"count\": " + std::to_string(0) + "}}",
+                                                                   dispatcher->resource()),
                                     false);
-            dispatcher->update_many(session,
-                                    database_name,
-                                    collection_name,
-                                    make_condition("count", "$gt", size_collection - 100 * i),
-                                    make_condition("$set", "count", size_collection),
-                                    false);
+            p = create_aggregate(database_name, collection_name, compare_type::gt, "count", size_collection - 100 * i);
+            dispatcher->update_many(
+                session,
+                p.first,
+                p.second,
+                document_t::document_from_json("{\"$set\": {\"count\": " + std::to_string(size_collection) + "}}",
+                                               dispatcher->resource()),
+                false);
         }
+        auto p = create_aggregate(database_name, collection_name, compare_type::all_true);
         dispatcher->update_many(session,
-                                database_name,
-                                collection_name,
-                                make_document(),
-                                make_condition("$set", "count", 0),
+                                p.first,
+                                p.second,
+                                document_t::document_from_json("{\"$set\": {\"count\": " + std::to_string(0) + "}}",
+                                                               dispatcher->resource()),
                                 false);
     }
 }

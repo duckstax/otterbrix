@@ -1,6 +1,7 @@
 #include "test_config.hpp"
 #include <catch2/catch.hpp>
 #include <components/expressions/compare_expression.hpp>
+#include <logical_plan/node_insert.hpp>
 #include <services/disk/disk.hpp>
 #include <services/wal/manager_wal_replicate.hpp>
 #include <services/wal/wal.hpp>
@@ -9,12 +10,11 @@ constexpr uint count_databases = 2;
 constexpr uint count_collections = 4;
 constexpr uint count_documents = 8;
 
-static const database_name_t database_name = "TestDatabase";
-static const collection_name_t collection_name = "TestCollection";
+static const database_name_t database_name = "testdatabase";
+static const collection_name_t collection_name = "testcollection";
 
 using namespace components::cursor;
 using components::expressions::compare_type;
-using components::ql::aggregate::operator_type;
 using key = components::expressions::key_t;
 using id_par = core::parameter_id_t;
 
@@ -27,14 +27,16 @@ cursor_t_ptr find_doc(otterbrix::wrapper_dispatcher_t* dispatcher,
                       int n_doc) {
     auto new_value = [&](auto value) { return value_t{tape, value}; };
     auto session_doc = otterbrix::session_id_t();
-    auto* ql = new components::ql::aggregate_statement{db_name, col_name, dispatcher->resource()};
+    auto aggregate = components::logical_plan::make_node_aggregate(dispatcher->resource(), {db_name, col_name});
     auto expr = components::expressions::make_compare_expression(dispatcher->resource(),
                                                                  compare_type::eq,
                                                                  key{"_id"},
                                                                  id_par{1});
-    ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-    ql->add_parameter(id_par{1}, new_value(gen_id(n_doc, dispatcher->resource())));
-    auto cur = dispatcher->find_one(session_doc, ql);
+    aggregate->append_child(
+        components::logical_plan::make_node_match(dispatcher->resource(), {db_name, col_name}, std::move(expr)));
+    auto params = components::logical_plan::make_parameter_node(dispatcher->resource());
+    params->add_parameter(id_par{1}, new_value(gen_id(n_doc, dispatcher->resource())));
+    auto cur = dispatcher->find_one(session_doc, aggregate, params);
     if (cur->is_success()) {
         cur->next();
     }
@@ -131,19 +133,24 @@ TEST_CASE("integration::cpp::test_save_load::disk+wal") {
                 doc->set("number", gen_doc_number(n_db, n_col, n_doc));
                 auto session = otterbrix::session_id_t();
                 auto address = actor_zeta::address_t::empty_address();
-                components::ql::insert_one_t insert_one(db_name, col_name, doc);
+                auto insert_one =
+                    components::logical_plan::make_node_insert(dispatcher->resource(), {db_name, col_name}, doc);
                 wal.insert_one(session, address, insert_one);
 
                 {
-                    auto match = components::ql::aggregate::make_match(
+                    auto match = components::logical_plan::make_node_match(
+                        dispatcher->resource(),
+                        {db_name, col_name},
                         components::expressions::make_compare_expression(dispatcher->resource(),
                                                                          compare_type::eq,
                                                                          key{"count"},
                                                                          core::parameter_id_t{1}));
-                    components::ql::storage_parameters params(dispatcher->resource());
-                    components::ql::add_parameter(params, core::parameter_id_t{1}, new_value(1));
-                    components::ql::delete_one_t delete_one(db_name, col_name, match, params);
-                    wal.delete_one(session, address, delete_one);
+                    auto params = components::logical_plan::make_parameter_node(dispatcher->resource());
+                    params->add_parameter(core::parameter_id_t{1}, new_value(1));
+                    auto delete_one = components::logical_plan::make_node_delete_one(dispatcher->resource(),
+                                                                                     {db_name, col_name},
+                                                                                     match);
+                    wal.delete_one(session, address, delete_one, params);
                 }
 
                 {
@@ -157,50 +164,56 @@ TEST_CASE("integration::cpp::test_save_load::disk+wal") {
                                                                                         compare_type::lte,
                                                                                         key{"count"},
                                                                                         core::parameter_id_t{2}));
-                    auto match = components::ql::aggregate::make_match(expr);
-                    components::ql::storage_parameters params(dispatcher->resource());
-                    components::ql::add_parameter(params, core::parameter_id_t{1}, new_value(2));
-                    components::ql::add_parameter(params, core::parameter_id_t{2}, new_value(4));
-                    components::ql::delete_many_t delete_many(db_name, col_name, match, params);
-                    wal.delete_many(session, address, delete_many);
+                    auto match = components::logical_plan::make_node_match(dispatcher->resource(),
+                                                                           {db_name, col_name},
+                                                                           std::move(expr));
+                    auto params = components::logical_plan::make_parameter_node(dispatcher->resource());
+                    params->add_parameter(core::parameter_id_t{1}, new_value(2));
+                    params->add_parameter(core::parameter_id_t{2}, new_value(4));
+                    auto delete_many = components::logical_plan::make_node_delete_many(dispatcher->resource(),
+                                                                                       {db_name, col_name},
+                                                                                       match);
+                    wal.delete_many(session, address, delete_many, params);
                 }
 
                 {
-                    auto match = components::ql::aggregate::make_match(
+                    auto match = components::logical_plan::make_node_match(
+                        dispatcher->resource(),
+                        {db_name, col_name},
                         components::expressions::make_compare_expression(dispatcher->resource(),
                                                                          compare_type::eq,
                                                                          key{"count"},
                                                                          core::parameter_id_t{1}));
-                    components::ql::storage_parameters params(dispatcher->resource());
-                    components::ql::add_parameter(params, core::parameter_id_t{1}, new_value(5));
-                    components::ql::update_one_t update_one(
-                        db_name,
-                        col_name,
+                    auto params = components::logical_plan::make_parameter_node(dispatcher->resource());
+                    params->add_parameter(core::parameter_id_t{1}, new_value(5));
+                    auto update_one = components::logical_plan::make_node_update_one(
+                        dispatcher->resource(),
+                        {db_name, col_name},
                         match,
-                        params,
                         components::document::document_t::document_from_json(R"({"$set": {"count": 0}})",
                                                                              dispatcher->resource()),
                         false);
-                    wal.update_one(session, address, update_one);
+                    wal.update_one(session, address, update_one, params);
                 }
 
                 {
-                    auto match = components::ql::aggregate::make_match(
+                    auto match = components::logical_plan::make_node_match(
+                        dispatcher->resource(),
+                        {db_name, col_name},
                         components::expressions::make_compare_expression(dispatcher->resource(),
                                                                          compare_type::gt,
                                                                          key{"count"},
                                                                          core::parameter_id_t{1}));
-                    components::ql::storage_parameters params(dispatcher->resource());
-                    components::ql::add_parameter(params, core::parameter_id_t{1}, new_value(5));
-                    components::ql::update_many_t update_many(
-                        db_name,
-                        col_name,
+                    auto params = components::logical_plan::make_parameter_node(dispatcher->resource());
+                    params->add_parameter(core::parameter_id_t{1}, new_value(5));
+                    auto update_many = components::logical_plan::make_node_update_many(
+                        dispatcher->resource(),
+                        {db_name, col_name},
                         match,
-                        params,
                         components::document::document_t::document_from_json(R"({"$set": {"count": 1000}})",
                                                                              dispatcher->resource()),
                         false);
-                    wal.update_many(session, address, update_many);
+                    wal.update_many(session, address, update_many, params);
                 }
             }
         }
@@ -210,7 +223,6 @@ TEST_CASE("integration::cpp::test_save_load::disk+wal") {
         test_spaces space(config);
         auto* dispatcher = space.dispatcher();
         auto tape = std::make_unique<impl::base_document>(dispatcher->resource());
-        auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
         dispatcher->load();
         for (uint n_db = 1; n_db <= count_databases; ++n_db) {
             auto db_name = database_name + "_" + std::to_string(n_db);

@@ -65,7 +65,7 @@ namespace services::disk {
         auto flush(const session_id_t& session, wal::id_t wal_id) -> void;
 
         void create_index_agent(const session_id_t& session,
-                                const components::ql::create_index_t& index,
+                                const components::logical_plan::node_create_index_ptr& index,
                                 services::collection::context_collection_t* collection);
         void drop_index_agent(const session_id_t& session,
                               const index_name_t& index_name,
@@ -110,10 +110,11 @@ namespace services::disk {
         std::pmr::unordered_map<session_id_t, removed_index_t> removed_indexes_;
 
         auto agent() -> actor_zeta::address_t;
-        void write_index_impl(const components::ql::create_index_t& index);
+        void write_index_impl(const components::logical_plan::node_create_index_ptr& index);
         void load_indexes_impl(const session_id_t& session, const actor_zeta::address_t& dispatcher);
-        std::vector<components::ql::create_index_t> read_indexes_impl(const collection_name_t& collection_name) const;
-        std::vector<components::ql::create_index_t> read_indexes_impl() const;
+        std::vector<components::logical_plan::node_create_index_ptr>
+        read_indexes_impl(const collection_name_t& collection_name) const;
+        std::vector<components::logical_plan::node_create_index_ptr> read_indexes_impl() const;
         void remove_index_impl(const index_name_t& index_name);
         void remove_all_indexes_from_collection_impl(const collection_name_t& collection_name);
     };
@@ -124,7 +125,7 @@ namespace services::disk {
 
         auto load(const session_id_t& session) -> void;
         void create_index_agent(const session_id_t& session,
-                                const components::ql::create_index_t& index,
+                                const components::logical_plan::node_create_index_ptr& index,
                                 services::collection::context_collection_t* collection);
 
         auto make_scheduler() noexcept -> actor_zeta::scheduler_abstract_t*;

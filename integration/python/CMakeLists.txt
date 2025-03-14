@@ -23,7 +23,6 @@ set(otterbrix_LIBS
         otterbrix::wal
         otterbrix::disk
         otterbrix::locks
-        otterbrix::ql
         otterbrix::b_plus_tree
 )
 

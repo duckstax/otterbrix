@@ -12,8 +12,8 @@ add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         non_thread_scheduler
-        otterbrix::ql
         otterbrix::log
+        otterbrix::logical_plan
         otterbrix::session
         otterbrix::wal
         otterbrix::test_generaty
@@ -21,7 +21,10 @@ target_link_libraries(
         Catch2::Catch2
         Crc32c::crc32c
         actor-zeta::actor-zeta
+        absl::int128
         Boost::boost
+        magic_enum::magic_enum
+        msgpackc-cxx
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

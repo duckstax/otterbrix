@@ -5,7 +5,7 @@ using namespace components::document;
 
 void document_write(benchmark::State& state) {
     state.PauseTiming();
-    auto doc = make_document();
+    auto doc = make_document(wr_dispatcher()->resource());
 
     std::string key_simple{"count"};
     std::string key_array{"countArray.1"};

@@ -5,7 +5,6 @@
 
 #include <components/document/document.hpp>
 #include <components/planner/planner.hpp>
-#include <components/ql/statements.hpp>
 
 #include <services/collection/route.hpp>
 #include <services/disk/manager_disk.hpp>
@@ -13,7 +12,7 @@
 #include <services/memory_storage/route.hpp>
 #include <services/wal/route.hpp>
 
-using namespace components::ql;
+using namespace components::logical_plan;
 using namespace components::cursor;
 
 namespace services::dispatcher {
@@ -29,22 +28,22 @@ namespace services::dispatcher {
                                                            disk::handler_id(disk::route::load_finish),
                                                            this,
                                                            &dispatcher_t::load_from_disk_result))
-        , load_from_memory_resource_result_(
+        , load_from_memory_storage_result_(
               actor_zeta::make_behavior(resource(),
                                         memory_storage::handler_id(memory_storage::route::load_finish),
                                         this,
-                                        &dispatcher_t::load_from_memory_resource_result))
+                                        &dispatcher_t::load_from_memory_storage_result))
         , load_from_wal_result_(actor_zeta::make_behavior(resource(),
                                                           wal::handler_id(wal::route::load_finish),
                                                           this,
                                                           &dispatcher_t::load_from_wal_result))
-        , execute_ql_(
-              actor_zeta::make_behavior(resource(), handler_id(route::execute_ql), this, &dispatcher_t::execute_ql))
-        , execute_ql_finish_(
+        , execute_plan_(
+              actor_zeta::make_behavior(resource(), handler_id(route::execute_plan), this, &dispatcher_t::execute_plan))
+        , execute_plan_finish_(
               actor_zeta::make_behavior(resource(),
                                         memory_storage::handler_id(memory_storage::route::execute_plan_finish),
                                         this,
-                                        &dispatcher_t::execute_ql_finish))
+                                        &dispatcher_t::execute_plan_finish))
         , size_(actor_zeta::make_behavior(resource(),
                                           collection::handler_id(collection::route::size),
                                           this,
@@ -86,19 +85,19 @@ namespace services::dispatcher {
                     break;
                 }
                 case memory_storage::handler_id(memory_storage::route::load_finish): {
-                    load_from_memory_resource_result_(msg);
+                    load_from_memory_storage_result_(msg);
                     break;
                 }
                 case wal::handler_id(wal::route::load_finish): {
                     load_from_wal_result_(msg);
                     break;
                 }
-                case handler_id(route::execute_ql): {
-                    execute_ql_(msg);
+                case handler_id(route::execute_plan): {
+                    execute_plan_(msg);
                     break;
                 }
                 case memory_storage::handler_id(memory_storage::route::execute_plan_finish): {
-                    execute_ql_finish_(msg);
+                    execute_plan_finish_(msg);
                     break;
                 }
                 case collection::handler_id(collection::route::size): {
@@ -148,8 +147,8 @@ namespace services::dispatcher {
         }
     }
 
-    void dispatcher_t::load_from_memory_resource_result(const components::session::session_id_t& session) {
-        trace(log_, "dispatcher_t::load_from_memory_resource_result, session: {}", session.data());
+    void dispatcher_t::load_from_memory_storage_result(const components::session::session_id_t& session) {
+        trace(log_, "dispatcher_t::load_from_memory_storage_result, session: {}", session.data());
         actor_zeta::send(manager_disk_, address(), disk::handler_id(disk::route::load_indexes), session);
         actor_zeta::send(manager_wal_, address(), wal::handler_id(wal::route::load), session, load_result_.wal_id());
         load_result_.clear();
@@ -176,106 +175,70 @@ namespace services::dispatcher {
         last_wal_id_ = records_[load_count_answers_ - 1].id;
         for (auto& record : records_) {
             switch (record.type) {
-                case statement_type::create_database: {
-                    assert(std::holds_alternative<create_database_t>(record.data) &&
-                           "[dispatcher_t::load_from_wal_result]: [ case: statement_type::create_database] variant "
+                case node_type::create_database_t: {
+                    assert(record.data->type() == record.type &&
+                           "[dispatcher_t::load_from_wal_result]: [ case: node_type::create_database] variant "
                            "record.data holds the alternative create_database_t");
-                    auto& data = std::get<create_database_t>(record.data);
                     components::session::session_id_t session_database;
-                    execute_ql(session_database, &data, manager_wal_);
+                    execute_plan(session_database, record.data, record.params, manager_wal_);
                     break;
                 }
-                case statement_type::drop_database: {
-                    assert(std::holds_alternative<drop_database_t>(record.data) &&
-                           "[dispatcher_t::load_from_wal_result]: [ case: statement_type::drop_database] variant "
+                case node_type::drop_database_t: {
+                    assert(record.data->type() == record.type &&
+                           "[dispatcher_t::load_from_wal_result]: [ case: node_type::drop_database] variant "
                            "record.data holds the alternative drop_database_t");
-                    auto& data = std::get<drop_database_t>(record.data);
                     components::session::session_id_t session_database;
-                    execute_ql(session_database, &data, manager_wal_);
+                    execute_plan(session_database, record.data, record.params, manager_wal_);
                     break;
                 }
-                case statement_type::create_collection: {
-                    assert(std::holds_alternative<create_collection_t>(record.data) &&
-                           "[dispatcher_t::load_from_wal_result]: [ case: statement_type::create_collection] variant "
+                case node_type::create_collection_t: {
+                    assert(record.data->type() == record.type &&
+                           "[dispatcher_t::load_from_wal_result]: [ case: node_type::create_collection] variant "
                            "record.data holds the alternative create_collection_t");
-                    auto& data = std::get<create_collection_t>(record.data);
                     components::session::session_id_t session_collection;
-                    execute_ql(session_collection, &data, manager_wal_);
+                    execute_plan(session_collection, record.data, record.params, manager_wal_);
                     break;
                 }
-                case statement_type::drop_collection: {
-                    assert(std::holds_alternative<drop_collection_t>(record.data) &&
-                           "[dispatcher_t::load_from_wal_result]: [ case: statement_type::drop_collection] variant "
+                case node_type::drop_collection_t: {
+                    assert(record.data->type() == record.type &&
+                           "[dispatcher_t::load_from_wal_result]: [ case: node_type::drop_collection] variant "
                            "record.data holds the alternative drop_collection_t");
-                    auto& data = std::get<drop_collection_t>(record.data);
                     components::session::session_id_t session_collection;
-                    execute_ql(session_collection, &data, manager_wal_);
+                    execute_plan(session_collection, record.data, record.params, manager_wal_);
                     break;
                 }
-                case statement_type::insert_one: {
+                case node_type::insert_t: {
                     trace(log_, "dispatcher_t::load_from_wal_result: insert_one {}", session.data());
-                    assert(std::holds_alternative<insert_one_t>(record.data) &&
-                           "[dispatcher_t::load_from_wal_result]: [ case: statement_type::insert_one] variant "
+                    assert(record.data->type() == record.type &&
+                           "[dispatcher_t::load_from_wal_result]: [ case: node_type::insert_t] variant "
                            "record.data holds the alternative insert_one_t");
-                    auto& ql = std::get<insert_one_t>(record.data);
                     components::session::session_id_t session_insert;
-                    execute_ql(session_insert, &ql, manager_wal_);
+                    execute_plan(session_insert, record.data, record.params, manager_wal_);
                     break;
                 }
-                case statement_type::insert_many: {
-                    trace(log_, "dispatcher_t::load_from_wal_result: insert_many {}", session.data());
-                    assert(std::holds_alternative<insert_many_t>(record.data) &&
-                           "[dispatcher_t::load_from_wal_result]: [ case: statement_type::insert_many] variant "
-                           "record.data holds the alternative insert_many_t");
-                    auto& ql = std::get<insert_many_t>(record.data);
-                    components::session::session_id_t session_insert;
-                    execute_ql(session_insert, &ql, manager_wal_);
-                    break;
-                }
-                case statement_type::delete_one: {
-                    assert(std::holds_alternative<delete_one_t>(record.data) &&
-                           "[dispatcher_t::load_from_wal_result]: [ case: statement_type::delete_one] variant "
+                case node_type::delete_t: {
+                    assert(record.data->type() == record.type &&
+                           "[dispatcher_t::load_from_wal_result]: [ case: node_type::delete_t] variant "
                            "record.data holds the alternative delete_one_t");
-                    auto& ql = std::get<delete_one_t>(record.data);
                     components::session::session_id_t session_delete;
-                    execute_ql(session_delete, &ql, manager_wal_);
+                    execute_plan(session_delete, record.data, record.params, manager_wal_);
                     break;
                 }
-                case statement_type::delete_many: {
-                    assert(std::holds_alternative<delete_many_t>(record.data) &&
-                           "[dispatcher_t::load_from_wal_result]: [ case: statement_type::delete_many] variant "
-                           "record.data holds the alternative delete_many_t");
-                    auto& ql = std::get<delete_many_t>(record.data);
-                    components::session::session_id_t session_delete;
-                    execute_ql(session_delete, &ql, manager_wal_);
-                    break;
-                }
-                case statement_type::update_one: {
+                case node_type::update_t: {
                     trace(log_, "dispatcher_t::load_from_wal_result: update_one {}", session.data());
-                    assert(std::holds_alternative<update_one_t>(record.data) &&
-                           "[dispatcher_t::load_from_wal_result]: [ case: statement_type::update_one] variant "
+                    assert(record.data->type() == record.type &&
+                           "[dispatcher_t::load_from_wal_result]: [ case: node_type::update_t] variant "
                            "record.data holds the alternative update_one_t");
-                    auto& ql = std::get<update_one_t>(record.data);
                     components::session::session_id_t session_update;
-                    execute_ql(session_update, &ql, manager_wal_);
+                    execute_plan(session_update, record.data, record.params, manager_wal_);
                     break;
                 }
-                case statement_type::update_many: {
-                    assert(std::holds_alternative<update_many_t>(record.data) &&
-                           "[dispatcher_t::load_from_wal_result]: [ case: statement_type::update_many] variant "
-                           "record.data holds the alternative update_many_t");
-                    auto& ql = std::get<update_many_t>(record.data);
-                    components::session::session_id_t session_update;
-                    execute_ql(session_update, &ql, manager_wal_);
-                    break;
-                }
-                case statement_type::create_index: {
-                    assert(std::holds_alternative<create_index_t>(record.data) &&
-                           "[dispatcher_t::load_from_wal_result]: [ case: statement_type::create_index] variant "
+                case node_type::create_index_t: {
+                    assert(record.data->type() == record.type &&
+                           "[dispatcher_t::load_from_wal_result]: [ case: node_type::create_index] variant "
                            "record.data holds the alternative create_index_t");
-                    auto& ql = std::get<create_index_t>(record.data);
                     components::session::session_id_t session_create_index;
-                    execute_ql(session_create_index, &ql, manager_wal_);
+                    execute_plan(session_create_index, record.data, record.params, manager_wal_);
                     break;
                 }
                 // TODO no drop index?
@@ -285,40 +248,42 @@ namespace services::dispatcher {
         }
     }
 
-    void dispatcher_t::execute_ql(const components::session::session_id_t& session,
-                                  ql_statement_t* ql,
-                                  actor_zeta::base::address_t address) {
-        trace(log_, "dispatcher_t::execute_ql: session {}, {}", session.data(), ql->to_string());
-        make_session(session_to_address_, session, session_t(address, ql));
-        auto logic_plan = create_logic_plan(ql);
+    void dispatcher_t::execute_plan(const components::session::session_id_t& session,
+                                    components::logical_plan::node_ptr plan,
+                                    parameter_node_ptr params,
+                                    actor_zeta::base::address_t address) {
+        trace(log_, "dispatcher_t::execute_plan: session {}, {}", session.data(), plan->to_string());
+        make_session(session_to_address_, session, session_t(address, plan, params));
+        auto logic_plan = create_logic_plan(plan);
         actor_zeta::send(memory_storage_,
                          dispatcher_t::address(),
                          memory_storage::handler_id(memory_storage::route::execute_plan),
                          session,
-                         std::move(logic_plan.first),
-                         std::move(logic_plan.second));
+                         std::move(logic_plan),
+                         params->take_parameters());
     }
 
-    void dispatcher_t::execute_ql_finish(const components::session::session_id_t& session, cursor_t_ptr result) {
+    void dispatcher_t::execute_plan_finish(const components::session::session_id_t& session, cursor_t_ptr result) {
         result_storage_[session] = result;
         auto& s = find_session(session_to_address_, session);
-        auto* ql = s.get<ql_statement_t*>();
+        auto plan = s.node();
+        auto params = s.params();
         trace(log_,
-              "dispatcher_t::execute_ql_finish: session {}, {}, {}",
+              "dispatcher_t::execute_plan_finish: session {}, {}, {}",
               session.data(),
-              ql->to_string(),
+              plan->to_string(),
               result->is_success());
         if (result->is_success()) {
             //todo: delete
 
-            switch (ql->type()) {
-                case statement_type::create_database: {
-                    trace(log_, "dispatcher_t::execute_ql_finish: {}", to_string(ql->type()));
+            switch (plan->type()) {
+                case node_type::create_database_t: {
+                    trace(log_, "dispatcher_t::execute_plan_finish: {}", to_string(plan->type()));
                     actor_zeta::send(manager_disk_,
                                      dispatcher_t::address(),
                                      disk::handler_id(disk::route::append_database),
                                      session,
-                                     ql->database_);
+                                     plan->database_name());
                     if (find_session(session_to_address_, session).address().get() == manager_wal_.get()) {
                         wal_success(session, last_wal_id_);
                     } else {
@@ -326,20 +291,20 @@ namespace services::dispatcher {
                                          dispatcher_t::address(),
                                          wal::handler_id(wal::route::create_database),
                                          session,
-                                         *static_cast<create_database_t*>(ql));
+                                         plan);
                         return;
                     }
                     break;
                 }
 
-                case statement_type::create_collection: {
-                    trace(log_, "dispatcher_t::execute_ql_finish: {}", to_string(ql->type()));
+                case node_type::create_collection_t: {
+                    trace(log_, "dispatcher_t::execute_plan_finish: {}", to_string(plan->type()));
                     actor_zeta::send(manager_disk_,
                                      dispatcher_t::address(),
                                      disk::handler_id(disk::route::append_collection),
                                      session,
-                                     ql->database_,
-                                     ql->collection_);
+                                     plan->database_name(),
+                                     plan->collection_name());
                     if (find_session(session_to_address_, session).address().get() == manager_wal_.get()) {
                         wal_success(session, last_wal_id_);
                     } else {
@@ -347,122 +312,71 @@ namespace services::dispatcher {
                                          dispatcher_t::address(),
                                          wal::handler_id(wal::route::create_collection),
                                          session,
-                                         *static_cast<create_collection_t*>(ql));
+                                         plan);
                         return;
                     }
                     break;
                 }
 
-                case statement_type::insert_one: {
-                    trace(log_, "dispatcher_t::execute_ql_finish: {}", to_string(ql->type()));
+                case node_type::insert_t: {
+                    trace(log_, "dispatcher_t::execute_plan_finish: {}", to_string(plan->type()));
                     if (s.address().get() == manager_wal_.get()) {
                         wal_success(session, last_wal_id_);
                     } else {
-                        assert(s.is_type<ql_statement_t*>() && "Doesn't holds ql_statement_t*");
-                        auto statement = *static_cast<components::ql::insert_one_t*>(s.get<ql_statement_t*>());
-                        actor_zeta::send(manager_wal_,
-                                         dispatcher_t::address(),
-                                         wal::handler_id(wal::route::insert_one),
-                                         session,
-                                         std::move(statement));
-                        return;
-                    }
-                    break;
-                }
-
-                case statement_type::insert_many: {
-                    trace(log_, "dispatcher_t::execute_ql_finish: {}", to_string(ql->type()));
-                    if (s.address().get() == manager_wal_.get()) {
-                        wal_success(session, last_wal_id_);
-                    } else {
-                        assert(s.is_type<ql_statement_t*>() && "Doesn't holds ql_statement_t*");
-                        auto statement = *static_cast<components::ql::insert_many_t*>(s.get<ql_statement_t*>());
+                        assert(s.node() && "Doesn't holds logical_plan");
                         actor_zeta::send(manager_wal_,
                                          dispatcher_t::address(),
                                          wal::handler_id(wal::route::insert_many),
                                          session,
-                                         std::move(statement));
-                        return;
-                    }
-                    break;
-                }
-                case statement_type::update_one: {
-                    trace(log_, "dispatcher_t::execute_ql_finish: {}", to_string(ql->type()));
-                    if (s.address().get() == manager_wal_.get()) {
-                        wal_success(session, last_wal_id_);
-                    } else {
-                        assert(s.is_type<ql_statement_t*>() && "Doesn't holds ql_statement_t*");
-                        auto statement = *static_cast<components::ql::update_one_t*>(s.get<ql_statement_t*>());
-                        actor_zeta::send(manager_wal_,
-                                         dispatcher_t::address(),
-                                         wal::handler_id(wal::route::update_one),
-                                         session,
-                                         std::move(statement));
+                                         std::move(plan));
                         return;
                     }
                     break;
                 }
 
-                case statement_type::update_many: {
-                    trace(log_, "dispatcher_t::execute_ql_finish: {}", to_string(ql->type()));
+                case node_type::update_t: {
+                    trace(log_, "dispatcher_t::execute_plan_finish: {}", to_string(plan->type()));
                     if (s.address().get() == manager_wal_.get()) {
                         wal_success(session, last_wal_id_);
                     } else {
-                        assert(s.is_type<ql_statement_t*>() && "Doesn't holds ql_statement_t*");
-                        auto statement = *static_cast<components::ql::update_many_t*>(s.get<ql_statement_t*>());
+                        assert(s.node() && "Doesn't holds correct plan*");
                         actor_zeta::send(manager_wal_,
                                          dispatcher_t::address(),
                                          wal::handler_id(wal::route::update_many),
                                          session,
-                                         std::move(statement));
+                                         std::move(plan),
+                                         s.params());
                         return;
                     }
                     break;
                 }
 
-                case statement_type::delete_one: {
-                    trace(log_, "dispatcher_t::execute_ql_finish: {}", to_string(ql->type()));
+                case node_type::delete_t: {
+                    trace(log_, "dispatcher_t::execute_plan_finish: {}", to_string(plan->type()));
                     if (s.address().get() == manager_wal_.get()) {
                         wal_success(session, last_wal_id_);
                     } else {
-                        assert(s.is_type<ql_statement_t*>() && "Doesn't holds ql_statement_t*");
-                        auto statement = *static_cast<components::ql::delete_one_t*>(s.get<ql_statement_t*>());
-                        actor_zeta::send(manager_wal_,
-                                         dispatcher_t::address(),
-                                         wal::handler_id(wal::route::delete_one),
-                                         session,
-                                         std::move(statement));
-                        return;
-                    }
-                    break;
-                }
-
-                case statement_type::delete_many: {
-                    trace(log_, "dispatcher_t::execute_ql_finish: {}", to_string(ql->type()));
-                    if (s.address().get() == manager_wal_.get()) {
-                        wal_success(session, last_wal_id_);
-                    } else {
-                        assert(s.is_type<ql_statement_t*>() && "Doesn't holds ql_statement_t*");
-                        auto statement = *static_cast<components::ql::delete_many_t*>(s.get<ql_statement_t*>());
+                        assert(s.node() && "Doesn't holds correct plan*");
                         actor_zeta::send(manager_wal_,
                                          dispatcher_t::address(),
                                          wal::handler_id(wal::route::delete_many),
                                          session,
-                                         std::move(statement));
+                                         std::move(plan),
+                                         s.params());
                         return;
                     }
                     break;
                 }
 
-                case statement_type::drop_collection: {
-                    trace(log_, "dispatcher_t::execute_ql_finish: {}", to_string(ql->type()));
-                    collection_full_name_t name(ql->database_, ql->collection_);
+                case node_type::drop_collection_t: {
+                    trace(log_, "dispatcher_t::execute_plan_finish: {}", to_string(plan->type()));
+                    collection_full_name_t name(plan->database_name(), plan->collection_name());
                     actor_zeta::send(manager_disk_,
                                      dispatcher_t::address(),
                                      disk::handler_id(disk::route::remove_collection),
                                      session,
-                                     ql->database_,
-                                     ql->collection_);
+                                     plan->database_name(),
+                                     plan->collection_name());
                     if (find_session(session_to_address_, session).address().get() == manager_wal_.get()) {
                         wal_success(session, last_wal_id_);
                     } else {
@@ -470,14 +384,14 @@ namespace services::dispatcher {
                                          dispatcher_t::address(),
                                          wal::handler_id(wal::route::drop_collection),
                                          session,
-                                         components::ql::drop_collection_t(ql->database_, ql->collection_));
+                                         std::move(plan));
                         return;
                     }
                     break;
                 }
-                case statement_type::create_index:
-                case statement_type::drop_index: {
-                    trace(log_, "dispatcher_t::execute_ql_finish: {}", to_string(ql->type()));
+                case node_type::create_index_t:
+                case node_type::drop_index_t: {
+                    trace(log_, "dispatcher_t::execute_plan_finish: {}", to_string(plan->type()));
                     const auto session_address = find_session(session_to_address_, session).address().get();
                     if (session_address == manager_wal_.get()) {
                         wal_success(session, last_wal_id_);
@@ -491,7 +405,7 @@ namespace services::dispatcher {
                     break;
                 }
                 default: {
-                    trace(log_, "dispatcher_t::execute_ql_finish: non processed type - {}", to_string(ql->type()));
+                    trace(log_, "dispatcher_t::execute_plan_finish: non processed type - {}", to_string(plan->type()));
                 }
             }
 
@@ -501,7 +415,7 @@ namespace services::dispatcher {
         if (!load_from_wal_in_progress(session)) {
             actor_zeta::send(s.address(),
                              dispatcher_t::address(),
-                             handler_id(route::execute_ql_finish),
+                             handler_id(route::execute_plan_finish),
                              session,
                              std::move(result));
             remove_session(session_to_address_, session);
@@ -569,7 +483,7 @@ namespace services::dispatcher {
         auto result = result_storage_[session];
         actor_zeta::send(session_obj.address(),
                          dispatcher_t::address(),
-                         handler_id(route::execute_ql_finish),
+                         handler_id(route::execute_plan_finish),
                          session,
                          result);
         remove_session(session_to_address_, session);
@@ -591,15 +505,10 @@ namespace services::dispatcher {
         return false;
     }
 
-    std::pair<components::logical_plan::node_ptr, components::ql::storage_parameters>
-    dispatcher_t::create_logic_plan(ql_statement_t* statement) {
+    components::logical_plan::node_ptr dispatcher_t::create_logic_plan(components::logical_plan::node_ptr plan) {
         //todo: cache logical plans
         components::planner::planner_t planner;
-        auto logic_plan = planner.create_plan(resource(), statement);
-        auto parameters = statement->is_parameters()
-                              ? static_cast<components::ql::ql_param_statement_t*>(statement)->take_parameters()
-                              : components::ql::storage_parameters{resource()};
-        return {logic_plan, parameters};
+        return planner.create_plan(resource(), std::move(plan));
     }
 
     manager_dispatcher_t::manager_dispatcher_t(std::pmr::memory_resource* resource_ptr,
@@ -611,10 +520,10 @@ namespace services::dispatcher {
                                           core::handler_id(core::route::load),
                                           this,
                                           &manager_dispatcher_t::load))
-        , execute_ql_(actor_zeta::make_behavior(resource(),
-                                                handler_id(route::execute_ql),
-                                                this,
-                                                &manager_dispatcher_t::execute_ql))
+        , execute_plan_(actor_zeta::make_behavior(resource(),
+                                                  handler_id(route::execute_plan),
+                                                  this,
+                                                  &manager_dispatcher_t::execute_plan))
         , size_(actor_zeta::make_behavior(resource(),
                                           collection::handler_id(collection::route::size),
                                           this,
@@ -653,8 +562,8 @@ namespace services::dispatcher {
                     load_(msg);
                     break;
                 }
-                case handler_id(route::execute_ql): {
-                    execute_ql_(msg);
+                case handler_id(route::execute_plan): {
+                    execute_plan_(msg);
                     break;
                 }
                 case collection::handler_id(collection::route::size): {
@@ -703,13 +612,16 @@ namespace services::dispatcher {
                                 current_message()->sender());
     }
 
-    void manager_dispatcher_t::execute_ql(const components::session::session_id_t& session, ql_statement_t* ql) {
-        trace(log_, "manager_dispatcher_t::execute_ql session: {}, {}", session.data(), ql->to_string());
+    void manager_dispatcher_t::execute_plan(const components::session::session_id_t& session,
+                                            node_ptr plan,
+                                            parameter_node_ptr params) {
+        trace(log_, "manager_dispatcher_t::execute_plan session: {}, {}", session.data(), plan->to_string());
         return actor_zeta::send(dispatcher(),
                                 address(),
-                                handler_id(route::execute_ql),
+                                handler_id(route::execute_plan),
                                 session,
-                                ql,
+                                std::move(plan),
+                                std::move(params),
                                 current_message()->sender());
     }
 

@@ -3,12 +3,11 @@
 #include <unistd.h>
 
 using components::expressions::compare_type;
-using components::ql::aggregate::operator_type;
 using key = components::expressions::key_t;
 using id_par = core::parameter_id_t;
 
-static const database_name_t database_name = "TestDatabase";
-static const collection_name_t collection_name = "TestCollection";
+static const database_name_t database_name = "testdatabase";
+static const collection_name_t collection_name = "testcollection";
 
 constexpr int kDocuments = 100;
 
@@ -53,23 +52,23 @@ constexpr int kDocuments = 100;
 #define CREATE_INDEX(INDEX_NAME, KEY)                                                                                  \
     do {                                                                                                               \
         auto session = otterbrix::session_id_t();                                                                      \
-        components::ql::create_index_t ql{database_name,                                                               \
-                                          collection_name,                                                             \
-                                          INDEX_NAME,                                                                  \
-                                          components::ql::index_type::single};                                         \
-        ql.keys_.emplace_back(KEY);                                                                                    \
-        dispatcher->create_index(session, &ql);                                                                        \
+        auto node = components::logical_plan::make_node_create_index(dispatcher->resource(),                           \
+                                                                     {database_name, collection_name},                 \
+                                                                     INDEX_NAME,                                       \
+                                                                     components::logical_plan::index_type::single);    \
+        node->keys().emplace_back(KEY);                                                                                \
+        dispatcher->create_index(session, node);                                                                       \
     } while (false)
 
 #define CREATE_EXISTED_INDEX(INDEX_NAME, KEY)                                                                          \
     do {                                                                                                               \
         auto session = otterbrix::session_id_t();                                                                      \
-        components::ql::create_index_t ql{database_name,                                                               \
-                                          collection_name,                                                             \
-                                          INDEX_NAME,                                                                  \
-                                          components::ql::index_type::single};                                         \
-        ql.keys_.emplace_back(KEY);                                                                                    \
-        auto res = dispatcher->create_index(session, &ql);                                                             \
+        auto node = components::logical_plan::make_node_create_index(dispatcher->resource(),                           \
+                                                                     {database_name, collection_name},                 \
+                                                                     INDEX_NAME,                                       \
+                                                                     components::logical_plan::index_type::single);    \
+        node->keys().emplace_back(KEY);                                                                                \
+        auto res = dispatcher->create_index(session, node);                                                            \
         REQUIRE(res->is_error() == true);                                                                              \
         REQUIRE(res->get_error().type == components::cursor::error_code_t::index_create_fail);                         \
                                                                                                                        \
@@ -78,27 +77,35 @@ constexpr int kDocuments = 100;
 #define DROP_INDEX(INDEX_NAME)                                                                                         \
     do {                                                                                                               \
         auto session = otterbrix::session_id_t();                                                                      \
-        components::ql::drop_index_t ql{database_name, collection_name, INDEX_NAME};                                   \
-        dispatcher->drop_index(session, &ql);                                                                          \
+        auto node = components::logical_plan::make_node_drop_index(dispatcher->resource(),                             \
+                                                                   {database_name, collection_name},                   \
+                                                                   INDEX_NAME);                                        \
+        dispatcher->drop_index(session, node);                                                                         \
     } while (false)
 
 #define CHECK_FIND_ALL()                                                                                               \
     do {                                                                                                               \
         auto session = otterbrix::session_id_t();                                                                      \
-        auto* ql = new components::ql::aggregate_statement{database_name, collection_name, dispatcher->resource()};    \
-        auto c = dispatcher->find(session, ql);                                                                        \
+        auto plan =                                                                                                    \
+            components::logical_plan::make_node_aggregate(dispatcher->resource(), {database_name, collection_name});   \
+        auto c =                                                                                                       \
+            dispatcher->find(session, plan, components::logical_plan::make_parameter_node(dispatcher->resource()));    \
         REQUIRE(c->size() == kDocuments);                                                                              \
     } while (false)
 
 #define CHECK_FIND(KEY, COMPARE, VALUE, COUNT)                                                                         \
     do {                                                                                                               \
         auto session = otterbrix::session_id_t();                                                                      \
-        auto* ql = new components::ql::aggregate_statement{database_name, collection_name, dispatcher->resource()};    \
+        auto plan =                                                                                                    \
+            components::logical_plan::make_node_aggregate(dispatcher->resource(), {database_name, collection_name});   \
         auto expr =                                                                                                    \
             components::expressions::make_compare_expression(dispatcher->resource(), COMPARE, key{KEY}, id_par{1});    \
-        ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));                      \
-        ql->add_parameter(id_par{1}, VALUE);                                                                           \
-        auto c = dispatcher->find(session, ql);                                                                        \
+        plan->append_child(components::logical_plan::make_node_match(dispatcher->resource(),                           \
+                                                                     {database_name, collection_name},                 \
+                                                                     std::move(expr)));                                \
+        auto params = components::logical_plan::make_parameter_node(dispatcher->resource());                           \
+        params->add_parameter(id_par{1}, VALUE);                                                                       \
+        auto c = dispatcher->find(session, plan, params);                                                              \
         REQUIRE(c->size() == COUNT);                                                                                   \
     } while (false)
 
@@ -106,8 +113,7 @@ constexpr int kDocuments = 100;
 
 #define CHECK_EXISTS_INDEX(NAME, EXISTS)                                                                               \
     do {                                                                                                               \
-        auto index_name = collection_name + "_" + NAME;                                                                \
-        auto path = config.disk.path / database_name / collection_name / index_name;                                   \
+        auto path = config.disk.path / database_name / collection_name / NAME;                                         \
         REQUIRE(std::filesystem::exists(path) == EXISTS);                                                              \
         REQUIRE(std::filesystem::is_directory(path) == EXISTS);                                                        \
     } while (false)
@@ -130,14 +136,19 @@ TEST_CASE("integration::test_index::base") {
         CHECK_FIND_ALL();
         do {
             auto session = otterbrix::session_id_t();
-            auto* ql = new components::ql::aggregate_statement{database_name, collection_name, dispatcher->resource()};
+
+            auto plan =
+                components::logical_plan::make_node_aggregate(dispatcher->resource(), {database_name, collection_name});
             auto expr = components::expressions::make_compare_expression(dispatcher->resource(),
                                                                          compare_type::eq,
                                                                          key{"count"},
                                                                          id_par{1});
-            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            ql->add_parameter(id_par{1}, new_value(10));
-            auto c = dispatcher->find(session, ql);
+            plan->append_child(components::logical_plan::make_node_match(dispatcher->resource(),
+                                                                         {database_name, collection_name},
+                                                                         std::move(expr)));
+            auto params = components::logical_plan::make_parameter_node(dispatcher->resource());
+            params->add_parameter(id_par{1}, new_value(10));
+            auto c = dispatcher->find(session, plan, params);
             REQUIRE(c->size() == 1);
         } while (false);
         CHECK_FIND_COUNT(compare_type::eq, new_value(10), 1);

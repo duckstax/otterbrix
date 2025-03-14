@@ -1,12 +1,13 @@
 #pragma once
 #include <components/document/document.hpp>
 #include <components/document/document_id.hpp>
-#include <components/ql/ql_statement.hpp>
 #include <core/b_plus_tree/b_plus_tree.hpp>
 #include <filesystem>
 #include <wal/base.hpp>
 
 #include "metadata.hpp"
+
+#include <base/collection_full_name.hpp>
 
 namespace services::disk {
 

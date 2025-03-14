@@ -2,8 +2,8 @@
 #include <catch2/catch.hpp>
 #include <integration/cpp/connection.hpp>
 
-static const database_name_t database_name = "TestDatabase";
-static const collection_name_t collection_name = "TestCollection";
+static const database_name_t database_name = "testdatabase";
+static const collection_name_t collection_name = "testcollection";
 constexpr size_t doc_num = 1000;
 constexpr size_t num_threads = 4;
 constexpr size_t work_per_thread = doc_num / num_threads;

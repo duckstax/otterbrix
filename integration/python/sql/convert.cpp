@@ -14,6 +14,10 @@
 #include <components/expressions/aggregate_expression.hpp>
 #include <components/expressions/compare_expression.hpp>
 #include <components/expressions/scalar_expression.hpp>
+#include <expressions/sort_expression.hpp>
+#include <logical_plan/node_group.hpp>
+#include <logical_plan/node_match.hpp>
+#include <logical_plan/node_sort.hpp>
 
 // The bug related to the use of RTTI by the pybind11 library has been fixed: a
 // declaration should be in each translation unit.
@@ -199,8 +203,9 @@ auto to_order(const py::object& order) -> services::storage::sort::order {
                                            : services::storage::sort::order::ascending;
 }
 
-using components::ql::aggregate_statement;
-using components::ql::aggregate::operator_type;
+using components::logical_plan::node_aggregate_t;
+using components::logical_plan::parameter_node_t;
+using components::logical_plan::aggregate::operator_type;
 
 using ex_key_t = components::expressions::key_t;
 using components::expressions::expression_ptr;
@@ -241,19 +246,22 @@ void parse_find_condition_dict_(std::pmr::memory_resource* resource,
                                 compare_expression_t* parent_condition,
                                 const py::handle& condition,
                                 const std::string& prev_key,
-                                aggregate_statement* aggregate);
+                                node_aggregate_t* aggregate,
+                                parameter_node_t* params);
 void parse_find_condition_array_(std::pmr::memory_resource* resource,
                                  compare_expression_t* parent_condition,
                                  const py::handle& condition,
                                  const std::string& prev_key,
-                                 aggregate_statement* aggregate);
+                                 node_aggregate_t* aggregate,
+                                 parameter_node_t* params);
 
 void parse_find_condition_(std::pmr::memory_resource* resource,
                            compare_expression_t* parent_condition,
                            const py::handle& condition,
                            const std::string& prev_key,
                            const std::string& key_word,
-                           aggregate_statement* aggregate) {
+                           node_aggregate_t* aggregate,
+                           parameter_node_t* params) {
     auto real_key = prev_key;
     auto type = get_compare_type(key_word);
     if (type == compare_type::invalid) {
@@ -263,14 +271,14 @@ void parse_find_condition_(std::pmr::memory_resource* resource,
         }
     }
     if (py::isinstance<py::dict>(condition)) {
-        parse_find_condition_dict_(resource, parent_condition, condition, real_key, aggregate);
+        parse_find_condition_dict_(resource, parent_condition, condition, real_key, aggregate, params);
     } else if (py::isinstance<py::list>(condition) || py::isinstance<py::tuple>(condition)) {
-        parse_find_condition_array_(resource, parent_condition, condition, real_key, aggregate);
+        parse_find_condition_array_(resource, parent_condition, condition, real_key, aggregate, params);
     } else {
-        auto value = aggregate->add_parameter(to_value(condition, aggregate->parameters().tape()));
+        auto value = params->add_parameter(to_value(condition, params->parameters().tape()));
         auto sub_condition = make_compare_expression(resource, type, ex_key_t(real_key), value);
         if (sub_condition->is_union()) {
-            parse_find_condition_(resource, sub_condition.get(), condition, real_key, std::string(), aggregate);
+            parse_find_condition_(resource, sub_condition.get(), condition, real_key, std::string(), aggregate, params);
         }
         normalize(sub_condition);
         parent_condition->append_child(sub_condition);
@@ -281,7 +289,8 @@ void parse_find_condition_dict_(std::pmr::memory_resource* resource,
                                 compare_expression_t* parent_condition,
                                 const py::handle& condition,
                                 const std::string& prev_key,
-                                aggregate_statement* aggregate) {
+                                node_aggregate_t* aggregate,
+                                parameter_node_t* params) {
     for (const auto& it : condition) {
         auto key = py::str(it).cast<std::string>();
         auto type = get_compare_type(key);
@@ -291,9 +300,9 @@ void parse_find_condition_dict_(std::pmr::memory_resource* resource,
             union_condition = parent_condition->children().at(parent_condition->children().size() - 1).get();
         }
         if (prev_key.empty()) {
-            parse_find_condition_(resource, union_condition, condition[it], key, std::string(), aggregate);
+            parse_find_condition_(resource, union_condition, condition[it], key, std::string(), aggregate, params);
         } else {
-            parse_find_condition_(resource, union_condition, condition[it], prev_key, key, aggregate);
+            parse_find_condition_(resource, union_condition, condition[it], prev_key, key, aggregate, params);
         }
     }
 }
@@ -302,15 +311,17 @@ void parse_find_condition_array_(std::pmr::memory_resource* resource,
                                  compare_expression_t* parent_condition,
                                  const py::handle& condition,
                                  const std::string& prev_key,
-                                 aggregate_statement* aggregate) {
+                                 node_aggregate_t* aggregate,
+                                 parameter_node_t* params) {
     for (const auto& it : condition) {
-        parse_find_condition_(resource, parent_condition, it, prev_key, std::string(), aggregate);
+        parse_find_condition_(resource, parent_condition, it, prev_key, std::string(), aggregate, params);
     }
 }
 
 expression_ptr parse_find_condition_(std::pmr::memory_resource* resource,
                                      const py::handle& condition,
-                                     aggregate_statement* aggregate) {
+                                     node_aggregate_t* aggregate,
+                                     parameter_node_t* params) {
     auto res_condition = make_compare_union_expression(resource, compare_type::union_and);
     for (const auto& it : condition) {
         if (py::len(condition) == 1) {
@@ -321,7 +332,8 @@ expression_ptr parse_find_condition_(std::pmr::memory_resource* resource,
                               condition[it],
                               py::str(it).cast<std::string>(),
                               std::string(),
-                              aggregate);
+                              aggregate,
+                              params);
     }
     if (res_condition->children().size() == 1) {
         compare_expression_ptr child = res_condition->children()[0];
@@ -332,31 +344,31 @@ expression_ptr parse_find_condition_(std::pmr::memory_resource* resource,
     return res_condition;
 }
 
-aggregate_expression_t::param_storage parse_aggregate_param(const py::handle& condition,
-                                                            aggregate_statement* aggregate) {
-    auto value = to_value(condition, aggregate->parameters().tape());
+aggregate_expression_t::param_storage parse_aggregate_param(const py::handle& condition, parameter_node_t* parms) {
+    auto value = to_value(condition, parms->parameters().tape());
     if (value.physical_type() == components::types::physical_type::STRING && !value.as_string().empty() &&
         value.as_string().at(0) == '$') {
         return ex_key_t(value.as_string().substr(1));
     } else {
-        return aggregate->add_parameter(value);
+        return parms->add_parameter(value);
     }
 }
 
-scalar_expression_t::param_storage parse_scalar_param(const py::handle& condition, aggregate_statement* aggregate) {
-    auto value = to_value(condition, aggregate->parameters().tape());
+scalar_expression_t::param_storage parse_scalar_param(const py::handle& condition, parameter_node_t* params) {
+    auto value = to_value(condition, params->parameters().tape());
     if (value.physical_type() == components::types::physical_type::STRING && !value.as_string().empty() &&
         value.as_string().at(0) == '$') {
         return ex_key_t(value.as_string().substr(1));
     } else {
-        return aggregate->add_parameter(value);
+        return params->add_parameter(value);
     }
 }
 
 expression_ptr parse_group_expr(std::pmr::memory_resource* resource,
                                 const std::string& key,
                                 const py::handle& condition,
-                                aggregate_statement* aggregate) {
+                                node_aggregate_t* aggregate,
+                                parameter_node_t* params) {
     if (py::isinstance<py::dict>(condition)) {
         for (const auto& it : condition) {
             auto key_type = py::str(it).cast<std::string>().substr(1);
@@ -364,61 +376,65 @@ expression_ptr parse_group_expr(std::pmr::memory_resource* resource,
                 auto type = get_aggregate_type(key_type);
                 auto expr = make_aggregate_expression(resource, type, key.empty() ? ex_key_t() : ex_key_t(key));
                 if (py::isinstance<py::dict>(condition[it])) {
-                    expr->append_param(parse_group_expr(resource, {}, condition[it], aggregate));
+                    expr->append_param(parse_group_expr(resource, {}, condition[it], aggregate, params));
                 } else if (py::isinstance<py::list>(condition[it]) || py::isinstance<py::tuple>(condition[it])) {
                     for (const auto& value : condition[it]) {
-                        expr->append_param(parse_aggregate_param(value, aggregate));
+                        expr->append_param(parse_aggregate_param(value, params));
                     }
                 } else {
-                    expr->append_param(parse_aggregate_param(condition[it], aggregate));
+                    expr->append_param(parse_aggregate_param(condition[it], params));
                 }
                 return expr;
             } else if (is_scalar_type(key_type)) {
                 auto type = get_scalar_type(key_type);
                 auto expr = make_scalar_expression(resource, type, key.empty() ? ex_key_t() : ex_key_t(key));
                 if (py::isinstance<py::dict>(condition[it])) {
-                    expr->append_param(parse_group_expr(resource, {}, condition[it], aggregate));
+                    expr->append_param(parse_group_expr(resource, {}, condition[it], aggregate, params));
                 } else if (py::isinstance<py::list>(condition[it]) || py::isinstance<py::tuple>(condition[it])) {
                     for (const auto& value : condition[it]) {
-                        expr->append_param(parse_scalar_param(value, aggregate));
+                        expr->append_param(parse_scalar_param(value, params));
                     }
                 } else {
-                    expr->append_param(parse_scalar_param(condition[it], aggregate));
+                    expr->append_param(parse_scalar_param(condition[it], params));
                 }
                 return expr;
             }
         }
     } else {
         auto expr = make_scalar_expression(resource, scalar_type::get_field, key.empty() ? ex_key_t() : ex_key_t(key));
-        expr->append_param(parse_scalar_param(condition, aggregate));
+        expr->append_param(parse_scalar_param(condition, params));
         return expr;
     }
     return nullptr;
 }
 
-components::ql::aggregate::group_t
-parse_group(std::pmr::memory_resource* resource, const py::handle& condition, aggregate_statement* aggregate) {
-    components::ql::aggregate::group_t group;
+components::logical_plan::node_group_ptr parse_group(std::pmr::memory_resource* resource,
+                                                     const py::handle& condition,
+                                                     node_aggregate_t* aggregate,
+                                                     parameter_node_t* params) {
+    std::vector<expression_ptr> expressions;
     for (const auto& it : condition) {
-        components::ql::aggregate::append_expr(
-            group,
-            parse_group_expr(resource, py::str(it).cast<std::string>(), condition[it], aggregate));
+        expressions.emplace_back(
+            parse_group_expr(resource, py::str(it).cast<std::string>(), condition[it], aggregate, params));
     }
-    return group;
+    return components::logical_plan::make_node_group(resource,
+                                                     {aggregate->database_name(), aggregate->collection_name()},
+                                                     expressions);
 }
 
-components::ql::aggregate::sort_t parse_sort(const py::handle& condition) {
-    components::ql::aggregate::sort_t sort;
+components::logical_plan::node_sort_ptr parse_sort(std::pmr::memory_resource* resource, const py::handle& condition) {
+    std::vector<expression_ptr> expressions;
     for (const auto& it : condition) {
-        components::ql::aggregate::append_sort(sort,
-                                               ex_key_t(py::str(it).cast<std::string>()),
-                                               sort_order(condition[it].cast<int>()));
+        expressions.emplace_back(
+            make_sort_expression(ex_key_t(py::str(it).cast<std::string>()), sort_order(condition[it].cast<int>())));
     }
-    return sort;
+    return components::logical_plan::make_node_sort(resource, {}, expressions);
 }
 
-auto to_statement(const py::handle& source, aggregate_statement* aggregate, std::pmr::memory_resource* resource)
-    -> void {
+auto to_statement(std::pmr::memory_resource* resource,
+                  const py::handle& source,
+                  node_aggregate_t* aggregate,
+                  parameter_node_t* params) -> void {
     auto is_sequence = py::isinstance<py::sequence>(source);
 
     if (!is_sequence) {
@@ -431,8 +447,6 @@ auto to_statement(const py::handle& source, aggregate_statement* aggregate, std:
         throw py::value_error(" len == 0 ");
     }
 
-    aggregate->reserve(size);
-
     for (const py::handle obj : source) {
         auto is_mapping = py::isinstance<py::dict>(obj);
         if (!is_mapping) {
@@ -443,7 +457,7 @@ auto to_statement(const py::handle& source, aggregate_statement* aggregate, std:
             auto name = py::str(key).cast<std::string>();
             constexpr static std::string_view prefix = "$";
             std::string result = name.substr(prefix.length());
-            operator_type op_type = components::ql::get_aggregate_type(result);
+            operator_type op_type = components::logical_plan::aggregate::get_aggregate_type(result);
             switch (op_type) {
                 case operator_type::invalid:
                     break;
@@ -451,16 +465,17 @@ auto to_statement(const py::handle& source, aggregate_statement* aggregate, std:
                     break;
                 }
                 case operator_type::group: {
-                    aggregate->append(operator_type::group, parse_group(resource, obj[key], aggregate));
+                    aggregate->append_child(parse_group(resource, obj[key], aggregate, params));
                     break;
                 }
                 case operator_type::limit: {
                     break;
                 }
                 case operator_type::match: {
-                    aggregate->append(
-                        operator_type::match,
-                        components::ql::aggregate::make_match(parse_find_condition_(resource, obj[key], aggregate)));
+                    aggregate->append_child(components::logical_plan::make_node_match(
+                        resource,
+                        {aggregate->database_name(), aggregate->collection_name()},
+                        parse_find_condition_(resource, obj[key], aggregate, params)));
                     break;
                 }
                 case operator_type::merge: {
@@ -476,7 +491,7 @@ auto to_statement(const py::handle& source, aggregate_statement* aggregate, std:
                     break;
                 }
                 case operator_type::sort: {
-                    aggregate->append(operator_type::sort, parse_sort(obj[key]));
+                    aggregate->append_child(parse_sort(resource, obj[key]));
                     break;
                 }
                 case operator_type::unset: {
@@ -495,10 +510,11 @@ auto to_statement(const py::handle& source, aggregate_statement* aggregate, std:
 
 auto test_to_statement(const py::handle& source) -> py::str {
     auto resource = std::pmr::synchronized_pool_resource();
-    aggregate_statement aggregate("database", "collection", &resource);
-    to_statement(source, &aggregate, &resource);
+    node_aggregate_t aggregate(&resource, {"database", "collection"});
+    parameter_node_t params(&resource);
+    to_statement(&resource, source, &aggregate, &params);
     std::stringstream stream;
-    stream << aggregate;
+    stream << aggregate.to_string();
     return stream.str();
 }
 
