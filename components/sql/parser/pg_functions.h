@@ -40,9 +40,11 @@ std::string errmsg(const char* fmt, Args... args) {
         throw std::runtime_error("Error during formatting.");
     }
     auto size = static_cast<size_t>(size_s);
-    std::unique_ptr<char[]> buf(new char[size]);
-    std::snprintf(buf.get(), size, fmt, args...);
-    return {buf.get(), buf.get() + size - 1}; // We don't want the '\0' inside
+    std::string result;
+    result.resize(size);
+    std::snprintf(result.data(), size, fmt, args...);
+    result.resize(size - 1); // remove '\0'
+    return result;
 }
 const char* errhint(const char* msg);
 const char* errmsg_internal(const char* fmt, ...);
