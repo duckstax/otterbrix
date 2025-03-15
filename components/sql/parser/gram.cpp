@@ -27361,9 +27361,9 @@ yyreduce:
 					}
 					else
 						ereport(ERROR,
-								(errcode(ERRCODE_SYNTAX_ERROR),
+								errcode(ERRCODE_SYNTAX_ERROR),
 								 errmsg("unrecognized role option \"%s\"", (yyvsp[0].str)),
-									 parser_errposition((yylsp[0]))));
+									 parser_errposition((yylsp[0])));
 				}
 #line 27369 "gram.cpp"
     break;
@@ -27746,9 +27746,9 @@ yyreduce:
 					n->authid = (yyvsp[-1].str);
 					if ((yyvsp[0].list) != NIL)
 						ereport(ERROR,
-								(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+								errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 								 errmsg("CREATE SCHEMA IF NOT EXISTS cannot include schema elements"),
-								 parser_errposition((yylsp[0]))));
+								 parser_errposition((yylsp[0])));
 					n->schemaElts = (yyvsp[0].list);
 					n->if_not_exists = true;
 					(yyval.node) = (Node *)n;
@@ -27765,9 +27765,9 @@ yyreduce:
 					n->authid = NULL;
 					if ((yyvsp[0].list) != NIL)
 						ereport(ERROR,
-								(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+								errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 								 errmsg("CREATE SCHEMA IF NOT EXISTS cannot include schema elements"),
-								 parser_errposition((yylsp[0]))));
+								 parser_errposition((yylsp[0])));
 					n->schemaElts = (yyvsp[0].list);
 					n->if_not_exists = true;
 					(yyval.node) = (Node *)n;
@@ -27939,9 +27939,9 @@ yyreduce:
 #line 2154 "gram.y"
                                 {
 					ereport(ERROR,
-							(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+							errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 							 errmsg("current database cannot be changed"),
-							 parser_errposition((yylsp[0]))));
+							 parser_errposition((yylsp[0])));
 					(yyval.vsetstmt) = NULL; /*not reached*/
 				}
 #line 27948 "gram.cpp"
@@ -28142,9 +28142,9 @@ yyreduce:
 						A_Const *n = (A_Const *) linitial((yyvsp[0].list));
 						if ((n->val.val.ival & ~(INTERVAL_MASK(HOUR) | INTERVAL_MASK(MINUTE))) != 0)
 							ereport(ERROR,
-									(errcode(ERRCODE_SYNTAX_ERROR),
+									errcode(ERRCODE_SYNTAX_ERROR),
 									 errmsg("time zone interval must be HOUR or HOUR TO MINUTE"),
-									 parser_errposition((yylsp[0]))));
+									 parser_errposition((yylsp[0])));
 					}
 					t->typmods = (yyvsp[0].list);
 					(yyval.node) = makeStringConstCast((yyvsp[-1].str), (yylsp[-1]), t);
@@ -28161,14 +28161,14 @@ yyreduce:
 						A_Const *n = (A_Const *) linitial((yyvsp[0].list));
 						if ((n->val.val.ival & ~(INTERVAL_MASK(HOUR) | INTERVAL_MASK(MINUTE))) != 0)
 							ereport(ERROR,
-									(errcode(ERRCODE_SYNTAX_ERROR),
+									errcode(ERRCODE_SYNTAX_ERROR),
 									 errmsg("time zone interval must be HOUR or HOUR TO MINUTE"),
-									 parser_errposition((yylsp[0]))));
+									 parser_errposition((yylsp[0])));
 						if (list_length((yyvsp[0].list)) != 1)
 							ereport(ERROR,
-									(errcode(ERRCODE_SYNTAX_ERROR),
+									errcode(ERRCODE_SYNTAX_ERROR),
 									 errmsg("interval precision specified twice"),
-									 parser_errposition((yylsp[-5]))));
+									 parser_errposition((yylsp[-5])));
 						t->typmods = lappend((yyvsp[0].list), makeIntConst((yyvsp[-3].ival), (yylsp[-3])));
 					}
 					else
@@ -29577,8 +29577,8 @@ yyreduce:
 #line 3317 "gram.y"
                                 {
 					ereport(ERROR,
-							(errcode(ERRCODE_SYNTAX_ERROR),
-							 errmsg("cannot specify a name, rank, or value for a DEFAULT partition in this context")));
+							errcode(ERRCODE_SYNTAX_ERROR),
+							 errmsg("cannot specify a name, rank, or value for a DEFAULT partition in this context"));
 				}
 #line 29584 "gram.cpp"
     break;
@@ -29637,8 +29637,8 @@ yyreduce:
 
                     if (pid->idtype != AT_AP_IDName)
 						ereport(ERROR,
-								(errcode(ERRCODE_SYNTAX_ERROR),
-								 errmsg("can only ADD a partition by name")));
+								errcode(ERRCODE_SYNTAX_ERROR),
+								 errmsg("can only ADD a partition by name"));
 
                     pc->partid = (Node *) pid;
 
@@ -29669,8 +29669,8 @@ yyreduce:
 
                     if (pid->idtype != AT_AP_IDName)
 						ereport(ERROR,
-								(errcode(ERRCODE_SYNTAX_ERROR),
-								 errmsg("can only ADD a partition by name")));
+								errcode(ERRCODE_SYNTAX_ERROR),
+								 errmsg("can only ADD a partition by name"));
 
                     pc->partid = (Node *) pid;
 
@@ -29924,10 +29924,10 @@ yyreduce:
 
 							if (e->subSpec)
 								ereport(ERROR,
-										(errcode(ERRCODE_SYNTAX_ERROR),
+										errcode(ERRCODE_SYNTAX_ERROR),
 										 errmsg("template cannot contain "
 												"specification for child "
-												"partition")));
+												"partition"));
 						}
 					}
 
@@ -30150,9 +30150,9 @@ yyreduce:
 
 					if (n->is_program && n->filename == NULL)
 						ereport(ERROR,
-								(errcode(ERRCODE_SYNTAX_ERROR),
+								errcode(ERRCODE_SYNTAX_ERROR),
 								 errmsg("STDIN/STDOUT not allowed with PROGRAM"),
-								 parser_errposition((yylsp[-5]))));
+								 parser_errposition((yylsp[-5])));
 
 // -- non-upstream patch begin
 					if (n->is_program) {
@@ -30160,10 +30160,10 @@ yyreduce:
 						* MDB-21297: forbit usage of COPY TO PROGRAM and COPY FROM PROGRAM at all
 						*/
 						// ereport(ERROR,
-						// 	(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
+						// 	errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
 						// 		errmsg("forbidden to COPY to or from an external program or file in Yandex Cloud"),
 						// 		errhint("Anyone can COPY to stdout or from stdin. "
-						// 				"psql's \\copy command also works for anyone.")));
+						// 				"psql's \\copy command also works for anyone."));
 					}
 // --- non-upstream patch end
 
@@ -30205,9 +30205,9 @@ yyreduce:
 
 					if (n->is_program && n->filename == NULL)
 						ereport(ERROR,
-								(errcode(ERRCODE_SYNTAX_ERROR),
+								errcode(ERRCODE_SYNTAX_ERROR),
 								 errmsg("STDIN/STDOUT not allowed with PROGRAM"),
-								 parser_errposition((yylsp[-2]))));
+								 parser_errposition((yylsp[-2])));
 
 // -- non-upstream patch begin
 					if (n->is_program) {
@@ -30215,10 +30215,10 @@ yyreduce:
 						* MDB-21297: forbit usage of COPY TO PROGRAM and COPY FROM PROGRAM at all
 						*/
 						// ereport(ERROR,
-						// 	(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
+						// 	errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
 						// 		errmsg("forbidden to COPY to or from an external program or file in Yandex Cloud"),
 						// 		errhint("Anyone can COPY to stdout or from stdin. "
-						// 				"psql's \\copy command also works for anyone.")));
+						// 				"psql's \\copy command also works for anyone."));
 					}
 // --- non-upstream patch end
 
@@ -30686,8 +30686,8 @@ yyreduce:
 #line 4239 "gram.y"
                                 {
 					ereport(WARNING,
-							(errmsg("GLOBAL is deprecated in temporary table creation"),
-							 parser_errposition((yylsp[-1]))));
+							errmsg("GLOBAL is deprecated in temporary table creation"),
+							 parser_errposition((yylsp[-1])));
 					(yyval.ival) = RELPERSISTENCE_TEMP;
 				}
 #line 30694 "gram.cpp"
@@ -30697,8 +30697,8 @@ yyreduce:
 #line 4246 "gram.y"
                                 {
 					ereport(WARNING,
-							(errmsg("GLOBAL is deprecated in temporary table creation"),
-							 parser_errposition((yylsp[-1]))));
+							errmsg("GLOBAL is deprecated in temporary table creation"),
+							 parser_errposition((yylsp[-1])));
 					(yyval.ival) = RELPERSISTENCE_TEMP;
 				}
 #line 30705 "gram.cpp"
@@ -31364,9 +31364,9 @@ yyreduce:
 
 						if (strcmp(oldelem->name, newelem->name) == 0)
 							ereport(ERROR,
-									(errcode(ERRCODE_DUPLICATE_COLUMN),
+									errcode(ERRCODE_DUPLICATE_COLUMN),
 									 errmsg("duplicate column in DISTRIBUTED BY clause"),
-									 parser_errposition((yylsp[0]))));
+									 parser_errposition((yylsp[0])));
 					}
 
 					(yyval.list) = lappend((yyvsp[-2].list), newelem);
@@ -31399,9 +31399,9 @@ yyreduce:
 #line 4745 "gram.y"
                         {
 				ereport(ERROR,
-						(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+						errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 						 errmsg("MATCH PARTIAL not yet implemented"),
-						 parser_errposition((yylsp[-1]))));
+						 parser_errposition((yylsp[-1])));
 				(yyval.ival) = FKCONSTR_MATCH_PARTIAL;
 			}
 #line 31408 "gram.cpp"
@@ -32267,8 +32267,8 @@ yyreduce:
 					(yyval.ival) = PARTTYP_RANGE; 
 
 					ereport(ERROR,
-							(errcode(ERRCODE_SYNTAX_ERROR),
-							 errmsg("PARTITION BY must specify RANGE or LIST")));
+							errcode(ERRCODE_SYNTAX_ERROR),
+							 errmsg("PARTITION BY must specify RANGE or LIST"));
 				}
 #line 32274 "gram.cpp"
     break;
@@ -32327,10 +32327,10 @@ yyreduce:
 
 							if (e->subSpec)
 								ereport(ERROR,
-										(errcode(ERRCODE_SYNTAX_ERROR),
+										errcode(ERRCODE_SYNTAX_ERROR),
 										 errmsg("template cannot contain "
 												"specification for child "
-												"partition")));
+												"partition"));
 						}
 
 					}
@@ -32420,9 +32420,9 @@ yyreduce:
 
 					if ((yyvsp[0].node))
 						ereport(ERROR,
-                                (errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+                                errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 								 errmsg("Cannot create a partitioned table using CREATE TABLE AS SELECT"),
-                                 errhint("Use CREATE TABLE...LIKE (followed by INSERT...SELECT) instead")));
+                                 errhint("Use CREATE TABLE...LIKE (followed by INSERT...SELECT) instead"));
 
 					(yyvsp[-5].into)->skipData = !((yyvsp[-2].boolean));
 					(yyval.node) = (Node *) ctas;
@@ -32487,9 +32487,9 @@ yyreduce:
 								
 								if(!n->isweb)
 									ereport(ERROR,
-											(errcode(ERRCODE_SYNTAX_ERROR),
+											errcode(ERRCODE_SYNTAX_ERROR),
 										 	 errmsg("EXECUTE may not be used with a regular external table"),
-										 	 errhint("Use CREATE EXTERNAL WEB TABLE instead")));							
+										 	 errhint("Use CREATE EXTERNAL WEB TABLE instead"));
 								
 								/* if no ON clause specified, default to "ON ALL" */
 								if(extdesc->on_clause == NIL)
@@ -32500,8 +32500,8 @@ yyreduce:
 								else if(n->iswritable)
 								{
 									ereport(ERROR,
-											(errcode(ERRCODE_SYNTAX_ERROR),
-									 		 errmsg("ON clause may not be used with a writable external table")));							
+											errcode(ERRCODE_SYNTAX_ERROR),
+									 		 errmsg("ON clause may not be used with a writable external table"));
 								}
 							}
 
@@ -32509,8 +32509,8 @@ yyreduce:
 							{
 								if (n->iswritable)
 									ereport(ERROR,
-										(errcode(ERRCODE_SYNTAX_ERROR),
-										 errmsg("Single row error handling may not be used with a writable external table")));
+										errcode(ERRCODE_SYNTAX_ERROR),
+										 errmsg("Single row error handling may not be used with a writable external table"));
 
 								if (((SingleRowErrorDesc *)n->sreh)->log_errors_type == LOG_ERRORS_PERSISTENTLY)
 								{
@@ -32916,14 +32916,14 @@ yyreduce:
 			/* PERCENT value check */
 			if(!n->is_limit_in_rows && (n->rejectlimit < 1 || n->rejectlimit > 100))
 				ereport(ERROR,
-						(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-						 errmsg("invalid PERCENT value. Should be (1 - 100)")));
+						errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+						 errmsg("invalid PERCENT value. Should be (1 - 100)"));
 			
 			/* ROW values check */
 			if(n->is_limit_in_rows && n->rejectlimit < 2)
 			   ereport(ERROR,
-					   (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-						errmsg("invalid (ROWS) reject limit. Should be 2 or larger")));
+					   errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+						errmsg("invalid (ROWS) reject limit. Should be 2 or larger"));
 
 			(yyval.list) = lappend(NULL, makeDefElem("sreh", (Node *) n));
 		}
@@ -32942,17 +32942,17 @@ yyreduce:
 			if (gp_ignore_error_table) /* ignore the [INTO error-table] clause for backward compatibility */
 			{
 			ereport(WARNING,
-					(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+					errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 					 errmsg("error table is not supported"),
-					 errhint("Use gp_read_error_log() and gp_truncate_error_log() to view and manage the internal error log associated with your table.")));
+					 errhint("Use gp_read_error_log() and gp_truncate_error_log() to view and manage the internal error log associated with your table."));
 			}
 			else
 			{
 			ereport(ERROR,
-					(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+					errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 					 errmsg("error table is not supported"),
 					 errhint("Set gp_ignore_error_table to ignore the [INTO error-table] clause for backward compatibility."),
-					 parser_errposition((yylsp[-1]))));
+					 parser_errposition((yylsp[-1])));
 			}
 			(yyval.ival) = LOG_ERRORS_ENABLE;
 		}
@@ -32983,14 +32983,14 @@ yyreduce:
 			/* PERCENT value check */
 			if(!n->is_limit_in_rows && (n->rejectlimit < 1 || n->rejectlimit > 100))
 				ereport(ERROR,
-						(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-						 errmsg("invalid PERCENT value. Should be (1 - 100)")));
+						errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+						 errmsg("invalid PERCENT value. Should be (1 - 100)"));
 
 			/* ROW values check */
 			if(n->is_limit_in_rows && n->rejectlimit < 2)
 			   ereport(ERROR,
-					   (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-						errmsg("invalid (ROWS) reject limit. Should be 2 or larger")));
+					   errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+						errmsg("invalid (ROWS) reject limit. Should be 2 or larger"));
 
 			(yyval.node) = (Node *)n;
 		}
@@ -34629,16 +34629,16 @@ yyreduce:
 					/* special message for this case */
 					if ((newspec & (CAS_NOT_DEFERRABLE | CAS_INITIALLY_DEFERRED)) == (CAS_NOT_DEFERRABLE | CAS_INITIALLY_DEFERRED))
 						ereport(ERROR,
-								(errcode(ERRCODE_SYNTAX_ERROR),
+								errcode(ERRCODE_SYNTAX_ERROR),
 								 errmsg("constraint declared INITIALLY DEFERRED must be DEFERRABLE"),
-								 parser_errposition((yylsp[0]))));
+								 parser_errposition((yylsp[0])));
 					/* generic message for other conflicts */
 					if ((newspec & (CAS_NOT_DEFERRABLE | CAS_DEFERRABLE)) == (CAS_NOT_DEFERRABLE | CAS_DEFERRABLE) ||
 						(newspec & (CAS_INITIALLY_IMMEDIATE | CAS_INITIALLY_DEFERRED)) == (CAS_INITIALLY_IMMEDIATE | CAS_INITIALLY_DEFERRED))
 						ereport(ERROR,
-								(errcode(ERRCODE_SYNTAX_ERROR),
+								errcode(ERRCODE_SYNTAX_ERROR),
 								 errmsg("conflicting constraint properties"),
-								 parser_errposition((yylsp[0]))));
+								 parser_errposition((yylsp[0])));
 					(yyval.ival) = newspec;
 				}
 #line 34645 "gram.cpp"
@@ -34813,8 +34813,8 @@ yyreduce:
 								   NULL, yyscanner);
 
 					ereport(ERROR,
-							(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-							 errmsg("CREATE ASSERTION is not yet implemented")));
+							errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+							 errmsg("CREATE ASSERTION is not yet implemented"));
 
 					(yyval.node) = (Node *)n;
 				}
@@ -34830,8 +34830,8 @@ yyreduce:
 					n->behavior = (yyvsp[0].dbehavior);
 					n->removeType = OBJECT_TRIGGER; /* XXX */
 					ereport(ERROR,
-							(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-							 errmsg("DROP ASSERTION is not yet implemented")));
+							errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+							 errmsg("DROP ASSERTION is not yet implemented"));
 					(yyval.node) = (Node *) n;
 				}
 #line 34838 "gram.cpp"
@@ -34931,9 +34931,9 @@ yyreduce:
 					 */
 					if ((yyvsp[-4].boolean))
 						ereport(ERROR,
-								(errcode(ERRCODE_SYNTAX_ERROR),
+								errcode(ERRCODE_SYNTAX_ERROR),
 								 errmsg("syntax error"),
-								 parser_errposition((yylsp[-4]))));
+								 parser_errposition((yylsp[-4])));
 
 					DefineStmt *n = makeNode(DefineStmt);
 					n->kind = OBJECT_EXTPROTOCOL;
@@ -35393,10 +35393,10 @@ yyreduce:
 					 * dumps.
 					 */
 					ereport(NOTICE,
-							(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+							errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 							 errmsg("RECHECK is no longer required"),
 							 errhint("Update your data type."),
-							 parser_errposition((yylsp[0]))));
+							 parser_errposition((yylsp[0])));
 					(yyval.boolean) = TRUE;
 				}
 #line 35403 "gram.cpp"
@@ -37186,8 +37186,8 @@ yyreduce:
                     if (n->concurrent)
 					{
 						ereport(ERROR,
-								(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-								 errmsg("CREATE INDEX CONCURRENTLY is not supported")));
+								errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+								 errmsg("CREATE INDEX CONCURRENTLY is not supported"));
 
 					}
 
@@ -37639,9 +37639,9 @@ yyreduce:
 					if (!((yyvsp[0].fun_param)->mode == FUNC_PARAM_IN ||
 						  (yyvsp[0].fun_param)->mode == FUNC_PARAM_VARIADIC))
 						ereport(ERROR,
-								(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+								errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 								 errmsg("aggregates cannot have output arguments"),
-								 parser_errposition((yylsp[0]))));
+								 parser_errposition((yylsp[0])));
 					(yyval.fun_param) = (yyvsp[0].fun_param);
 				}
 #line 37648 "gram.cpp"
@@ -38093,10 +38093,10 @@ yyreduce:
 #line 9399 "gram.y"
                                 {
 				   ereport(ERROR,
-						   (errcode(ERRCODE_SYNTAX_ERROR),
+						   errcode(ERRCODE_SYNTAX_ERROR),
 							errmsg("missing argument"),
 							errhint("Use NONE to denote the missing argument of a unary operator."),
-							parser_errposition((yylsp[0]))));
+							parser_errposition((yylsp[0])));
 				}
 #line 38102 "gram.cpp"
     break;
@@ -40047,9 +40047,9 @@ yyreduce:
 					n->withCheckOption = static_cast<ViewCheckOption>((yyvsp[0].ival));
 					if (n->withCheckOption != NO_CHECK_OPTION)
 						ereport(ERROR,
-								(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+								errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 								 errmsg("WITH CHECK OPTION not supported on recursive views"),
-								 parser_errposition((yylsp[0]))));
+								 parser_errposition((yylsp[0])));
 					(yyval.node) = (Node *) n;
 				}
 #line 40056 "gram.cpp"
@@ -40068,9 +40068,9 @@ yyreduce:
 					n->withCheckOption = static_cast<ViewCheckOption>((yyvsp[0].ival));
 					if (n->withCheckOption != NO_CHECK_OPTION)
 						ereport(ERROR,
-								(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+								errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 								 errmsg("WITH CHECK OPTION not supported on recursive views"),
-								 parser_errposition((yylsp[0]))));
+								 parser_errposition((yylsp[0])));
 					(yyval.node) = (Node *) n;
 				}
 #line 40077 "gram.cpp"
@@ -40988,9 +40988,9 @@ yyreduce:
 #line 11556 "gram.y"
                                 {
 					ereport(ERROR,
-							(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+							errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 							 errmsg("cannot EXPLAIN CREATE TABLE without AS "
-							 		"clause")));
+							 		"clause"));
 				}
 #line 40996 "gram.cpp"
     break;
@@ -41178,9 +41178,9 @@ yyreduce:
                                 {
 					if (list_member((yyvsp[-2].list), (yyvsp[0].node)))
 						ereport(ERROR,
-								(errcode(ERRCODE_INVALID_TABLE_DEFINITION),
+								errcode(ERRCODE_INVALID_TABLE_DEFINITION),
 								 errmsg("duplicate location uri"),
-								 parser_errposition((yylsp[0]))));
+								 parser_errposition((yylsp[0])));
 					(yyval.list) = lappend((yyvsp[-2].list), (yyvsp[0].node));
 				}
 #line 41187 "gram.cpp"
@@ -41309,10 +41309,10 @@ yyreduce:
 					if (n->masteronly && n->mode != AccessShareLock)
 					{
 						ereport(ERROR,
-								(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+								errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 								errmsg("provided lock mode is not supported for MASTER ONLY"),
 							 	errhint("Only ACCESS SHARE mode is supported for MASTER ONLY."),
-								parser_errposition((yylsp[-2]))));
+								parser_errposition((yylsp[-2])));
 					}
 					(yyval.node) = (Node *)n;
 				}
@@ -41464,9 +41464,9 @@ yyreduce:
 					 */
 					if (list_length((yyvsp[-3].list)) != list_length((yyvsp[0].list)))
 						ereport(ERROR,
-								(errcode(ERRCODE_SYNTAX_ERROR),
+								errcode(ERRCODE_SYNTAX_ERROR),
 								 errmsg("number of columns does not match number of values"),
-								 parser_errposition((yylsp[-4]))));
+								 parser_errposition((yylsp[-4])));
 					forboth(col_cell, (yyvsp[-3].list), val_cell, (yyvsp[0].list))
 					{
 						ResTarget *res_col = (ResTarget *) lfirst(col_cell);
@@ -41903,8 +41903,8 @@ yyreduce:
 #line 12287 "gram.y"
                                 {
 					ereport(WARNING,
-							(errmsg("GLOBAL is deprecated in temporary table creation"),
-							 parser_errposition((yylsp[-3]))));
+							errmsg("GLOBAL is deprecated in temporary table creation"),
+							 parser_errposition((yylsp[-3])));
 					(yyval.range) = (yyvsp[0].range);
 					(yyval.range)->relpersistence = RELPERSISTENCE_TEMP;
 				}
@@ -41915,8 +41915,8 @@ yyreduce:
 #line 12295 "gram.y"
                                 {
 					ereport(WARNING,
-							(errmsg("GLOBAL is deprecated in temporary table creation"),
-							 parser_errposition((yylsp[-3]))));
+							errmsg("GLOBAL is deprecated in temporary table creation"),
+							 parser_errposition((yylsp[-3])));
 					(yyval.range) = (yyvsp[0].range);
 					(yyval.range)->relpersistence = RELPERSISTENCE_TEMP;
 				}
@@ -42107,10 +42107,10 @@ yyreduce:
                                 {
 					/* Disabled because it was too confusing, bjm 2002-02-18 */
 					ereport(ERROR,
-							(errcode(ERRCODE_SYNTAX_ERROR),
+							errcode(ERRCODE_SYNTAX_ERROR),
 							 errmsg("LIMIT #,# syntax is not supported"),
 							 errhint("Use separate LIMIT and OFFSET clauses."),
-							 parser_errposition((yylsp[-3]))));
+							 parser_errposition((yylsp[-3])));
 				}
 #line 42116 "gram.cpp"
     break;
@@ -42481,16 +42481,16 @@ yyreduce:
 						if (IsA((yyvsp[-1].node), SelectStmt) &&
 							((SelectStmt *) (yyvsp[-1].node))->valuesLists)
 							ereport(ERROR,
-									(errcode(ERRCODE_SYNTAX_ERROR),
+									errcode(ERRCODE_SYNTAX_ERROR),
 									 errmsg("VALUES in FROM must have an alias"),
 									 errhint("For example, FROM (VALUES ...) [AS] foo."),
-									 parser_errposition((yylsp[-1]))));
+									 parser_errposition((yylsp[-1])));
 						else
 							ereport(ERROR,
-									(errcode(ERRCODE_SYNTAX_ERROR),
+									errcode(ERRCODE_SYNTAX_ERROR),
 									 errmsg("subquery in FROM must have an alias"),
 									 errhint("For example, FROM (SELECT ...) [AS] foo."),
-									 parser_errposition((yylsp[-1]))));
+									 parser_errposition((yylsp[-1])));
 					}
 					(yyval.node) = (Node *) n;
 				}
@@ -42510,16 +42510,16 @@ yyreduce:
 						if (IsA((yyvsp[-1].node), SelectStmt) &&
 							((SelectStmt *) (yyvsp[-1].node))->valuesLists)
 							ereport(ERROR,
-									(errcode(ERRCODE_SYNTAX_ERROR),
+									errcode(ERRCODE_SYNTAX_ERROR),
 									 errmsg("VALUES in FROM must have an alias"),
 									 errhint("For example, FROM (VALUES ...) [AS] foo."),
-									 parser_errposition((yylsp[-1]))));
+									 parser_errposition((yylsp[-1])));
 						else
 							ereport(ERROR,
-									(errcode(ERRCODE_SYNTAX_ERROR),
+									errcode(ERRCODE_SYNTAX_ERROR),
 									 errmsg("subquery in FROM must have an alias"),
 									 errhint("For example, FROM (SELECT ...) [AS] foo."),
-									 parser_errposition((yylsp[-1]))));
+									 parser_errposition((yylsp[-1])));
 					}
 					(yyval.node) = (Node *) n;
 				}
@@ -43139,9 +43139,9 @@ yyreduce:
 					{
 						if (list_length((yyvsp[0].list)) != 1)
 							ereport(ERROR,
-									(errcode(ERRCODE_SYNTAX_ERROR),
+									errcode(ERRCODE_SYNTAX_ERROR),
 									 errmsg("interval precision specified twice"),
-									 parser_errposition((yylsp[-4]))));
+									 parser_errposition((yylsp[-4])));
 						(yyval.typnam)->typmods = lappend((yyvsp[0].list), makeIntConst((yyvsp[-2].ival), (yylsp[-2])));
 					}
 					else
@@ -43318,18 +43318,18 @@ yyreduce:
 					 */
 					if ((yyvsp[-1].ival) < 1)
 						ereport(ERROR,
-								(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+								errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 								 errmsg("precision for type float must be at least 1 bit"),
-								 parser_errposition((yylsp[-1]))));
+								 parser_errposition((yylsp[-1])));
 					else if ((yyvsp[-1].ival) <= 24)
 						(yyval.typnam) = SystemTypeName("float4");
 					else if ((yyvsp[-1].ival) <= 53)
 						(yyval.typnam) = SystemTypeName("float8");
 					else
 						ereport(ERROR,
-								(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+								errcode(ERRCODE_INVALID_PARAMETER_VALUE),
 								 errmsg("precision for type float must be less than 54 bits"),
-								 parser_errposition((yylsp[-1]))));
+								 parser_errposition((yylsp[-1])));
 				}
 #line 43335 "gram.cpp"
     break;
@@ -44038,14 +44038,14 @@ yyreduce:
                                 {
 					if (list_length((yyvsp[-2].list)) != 2)
 						ereport(ERROR,
-								(errcode(ERRCODE_SYNTAX_ERROR),
+								errcode(ERRCODE_SYNTAX_ERROR),
 								 errmsg("wrong number of parameters on left side of OVERLAPS expression"),
-								 parser_errposition((yylsp[-2]))));
+								 parser_errposition((yylsp[-2])));
 					if (list_length((yyvsp[0].list)) != 2)
 						ereport(ERROR,
-								(errcode(ERRCODE_SYNTAX_ERROR),
+								errcode(ERRCODE_SYNTAX_ERROR),
 								 errmsg("wrong number of parameters on right side of OVERLAPS expression"),
-								 parser_errposition((yylsp[0]))));
+								 parser_errposition((yylsp[0])));
 					(yyval.node) = (Node *) makeFuncCall(SystemFuncName("overlaps"),
 											   list_concat((yyvsp[-2].list), (yyvsp[0].list)),
 											   (yylsp[-1]));
@@ -44297,9 +44297,9 @@ yyreduce:
 					 * But, will probably implement a separate node in the executor.
 					 */
 					ereport(ERROR,
-							(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+							errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 							 errmsg("UNIQUE predicate is not yet implemented"),
-							 parser_errposition((yylsp[-1]))));
+							 parser_errposition((yylsp[-1])));
 				}
 #line 44305 "gram.cpp"
     break;
@@ -44775,19 +44775,19 @@ yyreduce:
 					{
 						if (n->agg_order != NIL)
 							ereport(ERROR,
-									(errcode(ERRCODE_SYNTAX_ERROR),
+									errcode(ERRCODE_SYNTAX_ERROR),
 									 errmsg("cannot use multiple ORDER BY clauses with WITHIN GROUP"),
-									 parser_errposition((yylsp[-2]))));
+									 parser_errposition((yylsp[-2])));
 						if (n->agg_distinct)
 							ereport(ERROR,
-									(errcode(ERRCODE_SYNTAX_ERROR),
+									errcode(ERRCODE_SYNTAX_ERROR),
 									 errmsg("cannot use DISTINCT with WITHIN GROUP"),
-									 parser_errposition((yylsp[-2]))));
+									 parser_errposition((yylsp[-2])));
 						if (n->func_variadic)
 							ereport(ERROR,
-									(errcode(ERRCODE_SYNTAX_ERROR),
+									errcode(ERRCODE_SYNTAX_ERROR),
 									 errmsg("cannot use VARIADIC with WITHIN GROUP"),
-									 parser_errposition((yylsp[-2]))));
+									 parser_errposition((yylsp[-2])));
 						n->agg_order = (yyvsp[-2].list);
 						n->agg_within_group = TRUE;
 					}
@@ -45643,15 +45643,15 @@ yyreduce:
 					if (n->frameOptions & (FRAMEOPTION_START_VALUE_PRECEDING |
 										   FRAMEOPTION_END_VALUE_PRECEDING))
 						ereport(ERROR,
-								(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+								errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 								 errmsg("RANGE PRECEDING is only supported with UNBOUNDED"),
-								 parser_errposition((yylsp[-2]))));
+								 parser_errposition((yylsp[-2])));
 					if (n->frameOptions & (FRAMEOPTION_START_VALUE_FOLLOWING |
 										   FRAMEOPTION_END_VALUE_FOLLOWING))
 						ereport(ERROR,
-								(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+								errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 								 errmsg("RANGE FOLLOWING is only supported with UNBOUNDED"),
-								 parser_errposition((yylsp[-2]))));
+								 parser_errposition((yylsp[-2])));
 #endif
 					(yyval.windef) = n;
 				}
@@ -45687,14 +45687,14 @@ yyreduce:
 					/* reject invalid cases */
 					if (n->frameOptions & FRAMEOPTION_START_UNBOUNDED_FOLLOWING)
 						ereport(ERROR,
-								(errcode(ERRCODE_WINDOWING_ERROR),
+								errcode(ERRCODE_WINDOWING_ERROR),
 								 errmsg("frame start cannot be UNBOUNDED FOLLOWING"),
-								 parser_errposition((yylsp[0]))));
+								 parser_errposition((yylsp[0])));
 					if (n->frameOptions & FRAMEOPTION_START_VALUE_FOLLOWING)
 						ereport(ERROR,
-								(errcode(ERRCODE_WINDOWING_ERROR),
+								errcode(ERRCODE_WINDOWING_ERROR),
 								 errmsg("frame starting from following row cannot end with current row"),
-								 parser_errposition((yylsp[0]))));
+								 parser_errposition((yylsp[0])));
 					n->frameOptions |= FRAMEOPTION_END_CURRENT_ROW;
 					(yyval.windef) = n;
 				}
@@ -45714,27 +45714,27 @@ yyreduce:
 					/* reject invalid cases */
 					if (frameOptions & FRAMEOPTION_START_UNBOUNDED_FOLLOWING)
 						ereport(ERROR,
-								(errcode(ERRCODE_WINDOWING_ERROR),
+								errcode(ERRCODE_WINDOWING_ERROR),
 								 errmsg("frame start cannot be UNBOUNDED FOLLOWING"),
-								 parser_errposition((yylsp[-2]))));
+								 parser_errposition((yylsp[-2])));
 					if (frameOptions & FRAMEOPTION_END_UNBOUNDED_PRECEDING)
 						ereport(ERROR,
-								(errcode(ERRCODE_WINDOWING_ERROR),
+								errcode(ERRCODE_WINDOWING_ERROR),
 								 errmsg("frame end cannot be UNBOUNDED PRECEDING"),
-								 parser_errposition((yylsp[0]))));
+								 parser_errposition((yylsp[0])));
 					if ((frameOptions & FRAMEOPTION_START_CURRENT_ROW) &&
 						(frameOptions & FRAMEOPTION_END_VALUE_PRECEDING))
 						ereport(ERROR,
-								(errcode(ERRCODE_WINDOWING_ERROR),
+								errcode(ERRCODE_WINDOWING_ERROR),
 								 errmsg("frame starting from current row cannot have preceding rows"),
-								 parser_errposition((yylsp[0]))));
+								 parser_errposition((yylsp[0])));
 					if ((frameOptions & FRAMEOPTION_START_VALUE_FOLLOWING) &&
 						(frameOptions & (FRAMEOPTION_END_VALUE_PRECEDING |
 										 FRAMEOPTION_END_CURRENT_ROW)))
 						ereport(ERROR,
-								(errcode(ERRCODE_WINDOWING_ERROR),
+								errcode(ERRCODE_WINDOWING_ERROR),
 								 errmsg("frame starting from following row cannot have preceding rows"),
-								 parser_errposition((yylsp[0]))));
+								 parser_errposition((yylsp[0])));
 					n1->frameOptions = frameOptions;
 					n1->endOffset = n2->startOffset;
 					(yyval.windef) = n1;
@@ -46658,10 +46658,10 @@ yyreduce:
 							break;
 						default:
 							//ereport(ERROR, mdxn: ereport NameListToString
-							//		(errcode(ERRCODE_SYNTAX_ERROR),
+							//		errcode(ERRCODE_SYNTAX_ERROR),
 							//		 errmsg("improper qualified name (too many dotted names): %s",
 							//				NameListToString(lcons(makeString($1), $2))),
-							//		 parser_errposition(@1)));
+							//		 parser_errposition(@1));
 							break;
 					}
 				}
@@ -46806,15 +46806,15 @@ yyreduce:
 
 						if (IsA(arg, NamedArgExpr))
 							ereport(ERROR,
-									(errcode(ERRCODE_SYNTAX_ERROR),
+									errcode(ERRCODE_SYNTAX_ERROR),
 									 errmsg("type modifier cannot have parameter name"),
-									 parser_errposition(arg->location)));
+									 parser_errposition(arg->location));
 					}
 					if ((yyvsp[-2].list) != NIL)
 							ereport(ERROR,
-									(errcode(ERRCODE_SYNTAX_ERROR),
+									errcode(ERRCODE_SYNTAX_ERROR),
 									 errmsg("type modifier cannot have ORDER BY"),
-									 parser_errposition((yylsp[-2]))));
+									 parser_errposition((yylsp[-2])));
 
 					t->typmods = (yyvsp[-3].list);
 					t->location = (yylsp[-5]);
@@ -46849,9 +46849,9 @@ yyreduce:
 					{
 						if (list_length((yyvsp[0].list)) != 1)
 							ereport(ERROR,
-									(errcode(ERRCODE_SYNTAX_ERROR),
+									errcode(ERRCODE_SYNTAX_ERROR),
 									 errmsg("interval precision specified twice"),
-									 parser_errposition((yylsp[-5]))));
+									 parser_errposition((yylsp[-5])));
 						t->typmods = lappend((yyvsp[0].list), makeIntConst((yyvsp[-3].ival), (yylsp[-3])));
 					}
 					else
@@ -47542,9 +47542,9 @@ makeOrderedSetArgs(List *directargs, List *orderedargs,
 			firsto->mode != FUNC_PARAM_VARIADIC ||
 			!equal(lastd->argType, firsto->argType))
 			ereport(ERROR,
-					(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+					errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 					 errmsg("an ordered-set aggregate with a VARIADIC direct argument must have one VARIADIC aggregated argument of the same data type"),
-					 parser_errposition(exprLocation(reinterpret_cast<Node *>(firsto)))));
+					 parser_errposition(exprLocation(reinterpret_cast<Node *>(firsto))));
 
 		/* OK, drop the duplicate VARIADIC argument from the internal form */
 		orderedargs = NIL;
@@ -47579,9 +47579,9 @@ insertSelectOptions(SelectStmt *stmt,
 	{
 		if (stmt->sortClause)
 			ereport(ERROR,
-					(errcode(ERRCODE_SYNTAX_ERROR),
+					errcode(ERRCODE_SYNTAX_ERROR),
 					 errmsg("multiple ORDER BY clauses not allowed"),
-					 parser_errposition(exprLocation(reinterpret_cast<Node *>(sortClause)))));
+					 parser_errposition(exprLocation(reinterpret_cast<Node *>(sortClause))));
 		stmt->sortClause = sortClause;
 	}
 	/* We can handle multiple locking clauses, though */
@@ -47590,27 +47590,27 @@ insertSelectOptions(SelectStmt *stmt,
 	{
 		if (stmt->limitOffset)
 			ereport(ERROR,
-					(errcode(ERRCODE_SYNTAX_ERROR),
+					errcode(ERRCODE_SYNTAX_ERROR),
 					 errmsg("multiple OFFSET clauses not allowed"),
-					 parser_errposition(exprLocation(limitOffset))));
+					 parser_errposition(exprLocation(limitOffset)));
 		stmt->limitOffset = limitOffset;
 	}
 	if (limitCount)
 	{
 		if (stmt->limitCount)
 			ereport(ERROR,
-					(errcode(ERRCODE_SYNTAX_ERROR),
+					errcode(ERRCODE_SYNTAX_ERROR),
 					 errmsg("multiple LIMIT clauses not allowed"),
-					 parser_errposition(exprLocation(limitCount))));
+					 parser_errposition(exprLocation(limitCount)));
 		stmt->limitCount = limitCount;
 	}
 	if (withClause)
 	{
 		if (stmt->withClause)
 			ereport(ERROR,
-					(errcode(ERRCODE_SYNTAX_ERROR),
+					errcode(ERRCODE_SYNTAX_ERROR),
 					 errmsg("multiple WITH clauses not allowed"),
-					 parser_errposition(exprLocation(reinterpret_cast<Node *>(withClause)))));
+					 parser_errposition(exprLocation(reinterpret_cast<Node *>(withClause))));
 		stmt->withClause = withClause;
 	}
 }
@@ -47759,13 +47759,13 @@ mergeTableFuncParameters(List *func_args, List *columns)
 				break;
 			case FUNC_PARAM_OUT:
 				ereport(ERROR,
-						(errcode(ERRCODE_SYNTAX_ERROR),
-						 errmsg("OUT arguments aren't allowed in TABLE functions")));
+						errcode(ERRCODE_SYNTAX_ERROR),
+						 errmsg("OUT arguments aren't allowed in TABLE functions"));
 				break;
 			case FUNC_PARAM_INOUT:
 				ereport(ERROR,
-						(errcode(ERRCODE_SYNTAX_ERROR),
-						 errmsg("INOUT arguments aren't allowed in TABLE functions")));
+						errcode(ERRCODE_SYNTAX_ERROR),
+						 errmsg("INOUT arguments aren't allowed in TABLE functions"));
 				break;
 		}
 	}
@@ -47809,8 +47809,8 @@ checkWindowExclude(void)
 
 	/* MPP-13628 */
 	ereport(ERROR,
-			(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-			 errmsg("window EXCLUDE clause not yet implemented")));
+			errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+			 errmsg("window EXCLUDE clause not yet implemented"));
 }
 
 /*
@@ -47855,10 +47855,10 @@ makeRangeVarFromAnyName(List *names, int position, core_yyscan_t yyscanner)
 			break;
 		default:
 			//ereport(ERROR, mdxn: ereport NameListToString
-			//		(errcode(ERRCODE_SYNTAX_ERROR),
+			//		errcode(ERRCODE_SYNTAX_ERROR),
 			//		 errmsg("improper qualified name (too many dotted names): %s",
 			//				NameListToString(names)),
-			//		 parser_errposition(position)));
+			//		 parser_errposition(position));
 			break;
 	}
 
@@ -47890,9 +47890,9 @@ SplitColQualList(List *qualList,
 
 			if (*collClause)
 				ereport(ERROR,
-						(errcode(ERRCODE_SYNTAX_ERROR),
+						errcode(ERRCODE_SYNTAX_ERROR),
 						 errmsg("multiple COLLATE clauses not allowed"),
-						 parser_errposition(c->location)));
+						 parser_errposition(c->location));
 			*collClause = c;
 		}
 		else
@@ -47927,11 +47927,11 @@ processCASbits(int cas_bits, int location, const char *constrType,
 			*deferrable = true;
 		else
 			ereport(ERROR,
-					(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+					errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 					 /* translator: %s is CHECK, UNIQUE, or similar */
 					 errmsg("%s constraints cannot be marked DEFERRABLE",
 							constrType),
-					 parser_errposition(location)));
+					 parser_errposition(location));
 	}
 
 	if (cas_bits & CAS_INITIALLY_DEFERRED)
@@ -47940,11 +47940,11 @@ processCASbits(int cas_bits, int location, const char *constrType,
 			*initdeferred = true;
 		else
 			ereport(ERROR,
-					(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+					errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 					 /* translator: %s is CHECK, UNIQUE, or similar */
 					 errmsg("%s constraints cannot be marked DEFERRABLE",
 							constrType),
-					 parser_errposition(location)));
+					 parser_errposition(location));
 	}
 
 	if (cas_bits & CAS_NOT_VALID)
@@ -47953,11 +47953,11 @@ processCASbits(int cas_bits, int location, const char *constrType,
 			*not_valid = true;
 		else
 			ereport(ERROR,
-					(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+					errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 					 /* translator: %s is CHECK, UNIQUE, or similar */
 					 errmsg("%s constraints cannot be marked NOT VALID",
 							constrType),
-					 parser_errposition(location)));
+					 parser_errposition(location));
 	}
 
 	if (cas_bits & CAS_NO_INHERIT)
@@ -47966,11 +47966,11 @@ processCASbits(int cas_bits, int location, const char *constrType,
 			*no_inherit = true;
 		else
 			ereport(ERROR,
-					(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+					errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 					 /* translator: %s is CHECK, UNIQUE, or similar */
 					 errmsg("%s constraints cannot be marked NO INHERIT",
 							constrType),
-					 parser_errposition(location)));
+					 parser_errposition(location));
 	}
 }
 

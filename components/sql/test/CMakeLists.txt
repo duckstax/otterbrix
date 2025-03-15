@@ -10,6 +10,7 @@ set(${PROJECT_NAME}_SOURCES
         test_insert.cpp
         test_join.cpp
         test_update.cpp
+        test_errors.cpp
 )
 
 add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})

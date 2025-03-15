@@ -1,12 +1,15 @@
 #include "sql/transformer/transformer.hpp"
 #include "sql/transformer/utils.hpp"
 #include <logical_plan/node_create_index.hpp>
+#include <sql/parser/pg_functions.h>
 
 using namespace components::expressions;
 
 namespace components::sql::transform {
     logical_plan::node_ptr transformer::transform_create_index(IndexStmt& node) {
-        assert(node.relation->relname && node.relation->schemaname);
+        if (!(node.relation->relname && node.relation->schemaname && node.idxname)) {
+            throw parser_exception_t{"incorrect create index arguments", ""};
+        }
 
         auto create_index = logical_plan::make_node_create_index(resource,
                                                                  {node.relation->schemaname, node.relation->relname},

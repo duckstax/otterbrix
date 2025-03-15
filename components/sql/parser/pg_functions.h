@@ -5,15 +5,50 @@
 
 #include "nodes/parsenodes.h"
 
-// error handling
-int ereport(int code, ...);
+#include <stdexcept>
 
-void elog(int code, const char* fmt, ...);
+class parser_exception_t : public std::exception {
+public:
+    parser_exception_t(int main_code, int support_code, std::string message, std::string detail, int pos);
+    parser_exception_t(std::string message, std::string detail);
+
+    const char* what() const noexcept override;
+
+    int main_error_code = -1;
+    int support_error_code = -1;
+    std::string message;
+    std::string detail;
+    int query_pos = -1;
+};
+
+// error handling
+int ereport(int code, std::string message);
+int ereport(int code, std::string message, int pos);
+int ereport(int main_code, int support_code, std::string message);
+int ereport(int main_code, int support_code, std::string message, int pos);
+int ereport(int main_code, int support_code, std::string message, std::string detail);
+int ereport(int main_code, int support_code, std::string message, std::string detail, int pos);
+
+void elog(int code, const char* message, ...);
 int errcode(int sqlerrcode);
-int errmsg(const char* fmt, ...);
-int errhint(const char* msg);
-int errmsg_internal(const char* fmt, ...);
-int errdetail(const char* fmt, ...);
+
+// TODO: use std::format (C++ 20)
+template<typename... Args>
+std::string errmsg(const char* fmt, Args... args) {
+    int size_s = std::snprintf(nullptr, 0, fmt, args...) + 1; // Extra space for '\0'
+    if (size_s <= 0) {
+        throw std::runtime_error("Error during formatting.");
+    }
+    auto size = static_cast<size_t>(size_s);
+    std::string result;
+    result.resize(size);
+    std::snprintf(result.data(), size, fmt, args...);
+    result.resize(size - 1); // remove '\0'
+    return result;
+}
+const char* errhint(const char* msg);
+const char* errmsg_internal(const char* fmt, ...);
+const char* errdetail(const char* fmt, ...);
 int errposition(int cursorpos);
 char* psprintf(const char* fmt, ...);
 

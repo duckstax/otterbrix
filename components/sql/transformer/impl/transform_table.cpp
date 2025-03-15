@@ -3,6 +3,7 @@
 #include <logical_plan/node_create_collection.hpp>
 #include <logical_plan/node_drop_collection.hpp>
 #include <logical_plan/node_drop_index.hpp>
+#include <sql/parser/pg_functions.h>
 
 namespace components::sql::transform {
     logical_plan::node_ptr transformer::transform_create_table(CreateStmt& node) {
@@ -23,7 +24,9 @@ namespace components::sql::transform {
             }
             case OBJECT_INDEX: {
                 auto drop_name = reinterpret_cast<List*>(node.objects->lst.front().data)->lst;
-                assert(drop_name.size() == 3);
+                if (drop_name.size() != 3) {
+                    throw parser_exception_t{"incorrect drop: arguments size", ""};
+                }
 
                 auto it = drop_name.begin();
                 auto database = strVal(it++->data);
