@@ -2,6 +2,7 @@
 #include "utils.hpp"
 
 namespace components::sql::transform {
+
     logical_plan::node_ptr transformer::transform(Node& node, logical_plan::parameter_node_t* statement) {
         // TODO: Error handling
         switch (node.type) {

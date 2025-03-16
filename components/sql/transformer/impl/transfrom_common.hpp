@@ -13,4 +13,5 @@ namespace components::sql::transform::impl {
     components::expressions::compare_expression_ptr transform_a_indirection(logical_plan::parameter_node_t* statement,
                                                                             A_Indirection* node);
 
+    logical_plan::node_ptr transform_function(RangeFunction& node, logical_plan::parameter_node_t* statement);
 } // namespace components::sql::transform::impl
