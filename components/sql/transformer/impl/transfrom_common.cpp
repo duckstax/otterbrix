@@ -1,5 +1,7 @@
 #include "sql/transformer/impl/transfrom_common.hpp"
 
+#include <logical_plan/node_function.hpp>
+
 using namespace components::expressions;
 
 namespace components::sql::transform::impl {
@@ -25,6 +27,10 @@ namespace components::sql::transform::impl {
                         return {document::value_t(tape, floatVal(value)), strVal(value)};
                     }
                 }
+            }
+            case T_ColumnRef: {
+                std::string str = strVal(pg_ptr_cast<ColumnRef>(node)->fields->lst.front().data);
+                return {document::value_t(tape, str), str};
             }
         }
         return {document::value_t(tape, nullptr), {}};
@@ -121,4 +127,19 @@ namespace components::sql::transform::impl {
             throw std::runtime_error("Unsupported node type: " + node_tag_to_string(node->type));
         }
     }
+
+    logical_plan::node_ptr transform_function(RangeFunction& node, logical_plan::parameter_node_t* statement) {
+        auto func_call = pg_ptr_cast<FuncCall>(pg_ptr_cast<List>(node.functions->lst.front().data)->lst.front().data);
+        std::string funcname = strVal(func_call->funcname->lst.front().data);
+        std::pmr::vector<core::parameter_id_t> args;
+        args.reserve(func_call->args->lst.size());
+        for (const auto& arg : func_call->args->lst) {
+            auto v = impl::get_value(pg_ptr_cast<Node>(arg.data), statement->parameters().tape());
+            args.emplace_back(statement->add_parameter(v.first));
+        }
+        return logical_plan::make_node_function(statement->parameters().resource(),
+                                                std::move(funcname),
+                                                std::move(args));
+    }
+
 } // namespace components::sql::transform::impl

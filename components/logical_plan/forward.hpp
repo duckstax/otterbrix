@@ -24,6 +24,7 @@ namespace components::logical_plan {
         match_t,
         group_t,
         sort_t,
+        sub_query_t,
         update_t,
         union_t,
         unused

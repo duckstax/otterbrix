@@ -11,6 +11,7 @@ set(SOURCE_${PROJECT_NAME}
         node_delete.cpp
         node_drop_collection.cpp
         node_drop_database.cpp
+        node_function.cpp
         node_group.cpp
         node_insert.cpp
         node_join.cpp
