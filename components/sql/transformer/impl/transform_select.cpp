@@ -97,13 +97,12 @@ namespace components::sql::transform {
                 // from table_name
                 auto table = pg_ptr_cast<RangeVar>(from_first);
                 agg = logical_plan::make_node_aggregate(resource, rangevar_to_collection(table));
-            }
-            if (nodeTag(from_first) == T_JoinExpr) {
+            } else if (nodeTag(from_first) == T_JoinExpr) {
                 // from table_1 join table_2 on cond
                 join_dfs(resource, pg_ptr_cast<JoinExpr>(from_first), agg, join, statement);
-            }
-            if (nodeTag(from_first) == T_RangeFunction) {
-                return impl::transform_function(*pg_ptr_cast<RangeFunction>(from_first), statement);
+            } else if (nodeTag(from_first) == T_RangeFunction) {
+                agg = logical_plan::make_node_aggregate(resource, {});
+                agg->append_child(impl::transform_function(*pg_ptr_cast<RangeFunction>(from_first), statement));
             }
         }
 
@@ -154,7 +153,7 @@ namespace components::sql::transform {
                             group->append_expression(
                                 make_scalar_expression(resource,
                                                        scalar_type::get_field,
-                                                       components::expressions::key_t{strVal(table.front().data)}));
+                                                       components::expressions::key_t{strVal(table.back().data)}));
                         }
                         break;
                     }

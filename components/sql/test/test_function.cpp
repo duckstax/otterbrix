@@ -30,20 +30,20 @@ TEST_CASE("sql::function") {
     auto new_value = [&](auto value) { return v{tape.get(), value}; };
 
     TEST_SIMPLE_FUNCTION(R"_(SELECT * FROM func_name(some_argument);)_",
-                         R"_($function: {name: {"func_name"}, args: {#0}})_",
+                         R"_($aggregate: {$function: {name: {"func_name"}, args: {#0}}})_",
                          vec({new_value("some_argument")}));
 
     TEST_SIMPLE_FUNCTION(R"_(SELECT * FROM postgresSql('public.customers', "sql query") AS customer;)_",
-                         R"_($function: {name: {"postgressql"}, args: {#0, #1}})_",
+                         R"_($aggregate: {$function: {name: {"postgressql"}, args: {#0, #1}}})_",
                          vec({new_value("public.customers"), new_value("sql query")}));
 
     TEST_SIMPLE_FUNCTION(R"_(SELECT * FROM no_arg() AS customer;)_",
-                         R"_($function: {name: {"no_arg"}, args: {}})_",
+                         R"_($aggregate: {$function: {name: {"no_arg"}, args: {}}})_",
                          vec({}));
 
     TEST_SIMPLE_FUNCTION(
         R"_(SELECT alias.id, alias.count, alias.value FROM some_database('db_name.col_name', "some query") AS alias;)_",
-        R"_($function: {name: {"some_database"}, args: {#0, #1}})_",
+        R"_($aggregate: {$function: {name: {"some_database"}, args: {#0, #1}}, $group: {id, count, value}})_",
         vec({new_value("db_name.col_name"), new_value("some query")}));
 
     TEST_SIMPLE_FUNCTION(
