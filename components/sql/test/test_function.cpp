@@ -47,13 +47,11 @@ TEST_CASE("sql::function") {
         vec({new_value("db_name.col_name"), new_value("some query")}));
 
     TEST_SIMPLE_FUNCTION(
-        R"_(SELECT first_set.id, second_set.id FROM
-                some_database('db_name.col_name', "some query") AS first_set
-            JOIN
-                other_database('db_name.col_name', "other query") AS second_set
-            ON
-                first_set.id = second_set.id;)_",
-        R"_($join: {$type: inner, $function: {name: {"some_database"}, args: {#0, #1}}, $function: {name: {"other_database"}, args: {#2, #3}}, "id": {$eq: "id"}})_",
+        R"_(SELECT first_set.id, second_set.id FROM some_database('db_name.col_name', "some query") AS first_set )_"
+        R"_(JOIN other_database('db_name.col_name', "other query") AS second_set )_"
+        R"_(ON first_set.id = second_set.id;)_",
+        R"_($aggregate: {$join: {$type: inner, $function: {name: {"some_database"}, args: {#0, #1}}, )_"
+        R"_($function: {name: {"other_database"}, args: {#2, #3}}, "id": {$eq: "id"}}, $group: {id, id}})_",
         vec({new_value("db_name.col_name"),
              new_value("some query"),
              new_value("db_name.col_name"),
@@ -61,10 +59,10 @@ TEST_CASE("sql::function") {
 
     TEST_SIMPLE_FUNCTION(
         R"_(SELECT * FROM sql_func('db.col', "select something") AS col1 JOIN col2 ON col1.id = col2.id_col1;)_",
-        R"_($join: {$type: inner, $function: {name: {"sql_func"}, args: {#0, #1}}, $aggregate: {}, "id": {$eq: "id_col1"}})_",
+        R"_($aggregate: {$join: {$type: inner, $function: {name: {"sql_func"}, args: {#0, #1}}, $aggregate: {}, "id": {$eq: "id_col1"}}})_",
         vec({new_value("db.col"), new_value("select something")}));
     TEST_SIMPLE_FUNCTION(
         R"_(SELECT * FROM col1 JOIN sql_func('db.col', "select something else") AS col2 ON col1.id = col2.id_col1;)_",
-        R"_($join: {$type: inner, $aggregate: {}, $function: {name: {"sql_func"}, args: {#0, #1}}, "id": {$eq: "id_col1"}})_",
+        R"_($aggregate: {$join: {$type: inner, $aggregate: {}, $function: {name: {"sql_func"}, args: {#0, #1}}, "id": {$eq: "id_col1"}}})_",
         vec({new_value("db.col"), new_value("select something else")}));
 }
