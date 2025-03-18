@@ -13174,7 +13174,7 @@ Numeric:	INT_P
 				}
 			| BIGINT
 				{
-					$$ = SystemTypeName("int8");
+					$$ = SystemTypeName("int8_t");
 					$$->location = @1;
 				}
 			| REAL

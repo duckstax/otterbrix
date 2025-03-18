@@ -166,7 +166,7 @@ typedef struct Var {
     AttrNumber varattno;  /* attribute number of this var, or zero for
                                 * all */
     Oid vartype;          /* pg_type OID for the type of this var */
-    int32 vartypmod;      /* pg_attribute typmod value */
+    int32_t vartypmod;    /* pg_attribute typmod value */
     Oid varcollid;        /* OID of collation, or InvalidOid if none */
     Index varlevelsup;    /* for subquery variables referencing outer
                                 * relations; 0 in a normal var, >0 means N
@@ -181,18 +181,18 @@ typedef struct Var {
 */
 typedef struct Const {
     Expr xpr;
-    Oid consttype;     /* pg_type OID of the constant's datatype */
-    int32 consttypmod; /* typmod value, if any */
-    Oid constcollid;   /* OID of collation, or InvalidOid if none */
-    int constlen;      /* typlen of the constant's datatype */
-    Datum constvalue;  /* the constant's value */
-    bool constisnull;  /* whether the constant is null (if true,
+    Oid consttype;       /* pg_type OID of the constant's datatype */
+    int32_t consttypmod; /* typmod value, if any */
+    Oid constcollid;     /* OID of collation, or InvalidOid if none */
+    int constlen;        /* typlen of the constant's datatype */
+    Datum constvalue;    /* the constant's value */
+    bool constisnull;    /* whether the constant is null (if true,
                                 * constvalue is undefined) */
-    bool constbyval;   /* whether this datatype is passed by value.
+    bool constbyval;     /* whether this datatype is passed by value.
                                 * If true, then all the information is stored
                                 * in the Datum. If false, then the Datum
                                 * contains a pointer to the information. */
-    int location;      /* token location, or -1 if unknown */
+    int location;        /* token location, or -1 if unknown */
 } Const;
 
 /* ----------------
@@ -233,7 +233,7 @@ typedef struct Param {
     ParamKind paramkind; /* kind of parameter. See above */
     int paramid;         /* numeric ID for parameter */
     Oid paramtype;       /* pg_type OID of parameter's datatype */
-    int32 paramtypmod;   /* typmod value, if known */
+    int32_t paramtypmod; /* typmod value, if known */
     Oid paramcollid;     /* OID of collation, or InvalidOid if none */
     int location;        /* token location, or -1 if unknown */
 } Param;
@@ -396,7 +396,7 @@ typedef struct ArrayRef {
     Expr xpr;
     Oid refarraytype;      /* type of the array proper */
     Oid refelemtype;       /* type of the array elements */
-    int32 reftypmod;       /* typmod of the array (and elements too) */
+    int32_t reftypmod;     /* typmod of the array (and elements too) */
     Oid refcollid;         /* OID of collation, or InvalidOid if none */
     List* refupperindexpr; /* expressions that evaluate to upper array
                                 * indexes */
@@ -700,9 +700,9 @@ typedef struct SubPlan {
     /* Identification of the SubPlan for EXPLAIN and debugging purposes: */
     char* plan_name; /* A name assigned during planning */
     /* Extra data useful for determining subplan's output type: */
-    Oid firstColType;      /* Type of first column of subplan result */
-    int32 firstColTypmod;  /* Typmod of first column of subplan result */
-    Oid firstColCollation; /* Collation of first column of
+    Oid firstColType;       /* Type of first column of subplan result */
+    int32_t firstColTypmod; /* Typmod of first column of subplan result */
+    Oid firstColCollation;  /* Collation of first column of
                                         * subplan result */
     /* Information about execution strategy: */
     bool useHashTable;    /* TRUE to store subselect output in a hash
@@ -752,12 +752,12 @@ typedef struct AlternativeSubPlan {
 
 typedef struct FieldSelect {
     Expr xpr;
-    Expr* arg;           /* input expression */
-    AttrNumber fieldnum; /* attribute number of field to extract */
-    Oid resulttype;      /* type of the field (result type of this
+    Expr* arg;            /* input expression */
+    AttrNumber fieldnum;  /* attribute number of field to extract */
+    Oid resulttype;       /* type of the field (result type of this
                                 * node) */
-    int32 resulttypmod;  /* output typmod (usually -1) */
-    Oid resultcollid;    /* OID of collation of the field */
+    int32_t resulttypmod; /* output typmod (usually -1) */
+    Oid resultcollid;     /* OID of collation of the field */
 } FieldSelect;
 
 /* ----------------
@@ -801,7 +801,7 @@ typedef struct RelabelType {
     Expr xpr;
     Expr* arg;                  /* input expression */
     Oid resulttype;             /* output type of coercion expression */
-    int32 resulttypmod;         /* output typmod (usually -1) */
+    int32_t resulttypmod;       /* output typmod (usually -1) */
     Oid resultcollid;           /* OID of collation, or InvalidOid if none */
     CoercionForm relabelformat; /* how to display this node */
     int location;               /* token location, or -1 if unknown */
@@ -843,7 +843,7 @@ typedef struct ArrayCoerceExpr {
     Expr* arg;                 /* input expression (yields an array) */
     Oid elemfuncid;            /* OID of element coercion function, or 0 */
     Oid resulttype;            /* output type of coercion (an array type) */
-    int32 resulttypmod;        /* output typmod (also element typmod) */
+    int32_t resulttypmod;      /* output typmod (also element typmod) */
     Oid resultcollid;          /* OID of collation, or InvalidOid if none */
     bool isExplicit;           /* conversion semantics flag to pass to func */
     CoercionForm coerceformat; /* how to display this node */
@@ -937,9 +937,9 @@ typedef struct CaseWhen {
 */
 typedef struct CaseTestExpr {
     Expr xpr;
-    Oid typeId;    /* type for substituted value */
-    int32 typeMod; /* typemod for substituted value */
-    Oid collation; /* collation for the substituted value */
+    Oid typeId;      /* type for substituted value */
+    int32_t typeMod; /* typemod for substituted value */
+    Oid collation;   /* collation for the substituted value */
 } CaseTestExpr;
 
 /*
@@ -1106,7 +1106,7 @@ typedef struct XmlExpr {
     List* args;              /* list of expressions */
     XmlOptionType xmloption; /* DOCUMENT or CONTENT */
     Oid type;                /* target type/typmod for XMLSERIALIZE */
-    int32 typmod;
+    int32_t typmod;
     int location; /* token location, or -1 if unknown */
 } XmlExpr;
 
@@ -1180,7 +1180,7 @@ typedef struct CoerceToDomain {
     Expr xpr;
     Expr* arg;                   /* input expression */
     Oid resulttype;              /* domain type ID (result type) */
-    int32 resulttypmod;          /* output typmod (currently always -1) */
+    int32_t resulttypmod;        /* output typmod (currently always -1) */
     Oid resultcollid;            /* OID of collation, or InvalidOid if none */
     CoercionForm coercionformat; /* how to display this node */
     int location;                /* token location, or -1 if unknown */
@@ -1197,10 +1197,10 @@ typedef struct CoerceToDomain {
 */
 typedef struct CoerceToDomainValue {
     Expr xpr;
-    Oid typeId;    /* type for substituted value */
-    int32 typeMod; /* typemod for substituted value */
-    Oid collation; /* collation for the substituted value */
-    int location;  /* token location, or -1 if unknown */
+    Oid typeId;      /* type for substituted value */
+    int32_t typeMod; /* typemod for substituted value */
+    Oid collation;   /* collation for the substituted value */
+    int location;    /* token location, or -1 if unknown */
 } CoerceToDomainValue;
 
 /*
@@ -1212,10 +1212,10 @@ typedef struct CoerceToDomainValue {
 */
 typedef struct SetToDefault {
     Expr xpr;
-    Oid typeId;    /* type for substituted value */
-    int32 typeMod; /* typemod for substituted value */
-    Oid collation; /* collation for the substituted value */
-    int location;  /* token location, or -1 if unknown */
+    Oid typeId;      /* type for substituted value */
+    int32_t typeMod; /* typemod for substituted value */
+    Oid collation;   /* collation for the substituted value */
+    int location;    /* token location, or -1 if unknown */
 } SetToDefault;
 
 /*

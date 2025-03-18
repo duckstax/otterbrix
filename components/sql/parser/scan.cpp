@@ -3490,7 +3490,7 @@ static int process_integer_literal(const char* token, YYSTYPE* lval) {
         errno == ERANGE
 #ifdef HAVE_LONG_INT_64
         /* if long > 32 bits, check for overflow of int4 */
-        || val != (long) ((int32) val)
+        || val != (long) ((int32_t) val)
 #endif
     ) {
         /* integer too large, treat it as a float */

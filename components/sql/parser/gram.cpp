@@ -43237,7 +43237,7 @@ yyreduce:
   case 1856: /* Numeric: BIGINT  */
 #line 13176 "gram.y"
                                 {
-					(yyval.typnam) = SystemTypeName("int8");
+					(yyval.typnam) = SystemTypeName("int8_t");
 					(yyval.typnam)->location = (yylsp[0]);
 				}
 #line 43244 "gram.cpp"
