@@ -1,7 +1,7 @@
-#include "sql/transformer/transformer.hpp"
-#include "sql/transformer/utils.hpp"
 #include "transfrom_common.hpp"
-#include <logical_plan/node_delete.hpp>
+#include <components/logical_plan/node_delete.hpp>
+#include <components/sql/transformer/transformer.hpp>
+#include <components/sql/transformer/utils.hpp>
 
 using namespace components::expressions;
 

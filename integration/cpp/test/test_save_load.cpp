@@ -1,7 +1,7 @@
 #include "test_config.hpp"
 #include <catch2/catch.hpp>
 #include <components/expressions/compare_expression.hpp>
-#include <logical_plan/node_insert.hpp>
+#include <components/logical_plan/node_insert.hpp>
 #include <services/disk/disk.hpp>
 #include <services/wal/manager_wal_replicate.hpp>
 #include <services/wal/wal.hpp>

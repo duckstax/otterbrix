@@ -13,13 +13,13 @@
 #include <components/cursor/cursor.hpp>
 #include <components/document/document.hpp>
 #include <components/log/log.hpp>
+#include <components/logical_plan/node_aggregate.hpp>
+#include <components/logical_plan/node_create_index.hpp>
+#include <components/logical_plan/node_drop_index.hpp>
+#include <components/logical_plan/node_match.hpp>
 #include <components/session/session.hpp>
+#include <components/sql/transformer/transformer.hpp>
 #include <integration/cpp/impl/session_blocker.hpp>
-#include <logical_plan/node_aggregate.hpp>
-#include <logical_plan/node_create_index.hpp>
-#include <logical_plan/node_drop_index.hpp>
-#include <logical_plan/node_match.hpp>
-#include <sql/transformer/transformer.hpp>
 
 namespace otterbrix {
 

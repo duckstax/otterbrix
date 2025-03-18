@@ -3,8 +3,8 @@
 #include <components/cursor/cursor.hpp>
 #include <components/index/disk/route.hpp>
 #include <components/index/single_field_index.hpp>
+#include <components/logical_plan/node_drop_index.hpp>
 #include <core/pmr.hpp>
-#include <logical_plan/node_drop_index.hpp>
 #include <services/collection/collection.hpp>
 #include <services/collection/session/session.hpp>
 #include <services/disk/index_disk.hpp>

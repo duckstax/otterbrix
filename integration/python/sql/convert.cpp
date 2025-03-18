@@ -14,10 +14,10 @@
 #include <components/expressions/aggregate_expression.hpp>
 #include <components/expressions/compare_expression.hpp>
 #include <components/expressions/scalar_expression.hpp>
-#include <expressions/sort_expression.hpp>
-#include <logical_plan/node_group.hpp>
-#include <logical_plan/node_match.hpp>
-#include <logical_plan/node_sort.hpp>
+#include <components/expressions/sort_expression.hpp>
+#include <components/logical_plan/node_group.hpp>
+#include <components/logical_plan/node_match.hpp>
+#include <components/logical_plan/node_sort.hpp>
 
 // The bug related to the use of RTTI by the pybind11 library has been fixed: a
 // declaration should be in each translation unit.

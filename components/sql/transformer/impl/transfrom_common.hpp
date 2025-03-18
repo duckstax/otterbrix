@@ -1,9 +1,9 @@
 #pragma once
-#include "sql/transformer/transformer.hpp"
-#include "sql/transformer/utils.hpp"
-#include <document/value.hpp>
-#include <expressions/compare_expression.hpp>
-#include <expressions/scalar_expression.hpp>
+#include <components/document/value.hpp>
+#include <components/expressions/compare_expression.hpp>
+#include <components/expressions/scalar_expression.hpp>
+#include <components/sql/transformer/transformer.hpp>
+#include <components/sql/transformer/utils.hpp>
 
 namespace components::sql::transform::impl {
 

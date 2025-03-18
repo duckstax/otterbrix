@@ -1,7 +1,7 @@
 #pragma once
 
 #include "node.hpp"
-#include <expressions/key.hpp>
+#include <components/expressions/key.hpp>
 
 namespace components::logical_plan {
 

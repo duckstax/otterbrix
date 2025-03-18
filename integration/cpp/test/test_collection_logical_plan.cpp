@@ -1,17 +1,17 @@
 #include "test_config.hpp"
 #include <catch2/catch.hpp>
+#include <components/expressions/aggregate_expression.hpp>
 #include <components/expressions/compare_expression.hpp>
+#include <components/expressions/scalar_expression.hpp>
+#include <components/expressions/sort_expression.hpp>
 #include <components/logical_plan/node.hpp>
-#include <expressions/aggregate_expression.hpp>
-#include <expressions/scalar_expression.hpp>
-#include <expressions/sort_expression.hpp>
-#include <logical_plan/node_data.hpp>
-#include <logical_plan/node_delete.hpp>
-#include <logical_plan/node_group.hpp>
-#include <logical_plan/node_insert.hpp>
-#include <logical_plan/node_join.hpp>
-#include <logical_plan/node_sort.hpp>
-#include <logical_plan/node_update.hpp>
+#include <components/logical_plan/node_data.hpp>
+#include <components/logical_plan/node_delete.hpp>
+#include <components/logical_plan/node_group.hpp>
+#include <components/logical_plan/node_insert.hpp>
+#include <components/logical_plan/node_join.hpp>
+#include <components/logical_plan/node_sort.hpp>
+#include <components/logical_plan/node_update.hpp>
 #include <variant>
 
 static const database_name_t database_name = "testdatabase";

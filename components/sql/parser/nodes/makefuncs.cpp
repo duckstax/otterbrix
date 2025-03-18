@@ -1,5 +1,5 @@
 #include "makefuncs.h"
-#include "sql/parser/pg_functions.h"
+#include <components/sql/parser/pg_functions.h>
 
 /*
  * makeA_Expr -

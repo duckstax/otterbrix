@@ -38,7 +38,6 @@ target_link_libraries(
         magic_enum::magic_enum
         msgpackc-cxx
         absl::int128
-        otterbrix::types
         Boost::boost
 )
 

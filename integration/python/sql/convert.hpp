@@ -7,9 +7,9 @@
 #include <components/document/document.hpp>
 #include <components/physical_plan/collection/operators/sort/sort.hpp>
 
-#include <logical_plan/node.hpp>
-#include <logical_plan/node_aggregate.hpp>
-#include <logical_plan/param_storage.hpp>
+#include <components/logical_plan/node.hpp>
+#include <components/logical_plan/node_aggregate.hpp>
+#include <components/logical_plan/param_storage.hpp>
 
 namespace py = pybind11;
 

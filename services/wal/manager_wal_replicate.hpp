@@ -15,7 +15,7 @@
 #include "route.hpp"
 #include "wal.hpp"
 
-#include <logical_plan/param_storage.hpp>
+#include <components/logical_plan/param_storage.hpp>
 
 namespace services::wal {
 

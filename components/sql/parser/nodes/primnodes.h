@@ -22,7 +22,7 @@
 #include "attrnum.h"
 #include "nodes.h"
 #include "pg_type_definitions.h"
-#include "sql/parser/pg_std_list.h"
+#include <components/sql/parser/pg_std_list.h>
 
 /* ----------------------------------------------------------------
 *						node definitions

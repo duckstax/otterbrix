@@ -4,7 +4,7 @@
 
 #include "predicates/predicate.hpp"
 
-#include <logical_plan/node_limit.hpp>
+#include <components/logical_plan/node_limit.hpp>
 
 namespace services::collection::operators {
 
