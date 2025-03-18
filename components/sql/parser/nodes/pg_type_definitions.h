@@ -92,6 +92,9 @@ typedef uintptr_t Datum;
     16 /* Client communication problems; same as LOG
 								 * for server reporting, but never sent to
 								 * client. */
+// This clashes with INFO("") from catch2
+// TODO: figure out what to do with thats
+/*
 #define INFO                                                                                                           \
     17 /* Messages specifically requested by user (eg
 								 * VACUUM VERBOSE output); always sent to
