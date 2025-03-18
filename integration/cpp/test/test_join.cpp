@@ -126,7 +126,7 @@ TEST_CASE("integration::cpp::test_join") {
                   << database_name << "." << collection_name_2 << " ON " << database_name << "." << collection_name_1
                   << ".key_1"
                   << " = " << database_name << "." << collection_name_2 + ".key"
-                  << " ORDER BY key_1 ASC;";
+                  << " ORDER BY key_1 ASC, key ASC;";
             auto cur = dispatcher->execute_sql(session, query.str());
             REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 100);
@@ -158,7 +158,7 @@ TEST_CASE("integration::cpp::test_join") {
                   << database_name << "." << collection_name_2 << " ON " << database_name << "." << collection_name_1
                   << ".key_1"
                   << " = " << database_name << "." << collection_name_2 + ".key"
-                  << " ORDER BY key_1 ASC;";
+                  << " ORDER BY key_1 ASC, key ASC;";
             auto cur = dispatcher->execute_sql(session, query.str());
             REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 175);

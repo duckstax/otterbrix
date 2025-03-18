@@ -25,6 +25,9 @@ namespace services::storage::sort {
         void add(const std::string& key, order order_ = order::ascending);
         bool operator()(const document_ptr& doc1, const document_ptr& doc2) const {
             for (const auto& f : functions_) {
+                if (!doc1.get() || !doc2.get()) {
+                    return false;
+                }
                 auto res = f(doc1, doc2);
                 if (res < compare_t::equals) {
                     return true;

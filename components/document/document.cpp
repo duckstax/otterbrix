@@ -893,8 +893,9 @@ namespace components::document {
         using types::logical_type;
 
         auto type1 = element1->logical_type();
+        auto type2 = element2->logical_type();
 
-        if (type1 == element2->logical_type()) {
+        if (type1 == type2) {
             switch (type1) {
                 case logical_type::TINYINT:
                     return equals_<int8_t>(element1, element2);
@@ -925,6 +926,12 @@ namespace components::document {
                 case logical_type::NA:
                     return compare_t::equals;
             }
+        }
+        if (type1 == logical_type::NA) {
+            return compare_t::more;
+        }
+        if (type2 == logical_type::NA) {
+            return compare_t::less;
         }
 
         return compare_t::equals;
