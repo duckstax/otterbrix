@@ -414,5 +414,18 @@ TEST_CASE("integration::cpp::test_collection::logical_plan") {
                 REQUIRE(cur->get()->get_long("max") == (num + 25) * 2 * 10);
             }
         }
+        INFO("just raw data") {
+            auto session = otterbrix::session_id_t();
+            auto node = logical_plan::make_node_raw_data(dispatcher->resource(), documents_left);
+            auto cur = dispatcher->execute_plan(session, node);
+            REQUIRE(cur->is_success());
+            REQUIRE(cur->size() == documents_left.size());
+
+            for (int num = 0; num < cur->size(); ++num) {
+                REQUIRE(cur->has_next());
+                cur->next();
+                REQUIRE(cur->get() == documents_left[num]);
+            }
+        }
     }
 }
