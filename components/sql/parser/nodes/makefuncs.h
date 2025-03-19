@@ -21,7 +21,7 @@ extern A_Expr* makeSimpleA_Expr(A_Expr_Kind kind, char* name, Node* lexpr, Node*
 //extern Var *makeVar(Index varno,
 //                   AttrNumber varattno,
 //                   Oid vartype,
-//                   int32 vartypmod,
+//                   int32_t vartypmod,
 //                   Oid varcollid,
 //                   Index varlevelsup);
 
@@ -43,14 +43,14 @@ extern A_Expr* makeSimpleA_Expr(A_Expr_Kind kind, char* name, Node* lexpr, Node*
 //extern FromExpr *makeFromExpr(List *fromlist, Node *quals);
 //
 //extern Const *makeConst(Oid consttype,
-//                       int32 consttypmod,
+//                       int32_t consttypmod,
 //                       Oid constcollid,
 //                       int constlen,
 //                       Datum constvalue,
 //                       bool constisnull,
 //                       bool constbyval);
 //
-//extern Const *makeNullConst(Oid consttype, int32 consttypmod, Oid constcollid);
+//extern Const *makeNullConst(Oid consttype, int32_t consttypmod, Oid constcollid);
 //
 //extern Node *makeBoolConst(bool value, bool isnull);
 //
@@ -58,7 +58,7 @@ extern A_Expr* makeSimpleA_Expr(A_Expr_Kind kind, char* name, Node* lexpr, Node*
 //
 //extern Alias *makeAlias(const char *aliasname, List *colnames);
 //
-//extern RelabelType *makeRelabelType(Expr *arg, Oid rtype, int32 rtypmod,
+//extern RelabelType *makeRelabelType(Expr *arg, Oid rtype, int32_t rtypmod,
 //                                   Oid rcollid, CoercionForm rformat);
 
 extern RangeVar* makeRangeVar(char* schemaname, char* relname, int location);
@@ -66,10 +66,10 @@ extern RangeVar* makeRangeVar(char* schemaname, char* relname, int location);
 extern TypeName* makeTypeName(char* typnam);
 
 extern TypeName* makeTypeNameFromNameList(List* names);
-//extern TypeName *makeTypeNameFromOid(Oid typeOid, int32 typmod);
+//extern TypeName *makeTypeNameFromOid(Oid typeOid, int32_t typmod);
 
 //extern ColumnDef *makeColumnDef(const char *colname,
-//                               Oid typeOid, int32 typmod, Oid collOid);
+//                               Oid typeOid, int32_t typmod, Oid collOid);
 
 //extern FuncExpr *makeFuncExpr(Oid funcid, Oid rettype, List *args,
 //                             Oid funccollid, Oid inputcollid, CoercionForm fformat);

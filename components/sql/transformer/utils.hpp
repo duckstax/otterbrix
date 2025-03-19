@@ -1,9 +1,9 @@
 #pragma once
 
-#include "sql/parser/nodes/parsenodes.h"
 #include <components/base/collection_full_name.hpp>
 #include <components/expressions/forward.hpp>
-#include <logical_plan/node_join.hpp>
+#include <components/logical_plan/node_join.hpp>
+#include <components/sql/parser/nodes/parsenodes.h>
 #include <string>
 
 namespace components::sql::transform {
@@ -73,7 +73,7 @@ namespace components::sql::transform {
             return it->second;
         }
 
-        throw std::runtime_error("Unknown aggregate operator: " + std::string(str));
+        return expressions::aggregate_type::invalid;
     }
 
     std::string node_tag_to_string(NodeTag type);

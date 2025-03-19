@@ -1,5 +1,5 @@
 #include "parsenodes.h"
-#include "sql/parser/pg_functions.h"
+#include <components/sql/parser/pg_functions.h>
 
 Value* makeInteger(long i) {
     Value* v = makeNode(Value);

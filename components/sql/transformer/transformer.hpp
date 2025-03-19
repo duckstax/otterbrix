@@ -1,8 +1,8 @@
 #pragma once
 
-#include "sql/parser/nodes/parsenodes.h"
-#include <logical_plan/node.hpp>
-#include <logical_plan/param_storage.hpp>
+#include <components/logical_plan/node.hpp>
+#include <components/logical_plan/param_storage.hpp>
+#include <components/sql/parser/nodes/parsenodes.h>
 
 namespace components::sql::transform {
     class transformer {

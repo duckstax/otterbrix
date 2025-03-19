@@ -2,8 +2,8 @@
 #include <components/physical_plan/collection/operators/operator.hpp>
 #include <memory>
 
-#include <logical_plan/node.hpp>
-#include <logical_plan/node_drop_index.hpp>
+#include <components/logical_plan/node.hpp>
+#include <components/logical_plan/node_drop_index.hpp>
 #include <string>
 
 namespace services::collection::operators {

@@ -1,7 +1,7 @@
-#include "sql/transformer/transformer.hpp"
-#include "sql/transformer/utils.hpp"
-#include <logical_plan/node_create_index.hpp>
-#include <sql/parser/pg_functions.h>
+#include <components/logical_plan/node_create_index.hpp>
+#include <components/sql/parser/pg_functions.h>
+#include <components/sql/transformer/transformer.hpp>
+#include <components/sql/transformer/utils.hpp>
 
 using namespace components::expressions;
 

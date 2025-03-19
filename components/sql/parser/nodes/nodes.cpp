@@ -1,6 +1,6 @@
 #include "nodes.h"
 #include "parsenodes.h"
-#include "sql/parser/pg_functions.h"
+#include <components/sql/parser/pg_functions.h>
 
 #define COMPARE_SCALAR_FIELD(fldname)                                                                                  \
     do {                                                                                                               \

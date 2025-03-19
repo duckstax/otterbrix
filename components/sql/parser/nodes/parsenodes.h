@@ -58,11 +58,11 @@ typedef enum SortByNulls
 /*
 * Grantable rights are encoded so that we can OR them together in a bitmask.
 * The present representation of AclItem limits us to 16 distinct rights,
-* even though AclMode is defined as uint32.  See utils/acl.h.
+* even though AclMode is defined as uint32_t.  See utils/acl.h.
 *
 * Caution: changing these codes breaks stored ACLs, hence forces initdb.
 */
-typedef uint32 AclMode; /* a bitmask of privilege bits */
+typedef uint32_t AclMode; /* a bitmask of privilege bits */
 
 #define ACL_INSERT (1 << 0) /* for relations */
 #define ACL_SELECT (1 << 1)
@@ -106,7 +106,7 @@ typedef uint32 AclMode; /* a bitmask of privilege bits */
 * statemnt, and the type of utitily statemnt.
 */
 
-typedef uint8 ParentStmtType;
+typedef uint8_t ParentStmtType;
 
 #define PARENTSTMTTYPE_NONE 0
 #define PARENTSTMTTYPE_CTAS 1
@@ -133,7 +133,7 @@ typedef struct Query {
 
     QuerySource querySource; /* where did I come from? */
 
-    uint32 queryId; /* query identifier (can be set by plugins) */
+    uint32_t queryId; /* query identifier (can be set by plugins) */
 
     bool canSetTag; /* do I set the command result tag? */
 
@@ -191,8 +191,8 @@ typedef struct Query {
     List* scatterClause;     /* a list of tle's */
     bool isTableValueSelect; /* GPDB: Is this a TABLE (...) subquery argument? */
 
-    Node* limitOffset; /* # of result tuples to skip (int8 expr) */
-    Node* limitCount;  /* # of result tuples to return (int8 expr) */
+    Node* limitOffset; /* # of result tuples to skip (int8_t expr) */
+    Node* limitCount;  /* # of result tuples to return (int8_t expr) */
 
     List* rowMarks; /* a list of RowMarkClause's */
 
@@ -244,7 +244,7 @@ typedef struct TypeName {
     bool setof;        /* is a set? */
     bool pct_type;     /* %TYPE specified? */
     List* typmods;     /* type modifier expression(s) */
-    int32 typemod;     /* prespecified type modifier */
+    int32_t typemod;   /* prespecified type modifier */
     List* arrayBounds; /* array bounds */
     int location;      /* token location, or -1 if unknown */
 } TypeName;
@@ -2230,9 +2230,9 @@ typedef struct CreateTrigStmt {
     List* args;         /* list of (T_String) Values or NIL */
     bool row;           /* ROW/STATEMENT */
     /* timing uses the TRIGGER_TYPE bits defined in catalog/pg_trigger.h */
-    int16 timing; /* BEFORE, AFTER, or INSTEAD */
+    int16_t timing; /* BEFORE, AFTER, or INSTEAD */
     /* events uses the TRIGGER_TYPE bits defined in catalog/pg_trigger.h */
-    int16 events;      /* "OR" of INSERT/UPDATE/DELETE/TRUNCATE */
+    int16_t events;    /* "OR" of INSERT/UPDATE/DELETE/TRUNCATE */
     List* columns;     /* column names, or NIL for all columns */
     Node* whenClause;  /* qual expression, or NULL if none */
     bool isconstraint; /* This is a constraint trigger */
@@ -2591,7 +2591,7 @@ typedef enum FetchDirection
 typedef struct FetchStmt {
     NodeTag type;
     FetchDirection direction; /* see above */
-    int64 howMany;            /* number of rows, or position argument */
+    int64_t howMany;          /* number of rows, or position argument */
     char* portalname;         /* name of portal (cursor) */
     bool ismove;              /* TRUE if MOVE */
 } FetchStmt;
@@ -3245,7 +3245,7 @@ typedef struct AlterTSConfigurationStmt {
 typedef struct RetrieveStmt {
     NodeTag type;
     char* endpoint_name;
-    int64 count;
+    int64_t count;
     bool is_all;
 } RetrieveStmt;
 

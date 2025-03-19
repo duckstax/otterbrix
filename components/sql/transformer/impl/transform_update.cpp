@@ -1,9 +1,9 @@
-#include "sql/transformer/transformer.hpp"
-#include "sql/transformer/utils.hpp"
 #include "transfrom_common.hpp"
-#include <expressions/aggregate_expression.hpp>
-#include <logical_plan/node_aggregate.hpp>
-#include <logical_plan/node_update.hpp>
+#include <components/expressions/aggregate_expression.hpp>
+#include <components/logical_plan/node_aggregate.hpp>
+#include <components/logical_plan/node_update.hpp>
+#include <components/sql/transformer/transformer.hpp>
+#include <components/sql/transformer/utils.hpp>
 
 using namespace components::expressions;
 

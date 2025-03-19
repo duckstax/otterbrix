@@ -7,15 +7,15 @@
 #include "manager_wal_replicate.hpp"
 #include "route.hpp"
 
-#include <logical_plan/node.hpp>
-#include <logical_plan/node_create_collection.hpp>
-#include <logical_plan/node_create_database.hpp>
-#include <logical_plan/node_create_index.hpp>
-#include <logical_plan/node_delete.hpp>
-#include <logical_plan/node_drop_collection.hpp>
-#include <logical_plan/node_drop_database.hpp>
-#include <logical_plan/node_insert.hpp>
-#include <logical_plan/node_update.hpp>
+#include <components/logical_plan/node.hpp>
+#include <components/logical_plan/node_create_collection.hpp>
+#include <components/logical_plan/node_create_database.hpp>
+#include <components/logical_plan/node_create_index.hpp>
+#include <components/logical_plan/node_delete.hpp>
+#include <components/logical_plan/node_drop_collection.hpp>
+#include <components/logical_plan/node_drop_database.hpp>
+#include <components/logical_plan/node_insert.hpp>
+#include <components/logical_plan/node_update.hpp>
 
 namespace services::wal {
 

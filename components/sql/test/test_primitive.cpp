@@ -1,5 +1,5 @@
-#include "sql/parser/parser.h"
 #include <catch2/catch.hpp>
+#include <components/sql/parser/parser.h>
 
 TEST_CASE("sql::raw_parser_create") {
     auto test = raw_parser(R"_(create table test(a integer, b varchar(200));)_");

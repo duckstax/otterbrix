@@ -14,6 +14,7 @@ set(SOURCE_${PROJECT_NAME}
     parser/nodes/value.cpp
     parser/nodes/makefuncs.cpp
     parser/nodes/nodes.cpp
+    parser/nodes/parsenodes.h
 
     transformer/utils.cpp
     transformer/transformer.cpp

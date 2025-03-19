@@ -1,6 +1,6 @@
-#include "sql/transformer/impl/transfrom_common.hpp"
+#include <components/sql/transformer/impl/transfrom_common.hpp>
 
-#include <logical_plan/node_function.hpp>
+#include <components/logical_plan/node_function.hpp>
 
 using namespace components::expressions;
 
@@ -29,7 +29,7 @@ namespace components::sql::transform::impl {
                 }
             }
             case T_ColumnRef: {
-                std::string str = strVal(pg_ptr_cast<ColumnRef>(node)->fields->lst.front().data);
+                std::string str = strVal(pg_ptr_cast<ColumnRef>(node)->fields->lst.back().data);
                 return {document::value_t(tape, str), str};
             }
         }
@@ -130,10 +130,14 @@ namespace components::sql::transform::impl {
 
     logical_plan::node_ptr transform_function(RangeFunction& node, logical_plan::parameter_node_t* statement) {
         auto func_call = pg_ptr_cast<FuncCall>(pg_ptr_cast<List>(node.functions->lst.front().data)->lst.front().data);
-        std::string funcname = strVal(func_call->funcname->lst.front().data);
+        return transform_function(*func_call, statement);
+    }
+
+    logical_plan::node_ptr transform_function(FuncCall& node, logical_plan::parameter_node_t* statement) {
+        std::string funcname = strVal(node.funcname->lst.front().data);
         std::pmr::vector<core::parameter_id_t> args;
-        args.reserve(func_call->args->lst.size());
-        for (const auto& arg : func_call->args->lst) {
+        args.reserve(node.args->lst.size());
+        for (const auto& arg : node.args->lst) {
             auto v = impl::get_value(pg_ptr_cast<Node>(arg.data), statement->parameters().tape());
             args.emplace_back(statement->add_parameter(v.first));
         }

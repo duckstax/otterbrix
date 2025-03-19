@@ -1,15 +1,16 @@
-#include "sql/transformer/transformer.hpp"
-#include "sql/transformer/utils.hpp"
 #include "transfrom_common.hpp"
+#include <components/expressions/aggregate_expression.hpp>
+#include <components/expressions/expression.hpp>
+#include <components/expressions/sort_expression.hpp>
 #include <components/logical_plan/node_aggregate.hpp>
+#include <components/logical_plan/node_function.hpp>
 #include <components/logical_plan/node_group.hpp>
 #include <components/logical_plan/node_join.hpp>
 #include <components/logical_plan/node_match.hpp>
 #include <components/logical_plan/node_sort.hpp>
-#include <expressions/aggregate_expression.hpp>
-#include <expressions/expression.hpp>
-#include <expressions/sort_expression.hpp>
-#include <sql/parser/pg_functions.h>
+#include <components/sql/parser/pg_functions.h>
+#include <components/sql/transformer/transformer.hpp>
+#include <components/sql/transformer/utils.hpp>
 
 using namespace components::expressions;
 
@@ -82,6 +83,8 @@ namespace components::sql::transform {
     logical_plan::node_ptr transformer::transform_select(SelectStmt& node, logical_plan::parameter_node_t* statement) {
         logical_plan::node_aggregate_ptr agg = nullptr;
         logical_plan::node_join_ptr join = nullptr;
+        // temp solution for custom function
+        logical_plan::node_ptr overlying_func = nullptr;
 
         if (node.fromClause) {
             // has from
@@ -112,23 +115,30 @@ namespace components::sql::transform {
                     case T_FuncCall: {
                         // group
                         auto func = pg_ptr_cast<FuncCall>(res->val);
-                        auto arg = std::string{
-                            strVal(pg_ptr_cast<ColumnRef>(func->args->lst.front().data)->fields->lst.front().data)};
                         auto funcname = std::string{strVal(func->funcname->lst.front().data)};
+                        auto type = get_aggregate_type(funcname);
 
-                        std::string expr_name;
-                        if (res->name) {
-                            expr_name = res->name;
+                        if (type == aggregate_type::invalid) {
+                            // TODO: parse custom function here
+                            overlying_func = impl::transform_function(*func, statement);
                         } else {
-                            expr_name.reserve(funcname.size() + arg.size() + 2);
-                            expr_name.append(funcname).append("(").append(arg).append(")");
-                        }
+                            auto arg = std::string{
+                                strVal(pg_ptr_cast<ColumnRef>(func->args->lst.front().data)->fields->lst.front().data)};
 
-                        group->append_expression(
-                            make_aggregate_expression(resource,
-                                                      get_aggregate_type(funcname),
-                                                      components::expressions::key_t{std::move(expr_name)},
-                                                      components::expressions::key_t{std::move(arg)}));
+                            std::string expr_name;
+                            if (res->name) {
+                                expr_name = res->name;
+                            } else {
+                                expr_name.reserve(funcname.size() + arg.size() + 2);
+                                expr_name.append(funcname).append("(").append(arg).append(")");
+                            }
+
+                            group->append_expression(
+                                make_aggregate_expression(resource,
+                                                          type,
+                                                          components::expressions::key_t{std::move(expr_name)},
+                                                          components::expressions::key_t{std::move(arg)}));
+                        }
                         break;
                     }
                     case T_ColumnRef: {
@@ -197,12 +207,17 @@ namespace components::sql::transform {
             for (auto sort_it : node.sortClause->lst) {
                 auto sortby = pg_ptr_cast<SortBy>(sort_it.data);
                 assert(nodeTag(sortby->node) == T_ColumnRef);
-                auto field = strVal(pg_ptr_cast<ColumnRef>(sortby->node)->fields->lst.front().data);
+                auto field = strVal(pg_ptr_cast<ColumnRef>(sortby->node)->fields->lst.back().data);
                 expressions.emplace_back(
                     make_sort_expression(components::expressions::key_t{field},
                                          sortby->sortby_dir == SORTBY_DESC ? sort_order::desc : sort_order::asc));
             }
             agg->append_child(logical_plan::make_node_sort(resource, agg->collection_full_name(), expressions));
+        }
+
+        if (overlying_func) {
+            overlying_func->append_child(agg);
+            return overlying_func;
         }
         return agg;
     }

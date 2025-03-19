@@ -2,18 +2,6 @@
 #include <cstddef>
 #include <cstdint>
 
-#define int8 int8_t
-#define uint8 uint8_t
-
-#define int16 int16_t
-#define uint16 uint16_t
-
-#define int32 int32_t
-#define uint32 uint32_t
-
-#define int64 int64_t
-#define uint64 uint64_t
-
 typedef uint32_t Oid;
 #define InvalidOid ((Oid) 0)
 
@@ -92,6 +80,9 @@ typedef uintptr_t Datum;
     16 /* Client communication problems; same as LOG
 								 * for server reporting, but never sent to
 								 * client. */
+// This clashes with INFO("") from catch2
+// TODO: figure out what to do with thats
+/*
 #define INFO                                                                                                           \
     17 /* Messages specifically requested by user (eg
 								 * VACUUM VERBOSE output); always sent to

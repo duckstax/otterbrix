@@ -2,7 +2,7 @@
 
 #include "node.hpp"
 
-#include <expressions/compare_expression.hpp>
+#include <components/expressions/compare_expression.hpp>
 
 namespace components::logical_plan {
 

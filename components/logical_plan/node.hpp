@@ -30,6 +30,7 @@ namespace components::logical_plan {
         const database_name_t& database_name() const;
         const collection_name_t& collection_name() const;
         const std::pmr::vector<node_ptr>& children() const;
+        std::pmr::vector<node_ptr>& children();
         const std::pmr::vector<expression_ptr>& expressions() const;
 
         void reserve_child(std::size_t count);

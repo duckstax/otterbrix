@@ -188,6 +188,7 @@ namespace services::collection::executor {
                 update_document_impl(session, collection, std::move(plan));
                 return;
             }
+            case operators::operator_type::raw_data:
             case operators::operator_type::join:
             case operators::operator_type::aggregate: {
                 aggregate_document_impl(session, collection, std::move(plan));
@@ -234,8 +235,10 @@ namespace services::collection::executor {
                                              operators::operator_ptr plan) {
         if (plan->type() == operators::operator_type::aggregate) {
             trace(log_, "executor::execute_plan : operators::operator_type::agreggate");
-        } else {
+        } else if (plan->type() == operators::operator_type::join) {
             trace(log_, "executor::execute_plan : operators::operator_type::join");
+        } else {
+            trace(log_, "executor::execute_plan : operators::operator_type::raw_data");
         }
         if (plan->is_root()) {
             auto cursor = std::make_unique<components::cursor::sub_cursor_t>(resource(),

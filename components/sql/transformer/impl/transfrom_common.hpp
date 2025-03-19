@@ -1,9 +1,9 @@
 #pragma once
-#include "sql/transformer/transformer.hpp"
-#include "sql/transformer/utils.hpp"
-#include <document/value.hpp>
-#include <expressions/compare_expression.hpp>
-#include <expressions/scalar_expression.hpp>
+#include <components/document/value.hpp>
+#include <components/expressions/compare_expression.hpp>
+#include <components/expressions/scalar_expression.hpp>
+#include <components/sql/transformer/transformer.hpp>
+#include <components/sql/transformer/utils.hpp>
 
 namespace components::sql::transform::impl {
 
@@ -14,4 +14,6 @@ namespace components::sql::transform::impl {
                                                                             A_Indirection* node);
 
     logical_plan::node_ptr transform_function(RangeFunction& node, logical_plan::parameter_node_t* statement);
+
+    logical_plan::node_ptr transform_function(FuncCall& node, logical_plan::parameter_node_t* statement);
 } // namespace components::sql::transform::impl
