@@ -73,7 +73,7 @@ namespace components::sql::transform {
             return it->second;
         }
 
-        throw std::runtime_error("Unknown aggregate operator: " + std::string(str));
+        return expressions::aggregate_type::invalid;
     }
 
     std::string node_tag_to_string(NodeTag type);

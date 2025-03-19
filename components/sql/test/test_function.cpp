@@ -61,6 +61,7 @@ TEST_CASE("sql::function") {
         R"_(SELECT * FROM sql_func('db.col', "select something") AS col1 JOIN col2 ON col1.id = col2.id_col1;)_",
         R"_($aggregate: {$join: {$type: inner, $function: {name: {"sql_func"}, args: {#0, #1}}, $aggregate: {}, "id": {$eq: "id_col1"}}})_",
         vec({new_value("db.col"), new_value("select something")}));
+
     TEST_SIMPLE_FUNCTION(
         R"_(SELECT * FROM col1 JOIN sql_func('db.col', "select something else") AS col2 ON col1.id = col2.id_col1;)_",
         R"_($aggregate: {$join: {$type: inner, $aggregate: {}, $function: {name: {"sql_func"}, args: {#0, #1}}, "id": {$eq: "id_col1"}}})_",

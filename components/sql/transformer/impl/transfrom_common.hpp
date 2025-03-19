@@ -14,4 +14,6 @@ namespace components::sql::transform::impl {
                                                                             A_Indirection* node);
 
     logical_plan::node_ptr transform_function(RangeFunction& node, logical_plan::parameter_node_t* statement);
+
+    logical_plan::node_ptr transform_function(FuncCall& node, logical_plan::parameter_node_t* statement);
 } // namespace components::sql::transform::impl
