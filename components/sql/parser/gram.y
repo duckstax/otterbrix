@@ -2277,9 +2277,9 @@ zone_value:
 						A_Const *n = (A_Const *) linitial($3);
 						if ((n->val.val.ival & ~(INTERVAL_MASK(HOUR) | INTERVAL_MASK(MINUTE))) != 0)
 							ereport(ERROR,
-									(errcode(ERRCODE_SYNTAX_ERROR),
+									errcode(ERRCODE_SYNTAX_ERROR),
 									 errmsg("time zone interval must be HOUR or HOUR TO MINUTE"),
-									 parser_errposition(@3)));
+									 parser_errposition(@3));
 					}
 					t->typmods = $3;
 					$$ = makeStringConstCast($2, @2, t);
