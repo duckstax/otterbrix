@@ -36,23 +36,34 @@ namespace components::sql::transform::impl {
         return {document::value_t(tape, nullptr), {}};
     }
 
-    compare_expression_ptr transform_a_expr(logical_plan::parameter_node_t* statement, A_Expr* node) {
+    compare_expression_ptr
+    transform_a_expr(logical_plan::parameter_node_t* statement, A_Expr* node, logical_plan::node_ptr* func_node) {
         switch (node->kind) {
             case AEXPR_AND: // fall-through
             case AEXPR_OR: {
-                assert(nodeTag(node->lexpr) == T_A_Expr || nodeTag(node->lexpr) == T_A_Indirection);
-                assert(nodeTag(node->rexpr) == T_A_Expr || nodeTag(node->rexpr) == T_A_Indirection);
                 compare_expression_ptr left;
                 compare_expression_ptr right;
                 if (nodeTag(node->lexpr) == T_A_Expr) {
                     left = transform_a_expr(statement, pg_ptr_cast<A_Expr>(node->lexpr));
-                } else {
+                } else if (nodeTag(node->lexpr) == T_A_Indirection) {
                     left = transform_a_indirection(statement, pg_ptr_cast<A_Indirection>(node->lexpr));
+                } else {
+                    auto func = pg_ptr_cast<FuncCall>(node->lexpr);
+                    *func_node = transform_function(*func, statement);
+                    if (nodeTag(node->rexpr) == T_A_Expr) {
+                        return transform_a_expr(statement, pg_ptr_cast<A_Expr>(node->rexpr));
+                    } else {
+                        return transform_a_indirection(statement, pg_ptr_cast<A_Indirection>(node->rexpr));
+                    }
                 }
                 if (nodeTag(node->rexpr) == T_A_Expr) {
                     right = transform_a_expr(statement, pg_ptr_cast<A_Expr>(node->rexpr));
-                } else {
+                } else if (nodeTag(node->rexpr) == T_A_Indirection) {
                     right = transform_a_indirection(statement, pg_ptr_cast<A_Indirection>(node->rexpr));
+                } else {
+                    auto func = pg_ptr_cast<FuncCall>(node->rexpr);
+                    *func_node = transform_function(*func, statement);
+                    return left;
                 }
                 auto expr = make_compare_union_expression(statement->parameters().resource(),
                                                           node->kind == AEXPR_AND ? compare_type::union_and
@@ -102,8 +113,12 @@ namespace components::sql::transform::impl {
                 compare_expression_ptr right;
                 if (nodeTag(node->rexpr) == T_A_Expr) {
                     right = transform_a_expr(statement, pg_ptr_cast<A_Expr>(node->rexpr));
-                } else {
+                } else if (nodeTag(node->rexpr) == T_A_Indirection) {
                     right = transform_a_indirection(statement, pg_ptr_cast<A_Indirection>(node->rexpr));
+                } else {
+                    auto func = pg_ptr_cast<FuncCall>(node->rexpr);
+                    *func_node = transform_function(*func, statement);
+                    return right;
                 }
                 auto expr = make_compare_union_expression(statement->parameters().resource(), compare_type::union_not);
                 if (expr->type() == right->type()) {
