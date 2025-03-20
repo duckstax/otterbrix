@@ -115,30 +115,23 @@ namespace components::sql::transform {
                     case T_FuncCall: {
                         // group
                         auto func = pg_ptr_cast<FuncCall>(res->val);
+                        auto arg = std::string{
+                            strVal(pg_ptr_cast<ColumnRef>(func->args->lst.front().data)->fields->lst.front().data)};
                         auto funcname = std::string{strVal(func->funcname->lst.front().data)};
-                        auto type = get_aggregate_type(funcname);
 
-                        if (type == aggregate_type::invalid) {
-                            // TODO: parse custom function here
-                            overlying_func = impl::transform_function(*func, statement);
+                        std::string expr_name;
+                        if (res->name) {
+                            expr_name = res->name;
                         } else {
-                            auto arg = std::string{
-                                strVal(pg_ptr_cast<ColumnRef>(func->args->lst.front().data)->fields->lst.front().data)};
-
-                            std::string expr_name;
-                            if (res->name) {
-                                expr_name = res->name;
-                            } else {
-                                expr_name.reserve(funcname.size() + arg.size() + 2);
-                                expr_name.append(funcname).append("(").append(arg).append(")");
-                            }
-
-                            group->append_expression(
-                                make_aggregate_expression(resource,
-                                                          type,
-                                                          components::expressions::key_t{std::move(expr_name)},
-                                                          components::expressions::key_t{std::move(arg)}));
+                            expr_name.reserve(funcname.size() + arg.size() + 2);
+                            expr_name.append(funcname).append("(").append(arg).append(")");
                         }
+
+                        group->append_expression(
+                            make_aggregate_expression(resource,
+                                                      get_aggregate_type(funcname),
+                                                      components::expressions::key_t{std::move(expr_name)},
+                                                      components::expressions::key_t{std::move(arg)}));
                         break;
                     }
                     case T_ColumnRef: {
@@ -183,10 +176,15 @@ namespace components::sql::transform {
 
         // where
         if (node.whereClause) {
-            auto where = pg_ptr_cast<A_Expr>(node.whereClause);
-            auto expr = impl::transform_a_expr(statement, where);
-            if (expr) {
-                agg->append_child(logical_plan::make_node_match(resource, agg->collection_full_name(), expr));
+            if (nodeTag(node.whereClause) == T_FuncCall) {
+                auto func = pg_ptr_cast<FuncCall>(node.whereClause);
+                overlying_func = impl::transform_function(*func, statement);
+            } else {
+                auto where = pg_ptr_cast<A_Expr>(node.whereClause);
+                auto expr = impl::transform_a_expr(statement, where, &overlying_func);
+                if (expr) {
+                    agg->append_child(logical_plan::make_node_match(resource, agg->collection_full_name(), expr));
+                }
             }
         }
 
