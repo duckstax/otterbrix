@@ -1,4 +1,7 @@
 #include "node_join.hpp"
+
+#include "node_serializer.hpp"
+
 #include <sstream>
 
 namespace components::logical_plan {
@@ -10,6 +13,15 @@ namespace components::logical_plan {
         , type_(type) {}
 
     join_type node_join_t::type() const { return type_; }
+
+    void node_join_t::serialize(node_base_serializer_t* serializer) const {
+        serializer->start_array(4);
+        serializer->append(node_t::type_);
+        serializer->append(type_);
+        serializer->append(collection_);
+        serializer->append(children_);
+        serializer->end_array();
+    }
 
     hash_t node_join_t::hash_impl() const { return 0; }
 

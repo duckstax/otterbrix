@@ -14,6 +14,7 @@
 #include <msgpack/zone.hpp>
 
 namespace components::logical_plan {
+    class node_base_serializer_t;
 
     class node_t;
     using node_ptr = boost::intrusive_ptr<node_t>;
@@ -45,6 +46,7 @@ namespace components::logical_plan {
         bool operator!=(const node_t& rhs) const;
 
         hash_t hash() const;
+        virtual void serialize(node_base_serializer_t*) const = 0;
 
         std::string to_string() const;
         std::pmr::memory_resource* resource() const noexcept;

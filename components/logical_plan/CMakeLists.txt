@@ -20,6 +20,7 @@ set(SOURCE_${PROJECT_NAME}
         node_sort.cpp
         node_update.cpp
         param_storage.cpp
+        node_serializer.cpp
 )
 
 add_library(otterbrix_${PROJECT_NAME}

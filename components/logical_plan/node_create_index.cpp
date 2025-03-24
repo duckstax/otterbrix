@@ -1,4 +1,7 @@
 #include "node_create_index.hpp"
+
+#include "node_serializer.hpp"
+
 #include <components/types/types.hpp>
 #include <sstream>
 
@@ -15,7 +18,18 @@ namespace components::logical_plan {
     const std::string& node_create_index_t::name() const noexcept { return name_; }
 
     index_type node_create_index_t::type() const noexcept { return index_type_; }
+
     keys_base_storage_t& node_create_index_t::keys() noexcept { return keys_; }
+
+    void node_create_index_t::serialize(node_base_serializer_t* serializer) const {
+        serializer->start_array(5);
+        serializer->append(type_);
+        serializer->append(index_type_);
+        serializer->append(collection_);
+        serializer->append(name_);
+        serializer->append(keys_);
+        serializer->end_array();
+    }
 
     hash_t node_create_index_t::hash_impl() const { return 0; }
 

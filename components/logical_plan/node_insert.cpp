@@ -1,4 +1,7 @@
 #include "node_insert.hpp"
+
+#include "node_serializer.hpp"
+
 #include <sstream>
 
 namespace components::logical_plan {
@@ -16,6 +19,14 @@ namespace components::logical_plan {
         , documents_(documents) {}
 
     const std::pmr::vector<document::document_ptr>& node_insert_t::documents() const { return documents_; }
+
+    void node_insert_t::serialize(node_base_serializer_t* serializer) const {
+        serializer->start_array(3);
+        serializer->append(type_);
+        serializer->append(collection_);
+        serializer->append(documents_);
+        serializer->end_array();
+    }
 
     hash_t node_insert_t::hash_impl() const { return 0; }
 

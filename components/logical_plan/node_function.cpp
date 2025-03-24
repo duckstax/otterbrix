@@ -1,4 +1,7 @@
 #include "node_function.hpp"
+
+#include "node_serializer.hpp"
+
 #include <sstream>
 
 namespace components::logical_plan {
@@ -17,6 +20,14 @@ namespace components::logical_plan {
     const std::string& node_function_t::name() const noexcept { return name_; }
 
     const std::pmr::vector<core::parameter_id_t>& node_function_t::args() const noexcept { return args_; }
+
+    void node_function_t::serialize(node_base_serializer_t* serializer) const {
+        serializer->start_array(3);
+        serializer->append(type_);
+        serializer->append(name_);
+        serializer->append(args_);
+        serializer->end_array();
+    }
 
     void add_argument(core::parameter_id_t arg);
 

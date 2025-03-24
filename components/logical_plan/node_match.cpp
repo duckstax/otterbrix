@@ -1,4 +1,7 @@
 #include "node_match.hpp"
+
+#include "node_serializer.hpp"
+
 #include <components/expressions/msgpack.hpp>
 #include <sstream>
 
@@ -6,6 +9,14 @@ namespace components::logical_plan {
 
     node_match_t::node_match_t(std::pmr::memory_resource* resource, const collection_full_name_t& collection)
         : node_t(resource, node_type::match_t, collection) {}
+
+    void node_match_t::serialize(node_base_serializer_t* serializer) const {
+        serializer->start_array(3);
+        serializer->append(type_);
+        serializer->append(collection_);
+        serializer->append(expressions_);
+        serializer->end_array();
+    }
 
     hash_t node_match_t::hash_impl() const { return 0; }
 
