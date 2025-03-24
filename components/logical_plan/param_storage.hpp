@@ -12,6 +12,7 @@
 #include <msgpack/zone.hpp>
 
 namespace components::logical_plan {
+    class node_base_serializer_t;
 
     using expr_value_t = document::value_t;
 
@@ -75,6 +76,8 @@ namespace components::logical_plan {
         }
 
         auto parameter(core::parameter_id_t id) const -> const expr_value_t&;
+
+        void serialize(node_base_serializer_t* serializer) const;
 
     private:
         uint16_t counter_{0};

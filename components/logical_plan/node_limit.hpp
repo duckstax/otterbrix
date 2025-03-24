@@ -29,6 +29,8 @@ namespace components::logical_plan {
 
         const limit_t& limit() const;
 
+        void serialize(node_base_serializer_t* serializer) const final;
+
     private:
         limit_t limit_;
 

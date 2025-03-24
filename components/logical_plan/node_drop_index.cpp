@@ -1,4 +1,7 @@
 #include "node_drop_index.hpp"
+
+#include "node_serializer.hpp"
+
 #include <sstream>
 
 namespace components::logical_plan {
@@ -10,6 +13,14 @@ namespace components::logical_plan {
         , name_(name) {}
 
     const std::string& node_drop_index_t::name() const noexcept { return name_; }
+
+    void node_drop_index_t::serialize(node_base_serializer_t* serializer) const {
+        serializer->start_array(3);
+        serializer->append(type_);
+        serializer->append(collection_);
+        serializer->append(name_);
+        serializer->end_array();
+    }
 
     hash_t node_drop_index_t::hash_impl() const { return 0; }
 

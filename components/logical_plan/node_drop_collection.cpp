@@ -1,4 +1,7 @@
 #include "node_drop_collection.hpp"
+
+#include "node_serializer.hpp"
+
 #include <sstream>
 
 namespace components::logical_plan {
@@ -6,6 +9,13 @@ namespace components::logical_plan {
     node_drop_collection_t::node_drop_collection_t(std::pmr::memory_resource* resource,
                                                    const collection_full_name_t& collection)
         : node_t(resource, node_type::drop_collection_t, collection) {}
+
+    void node_drop_collection_t::serialize(node_base_serializer_t* serializer) const {
+        serializer->start_array(2);
+        serializer->append(type_);
+        serializer->append(collection_);
+        serializer->end_array();
+    }
 
     hash_t node_drop_collection_t::hash_impl() const { return 0; }
 

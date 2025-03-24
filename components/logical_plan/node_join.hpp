@@ -4,7 +4,7 @@
 
 namespace components::logical_plan {
 
-    enum class join_type
+    enum class join_type : uint8_t
     {
         inner,
         full,
@@ -20,6 +20,8 @@ namespace components::logical_plan {
                              join_type type);
 
         join_type type() const;
+
+        void serialize(node_base_serializer_t* serializer) const final;
 
     private:
         join_type type_;

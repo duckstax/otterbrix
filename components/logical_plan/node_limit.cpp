@@ -1,4 +1,7 @@
 #include "node_limit.hpp"
+
+#include "node_serializer.hpp"
+
 #include <sstream>
 
 namespace components::logical_plan {
@@ -21,6 +24,14 @@ namespace components::logical_plan {
         , limit_(limit) {}
 
     const limit_t& node_limit_t::limit() const { return limit_; }
+
+    void node_limit_t::serialize(node_base_serializer_t* serializer) const {
+        serializer->start_array(3);
+        serializer->append(type_);
+        serializer->append(collection_);
+        serializer->append(limit_);
+        serializer->end_array();
+    }
 
     hash_t node_limit_t::hash_impl() const { return 0; }
 

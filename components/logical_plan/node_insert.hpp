@@ -19,6 +19,8 @@ namespace components::logical_plan {
 
         const std::pmr::vector<components::document::document_ptr>& documents() const;
 
+        void serialize(node_base_serializer_t* serializer) const final;
+
     private:
         std::pmr::vector<components::document::document_ptr> documents_;
 

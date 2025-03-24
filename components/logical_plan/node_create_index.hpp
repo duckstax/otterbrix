@@ -28,6 +28,8 @@ namespace components::logical_plan {
         index_type type() const noexcept;
         keys_base_storage_t& keys() noexcept;
 
+        void serialize(node_base_serializer_t* serializer) const final;
+
     private:
         hash_t hash_impl() const final;
         std::string to_string_impl() const final;
