@@ -24,7 +24,7 @@ namespace components::sql::transform::impl {
                         return {document::value_t(tape, int_value), std::to_string(int_value)};
                     }
                     case T_Float: {
-                        return {document::value_t(tape, floatVal(value)), strVal(value)};
+                        return {document::value_t(tape, float(floatVal(value))), strVal(value)};
                     }
                 }
             }
