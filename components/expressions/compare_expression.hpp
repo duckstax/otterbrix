@@ -45,7 +45,6 @@ namespace components::expressions {
         key_t key_right_;
         core::parameter_id_t value_;
         std::pmr::vector<compare_expression_ptr> children_;
-        bool union_;
 
         hash_t hash_impl() const final;
         std::string to_string_impl() const final;

@@ -19,6 +19,8 @@ namespace components::expressions {
 
     bool expression_i::operator!=(const expression_i& rhs) const { return !operator==(rhs); }
 
+    void expression_i::serialize(serializer::base_serializer_t* serializer) const { return serialize_impl(serializer); }
+
     expression_i::expression_i(expression_group group)
         : group_(group) {}
 

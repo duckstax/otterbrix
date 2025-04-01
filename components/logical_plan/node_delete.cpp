@@ -35,10 +35,11 @@ namespace components::logical_plan {
     }
 
     void node_delete_t::serialize_impl(serializer::base_serializer_t* serializer) const {
-        serializer->start_map(logical_plan::to_string(type_), 2);
+        serializer->start_array(3);
+        serializer->append("type", std::string("node_delete_t"));
         serializer->append("collection", collection_);
         serializer->append("child nodes", children_);
-        serializer->end_map();
+        serializer->end_array();
     }
 
     node_delete_ptr make_node_delete_many(std::pmr::memory_resource* resource,

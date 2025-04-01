@@ -19,9 +19,10 @@ namespace components::logical_plan {
     }
 
     void node_create_database_t::serialize_impl(serializer::base_serializer_t* serializer) const {
-        serializer->start_map(logical_plan::to_string(type_), 1);
+        serializer->start_array(2);
+        serializer->append("type", std::string("node_create_database_t"));
         serializer->append("collection", collection_);
-        serializer->end_map();
+        serializer->end_array();
     }
 
     node_create_database_ptr make_node_create_database(std::pmr::memory_resource* resource,

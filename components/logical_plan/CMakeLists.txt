@@ -35,6 +35,7 @@ target_link_libraries(
         otterbrix::document
         otterbrix::types
         otterbrix::expressions
+        otterbrix::serialization
         magic_enum::magic_enum
         msgpackc-cxx
         absl::int128

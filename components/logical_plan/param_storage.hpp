@@ -80,7 +80,7 @@ namespace components::logical_plan {
 
         auto parameter(core::parameter_id_t id) const -> const expr_value_t&;
 
-        void serialize_impl(serializer::base_serializer_t* serializer) const;
+        void serialize(serializer::base_serializer_t* serializer) const;
 
     private:
         uint16_t counter_{0};

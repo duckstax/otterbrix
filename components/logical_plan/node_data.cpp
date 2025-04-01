@@ -30,9 +30,10 @@ namespace components::logical_plan {
     }
 
     void node_data_t::serialize_impl(serializer::base_serializer_t* serializer) const {
-        serializer->start_map(logical_plan::to_string(type_), 1);
+        serializer->start_array(2);
+        serializer->append("type", std::string("node_data_t"));
         serializer->append("documents", documents_);
-        serializer->end_map();
+        serializer->end_array();
     }
 
     node_data_ptr make_node_raw_data(std::pmr::memory_resource* resource,

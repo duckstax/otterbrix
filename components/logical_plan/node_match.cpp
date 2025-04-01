@@ -29,10 +29,11 @@ namespace components::logical_plan {
     }
 
     void node_match_t::serialize_impl(serializer::base_serializer_t* serializer) const {
-        serializer->start_map(logical_plan::to_string(type_), 2);
+        serializer->start_array(3);
+        serializer->append("type", std::string("node_match_t"));
         serializer->append("collection", collection_);
         serializer->append("expressions", expressions_);
-        serializer->end_map();
+        serializer->end_array();
     }
 
     node_match_ptr make_node_match(std::pmr::memory_resource* resource,

@@ -31,11 +31,12 @@ namespace components::logical_plan {
     }
 
     void node_join_t::serialize_impl(serializer::base_serializer_t* serializer) const {
-        serializer->start_map(logical_plan::to_string(node_t::type_), 3);
+        serializer->start_array(4);
+        serializer->append("type", std::string("node_join_t"));
         serializer->append("node type", type_);
         serializer->append("collection", collection_);
         serializer->append("child nodes", children_);
-        serializer->end_map();
+        serializer->end_array();
     }
 
     node_join_ptr

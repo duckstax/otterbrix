@@ -1,6 +1,6 @@
 #include "aggregate_expression.hpp"
 #include <boost/container_hash/hash.hpp>
-#include <serialization/serializer.hpp>
+#include <components/serialization/serializer.hpp>
 #include <sstream>
 
 namespace components::expressions {
@@ -85,11 +85,12 @@ namespace components::expressions {
     }
 
     void aggregate_expression_t::serialize_impl(serializer::base_serializer_t* serializer) const {
-        serializer->start_map("aggregate expr", 3);
+        serializer->start_array(5);
+        serializer->append("type", std::string("aggregate_expression_t"));
         serializer->append("aggregate type", type_);
         serializer->append("key", key_);
         serializer->append("parameters", params_);
-        serializer->end_map();
+        serializer->end_array();
     }
 
     aggregate_expression_ptr

@@ -1,6 +1,6 @@
 #include "scalar_expression.hpp"
 #include <boost/container_hash/hash.hpp>
-#include <serialization/serializer.hpp>
+#include <components/serialization/serializer.hpp>
 #include <sstream>
 
 namespace components::expressions {
@@ -86,11 +86,12 @@ namespace components::expressions {
                std::equal(params_.begin(), params_.end(), other->params_.begin());
     }
     void scalar_expression_t::serialize_impl(serializer::base_serializer_t* serializer) const {
-        serializer->start_map("scalar expr", 3);
+        serializer->start_array(4);
+        serializer->append("type", std::string("scalar_expression_t"));
         serializer->append("scalar type", type_);
         serializer->append("key", key_);
         serializer->append("parameters", params_);
-        serializer->end_map();
+        serializer->end_array();
     }
 
     scalar_expression_ptr

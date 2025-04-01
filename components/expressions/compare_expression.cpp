@@ -1,6 +1,6 @@
 #include "compare_expression.hpp"
 #include <boost/container_hash/hash.hpp>
-#include <serialization/serializer.hpp>
+#include <components/serialization/serializer.hpp>
 #include <sstream>
 
 namespace components::expressions {
@@ -17,8 +17,7 @@ namespace components::expressions {
         , type_(type)
         , key_left_(key)
         , value_(value)
-        , children_(resource)
-        , union_(is_union_compare_condition(type_)) {}
+        , children_(resource) {}
 
     compare_expression_t::compare_expression_t(std::pmr::memory_resource* resource,
                                                compare_type type,
@@ -28,8 +27,7 @@ namespace components::expressions {
         , type_(type)
         , key_left_(key_left)
         , key_right_(key_right)
-        , children_(resource)
-        , union_(is_union_compare_condition(type_)) {}
+        , children_(resource) {}
 
     compare_type compare_expression_t::type() const { return type_; }
 
@@ -45,7 +43,7 @@ namespace components::expressions {
 
     void compare_expression_t::append_child(const compare_expression_ptr& child) { children_.push_back(child); }
 
-    bool compare_expression_t::is_union() const { return union_; }
+    bool compare_expression_t::is_union() const { return is_union_compare_condition(type_); }
 
     hash_t compare_expression_t::hash_impl() const {
         hash_t hash_{0};
@@ -90,14 +88,14 @@ namespace components::expressions {
     }
 
     void compare_expression_t::serialize_impl(serializer::base_serializer_t* serializer) const {
-        serializer->start_map("compare expr", 6);
+        serializer->start_array(7);
+        serializer->append("type", std::string("compare_expression_t"));
         serializer->append("compare type", type_);
         serializer->append("key left", key_left_);
         serializer->append("key right", key_right_);
         serializer->append("value", value_);
         serializer->append("child expressions", children_);
-        serializer->append("union", union_);
-        serializer->end_map();
+        serializer->end_array();
     }
 
     compare_expression_ptr make_compare_expression(std::pmr::memory_resource* resource,

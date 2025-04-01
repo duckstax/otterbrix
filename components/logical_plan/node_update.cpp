@@ -48,12 +48,13 @@ namespace components::logical_plan {
     }
 
     void node_update_t::serialize_impl(serializer::base_serializer_t* serializer) const {
-        serializer->start_map(logical_plan::to_string(type_), 4);
+        serializer->start_array(5);
+        serializer->append("type", std::string("node_update_t"));
         serializer->append("collection", collection_);
         serializer->append("child nodes", children_);
         serializer->append("update", update_);
         serializer->append("upsert", upsert_);
-        serializer->end_map();
+        serializer->end_array();
     }
 
     node_update_ptr make_node_update_many(std::pmr::memory_resource* resource,
