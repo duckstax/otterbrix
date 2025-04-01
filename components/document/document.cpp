@@ -895,7 +895,7 @@ namespace components::document {
         auto type1 = element1->logical_type();
         auto type2 = element2->logical_type();
 
-        if (type1 == type2) {
+        if (type1 == type2 || element1->is_number() && element2->is_number()) {
             switch (type1) {
                 case logical_type::TINYINT:
                     return equals_<int8_t>(element1, element2);

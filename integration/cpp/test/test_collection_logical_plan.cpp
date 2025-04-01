@@ -103,6 +103,23 @@ TEST_CASE("integration::cpp::test_collection::logical_plan") {
             REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 9);
         }
+        // same query, but now count is compared with different numeric type
+        {
+            auto session = otterbrix::session_id_t();
+            auto agg = logical_plan::make_node_aggregate(dispatcher->resource(), {database_name, collection_name});
+            auto expr = components::expressions::make_compare_expression(dispatcher->resource(),
+                                                                         compare_type::gt,
+                                                                         key{"count"},
+                                                                         id_par{1});
+            agg->append_child(logical_plan::make_node_match(dispatcher->resource(),
+                                                            {database_name, collection_name},
+                                                            std::move(expr)));
+            auto params = logical_plan::make_parameter_node(dispatcher->resource());
+            params->add_parameter(id_par{1}, new_value(90.0));
+            auto cur = dispatcher->execute_plan(session, agg, params);
+            REQUIRE(cur->is_success());
+            REQUIRE(cur->size() == 9);
+        }
     }
 
     INFO("delete") {
