@@ -1,25 +1,9 @@
 #include "aggregate_expression.hpp"
 #include <boost/container_hash/hash.hpp>
+#include <serialization/serializer.hpp>
 #include <sstream>
 
 namespace components::expressions {
-
-    template<class OStream>
-    OStream& operator<<(OStream& stream, const aggregate_expression_t::param_storage& param) {
-        std::visit(
-            [&stream](const auto& p) {
-                using type = std::decay_t<decltype(p)>;
-                if constexpr (std::is_same_v<type, core::parameter_id_t>) {
-                    stream << "#" << p;
-                } else if constexpr (std::is_same_v<type, key_t>) {
-                    stream << "\"$" << p << "\"";
-                } else if constexpr (std::is_same_v<type, expression_ptr>) {
-                    stream << p->to_string();
-                }
-            },
-            param);
-        return stream;
-    }
 
     template<class OStream>
     OStream& operator<<(OStream& stream, const aggregate_expression_t* expr) {
@@ -62,13 +46,9 @@ namespace components::expressions {
 
     const key_t& aggregate_expression_t::key() const { return key_; }
 
-    const std::pmr::vector<aggregate_expression_t::param_storage>& aggregate_expression_t::params() const {
-        return params_;
-    }
+    const std::pmr::vector<param_storage>& aggregate_expression_t::params() const { return params_; }
 
-    void aggregate_expression_t::append_param(const aggregate_expression_t::param_storage& param) {
-        params_.push_back(param);
-    }
+    void aggregate_expression_t::append_param(const param_storage& param) { params_.push_back(param); }
 
     hash_t aggregate_expression_t::hash_impl() const {
         hash_t hash_{0};
@@ -102,6 +82,14 @@ namespace components::expressions {
         auto* other = static_cast<const aggregate_expression_t*>(rhs);
         return type_ == other->type_ && key_ == other->key_ && params_.size() == other->params_.size() &&
                std::equal(params_.begin(), params_.end(), other->params_.begin());
+    }
+
+    void aggregate_expression_t::serialize_impl(serializer::base_serializer_t* serializer) const {
+        serializer->start_map("aggregate expr", 3);
+        serializer->append("aggregate type", type_);
+        serializer->append("key", key_);
+        serializer->append("parameters", params_);
+        serializer->end_map();
     }
 
     aggregate_expression_ptr

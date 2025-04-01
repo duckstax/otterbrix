@@ -13,11 +13,10 @@ namespace components::logical_plan {
 
         const std::string& name() const noexcept;
 
-        void serialize(node_base_serializer_t* serializer) const final;
-
     private:
         hash_t hash_impl() const final;
         std::string to_string_impl() const final;
+        void serialize_impl(serializer::base_serializer_t* serializer) const final;
 
         std::string name_;
     };

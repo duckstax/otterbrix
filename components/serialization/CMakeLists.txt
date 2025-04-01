@@ -1,11 +1,7 @@
-project(expressions CXX)
+project(serialization CXX)
 
 set(SOURCE_${PROJECT_NAME}
-        expression.cpp
-        compare_expression.cpp
-        aggregate_expression.cpp
-        scalar_expression.cpp
-        sort_expression.cpp
+        serializer.cpp
 )
 
 add_library(otterbrix_${PROJECT_NAME}
@@ -18,17 +14,17 @@ set_property(TARGET otterbrix_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 
 target_link_libraries(
         otterbrix_${PROJECT_NAME} PRIVATE
-        Boost::boost
-        absl::int128
+        otterbrix::logical_plan
+        otterbrix::document
+        otterbrix::types
+        otterbrix::expressions
         magic_enum::magic_enum
         msgpackc-cxx
+        absl::int128
+        Boost::boost
 )
 
 target_include_directories(
         otterbrix_${PROJECT_NAME}
         PUBLIC
 )
-
-if (DEV_MODE)
-    add_subdirectory(test)
-endif ()

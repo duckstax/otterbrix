@@ -9,11 +9,10 @@ namespace components::logical_plan {
         explicit node_create_collection_t(std::pmr::memory_resource* resource,
                                           const collection_full_name_t& collection);
 
-        void serialize(node_base_serializer_t* serializer) const final;
-
     private:
         hash_t hash_impl() const final;
         std::string to_string_impl() const final;
+        void serialize_impl(serializer::base_serializer_t* serializer) const final;
     };
 
     using node_create_collection_ptr = boost::intrusive_ptr<node_create_collection_t>;

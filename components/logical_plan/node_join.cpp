@@ -1,6 +1,6 @@
 #include "node_join.hpp"
 
-#include "node_serializer.hpp"
+#include <components/serialization/serializer.hpp>
 
 #include <sstream>
 
@@ -13,15 +13,6 @@ namespace components::logical_plan {
         , type_(type) {}
 
     join_type node_join_t::type() const { return type_; }
-
-    void node_join_t::serialize(node_base_serializer_t* serializer) const {
-        serializer->start_array(4);
-        serializer->append(node_t::type_);
-        serializer->append(type_);
-        serializer->append(collection_);
-        serializer->append(children_);
-        serializer->end_array();
-    }
 
     hash_t node_join_t::hash_impl() const { return 0; }
 
@@ -37,6 +28,14 @@ namespace components::logical_plan {
         }
         stream << "}";
         return stream.str();
+    }
+
+    void node_join_t::serialize_impl(serializer::base_serializer_t* serializer) const {
+        serializer->start_map(logical_plan::to_string(node_t::type_), 3);
+        serializer->append("node type", type_);
+        serializer->append("collection", collection_);
+        serializer->append("child nodes", children_);
+        serializer->end_map();
     }
 
     node_join_ptr

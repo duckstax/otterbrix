@@ -1,6 +1,6 @@
 #include "param_storage.hpp"
 
-#include "node_serializer.hpp"
+#include <components/serialization/serializer.hpp>
 
 #include <core/pmr.hpp>
 
@@ -31,12 +31,12 @@ namespace components::logical_plan {
         return get_parameter(&values_, id);
     }
 
-    void parameter_node_t::serialize(node_base_serializer_t* serializer) const {
-        serializer->start_array(values_.parameters.size());
+    void parameter_node_t::serialize_impl(serializer::base_serializer_t* serializer) const {
+        serializer->start_map("parameters", values_.parameters.size());
         for (const auto& [key, value] : values_.parameters) {
-            serializer->append(value);
+            serializer->append(std::to_string(key), value);
         }
-        serializer->end_array();
+        serializer->end_map();
     }
 
     parameter_node_ptr make_parameter_node(std::pmr::memory_resource* resource) {

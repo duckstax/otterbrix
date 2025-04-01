@@ -1,5 +1,6 @@
 #include "sort_expression.hpp"
 #include <boost/container_hash/hash.hpp>
+#include <serialization/serializer.hpp>
 #include <sstream>
 
 namespace components::expressions {
@@ -35,6 +36,12 @@ namespace components::expressions {
     bool sort_expression_t::equal_impl(const expression_i* rhs) const {
         auto* other = static_cast<const sort_expression_t*>(rhs);
         return order_ == other->order_ && key_ == other->key_;
+    }
+    void sort_expression_t::serialize_impl(serializer::base_serializer_t* serializer) const {
+        serializer->start_map("sort expression", 2);
+        serializer->append("sort order", order_);
+        serializer->append("key", key_);
+        serializer->end_map();
     }
 
     sort_expression_ptr make_sort_expression(const key_t& key, sort_order order) {

@@ -1,6 +1,6 @@
 #include "node_data.hpp"
 
-#include "node_serializer.hpp"
+#include <components/serialization/serializer.hpp>
 
 #include <sstream>
 
@@ -18,13 +18,6 @@ namespace components::logical_plan {
 
     const std::pmr::vector<document::document_ptr>& node_data_t::documents() const { return documents_; }
 
-    void node_data_t::serialize(node_base_serializer_t* serializer) const {
-        serializer->start_array(2);
-        serializer->append(type_);
-        serializer->append(documents_);
-        serializer->end_array();
-    }
-
     hash_t node_data_t::hash_impl() const { return 0; }
 
     std::string node_data_t::to_string_impl() const {
@@ -34,6 +27,12 @@ namespace components::logical_plan {
         stream << "$documents: " << documents_.size();
         stream << "}";
         return stream.str();
+    }
+
+    void node_data_t::serialize_impl(serializer::base_serializer_t* serializer) const {
+        serializer->start_map(logical_plan::to_string(type_), 1);
+        serializer->append("documents", documents_);
+        serializer->end_map();
     }
 
     node_data_ptr make_node_raw_data(std::pmr::memory_resource* resource,

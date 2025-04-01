@@ -344,7 +344,7 @@ expression_ptr parse_find_condition_(std::pmr::memory_resource* resource,
     return res_condition;
 }
 
-aggregate_expression_t::param_storage parse_aggregate_param(const py::handle& condition, parameter_node_t* parms) {
+components::expressions::param_storage parse_aggregate_param(const py::handle& condition, parameter_node_t* parms) {
     auto value = to_value(condition, parms->parameters().tape());
     if (value.physical_type() == components::types::physical_type::STRING && !value.as_string().empty() &&
         value.as_string().at(0) == '$') {
@@ -354,7 +354,7 @@ aggregate_expression_t::param_storage parse_aggregate_param(const py::handle& co
     }
 }
 
-scalar_expression_t::param_storage parse_scalar_param(const py::handle& condition, parameter_node_t* params) {
+components::expressions::param_storage parse_scalar_param(const py::handle& condition, parameter_node_t* params) {
     auto value = to_value(condition, params->parameters().tape());
     if (value.physical_type() == components::types::physical_type::STRING && !value.as_string().empty() &&
         value.as_string().at(0) == '$') {

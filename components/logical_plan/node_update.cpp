@@ -1,7 +1,7 @@
 #include "node_update.hpp"
 #include "node_limit.hpp"
 #include "node_match.hpp"
-#include "node_serializer.hpp"
+#include <components/serialization/serializer.hpp>
 
 #include <components/document/msgpack/msgpack_encoder.hpp>
 #include <sstream>
@@ -25,16 +25,6 @@ namespace components::logical_plan {
 
     bool node_update_t::upsert() const { return upsert_; }
 
-    void node_update_t::serialize(node_base_serializer_t* serializer) const {
-        serializer->start_array(5);
-        serializer->append(type_);
-        serializer->append(collection_);
-        serializer->append(children_);
-        serializer->append(update_);
-        serializer->append(upsert_);
-        serializer->end_array();
-    }
-
     hash_t node_update_t::hash_impl() const { return 0; }
 
     std::string node_update_t::to_string_impl() const {
@@ -55,6 +45,15 @@ namespace components::logical_plan {
         }
         stream << "}";
         return stream.str();
+    }
+
+    void node_update_t::serialize_impl(serializer::base_serializer_t* serializer) const {
+        serializer->start_map(logical_plan::to_string(type_), 4);
+        serializer->append("collection", collection_);
+        serializer->append("child nodes", children_);
+        serializer->append("update", update_);
+        serializer->append("upsert", upsert_);
+        serializer->end_map();
     }
 
     node_update_ptr make_node_update_many(std::pmr::memory_resource* resource,

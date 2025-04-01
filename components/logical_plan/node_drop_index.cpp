@@ -1,6 +1,6 @@
 #include "node_drop_index.hpp"
 
-#include "node_serializer.hpp"
+#include <components/serialization/serializer.hpp>
 
 #include <sstream>
 
@@ -14,20 +14,19 @@ namespace components::logical_plan {
 
     const std::string& node_drop_index_t::name() const noexcept { return name_; }
 
-    void node_drop_index_t::serialize(node_base_serializer_t* serializer) const {
-        serializer->start_array(3);
-        serializer->append(type_);
-        serializer->append(collection_);
-        serializer->append(name_);
-        serializer->end_array();
-    }
-
     hash_t node_drop_index_t::hash_impl() const { return 0; }
 
     std::string node_drop_index_t::to_string_impl() const {
         std::stringstream stream;
         stream << "$drop_index: " << database_name() << "." << collection_name() << " name:" << name();
         return stream.str();
+    }
+
+    void node_drop_index_t::serialize_impl(serializer::base_serializer_t* serializer) const {
+        serializer->start_map(logical_plan::to_string(type_), 2);
+        serializer->append("collection", collection_);
+        serializer->append("name", name_);
+        serializer->end_map();
     }
 
     node_drop_index_ptr make_node_drop_index(std::pmr::memory_resource* resource,

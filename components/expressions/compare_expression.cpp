@@ -1,5 +1,6 @@
 #include "compare_expression.hpp"
 #include <boost/container_hash/hash.hpp>
+#include <serialization/serializer.hpp>
 #include <sstream>
 
 namespace components::expressions {
@@ -86,6 +87,17 @@ namespace components::expressions {
         return type_ == other->type_ && key_left_ == other->key_left_ && key_right_ == other->key_right_ &&
                value_ == other->value_ && children_.size() == other->children_.size() &&
                std::equal(children_.begin(), children_.end(), other->children_.begin());
+    }
+
+    void compare_expression_t::serialize_impl(serializer::base_serializer_t* serializer) const {
+        serializer->start_map("compare expr", 6);
+        serializer->append("compare type", type_);
+        serializer->append("key left", key_left_);
+        serializer->append("key right", key_right_);
+        serializer->append("value", value_);
+        serializer->append("child expressions", children_);
+        serializer->append("union", union_);
+        serializer->end_map();
     }
 
     compare_expression_ptr make_compare_expression(std::pmr::memory_resource* resource,

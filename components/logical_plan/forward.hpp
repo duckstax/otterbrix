@@ -75,6 +75,11 @@ namespace components::logical_plan {
         }
     }
 
+#define node_type_from_string(STR)                                                                                     \
+    do {                                                                                                               \
+        return node_type::STR;                                                                                         \
+    } while (false);
+
     enum class visitation : uint8_t
     {
         visit_inputs,

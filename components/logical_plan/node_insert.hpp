@@ -19,13 +19,12 @@ namespace components::logical_plan {
 
         const std::pmr::vector<components::document::document_ptr>& documents() const;
 
-        void serialize(node_base_serializer_t* serializer) const final;
-
     private:
         std::pmr::vector<components::document::document_ptr> documents_;
 
         hash_t hash_impl() const final;
         std::string to_string_impl() const final;
+        void serialize_impl(serializer::base_serializer_t* serializer) const final;
     };
 
     using node_insert_ptr = boost::intrusive_ptr<node_insert_t>;

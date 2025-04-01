@@ -127,6 +127,21 @@ namespace msgpack {
                     to_msgpack_(v->json_trie().get(), o);
                 }
             };
+            template<>
+            struct pack<components::document::value_t> final {
+                template<typename Stream>
+                packer<Stream>& operator()(msgpack::packer<Stream>& o, const components::document::value_t& v) const {
+                    to_msgpack_(o, v.get_element());
+                    return o;
+                }
+            };
+
+            template<>
+            struct object_with_zone<components::document::value_t> final {
+                void operator()(msgpack::object::with_zone& o, const components::document::value_t& v) const {
+                    to_msgpack_(v.get_element(), o);
+                }
+            };
 
         } // namespace adaptor
     }     // MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS)

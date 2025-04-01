@@ -1,6 +1,6 @@
 #include "node_create_index.hpp"
 
-#include "node_serializer.hpp"
+#include <components/serialization/serializer.hpp>
 
 #include <components/types/types.hpp>
 #include <sstream>
@@ -20,16 +20,6 @@ namespace components::logical_plan {
     index_type node_create_index_t::type() const noexcept { return index_type_; }
 
     keys_base_storage_t& node_create_index_t::keys() noexcept { return keys_; }
-
-    void node_create_index_t::serialize(node_base_serializer_t* serializer) const {
-        serializer->start_array(5);
-        serializer->append(type_);
-        serializer->append(index_type_);
-        serializer->append(collection_);
-        serializer->append(name_);
-        serializer->append(keys_);
-        serializer->end_array();
-    }
 
     hash_t node_create_index_t::hash_impl() const { return 0; }
 
@@ -59,6 +49,15 @@ namespace components::logical_plan {
         }
         stream << "] type:" << name_index_type(index_type_);
         return stream.str();
+    }
+
+    void node_create_index_t::serialize_impl(serializer::base_serializer_t* serializer) const {
+        serializer->start_map(logical_plan::to_string(type_), 4);
+        serializer->append("index type", index_type_);
+        serializer->append("collection", collection_);
+        serializer->append("name", name_);
+        serializer->append("keys", keys_);
+        serializer->end_map();
     }
 
     node_create_index_ptr make_node_create_index(std::pmr::memory_resource* resource,

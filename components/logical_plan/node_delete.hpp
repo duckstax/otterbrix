@@ -13,11 +13,10 @@ namespace components::logical_plan {
                                const node_match_ptr& match,
                                const node_limit_ptr& limit);
 
-        void serialize(node_base_serializer_t* serializer) const final;
-
     private:
         hash_t hash_impl() const final;
         std::string to_string_impl() const final;
+        void serialize_impl(serializer::base_serializer_t* serializer) const final;
     };
 
     using node_delete_ptr = boost::intrusive_ptr<node_delete_t>;

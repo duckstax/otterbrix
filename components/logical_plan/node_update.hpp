@@ -20,7 +20,7 @@ namespace components::logical_plan {
         const components::document::document_ptr& update() const;
         bool upsert() const;
 
-        void serialize(node_base_serializer_t* serializer) const final;
+        void serialize_impl(serializer::base_serializer_t* serializer) const final;
 
     private:
         components::document::document_ptr update_;

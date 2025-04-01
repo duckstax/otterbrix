@@ -8,11 +8,10 @@ namespace components::logical_plan {
     public:
         explicit node_group_t(std::pmr::memory_resource* resource, const collection_full_name_t& collection);
 
-        void serialize(node_base_serializer_t* serializer) const final;
-
     private:
         hash_t hash_impl() const final;
         std::string to_string_impl() const final;
+        void serialize_impl(serializer::base_serializer_t* serializer) const final;
     };
 
     using node_group_ptr = boost::intrusive_ptr<node_group_t>;

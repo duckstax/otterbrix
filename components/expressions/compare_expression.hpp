@@ -50,6 +50,7 @@ namespace components::expressions {
         hash_t hash_impl() const final;
         std::string to_string_impl() const final;
         bool equal_impl(const expression_i* rhs) const final;
+        void serialize_impl(serializer::base_serializer_t* serializer) const final;
     };
 
     compare_expression_ptr make_compare_expression(std::pmr::memory_resource* resource,
