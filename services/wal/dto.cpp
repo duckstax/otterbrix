@@ -1,5 +1,7 @@
 #include "dto.hpp"
 
+#include <components/serialization/deserializer.hpp>
+#include <components/serialization/serializer.hpp>
 #include <absl/crc/crc32c.h>
 #include <components/serialization/deserializer.hpp>
 #include <components/serialization/serializer.hpp>
