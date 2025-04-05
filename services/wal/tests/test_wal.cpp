@@ -1,3 +1,5 @@
+#include "expressions/compare_expression.hpp"
+
 #include <catch2/catch.hpp>
 
 #include <actor-zeta.hpp>
@@ -82,7 +84,7 @@ TEST_CASE("insert one test") {
 
     std::size_t read_index = 0;
     for (int num = 1; num <= 5; ++num) {
-        wal_entry_t<components::logical_plan::node_insert_ptr> entry;
+        wal_entry_t entry;
 
         entry.size_ = test_wal.wal->test_read_size(read_index);
 
@@ -93,13 +95,13 @@ TEST_CASE("insert one test") {
         auto crc32_index = entry.size_;
         crc32_t crc32 = crc32c::Crc32c(output.data(), crc32_index);
 
-        unpack(output, entry, &resource);
+        unpack(output, entry);
         entry.crc32_ = read_crc32(output, entry.size_);
         test_wal.scheduler->run();
         REQUIRE(entry.crc32_ == crc32);
         REQUIRE(entry.entry_->database_name() == database_name);
         REQUIRE(entry.entry_->collection_name() == collection_name);
-        auto doc = entry.entry_->documents().front();
+        auto doc = reinterpret_cast<const node_insert_ptr&>(entry.entry_)->documents().front();
         REQUIRE(doc->get_string("/_id") == gen_id(num, &resource));
         REQUIRE(doc->get_long("/count") == num);
         REQUIRE(doc->get_string("/countStr") == std::pmr::string(std::to_string(num), &resource));
@@ -120,7 +122,7 @@ TEST_CASE("insert many empty test") {
     auto address = actor_zeta::base::address_t::address_t::empty_address();
     test_wal.wal->insert_many(session, address, data);
 
-    wal_entry_t<components::logical_plan::node_insert_ptr> entry;
+    wal_entry_t entry;
 
     entry.size_ = test_wal.wal->test_read_size(0);
 
@@ -131,7 +133,7 @@ TEST_CASE("insert many empty test") {
     auto crc32_index = entry.size_;
     crc32_t crc32 = crc32c::Crc32c(output.data(), crc32_index);
 
-    unpack(output, entry, &resource);
+    unpack(output, entry);
     entry.crc32_ = read_crc32(output, entry.size_);
     test_wal.scheduler->run();
     REQUIRE(entry.crc32_ == crc32);
@@ -156,7 +158,7 @@ TEST_CASE("insert many test") {
 
     std::size_t read_index = 0;
     for (int i = 0; i <= 3; ++i) {
-        wal_entry_t<components::logical_plan::node_insert_ptr> entry;
+        wal_entry_t entry;
 
         entry.size_ = test_wal.wal->test_read_size(read_index);
 
@@ -167,15 +169,15 @@ TEST_CASE("insert many test") {
         auto crc32_index = entry.size_;
         crc32_t crc32 = crc32c::Crc32c(output.data(), crc32_index);
 
-        unpack(output, entry, &resource);
+        unpack(output, entry);
         entry.crc32_ = read_crc32(output, entry.size_);
         test_wal.scheduler->run();
         REQUIRE(entry.crc32_ == crc32);
         REQUIRE(entry.entry_->database_name() == database_name);
         REQUIRE(entry.entry_->collection_name() == collection_name);
-        REQUIRE(entry.entry_->documents().size() == 5);
+        REQUIRE(reinterpret_cast<const node_insert_ptr&>(entry.entry_)->documents().size() == 5);
         int num = 0;
-        for (const auto& doc : entry.entry_->documents()) {
+        for (const auto& doc : reinterpret_cast<const node_insert_ptr&>(entry.entry_)->documents()) {
             ++num;
             REQUIRE(doc->get_string("/_id") == gen_id(num, &resource));
             REQUIRE(doc->get_long("/count") == num);
@@ -209,8 +211,8 @@ TEST_CASE("delete one test") {
     std::size_t index = 0;
     for (int num = 1; num <= 5; ++num) {
         auto record = test_wal.wal->test_read_record(index);
-        REQUIRE(record.type == node_type::delete_t);
         REQUIRE(record.id == services::wal::id_t(num));
+        REQUIRE(record.data->type() == node_type::delete_t);
         REQUIRE(record.data->database_name() == database_name);
         REQUIRE(record.data->collection_name() == collection_name);
         REQUIRE(record.data->children().front()->expressions().front()->group() == expression_group::compare);
@@ -248,8 +250,8 @@ TEST_CASE("delete many test") {
     std::size_t index = 0;
     for (int num = 1; num <= 5; ++num) {
         auto record = test_wal.wal->test_read_record(index);
-        REQUIRE(record.type == node_type::delete_t);
         REQUIRE(record.id == services::wal::id_t(num));
+        REQUIRE(record.data->type() == node_type::delete_t);
         REQUIRE(record.data->database_name() == database_name);
         REQUIRE(record.data->collection_name() == collection_name);
         REQUIRE(record.data->children().front()->expressions().front()->group() == expression_group::compare);
@@ -294,8 +296,8 @@ TEST_CASE("update one test") {
     std::size_t index = 0;
     for (int num = 1; num <= 5; ++num) {
         auto record = test_wal.wal->test_read_record(index);
-        REQUIRE(record.type == node_type::update_t);
         REQUIRE(record.id == services::wal::id_t(num));
+        REQUIRE(record.data->type() == node_type::update_t);
         REQUIRE(record.data->database_name() == database_name);
         REQUIRE(record.data->collection_name() == collection_name);
         REQUIRE(record.data->children().front()->expressions().front()->group() == expression_group::compare);
@@ -343,8 +345,8 @@ TEST_CASE("update many test") {
     std::size_t index = 0;
     for (int num = 1; num <= 5; ++num) {
         auto record = test_wal.wal->test_read_record(index);
-        REQUIRE(record.type == node_type::update_t);
         REQUIRE(record.id == services::wal::id_t(num));
+        REQUIRE(record.data->type() == node_type::update_t);
         REQUIRE(record.data->database_name() == database_name);
         REQUIRE(record.data->collection_name() == collection_name);
         REQUIRE(record.data->children().front()->expressions().front()->group() == expression_group::compare);
@@ -396,7 +398,7 @@ TEST_CASE("test read record") {
     std::size_t index = 0;
     for (int num = 1; num <= 5; ++num) {
         auto record = test_wal.wal->test_read_record(index);
-        REQUIRE(record.type == node_type::insert_t);
+        REQUIRE(record.data->type() == node_type::insert_t);
         REQUIRE(record.data->database_name() == database_name);
         REQUIRE(record.data->collection_name() == collection_name);
         auto doc = reinterpret_cast<const components::logical_plan::node_insert_ptr&>(record.data)->documents().front();
@@ -405,5 +407,5 @@ TEST_CASE("test read record") {
         REQUIRE(doc->get_string("/countStr") == std::pmr::string(std::to_string(num), &resource));
         index = test_wal.wal->test_next_record(index);
     }
-    REQUIRE(test_wal.wal->test_read_record(index).type == node_type::unused);
+    REQUIRE(test_wal.wal->test_read_record(index).data == nullptr);
 }

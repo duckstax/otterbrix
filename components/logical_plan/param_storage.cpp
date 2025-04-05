@@ -1,5 +1,7 @@
 #include "param_storage.hpp"
 
+#include <components/serialization/deserializer.hpp>
+
 #include <components/serialization/serializer.hpp>
 
 #include <core/pmr.hpp>
@@ -32,8 +34,9 @@ namespace components::logical_plan {
     }
 
     void parameter_node_t::serialize(serializer::base_serializer_t* serializer) const {
-        serializer->start_array(values_.parameters.size() + 1);
-        serializer->append("type", std::string("parameter_node_t"));
+        serializer->start_array(2);
+        serializer->append("type", serializer::serialization_type::parameters);
+        serializer->start_array(values_.parameters.size());
         for (const auto& [key, value] : values_.parameters) {
             serializer->start_array(2);
             serializer->append("key", key);
@@ -41,6 +44,18 @@ namespace components::logical_plan {
             serializer->end_array();
         }
         serializer->end_array();
+        serializer->end_array();
+    }
+
+    boost::intrusive_ptr<parameter_node_t> parameter_node_t::deserialize(serializer::base_deserializer_t* deserilizer) {
+        auto res = make_parameter_node(deserilizer->resource());
+        deserilizer->advance_array(1);
+        for (size_t i = 0; i < deserilizer->current_array_size(); i++) {
+            auto p = deserilizer->deserialize_param_pair(res->parameters().tape(), i);
+            res->add_parameter(p.first, p.second);
+        }
+        deserilizer->pop_array();
+        return res;
     }
 
     parameter_node_ptr make_parameter_node(std::pmr::memory_resource* resource) {

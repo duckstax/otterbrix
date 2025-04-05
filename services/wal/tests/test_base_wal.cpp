@@ -23,17 +23,17 @@ TEST_CASE("pack and unpack") {
     buffer_t buffer;
 
     pack(buffer, last_crc32, wal_id, data, make_parameter_node(&resource));
-    wal_entry_t<node_insert_ptr> entry;
+    wal_entry_t entry;
     entry.size_ = read_size_impl(buffer, 0);
 
     auto start = sizeof(size_tt);
     auto finish = sizeof(size_tt) + entry.size_ + sizeof(crc32_t);
     auto storage = read_payload(buffer, int(start), int(finish));
 
-    unpack<node_insert_ptr>(storage, entry, &resource);
+    unpack(storage, entry);
     entry.crc32_ = read_crc32(storage, entry.size_);
 
     REQUIRE(entry.last_crc32_ == last_crc32);
-    REQUIRE(entry.type_ == node_type::insert_t);
+    REQUIRE(entry.entry_->type() == node_type::insert_t);
     REQUIRE(entry.id_ == wal_id);
 }

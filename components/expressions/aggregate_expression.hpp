@@ -22,6 +22,8 @@ namespace components::expressions {
 
         void append_param(const param_storage& param);
 
+        static expression_ptr deserialize(serializer::base_deserializer_t* deserializer);
+
     private:
         aggregate_type type_;
         key_t key_;

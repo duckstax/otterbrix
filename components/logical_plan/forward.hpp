@@ -17,6 +17,7 @@ namespace components::logical_plan {
         drop_collection_t,
         drop_database_t,
         drop_index_t,
+        function_t,
         insert_t,
         join_t,
         intersect_t,
@@ -24,7 +25,6 @@ namespace components::logical_plan {
         match_t,
         group_t,
         sort_t,
-        sub_query_t,
         update_t,
         union_t,
         unused
@@ -52,6 +52,8 @@ namespace components::logical_plan {
                 return "drop_database_t";
             case node_type::drop_index_t:
                 return "drop_index_t";
+            case node_type::function_t:
+                return "function_t";
             case node_type::insert_t:
                 return "insert_t";
             case node_type::join_t:

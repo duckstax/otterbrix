@@ -29,6 +29,8 @@ namespace components::logical_plan {
 
         const limit_t& limit() const;
 
+        static node_ptr deserialize(serializer::base_deserializer_t* deserializer);
+
     private:
         limit_t limit_;
 
@@ -43,43 +45,4 @@ namespace components::logical_plan {
                                    const collection_full_name_t& collection,
                                    const limit_t& limit);
 
-    node_limit_ptr to_node_limit(const msgpack::object& msg_object, std::pmr::memory_resource* resource);
-
 } // namespace components::logical_plan
-
-// User defined class template specialization
-namespace msgpack {
-    MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {
-        namespace adaptor {
-
-            template<>
-            struct pack<components::logical_plan::node_limit_ptr> final {
-                template<typename Stream>
-                packer<Stream>& operator()(msgpack::packer<Stream>& o,
-                                           components::logical_plan::node_limit_ptr const& v) const {
-                    o.pack_array(3);
-                    o.pack(v->database_name());
-                    o.pack(v->collection_name());
-                    o.pack(v->limit().limit());
-                    return o;
-                }
-            };
-
-            template<>
-            struct object_with_zone<components::logical_plan::node_limit_ptr> final {
-                void operator()(msgpack::object::with_zone& o,
-                                components::logical_plan::node_limit_ptr const& v) const {
-                    o.type = type::ARRAY;
-                    o.via.array.size = 3;
-                    o.via.array.ptr =
-                        static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size,
-                                                                            MSGPACK_ZONE_ALIGNOF(msgpack::object)));
-                    o.via.array.ptr[0] = msgpack::object(v->database_name(), o.zone);
-                    o.via.array.ptr[1] = msgpack::object(v->collection_name(), o.zone);
-                    o.via.array.ptr[2] = msgpack::object(v->limit().limit(), o.zone);
-                }
-            };
-
-        } // namespace adaptor
-    }     // MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS)
-} // namespace msgpack

@@ -1,6 +1,7 @@
 #include "node_update.hpp"
 #include "node_limit.hpp"
 #include "node_match.hpp"
+#include <components/serialization/deserializer.hpp>
 #include <components/serialization/serializer.hpp>
 
 #include <components/document/msgpack/msgpack_encoder.hpp>
@@ -24,6 +25,19 @@ namespace components::logical_plan {
     const document::document_ptr& node_update_t::update() const { return update_; }
 
     bool node_update_t::upsert() const { return upsert_; }
+
+    node_ptr node_update_t::deserialize(serializer::base_deserializer_t* deserializer) {
+        auto collection = deserializer->deserialize_collection(1);
+        auto children = deserializer->deserialize_nodes(2);
+        auto update = deserializer->deserialize_document(3);
+        auto upsert = deserializer->deserialize_bool(4);
+        return make_node_update(deserializer->resource(),
+                                collection,
+                                reinterpret_cast<const node_match_ptr&>(children.at(0)),
+                                reinterpret_cast<const node_limit_ptr&>(children.at(1)),
+                                update,
+                                upsert);
+    }
 
     hash_t node_update_t::hash_impl() const { return 0; }
 
@@ -49,7 +63,7 @@ namespace components::logical_plan {
 
     void node_update_t::serialize_impl(serializer::base_serializer_t* serializer) const {
         serializer->start_array(5);
-        serializer->append("type", std::string("node_update_t"));
+        serializer->append("type", serializer::serialization_type::logical_node_update);
         serializer->append("collection", collection_);
         serializer->append("child nodes", children_);
         serializer->append("update", update_);
@@ -89,22 +103,6 @@ namespace components::logical_plan {
                                      const components::document::document_ptr& update,
                                      bool upsert) {
         return {new node_update_t{resource, collection, match, limit, update, upsert}};
-    }
-
-    node_update_ptr to_node_update(const msgpack::object& msg_object, std::pmr::memory_resource* resource) {
-        if (msg_object.type != msgpack::type::ARRAY) {
-            throw msgpack::type_error();
-        }
-        if (msg_object.via.array.size != 6) {
-            throw msgpack::type_error();
-        }
-        auto database = msg_object.via.array.ptr[0].as<std::string>();
-        auto collection = msg_object.via.array.ptr[1].as<std::string>();
-        auto match = to_node_match(msg_object.via.array.ptr[2], resource);
-        auto limit = to_node_limit(msg_object.via.array.ptr[3], resource);
-        auto update = components::document::to_document(msg_object.via.array.ptr[4], resource);
-        auto upsert = msg_object.via.array.ptr[5].as<bool>();
-        return make_node_update(resource, {database, collection}, match, limit, update, upsert);
     }
 
 } // namespace components::logical_plan

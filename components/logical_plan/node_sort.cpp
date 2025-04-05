@@ -1,14 +1,20 @@
 #include "node_sort.hpp"
 
+#include <components/serialization/deserializer.hpp>
 #include <components/serialization/serializer.hpp>
 
-#include <components/expressions/msgpack.hpp>
 #include <sstream>
 
 namespace components::logical_plan {
 
     node_sort_t::node_sort_t(std::pmr::memory_resource* resource, const collection_full_name_t& collection)
         : node_t(resource, node_type::sort_t, collection) {}
+
+    node_ptr node_sort_t::deserialize(serializer::base_deserializer_t* deserializer) {
+        auto collection = deserializer->deserialize_collection(1);
+        auto exprs = deserializer->deserialize_expressions(2);
+        return make_node_sort(deserializer->resource(), collection, exprs);
+    }
 
     hash_t node_sort_t::hash_impl() const { return 0; }
 
@@ -30,7 +36,7 @@ namespace components::logical_plan {
 
     void node_sort_t::serialize_impl(serializer::base_serializer_t* serializer) const {
         serializer->start_array(3);
-        serializer->append("type", std::string("node_sort_t"));
+        serializer->append("type", serializer::serialization_type::logical_node_sort);
         serializer->append("collection", collection_);
         serializer->append("expressions", expressions_);
         serializer->end_array();
@@ -50,18 +56,6 @@ namespace components::logical_plan {
         auto node = new node_sort_t{resource, collection};
         node->append_expressions(expressions);
         return node;
-    }
-    node_sort_ptr to_node_sort(const msgpack::object& msg_object, std::pmr::memory_resource* resource) {
-        if (msg_object.type != msgpack::type::ARRAY) {
-            throw msgpack::type_error();
-        }
-        if (msg_object.via.array.size != 3) {
-            throw msgpack::type_error();
-        }
-        auto database = msg_object.via.array.ptr[0].as<std::string>();
-        auto collection = msg_object.via.array.ptr[1].as<std::string>();
-        auto expr = expressions::to_expressions(msg_object.via.array.ptr[2], resource);
-        return make_node_sort(resource, {database, collection}, expr);
     }
 
 } // namespace components::logical_plan

@@ -18,6 +18,8 @@ namespace components::expressions {
         sort_order order() const;
         const key_t& key() const;
 
+        static expression_ptr deserialize(serializer::base_deserializer_t* deserializer);
+
     private:
         sort_order order_;
         key_t key_;

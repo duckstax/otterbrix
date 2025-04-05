@@ -5,6 +5,10 @@
 #include <components/physical_plan/collection/operators/operator_data.hpp>
 #include <components/physical_plan/collection/operators/operator_write_data.hpp>
 
+namespace components::expressions {
+    class key_t;
+}
+
 namespace services::collection {
 
     class context_collection_t;

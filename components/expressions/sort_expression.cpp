@@ -1,5 +1,6 @@
 #include "sort_expression.hpp"
 #include <boost/container_hash/hash.hpp>
+#include <components/serialization/deserializer.hpp>
 #include <components/serialization/serializer.hpp>
 #include <sstream>
 
@@ -20,6 +21,12 @@ namespace components::expressions {
 
     const key_t& sort_expression_t::key() const { return key_; }
 
+    expression_ptr sort_expression_t::deserialize(serializer::base_deserializer_t* deserializer) {
+        auto order = deserializer->deserialize_sort_order(1);
+        auto key = deserializer->deserialize_key(2);
+        return make_sort_expression(key, order);
+    }
+
     hash_t sort_expression_t::hash_impl() const {
         hash_t hash_{0};
         boost::hash_combine(hash_, order_);
@@ -39,7 +46,7 @@ namespace components::expressions {
     }
     void sort_expression_t::serialize_impl(serializer::base_serializer_t* serializer) const {
         serializer->start_array(3);
-        serializer->append("type", std::string("sort_expression_t"));
+        serializer->append("type", serializer::serialization_type::expression_sort);
         serializer->append("sort order", order_);
         serializer->append("key", key_);
         serializer->end_array();

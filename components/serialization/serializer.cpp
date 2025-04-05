@@ -9,6 +9,8 @@ namespace components::serializer {
     base_serializer_t::base_serializer_t(std::pmr::memory_resource* resource)
         : result_(std::pmr::string(resource)) {}
 
+    std::pmr::string base_serializer_t::result() const { return result_.str(); }
+
     void base_serializer_t::append(std::string_view key, const std::pmr::vector<logical_plan::node_ptr>& nodes) {
         start_array(nodes.size());
         for (const auto& n : nodes) {
@@ -49,14 +51,6 @@ namespace components::serializer {
         }
         end_array();
     }
-    void base_serializer_t::append(std::string_view,
-                                   const std::pmr::vector<expressions::compare_expression_ptr>& expressions) {
-        start_array(expressions.size());
-        for (const auto& expr : expressions) {
-            expr->serialize(this);
-        }
-        end_array();
-    }
 
     void base_serializer_t::append(std::string_view key, const std::pmr::vector<expressions::param_storage>& params) {
         start_array(params.size());
@@ -79,20 +73,30 @@ namespace components::serializer {
                 using param_type = std::decay_t<decltype(value)>;
                 if constexpr (std::is_same_v<param_type, core::parameter_id_t>) {
                     append(key, value);
-                } else if constexpr (std::is_same_v<param_type, key_t>) {
+                } else if constexpr (std::is_same_v<param_type, expressions::key_t>) {
                     append(key, value);
                 } else if constexpr (std::is_same_v<param_type, expressions::expression_ptr>) {
                     value->serialize(this);
+                } else {
+                    assert(false);
                 }
             },
             param);
     }
 
+    void base_serializer_t::append(std::string_view key, const logical_plan::node_ptr& node) { node->serialize(this); }
+
+    void base_serializer_t::append(std::string_view key, const expressions::expression_ptr& expr) {
+        expr->serialize(this);
+    }
+
+    void base_serializer_t::append(std::string_view key, const logical_plan::parameter_node_ptr& params) {
+        params->serialize(this);
+    }
+
     // TODO: use memory_resource to initialize root_arr_
     json_serializer_t::json_serializer_t(std::pmr::memory_resource* resource)
         : base_serializer_t(resource) {}
-
-    std::pmr::string json_serializer_t::result() const { return result_.str(); }
 
     void json_serializer_t::start_array(size_t size) {
         if (working_tree_.empty()) {
@@ -112,8 +116,16 @@ namespace components::serializer {
         }
     }
 
+    void json_serializer_t::append(std::string_view key, bool val) { working_tree_.top()->emplace_back(val); }
+
+    void json_serializer_t::append(std::string_view key, uint64_t val) { working_tree_.top()->emplace_back(val); }
+
     void json_serializer_t::append(std::string_view key, core::parameter_id_t val) {
         working_tree_.top()->emplace_back(val.t);
+    }
+
+    void json_serializer_t::append(std::string_view key, serialization_type type) {
+        working_tree_.top()->emplace_back(static_cast<uint8_t>(type));
     }
 
     void json_serializer_t::append(std::string_view key, logical_plan::node_type type) {
@@ -141,7 +153,7 @@ namespace components::serializer {
     }
 
     void json_serializer_t::append(std::string_view key, expressions::sort_order order) {
-        working_tree_.top()->emplace_back(static_cast<uint8_t>(order));
+        working_tree_.top()->emplace_back(static_cast<int8_t>(order));
     }
 
     void json_serializer_t::append(std::string_view key, logical_plan::limit_t limit) {
@@ -202,9 +214,9 @@ namespace components::serializer {
         }
     }
 
-    void json_serializer_t::append(std::string_view key, bool val) { working_tree_.top()->emplace_back(val); }
-
-    std::pmr::string msgpack_serializer_t::result() const { return result_.str(); }
+    msgpack_serializer_t::msgpack_serializer_t(std::pmr::memory_resource* resource)
+        : base_serializer_t(resource)
+        , packer_(result_) {}
 
     void msgpack_serializer_t::start_array(size_t size) { packer_.pack_array(size); }
 
@@ -212,7 +224,15 @@ namespace components::serializer {
         // nothing to do here
     }
 
+    void msgpack_serializer_t::append(std::string_view key, bool val) { packer_.pack(val); }
+
+    void msgpack_serializer_t::append(std::string_view key, uint64_t val) { packer_.pack(val); }
+
     void msgpack_serializer_t::append(std::string_view key, core::parameter_id_t val) { packer_.pack(val.t); }
+
+    void msgpack_serializer_t::append(std::string_view key, serialization_type type) {
+        packer_.pack(static_cast<uint8_t>(type));
+    }
 
     void msgpack_serializer_t::append(std::string_view key, logical_plan::node_type type) {
         packer_.pack(static_cast<uint8_t>(type));
@@ -239,7 +259,7 @@ namespace components::serializer {
     }
 
     void msgpack_serializer_t::append(std::string_view key, expressions::sort_order order) {
-        packer_.pack(static_cast<uint8_t>(order));
+        packer_.pack(static_cast<int8_t>(order));
     }
 
     void msgpack_serializer_t::append(std::string_view key, logical_plan::limit_t limit) {
@@ -250,7 +270,9 @@ namespace components::serializer {
 
     void msgpack_serializer_t::append(std::string_view key, const document_ptr& doc) { packer_.pack(doc); }
 
-    void msgpack_serializer_t::append(std::string_view key, const document::value_t& val) { packer_.pack(val); }
+    void msgpack_serializer_t::append(std::string_view key, const document::value_t& val) {
+        to_msgpack_(packer_, val.get_element());
+    }
 
     void msgpack_serializer_t::append(std::string_view key, const expressions::key_t& key_val) {
         if (key_val.is_string()) {
@@ -259,7 +281,5 @@ namespace components::serializer {
             packer_.pack_nil();
         }
     }
-
-    void msgpack_serializer_t::append(std::string_view key, bool val) { packer_.pack(val); }
 
 } // namespace components::serializer

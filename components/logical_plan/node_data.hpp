@@ -16,6 +16,8 @@ namespace components::logical_plan {
 
         const std::pmr::vector<components::document::document_ptr>& documents() const;
 
+        static node_ptr deserialize(serializer::base_deserializer_t* deserializer);
+
     private:
         std::pmr::vector<components::document::document_ptr> documents_;
 

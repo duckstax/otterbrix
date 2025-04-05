@@ -8,6 +8,8 @@ namespace components::logical_plan {
     public:
         explicit node_group_t(std::pmr::memory_resource* resource, const collection_full_name_t& collection);
 
+        static node_ptr deserialize(serializer::base_deserializer_t* deserializer);
+
     private:
         hash_t hash_impl() const final;
         std::string to_string_impl() const final;
@@ -21,5 +23,9 @@ namespace components::logical_plan {
     node_group_ptr make_node_group(std::pmr::memory_resource* resource,
                                    const collection_full_name_t& collection,
                                    const std::vector<expression_ptr>& expressions);
+
+    node_group_ptr make_node_group(std::pmr::memory_resource* resource,
+                                   const collection_full_name_t& collection,
+                                   const std::pmr::vector<expression_ptr>& expressions);
 
 } // namespace components::logical_plan

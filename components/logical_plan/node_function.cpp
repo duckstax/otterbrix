@@ -1,5 +1,6 @@
 #include "node_function.hpp"
 
+#include <components/serialization/deserializer.hpp>
 #include <components/serialization/serializer.hpp>
 
 #include <sstream>
@@ -7,19 +8,25 @@
 namespace components::logical_plan {
 
     node_function_t::node_function_t(std::pmr::memory_resource* resource, std::string&& name)
-        : node_t(resource, node_type::sub_query_t, {})
+        : node_t(resource, node_type::function_t, {})
         , name_(std::move(name)) {}
 
     node_function_t::node_function_t(std::pmr::memory_resource* resource,
                                      std::string&& name,
                                      std::pmr::vector<core::parameter_id_t>&& args)
-        : node_t(resource, node_type::sub_query_t, {})
+        : node_t(resource, node_type::function_t, {})
         , name_(std::move(name))
         , args_(std::move(args)) {}
 
     const std::string& node_function_t::name() const noexcept { return name_; }
 
     const std::pmr::vector<core::parameter_id_t>& node_function_t::args() const noexcept { return args_; }
+
+    node_ptr node_function_t::deserialize(serializer::base_deserializer_t* deserializer) {
+        auto name = deserializer->deserialize_string(1);
+        auto args = deserializer->deserialize_param_ids(2);
+        return make_node_function(deserializer->resource(), std::move(name), std::move(args));
+    }
 
     void add_argument(core::parameter_id_t arg);
 
@@ -45,7 +52,7 @@ namespace components::logical_plan {
 
     void node_function_t::serialize_impl(serializer::base_serializer_t* serializer) const {
         serializer->start_array(3);
-        serializer->append("type", std::string("node_function_t"));
+        serializer->append("type", serializer::serialization_type::logical_node_function);
         serializer->append("name", name_);
         serializer->append("args", args_);
         serializer->end_array();

@@ -15,8 +15,7 @@ namespace components::expressions {
         compare,
         aggregate,
         scalar,
-        sort,
-        join
+        sort
     };
 
     enum class compare_type : uint8_t

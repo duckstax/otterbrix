@@ -1,14 +1,20 @@
 #include "node_match.hpp"
 
+#include <components/serialization/deserializer.hpp>
 #include <components/serialization/serializer.hpp>
 
-#include <components/expressions/msgpack.hpp>
 #include <sstream>
 
 namespace components::logical_plan {
 
     node_match_t::node_match_t(std::pmr::memory_resource* resource, const collection_full_name_t& collection)
         : node_t(resource, node_type::match_t, collection) {}
+
+    node_ptr node_match_t::deserialize(serializer::base_deserializer_t* deserializer) {
+        auto collection = deserializer->deserialize_collection(1);
+        auto expr = deserializer->deserialize_expression(2);
+        return make_node_match(deserializer->resource(), collection, expr);
+    }
 
     hash_t node_match_t::hash_impl() const { return 0; }
 
@@ -30,9 +36,9 @@ namespace components::logical_plan {
 
     void node_match_t::serialize_impl(serializer::base_serializer_t* serializer) const {
         serializer->start_array(3);
-        serializer->append("type", std::string("node_match_t"));
+        serializer->append("type", serializer::serialization_type::logical_node_match);
         serializer->append("collection", collection_);
-        serializer->append("expressions", expressions_);
+        serializer->append("expression", expressions_.front());
         serializer->end_array();
     }
 
@@ -44,19 +50,6 @@ namespace components::logical_plan {
             node->append_expression(match);
         }
         return node;
-    }
-
-    node_match_ptr to_node_match(const msgpack::object& msg_object, std::pmr::memory_resource* resource) {
-        if (msg_object.type != msgpack::type::ARRAY) {
-            throw msgpack::type_error();
-        }
-        if (msg_object.via.array.size != 3) {
-            throw msgpack::type_error();
-        }
-        auto database = msg_object.via.array.ptr[0].as<std::string>();
-        auto collection = msg_object.via.array.ptr[1].as<std::string>();
-        auto expr = expressions::to_expression(msg_object.via.array.ptr[2], resource);
-        return make_node_match(resource, {database, collection}, expr);
     }
 
 } // namespace components::logical_plan

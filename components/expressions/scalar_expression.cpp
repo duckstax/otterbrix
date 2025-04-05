@@ -1,5 +1,6 @@
 #include "scalar_expression.hpp"
 #include <boost/container_hash/hash.hpp>
+#include <components/serialization/deserializer.hpp>
 #include <components/serialization/serializer.hpp>
 #include <sstream>
 
@@ -52,6 +53,17 @@ namespace components::expressions {
 
     void scalar_expression_t::append_param(const param_storage& param) { params_.push_back(param); }
 
+    expression_ptr scalar_expression_t::deserialize(serializer::base_deserializer_t* deserializer) {
+        auto type = deserializer->deserialize_scalar_type(1);
+        auto key = deserializer->deserialize_key(2);
+        auto params = deserializer->deserialize_param_storages(3);
+        auto res = make_scalar_expression(deserializer->resource(), type, key);
+        for (const auto& param : params) {
+            res->append_param(param);
+        }
+        return res;
+    }
+
     hash_t scalar_expression_t::hash_impl() const {
         hash_t hash_{0};
         boost::hash_combine(hash_, type_);
@@ -87,7 +99,7 @@ namespace components::expressions {
     }
     void scalar_expression_t::serialize_impl(serializer::base_serializer_t* serializer) const {
         serializer->start_array(4);
-        serializer->append("type", std::string("scalar_expression_t"));
+        serializer->append("type", serializer::serialization_type::expression_scalar);
         serializer->append("scalar type", type_);
         serializer->append("key", key_);
         serializer->append("parameters", params_);

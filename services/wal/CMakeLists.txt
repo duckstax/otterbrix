@@ -5,7 +5,6 @@ set( ${PROJECT_NAME}_HEADERS
 
 set(${PROJECT_NAME}_SOURCES
         dto.cpp
-        record.cpp
         manager_wal_replicate.cpp
         wal.cpp
 )
@@ -25,6 +24,7 @@ target_link_libraries(
         otterbrix::logical_plan
         otterbrix::locks
         otterbrix::file
+        otterbrix::serialization
 
         spdlog::spdlog
         Crc32c::crc32c

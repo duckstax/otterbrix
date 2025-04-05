@@ -2,6 +2,7 @@ project(serialization CXX)
 
 set(SOURCE_${PROJECT_NAME}
         serializer.cpp
+        deserializer.cpp
 )
 
 add_library(otterbrix_${PROJECT_NAME}

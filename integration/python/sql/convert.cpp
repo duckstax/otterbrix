@@ -297,7 +297,8 @@ void parse_find_condition_dict_(std::pmr::memory_resource* resource,
         auto union_condition = parent_condition;
         if (is_union_compare_condition(type)) {
             parent_condition->append_child(make_compare_union_expression(resource, type));
-            union_condition = parent_condition->children().at(parent_condition->children().size() - 1).get();
+            union_condition = reinterpret_cast<compare_expression_t*>(
+                parent_condition->children().at(parent_condition->children().size() - 1).get());
         }
         if (prev_key.empty()) {
             parse_find_condition_(resource, union_condition, condition[it], key, std::string(), aggregate, params);
@@ -336,7 +337,7 @@ expression_ptr parse_find_condition_(std::pmr::memory_resource* resource,
                               params);
     }
     if (res_condition->children().size() == 1) {
-        compare_expression_ptr child = res_condition->children()[0];
+        compare_expression_ptr child = reinterpret_cast<const compare_expression_ptr&>(res_condition->children()[0]);
         normalize(child);
         return child;
     }

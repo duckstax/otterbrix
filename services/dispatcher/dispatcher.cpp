@@ -174,69 +174,43 @@ namespace services::dispatcher {
         }
         last_wal_id_ = records_[load_count_answers_ - 1].id;
         for (auto& record : records_) {
-            switch (record.type) {
+            switch (record.data->type()) {
                 case node_type::create_database_t: {
-                    assert(record.data->type() == record.type &&
-                           "[dispatcher_t::load_from_wal_result]: [ case: node_type::create_database] variant "
-                           "record.data holds the alternative create_database_t");
                     components::session::session_id_t session_database;
                     execute_plan(session_database, record.data, record.params, manager_wal_);
                     break;
                 }
                 case node_type::drop_database_t: {
-                    assert(record.data->type() == record.type &&
-                           "[dispatcher_t::load_from_wal_result]: [ case: node_type::drop_database] variant "
-                           "record.data holds the alternative drop_database_t");
                     components::session::session_id_t session_database;
                     execute_plan(session_database, record.data, record.params, manager_wal_);
                     break;
                 }
                 case node_type::create_collection_t: {
-                    assert(record.data->type() == record.type &&
-                           "[dispatcher_t::load_from_wal_result]: [ case: node_type::create_collection] variant "
-                           "record.data holds the alternative create_collection_t");
                     components::session::session_id_t session_collection;
                     execute_plan(session_collection, record.data, record.params, manager_wal_);
                     break;
                 }
                 case node_type::drop_collection_t: {
-                    assert(record.data->type() == record.type &&
-                           "[dispatcher_t::load_from_wal_result]: [ case: node_type::drop_collection] variant "
-                           "record.data holds the alternative drop_collection_t");
                     components::session::session_id_t session_collection;
                     execute_plan(session_collection, record.data, record.params, manager_wal_);
                     break;
                 }
                 case node_type::insert_t: {
-                    trace(log_, "dispatcher_t::load_from_wal_result: insert_one {}", session.data());
-                    assert(record.data->type() == record.type &&
-                           "[dispatcher_t::load_from_wal_result]: [ case: node_type::insert_t] variant "
-                           "record.data holds the alternative insert_one_t");
                     components::session::session_id_t session_insert;
                     execute_plan(session_insert, record.data, record.params, manager_wal_);
                     break;
                 }
                 case node_type::delete_t: {
-                    assert(record.data->type() == record.type &&
-                           "[dispatcher_t::load_from_wal_result]: [ case: node_type::delete_t] variant "
-                           "record.data holds the alternative delete_one_t");
                     components::session::session_id_t session_delete;
                     execute_plan(session_delete, record.data, record.params, manager_wal_);
                     break;
                 }
                 case node_type::update_t: {
-                    trace(log_, "dispatcher_t::load_from_wal_result: update_one {}", session.data());
-                    assert(record.data->type() == record.type &&
-                           "[dispatcher_t::load_from_wal_result]: [ case: node_type::update_t] variant "
-                           "record.data holds the alternative update_one_t");
                     components::session::session_id_t session_update;
                     execute_plan(session_update, record.data, record.params, manager_wal_);
                     break;
                 }
                 case node_type::create_index_t: {
-                    assert(record.data->type() == record.type &&
-                           "[dispatcher_t::load_from_wal_result]: [ case: node_type::create_index] variant "
-                           "record.data holds the alternative create_index_t");
                     components::session::session_id_t session_create_index;
                     execute_plan(session_create_index, record.data, record.params, manager_wal_);
                     break;

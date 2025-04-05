@@ -21,6 +21,8 @@ namespace components::logical_plan {
 
         join_type type() const;
 
+        static node_ptr deserialize(serializer::base_deserializer_t* deserializer);
+
     private:
         join_type type_;
 

@@ -1,5 +1,7 @@
 #include "node_limit.hpp"
 
+#include <components/serialization/deserializer.hpp>
+
 #include <components/serialization/serializer.hpp>
 
 #include <sstream>
@@ -25,6 +27,12 @@ namespace components::logical_plan {
 
     const limit_t& node_limit_t::limit() const { return limit_; }
 
+    node_ptr node_limit_t::deserialize(serializer::base_deserializer_t* deserializer) {
+        auto collection = deserializer->deserialize_collection(1);
+        auto limit = deserializer->deserialize_limit(2);
+        return make_node_limit(deserializer->resource(), collection, limit);
+    }
+
     hash_t node_limit_t::hash_impl() const { return 0; }
 
     std::string node_limit_t::to_string_impl() const {
@@ -35,7 +43,7 @@ namespace components::logical_plan {
 
     void node_limit_t::serialize_impl(serializer::base_serializer_t* serializer) const {
         serializer->start_array(3);
-        serializer->append("type", std::string("node_limit_t"));
+        serializer->append("type", serializer::serialization_type::logical_node_limit);
         serializer->append("collection", collection_);
         serializer->append("limit", limit_);
         serializer->end_array();

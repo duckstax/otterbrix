@@ -9,13 +9,10 @@
 #include <memory_resource>
 #include <unordered_set>
 
-#include <msgpack.hpp>
-#include <msgpack/adaptor/list.hpp>
-#include <msgpack/zone.hpp>
-
 namespace components::serializer {
     class base_serializer_t;
-}
+    class base_deserializer_t;
+} // namespace components::serializer
 
 namespace components::logical_plan {
 
@@ -51,6 +48,8 @@ namespace components::logical_plan {
         hash_t hash() const;
         virtual void serialize(serializer::base_serializer_t*) const;
 
+        static node_ptr deserialize(serializer::base_deserializer_t* deserializer);
+
         std::string to_string() const;
         std::pmr::memory_resource* resource() const noexcept;
 
@@ -83,40 +82,4 @@ namespace components::logical_plan {
         return stream;
     }
 
-    node_ptr to_node_default(const msgpack::object& msg_object, node_type type, std::pmr::memory_resource* resource);
-
 } // namespace components::logical_plan
-
-// User defined class template specialization
-namespace msgpack {
-    MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {
-        namespace adaptor {
-
-            template<>
-            struct pack<components::logical_plan::node_ptr> final {
-                template<typename Stream>
-                packer<Stream>& operator()(msgpack::packer<Stream>& o,
-                                           components::logical_plan::node_ptr const& v) const {
-                    o.pack_array(2);
-                    o.pack(v->database_name());
-                    o.pack(v->collection_name());
-                    return o;
-                }
-            };
-
-            template<>
-            struct object_with_zone<components::logical_plan::node_ptr> final {
-                void operator()(msgpack::object::with_zone& o, components::logical_plan::node_ptr const& v) const {
-                    o.type = type::ARRAY;
-                    o.via.array.size = 2;
-                    o.via.array.ptr =
-                        static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size,
-                                                                            MSGPACK_ZONE_ALIGNOF(msgpack::object)));
-                    o.via.array.ptr[0] = msgpack::object(v->database_name(), o.zone);
-                    o.via.array.ptr[1] = msgpack::object(v->collection_name(), o.zone);
-                }
-            };
-
-        } // namespace adaptor
-    }     // MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS)
-} // namespace msgpack

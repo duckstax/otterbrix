@@ -6,7 +6,8 @@
 
 namespace components::serializer {
     class base_serializer_t;
-}
+    class base_deserializer_t;
+} // namespace components::serializer
 
 namespace components::expressions {
     class key_t;
@@ -25,6 +26,7 @@ namespace components::expressions {
         bool operator!=(const expression_i& rhs) const;
 
         void serialize(serializer::base_serializer_t*) const;
+        static boost::intrusive_ptr<expression_i> deserialize(serializer::base_deserializer_t* deserializer);
 
     protected:
         explicit expression_i(expression_group group);
