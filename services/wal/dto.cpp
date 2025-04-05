@@ -2,6 +2,7 @@
 
 #include <components/serialization/deserializer.hpp>
 #include <components/serialization/serializer.hpp>
+
 #include <absl/crc/crc32c.h>
 #include <chrono>
 #include <msgpack.hpp>
