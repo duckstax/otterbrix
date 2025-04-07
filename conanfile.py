@@ -6,6 +6,7 @@ class MyProjectConan(ConanFile):
     name = "my_project"
     version = "1.0"
     settings = "os", "compiler", "build_type", "arch"
+    python_requires = "conan1.59.0"
 
     requires = [
         "fmt/10.2.1",
