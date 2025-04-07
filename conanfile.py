@@ -42,6 +42,14 @@ class MyProjectConan(ConanFile):
     }
     generators = "CMakeDeps", "CMakeToolchain"
 
+    def config_options(self):
+        if self.settings.get_safe("compiler.cppstd") is None:
+            self.settings.cppstd = 17
+
+    def validate(self):
+        if not check_min_cppstd(self, 17):
+            raise ConanInvalidConfiguration("")
+
     def layout(self):
         cmake_layout(self)
 
