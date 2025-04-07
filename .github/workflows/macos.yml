@@ -26,7 +26,7 @@ jobs:
       - name: conan installation and configuration
         run: |
           pip install conan==2.15.0 pytest==6.2.5
-          conan profile detect --force
+          conan profile new default --detect
           conan config set general.parallel_download=$(sysctl -n hw.logicalcpu)
           conan config set general.cpu_count=$(sysctl -n hw.logicalcpu)
           conan remote add duckstax http://conan.duckstax.com
