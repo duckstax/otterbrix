@@ -26,8 +26,6 @@ jobs:
       - name: conan installation and configuration
         run: |
           conan profile detect --force
-          conan config set general.parallel_download=$(sysctl -n hw.logicalcpu)
-          conan config set general.cpu_count=$(sysctl -n hw.logicalcpu)
           conan remote add duckstax http://conan.duckstax.com
 
       - name: download dependencies
