@@ -6,13 +6,13 @@ class MyProjectConan(ConanFile):
     name = "my_project"
     version = "1.0"
     settings = "os", "compiler", "build_type", "arch"
+
     requires = [
-        "boost/1.86.0",
         "fmt/10.2.1",
         "spdlog/1.12.0",
         "pybind11/2.13.6",
         "msgpack-cxx/4.1.1",
-        "catch2/2.13.7",  # catch2/3.4.0 is commented
+        "catch2/2.13.7",
         "crc32c/1.1.2",
         "abseil/20230802.1",
         "benchmark/1.6.1",
@@ -21,6 +21,11 @@ class MyProjectConan(ConanFile):
         "magic_enum/0.8.1",
         "actor-zeta/1.0.0a11@duckstax/stable"
     ]
+
+    def configure(self):
+        # Здесь boost с override
+        self.requires("boost/1.86.0", override=True)
+
     options = {
         "actor-zeta/*:cxx_standard": [17],
         "actor-zeta/*:fPIC": [True, False],
@@ -36,9 +41,6 @@ class MyProjectConan(ConanFile):
         # "OpenSSL/*:shared": True,
     }
     generators = "CMakeDeps", "CMakeToolchain"
-
-    def configure(self):
-        self.requires("boost/1.86.0", override=True)
 
     def layout(self):
         cmake_layout(self)
