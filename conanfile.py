@@ -6,7 +6,6 @@ class MyProjectConan(ConanFile):
     name = "my_project"
     version = "1.0"
     settings = "os", "compiler", "build_type", "arch"
-    python_requires = "conan1.59.0"
 
     requires = [
         "fmt/10.2.1",
@@ -20,7 +19,7 @@ class MyProjectConan(ConanFile):
         "zlib/1.2.12",
         "bzip2/1.0.8",
         "magic_enum/0.8.1",
-        "actor-zeta/1.0.0a11@duckstax/stable"
+        #"actor-zeta/1.0.0a11@duckstax/stable"
     ]
 
     def configure(self):
@@ -28,17 +27,17 @@ class MyProjectConan(ConanFile):
         self.requires("boost/1.86.0", override=True)
 
     options = {
-        "actor-zeta/*:cxx_standard": [17],
-        "actor-zeta/*:fPIC": [True, False],
-        "actor-zeta/*:exceptions_disable": [True, False],
-        "actor-zeta/*:rtti_disable": [True, False],
+        #"actor-zeta/*:cxx_standard": [17],
+        #"actor-zeta/*:fPIC": [True, False],
+        #"actor-zeta/*:exceptions_disable": [True, False],
+        #"actor-zeta/*:rtti_disable": [True, False],
         # "OpenSSL/*:shared": [True, False],  # commented
     }
     default_options = {
-        "actor-zeta/*:cxx_standard": 17,
-        "actor-zeta/*:fPIC": True,
-        "actor-zeta/*:exceptions_disable": False,
-        "actor-zeta/*:rtti_disable": False,
+        #"actor-zeta/*:cxx_standard": 17,
+        #"actor-zeta/*:fPIC": True,
+        #"actor-zeta/*:exceptions_disable": False,
+        #"actor-zeta/*:rtti_disable": False,
         # "OpenSSL/*:shared": True,
     }
     generators = "CMakeDeps", "CMakeToolchain"
