@@ -50,6 +50,7 @@ class MyProjectConan(ConanFile):
 
     def generate(self):
         tc = CMakeToolchain(self)
+        tc.variables["CMAKE_CXX_STANDARD"] = "17"
         tc.generate()
         deps = CMakeDeps(self)
         deps.generate()
