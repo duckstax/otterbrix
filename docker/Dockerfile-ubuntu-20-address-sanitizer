@@ -27,8 +27,8 @@ RUN    pip3 install --no-cache-dir conan==1.60.0 pytest==6.2.5 cmake && \
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
 WORKDIR /app/build
-COPY conanfile.txt ./conanfile.txt
-RUN conan install conanfile.txt --build missing -s build_type=Release
+COPY conanfile.py ./conanfile.py
+RUN conan install conanfile.py --build missing -s build_type=Release
 
 WORKDIR /app
 COPY ./integration ./integration

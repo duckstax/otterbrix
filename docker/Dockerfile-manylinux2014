@@ -14,7 +14,7 @@ RUN  conan remote add duckstax http://conan.duckstax.com
 
 WORKDIR /app
 
-COPY ./conanfile.txt ./conanfile.txt
+COPY ./conanfile.py ./conanfile.py
 RUN conan install . --build missing  \
     --build fmt \
     --build spdlog  \
