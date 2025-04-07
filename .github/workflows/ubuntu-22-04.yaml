@@ -32,7 +32,6 @@ jobs:
         run: |
           pip install conan==2.15.0 pytest==6.2.5
           conan profile detect --force
-          conan profile update conf.tools.gnu:cxxstd=gnu11 defaul
           conan config set general.parallel_download=$(nproc)
           conan config set general.cpu_count=$(nproc)
           conan remote add duckstax http://conan.duckstax.com
