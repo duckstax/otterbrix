@@ -25,7 +25,7 @@ jobs:
 
       - name: conan installation and configuration
         run: |
-          pip install conan==1.64.0 pytest==6.2.5
+          pip install conan==2.15.0 pytest==6.2.5
           conan user
           conan profile new default --detect --force
           conan config set general.parallel_download=$(sysctl -n hw.logicalcpu)
