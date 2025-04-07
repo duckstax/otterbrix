@@ -14,7 +14,7 @@ magic_enum/0.8.1
 
 actor-zeta/1.0.0a11@duckstax/stable
 
-[overrides]
+[requires.overrides]
 boost/*: 1.86.0
 
 [options]
