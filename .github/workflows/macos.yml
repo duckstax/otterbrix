@@ -21,12 +21,11 @@ jobs:
       - name: Install system dependencies
         run: |
             brew install ninja cmake
-            python3 -m pip install --no-cache-dir conan==1.64 --break-system-packages
+            python3 -m pip install --no-cache-dir conan==2.15.0  pytest==6.2.5--break-system-packages
 
       - name: conan installation and configuration
         run: |
-          pip install conan==2.15.0 pytest==6.2.5
-          conan profile new default --detect
+          conan profile detect --force
           conan config set general.parallel_download=$(sysctl -n hw.logicalcpu)
           conan config set general.cpu_count=$(sysctl -n hw.logicalcpu)
           conan remote add duckstax http://conan.duckstax.com
