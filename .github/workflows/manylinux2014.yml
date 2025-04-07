@@ -62,8 +62,6 @@ jobs:
         run: |
           pip3 install --retries=30 conan==2.15.0 cmake
           conan profile detect --force
-          conan config set general.parallel_download=$(nproc)
-          conan config set general.cpu_count=$(nproc)
           conan remote add duckstax http://conan.duckstax.com
 
       - name: Download and Install conan dependencies

@@ -37,6 +37,9 @@ class MyProjectConan(ConanFile):
     }
     generators = "CMakeDeps", "CMakeToolchain"
 
+    def configure(self):
+        self.requires("boost/1.86.0", override=True)
+
     def layout(self):
         cmake_layout(self)
 
