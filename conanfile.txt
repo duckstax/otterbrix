@@ -3,7 +3,7 @@ boost/1.86.0
 fmt/10.2.1
 spdlog/1.12.0
 pybind11/2.13.6
-msgpack-cxx/4.1.1
+msgpack-cxx/7.0.0
 catch2/2.13.7 #catch2/3.4.0
 crc32c/1.1.2
 abseil/20230802.1
