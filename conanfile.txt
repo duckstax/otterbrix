@@ -16,11 +16,11 @@ actor-zeta/1.0.0a11@duckstax/stable
 
 
 [options]
-actor-zeta:cxx_standard=17
-actor-zeta:fPIC=True
-actor-zeta:exceptions_disable=False
-actor-zeta:rtti_disable=False
-#OpenSSL:shared = True
+actor-zeta/*:cxx_standard=17
+actor-zeta/*:fPIC=True
+actor-zeta/*:exceptions_disable=False
+actor-zeta/*:rtti_disable=False
+#OpenSSL/*:shared=True
 
 [generators]
 cmake
