@@ -72,6 +72,7 @@ jobs:
           --build fmt \
           --build spdlog  \
           -s build_type=Release \
+          -s compiler.cppstd=gnu17 \
           -g CMakeDeps -g CMakeToolchain
 
       - name: Build wheel
