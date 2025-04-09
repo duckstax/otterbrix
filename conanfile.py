@@ -15,7 +15,7 @@ class MyProjectConan(ConanFile):
         self.requires("msgpack-cxx/4.1.1@")
         self.requires("catch2/2.13.7@")
         self.requires("crc32c/1.1.2@")
-        self.requires("abseil/20211102.0@")
+        self.requires("abseil/20230802.1@")
         self.requires("benchmark/1.6.1@")
         self.requires("zlib/1.2.12@")
         self.requires("bzip2/1.0.8@")
