@@ -20,7 +20,7 @@ class MyProjectConan(ConanFile):
         self.requires("zlib/1.2.12@")
         self.requires("bzip2/1.0.8@")
         self.requires("magic_enum/0.8.1@")
-        self.requires("actor-zeta/1.0.0a12@otterbrix/stable")
+        self.requires("actor-zeta/1.0.0a12@")
 
     options = {
         "actor-zeta/*:cxx_standard": [17],
