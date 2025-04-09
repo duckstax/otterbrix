@@ -18,7 +18,7 @@ RUN apt update && \
 
 RUN    pip3 install --no-cache-dir conan==2.15.0 pytest==6.2.5 cmake && \
        conan profile detect --force && \
-       conan remote add duckstax http://conan.duckstax.com
+       conan remote add otterbrix http://conan.otterbrix.com
 
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 

@@ -6,7 +6,7 @@ RUN yum install -y ninja-build python3-pip python3-devel wget unzip zip devtools
 
 RUN    pip3 install --no-cache-dir conan==2.15.0 pytest==6.2.5 cmake && \
        conan profile detect --force && \
-       conan remote add duckstax http://conan.duckstax.com
+       conan remote add otterbrix http://conan.otterbrix.com
 
 WORKDIR /app
 

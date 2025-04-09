@@ -26,7 +26,7 @@ jobs:
       - name: conan installation and configuration
         run: |
           conan profile detect --force
-          conan remote add duckstax http://conan.duckstax.com
+          conan remote add otterbrix http://conan.otterbrix.com
 
       - name: download dependencies
         run: |

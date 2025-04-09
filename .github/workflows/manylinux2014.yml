@@ -62,7 +62,7 @@ jobs:
         run: |
           pip3 install --retries=30 conan==2.15.0 cmake
           conan profile detect --force
-          conan remote add duckstax http://conan.duckstax.com
+          conan remote add otterbrix http://conan.otterbrix.com
 
       - name: Download and Install conan dependencies
         run: |

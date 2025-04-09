@@ -33,7 +33,7 @@ jobs:
         run: |
           pip install conan==2.15.0 pytest==6.2.5
           conan profile detect --force
-          conan remote add duckstax http://conan.duckstax.com
+          conan remote add otterbrix http://conan.otterbrix.com
 
       - name: download dependencies
         run: |

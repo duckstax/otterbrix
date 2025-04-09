@@ -31,7 +31,7 @@ jobs:
             
             pip install conan==2.15.0 pytest==6.2.5
             conan profile detect --force
-            conan remote add duckstax http://conan.duckstax.com --insert 0
+            conan remote add otterbrix http://conan.otterbrix.com --insert 0
             
             mkdir build
             pwd
