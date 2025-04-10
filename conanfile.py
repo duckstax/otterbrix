@@ -10,8 +10,8 @@ class OtterbrixConan(ConanFile):
 
     def configure(self):
         self.requires("boost/1.86.0@", override=True)
-        self.requires("fmt/10.2.1@")
-        self.requires("spdlog/1.12.0@")
+        self.requires("fmt/11.1.3@")
+        self.requires("spdlog/1.15.1@")
         self.requires("pybind11/2.10.0@")
         self.requires("msgpack-cxx/4.1.1@")
         self.requires("catch2/2.13.7@")
@@ -57,6 +57,7 @@ class OtterbrixConan(ConanFile):
 
     def generate(self):
         tc = CMakeToolchain(self)
+        tc.variables["generator"] = "Ninja"
         tc.variables["CMAKE_CXX_STANDARD"] = "17"
         tc.generate()
 
