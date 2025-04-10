@@ -24,7 +24,7 @@ set_property(TARGET otterbrix_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 
 target_link_libraries(
         otterbrix_${PROJECT_NAME} PUBLIC
-        Crc32c::crc32c
+        absl::crc32c
         msgpackc-cxx
         otterbrix::types
         otterbrix::document

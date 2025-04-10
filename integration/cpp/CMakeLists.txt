@@ -48,7 +48,7 @@ target_link_libraries(
         pybind11::pybind11
         msgpackc-cxx
         #CONAN_PKG::date
-        Crc32c::crc32c
+        absl::crc32c
         absl::int128
         actor-zeta::actor-zeta
         Boost::boost
@@ -89,7 +89,7 @@ if (DEV_MODE OR ALLOW_BENCHMARK)
             spdlog::spdlog
             msgpackc-cxx
             #CONAN_PKG::date
-            Crc32c::crc32c
+            absl::crc32c
             absl::int128
             actor-zeta::actor-zeta
             Boost::boost

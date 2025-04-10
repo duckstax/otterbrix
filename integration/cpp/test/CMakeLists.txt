@@ -36,7 +36,7 @@ target_link_libraries(
         msgpackc-cxx
         #CONAN_PKG::date
         Catch2::Catch2
-        Crc32c::crc32c
+        absl::crc32c
         absl::int128
         benchmark::benchmark
         actor-zeta::actor-zeta

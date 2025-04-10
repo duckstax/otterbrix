@@ -639,7 +639,7 @@ namespace core::b_plus_tree {
         assert(is_valid_ && "block is not initialized!");
         data_ptr_t crc_buffer = reinterpret_cast<data_ptr_t>(count_);
         size_t size = full_size_ - (crc_buffer - internal_buffer_);
-        return crc32c::Crc32c(crc_buffer, size);
+        return absl::Crc32c(crc_buffer, size);
     }
 
 } // namespace core::b_plus_tree

@@ -1,7 +1,7 @@
 #include "dto.hpp"
 
+#include <absl/crc/crc32c.h>
 #include <chrono>
-#include <crc32c/crc32c.h>
 #include <msgpack.hpp>
 #include <unistd.h>
 
@@ -46,7 +46,7 @@ namespace services::wal {
     }
 
     crc32_t pack(buffer_t& storage, char* input, size_t data_size) {
-        auto last_crc32_ = crc32c::Crc32c(input, data_size);
+        auto last_crc32_ = absl::Crc32c(input, data_size);
         append_size(storage, size_tt(data_size));
         append_payload(storage, input, data_size);
         append_crc32(storage, last_crc32_);
