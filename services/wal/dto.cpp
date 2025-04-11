@@ -46,11 +46,11 @@ namespace services::wal {
     }
 
     crc32_t pack(buffer_t& storage, char* input, size_t data_size) {
-        auto last_crc32_ = absl::Crc32c(input, data_size);
+        auto last_crc32_ = absl::ComputeCrc32c({input, data_size});
         append_size(storage, size_tt(data_size));
         append_payload(storage, input, data_size);
-        append_crc32(storage, last_crc32_);
-        return last_crc32_;
+        append_crc32(storage, static_cast<uint32_t>(last_crc32_));
+        return static_cast<uint32_t>(last_crc32_);
     }
 
     id_t unpack_wal_id(buffer_t& storage) {
