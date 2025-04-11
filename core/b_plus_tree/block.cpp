@@ -1,8 +1,8 @@
 #include "block.hpp"
+#include <absl/crc/crc32c.h>
 #include <algorithm>
 #include <cassert>
 #include <core/buffer.hpp>
-#include <crc32c/crc32c.h>
 #include <cstring>
 
 namespace core::b_plus_tree {
@@ -635,11 +635,11 @@ namespace core::b_plus_tree {
         return {internal_buffer_ + meta->offset, meta->size};
     }
 
-    size_t block_t::calculate_checksum_() const {
+    uint64_t block_t::calculate_checksum_() const {
         assert(is_valid_ && "block is not initialized!");
         data_ptr_t crc_buffer = reinterpret_cast<data_ptr_t>(count_);
         size_t size = full_size_ - (crc_buffer - internal_buffer_);
-        return absl::Crc32c(crc_buffer, size);
+        return static_cast<uint32_t>(absl::ComputeCrc32c({reinterpret_cast<const char*>(crc_buffer), size}));
     }
 
 } // namespace core::b_plus_tree

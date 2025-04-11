@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
+#include <absl/crc/crc32c.h>
 #include <actor-zeta.hpp>
-#include <crc32c/crc32c.h>
 #include <log/log.hpp>
 #include <string>
 #include <thread>
@@ -91,7 +91,7 @@ TEST_CASE("insert one test") {
         auto output = test_wal.wal->test_read(start, finish);
 
         auto crc32_index = entry.size_;
-        crc32_t crc32 = absl::Crc32c(output.data(), crc32_index);
+        crc32_t crc32 = static_cast<uint32_t>(absl::ComputeCrc32c({output.data(), crc32_index}));
 
         unpack(output, entry, &resource);
         entry.crc32_ = read_crc32(output, entry.size_);
@@ -129,7 +129,7 @@ TEST_CASE("insert many empty test") {
     auto output = test_wal.wal->test_read(start, finish);
 
     auto crc32_index = entry.size_;
-    crc32_t crc32 = absl::Crc32c(output.data(), crc32_index);
+    crc32_t crc32 = static_cast<uint32_t>(absl::ComputeCrc32c({output.data(), crc32_index}));
 
     unpack(output, entry, &resource);
     entry.crc32_ = read_crc32(output, entry.size_);
@@ -165,7 +165,7 @@ TEST_CASE("insert many test") {
         auto output = test_wal.wal->test_read(start, finish);
 
         auto crc32_index = entry.size_;
-        crc32_t crc32 = absl::Crc32c(output.data(), crc32_index);
+        crc32_t crc32 = static_cast<uint32_t>(absl::ComputeCrc32c({output.data(), crc32_index}));
 
         unpack(output, entry, &resource);
         entry.crc32_ = read_crc32(output, entry.size_);
