@@ -52,7 +52,7 @@ jobs:
       - name: Test
         run: |
           cd build
-          ctest -C -V --output-on-failure
+          ctest -C Release -V --output-on-failure
 
       - name: PyTest
         run: |
