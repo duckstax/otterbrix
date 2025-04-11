@@ -1,8 +1,7 @@
 from conan import tools, ConanFile
-from conan.tools.cmake import CMake, CMakeToolchain, cmake_layout
+from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain, cmake_layout
 from conan.tools.build import check_min_cppstd
 from conan.errors import ConanInvalidConfiguration
-
 class OtterbrixConan(ConanFile):
     name = "otterbrix"
     version = "1.0"
