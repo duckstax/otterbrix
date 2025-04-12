@@ -292,7 +292,7 @@ namespace core::b_plus_tree {
         metadata_range find_index_range_(const index_t& index) const;
         void remove_range_(metadata_range range);
         item_data metadata_to_item_data_(const metadata* meta) const;
-        size_t calculate_checksum_() const;
+        uint64_t calculate_checksum_() const;
 
         std::pmr::memory_resource* resource_ = nullptr;
         index_t (*key_func_)(const item_data&);

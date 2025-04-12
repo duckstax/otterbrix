@@ -21,32 +21,28 @@ jobs:
       - name: Install system dependencies
         run: |
             brew install ninja cmake
-            python3 -m pip install --no-cache-dir conan==1.64 --break-system-packages
+            python3 -m pip install --no-cache-dir conan==2.15.0  pytest==6.2.5 --break-system-packages
 
       - name: conan installation and configuration
         run: |
-          pip install conan==1.64.0 pytest==6.2.5
-          conan user
-          conan profile new default --detect --force
-          conan config set general.parallel_download=$(sysctl -n hw.logicalcpu)
-          conan config set general.cpu_count=$(sysctl -n hw.logicalcpu)
-          conan remote add duckstax http://conan.duckstax.com
+          conan profile detect --force
+          conan remote add otterbrix http://conan.otterbrix.com
 
       - name: download dependencies
         run: |
           mkdir build && cd build
-          cp ../conanfile.txt .
-          conan install . --build missing -s build_type=Release
+          cp ../conanfile.py .
+          conan install . --build missing -s build_type=Release -s compiler.cppstd=gnu17
 
       - name: build
         env:
           CC: gcc
         run: |
           cd build
-          cmake  -G Ninja -DCMAKE_TOOLCHAIN_FILE="conan_toolchain.cmake" -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON -DEXAMPLE=ON ..
+          cmake  -G Ninja -DCMAKE_TOOLCHAIN_FILE=./build/Release/generators/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON -DEXAMPLE=ON ..
           cmake --build .
 
       - name: Test
         run: |
           cd build
-          ctest -C -V --output-on-failure
+          ctest -C Release -V --output-on-failure

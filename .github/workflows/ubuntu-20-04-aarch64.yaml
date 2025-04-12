@@ -29,22 +29,17 @@ jobs:
           run: |
             apt update && apt install -y  build-essential ninja-build python3-pip python3-dev curl gnupg apt-transport-https  cmake
             
-            pip install conan==1.64.0 pytest==6.2.5
-            
-            conan user
-            conan profile new default --detect --force
-            conan profile update settings.compiler.libcxx=libstdc++11 default
-            conan config set general.parallel_download=$(nproc)
-            conan config set general.cpu_count=$(nproc)
-            conan remote add duckstax http://conan.duckstax.com --insert 0
+            pip install conan==2.15.0 pytest==6.2.5
+            conan profile detect --force
+            conan remote add otterbrix http://conan.otterbrix.com --insert 0
             
             mkdir build
             pwd
             ls
             cd build
             cp ../conanfile.txt .
-            conan install . --build missing -s build_type=Release
+            conan install . --build missing -s build_type=Release -s compiler.cppstd=gnu17
             
-            cmake  -G Ninja -DCMAKE_TOOLCHAIN_FILE="conan_toolchain.cmake" -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON ..
+            cmake  -G Ninja -DCMAKE_TOOLCHAIN_FILE=./build/Release/generators/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON ..
             cmake --build .
             ctest -C -V --output-on-failure

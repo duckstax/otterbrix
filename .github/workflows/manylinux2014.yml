@@ -1,18 +1,18 @@
 name: manylinux2014
 
-on:
-  push:
-    paths-ignore:
-      - '**.md'
-    tags:
-      - '*'
-    branches:
-      - '**'
-  pull_request:
-    paths-ignore:
-      - '**.md'
-    branches:
-      - '**'
+#on:
+#  push:
+#    paths-ignore:
+#      - '**.md'
+#    tags:
+#      - '*'
+#    branches:
+#      - '**'
+#  pull_request:
+#    paths-ignore:
+#      - '**.md'
+#    branches:
+#      - '**'
 
 
 env:
@@ -60,23 +60,19 @@ jobs:
 
       - name: Set env conan dependencies
         run: |
-          pip3 install --retries=30 conan==1.66 cmake
-          conan user
-          conan profile new default --detect --force
-          conan profile update settings.compiler.libcxx=libstdc++11 default
-          conan config set general.parallel_download=$(nproc)
-          conan config set general.cpu_count=$(nproc)
-          conan config install conan
-          conan remote add duckstax http://conan.duckstax.com
+          pip3 install --retries=30 conan==2.15.0 cmake
+          conan profile detect --force
+          conan remote add otterbrix http://conan.otterbrix.com
 
       - name: Download and Install conan dependencies
         run: |
           pwd
           ls
-          conan install conanfile.txt --build missing  \
+          conan install conanfile.py --build missing  \
           --build fmt \
           --build spdlog  \
           -s build_type=Release \
+          -s compiler.cppstd=gnu17 \
           -g CMakeDeps -g CMakeToolchain
 
       - name: Build wheel
@@ -88,7 +84,7 @@ jobs:
 
           python3 -m pip install wheel setuptools scikit-build==0.16.6 pytest==6.2.5
           mkdir -p $(echo "./$(python3 get_path.py )")
-          conan install conanfile.txt --build missing -s build_type=Release -if=$(echo "./$(python3 get_path.py )")
+          conan install conanfile.py --build missing -s build_type=Release -if=$(echo "./$(python3 get_path.py )")
           ls
           python3 setup.py bdist_wheel --verbose
 
