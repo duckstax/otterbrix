@@ -24,7 +24,7 @@ namespace components::sql::transform::impl {
                         return {document::value_t(tape, int_value), std::to_string(int_value)};
                     }
                     case T_Float: {
-                        return {document::value_t(tape, floatVal(value)), strVal(value)};
+                        return {document::value_t(tape, static_cast<float>(floatVal(value))), strVal(value)};
                     }
                 }
             }
@@ -82,9 +82,13 @@ namespace components::sql::transform::impl {
                 return expr;
             }
             case AEXPR_OP: {
-                assert(nodeTag(node->lexpr) == T_ColumnRef || nodeTag(node->rexpr) == T_ColumnRef ||
-                       nodeTag(node->lexpr) == T_A_Const || nodeTag(node->rexpr) == T_A_Const ||
-                       nodeTag(node->lexpr) == T_TypeCast || nodeTag(node->rexpr) == T_TypeCast);
+                assert(nodeTag(node) == T_A_Indirection || nodeTag(node->lexpr) == T_ColumnRef ||
+                       nodeTag(node->rexpr) == T_ColumnRef || nodeTag(node->lexpr) == T_A_Const ||
+                       nodeTag(node->rexpr) == T_A_Const || nodeTag(node->lexpr) == T_TypeCast ||
+                       nodeTag(node->rexpr) == T_TypeCast);
+                if (nodeTag(node) == T_A_Indirection) {
+                    return transform_a_indirection(statement, pg_ptr_cast<A_Indirection>(node));
+                }
                 if (nodeTag(node->lexpr) == T_ColumnRef) {
                     auto key_left = strVal(pg_ptr_cast<ColumnRef>(node->lexpr)->fields->lst.back().data);
                     if (nodeTag(node->rexpr) == T_ColumnRef) {
@@ -138,6 +142,8 @@ namespace components::sql::transform::impl {
                                                                             A_Indirection* node) {
         if (node->arg->type == T_A_Expr) {
             return transform_a_expr(statement, pg_ptr_cast<A_Expr>(node->arg));
+        } else if (node->arg->type == T_A_Indirection) {
+            return transform_a_indirection(statement, pg_ptr_cast<A_Indirection>(node->arg));
         } else {
             throw std::runtime_error("Unsupported node type: " + node_tag_to_string(node->type));
         }

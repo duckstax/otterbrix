@@ -41,6 +41,10 @@ TEST_CASE("sql::select_from_where") {
         R"_($aggregate: {$match: {$and: ["number": {$eq: #0}, "name": {$eq: #1}, "count": {$eq: #2}]}})_",
         vec({new_value(10l), new_value(std::pmr::string("doc 10")), new_value(2l)}));
 
+    TEST_SIMPLE_UPDATE(R"_(SELECT * FROM TestDatabase.TestCollection WHERE ((((number = 10 AND name = 'doc 10'))));)_",
+                       R"_($aggregate: {$match: {$and: ["number": {$eq: #0}, "name": {$eq: #1}]}})_",
+                       vec({new_value(10l), new_value(std::pmr::string("doc 10"))}));
+
     TEST_SIMPLE_UPDATE(
         R"_(SELECT * FROM TestDatabase.TestCollection WHERE number = 10 OR name = 'doc 10' OR "count" = 2;)_",
         R"_($aggregate: {$match: {$or: ["number": {$eq: #0}, "name": {$eq: #1}, "count": {$eq: #2}]}})_",
