@@ -27,7 +27,7 @@ target_link_libraries(
         otterbrix::file
 
         spdlog::spdlog
-        Crc32c::crc32c
+        absl::crc32c
         actor-zeta::actor-zeta
         absl::int128
         Boost::boost

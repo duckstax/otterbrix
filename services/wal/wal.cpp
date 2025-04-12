@@ -1,5 +1,5 @@
 #include "wal.hpp"
-#include <crc32c/crc32c.h>
+#include <absl/crc/crc32c.h>
 #include <unistd.h>
 #include <utility>
 
@@ -395,7 +395,7 @@ namespace services::wal {
             auto finish = start + record.size + sizeof(crc32_t);
             auto output = read(start, finish);
             record.crc32 = read_crc32(output, record.size);
-            if (record.crc32 == crc32c::Crc32c(output.data(), record.size)) {
+            if (record.crc32 == static_cast<uint32_t>(absl::ComputeCrc32c({output.data(), record.size}))) {
                 msgpack::unpacked msg;
                 msgpack::unpack(msg, output.data(), record.size);
                 const auto& o = msg.get();
