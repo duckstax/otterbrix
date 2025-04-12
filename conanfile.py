@@ -8,7 +8,7 @@ class OtterbrixConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
 
     def configure(self):
-        self.requires("boost/1.86.0@", override=True)
+        self.requires("boost/1.87.0", override=True)
         self.requires("fmt/11.1.3@")
         self.requires("spdlog/1.15.1@")
         self.requires("pybind11/2.10.0@")
