@@ -55,7 +55,9 @@ namespace services::collection::operators::predicates {
                 std::vector<predicate_ptr> nested;
                 nested.reserve(expr->children().size());
                 for (const auto& nested_expr : expr->children()) {
-                    nested.emplace_back(create_simple_predicate(context, nested_expr));
+                    nested.emplace_back(create_simple_predicate(
+                        context,
+                        reinterpret_cast<const components::expressions::compare_expression_ptr&>(nested_expr)));
                 }
                 return {new simple_predicate(context, std::move(nested), expr->type())};
             }

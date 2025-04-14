@@ -1,5 +1,7 @@
 #include "compare_expression.hpp"
 #include <boost/container_hash/hash.hpp>
+#include <components/serialization/deserializer.hpp>
+#include <components/serialization/serializer.hpp>
 #include <sstream>
 
 namespace components::expressions {
@@ -16,8 +18,7 @@ namespace components::expressions {
         , type_(type)
         , key_left_(key)
         , value_(value)
-        , children_(resource)
-        , union_(is_union_compare_condition(type_)) {}
+        , children_(resource) {}
 
     compare_expression_t::compare_expression_t(std::pmr::memory_resource* resource,
                                                compare_type type,
@@ -27,8 +28,7 @@ namespace components::expressions {
         , type_(type)
         , key_left_(key_left)
         , key_right_(key_right)
-        , children_(resource)
-        , union_(is_union_compare_condition(type_)) {}
+        , children_(resource) {}
 
     compare_type compare_expression_t::type() const { return type_; }
 
@@ -38,13 +38,36 @@ namespace components::expressions {
 
     core::parameter_id_t compare_expression_t::value() const { return value_; }
 
-    const std::pmr::vector<compare_expression_ptr>& compare_expression_t::children() const { return children_; }
+    const std::pmr::vector<expression_ptr>& compare_expression_t::children() const { return children_; }
 
     void compare_expression_t::set_type(compare_type type) { type_ = type; }
 
-    void compare_expression_t::append_child(const compare_expression_ptr& child) { children_.push_back(child); }
+    void compare_expression_t::append_child(const expression_ptr& child) { children_.push_back(child); }
 
-    bool compare_expression_t::is_union() const { return union_; }
+    bool compare_expression_t::is_union() const { return is_union_compare_condition(type_); }
+
+    expression_ptr compare_expression_t::deserialize(serializer::base_deserializer_t* deserializer) {
+        auto type = deserializer->deserialize_compare_type(1);
+        auto key_left = deserializer->deserialize_key(2);
+        auto key_right = deserializer->deserialize_key(3);
+        auto param = deserializer->deserialize_param_id(4);
+        auto exprs = deserializer->deserialize_expressions(5);
+
+        compare_expression_ptr res;
+        if (is_union_compare_condition(type)) {
+            res = make_compare_union_expression(deserializer->resource(), type);
+            for (const auto& expr : exprs) {
+                res->append_child(expr);
+            }
+        } else {
+            if (key_right.is_null()) {
+                res = make_compare_expression(deserializer->resource(), type, key_left, param);
+            } else {
+                res = make_compare_expression(deserializer->resource(), type, key_left, key_right);
+            }
+        }
+        return res;
+    }
 
     hash_t compare_expression_t::hash_impl() const {
         hash_t hash_{0};
@@ -53,7 +76,7 @@ namespace components::expressions {
         boost::hash_combine(hash_, key_right_.hash());
         boost::hash_combine(hash_, std::hash<uint64_t>()(value_));
         for (const auto& child : children_) {
-            boost::hash_combine(hash_, child->hash_impl());
+            boost::hash_combine(hash_, reinterpret_cast<const compare_expression_ptr&>(child)->hash_impl());
         }
         return hash_;
     }
@@ -68,7 +91,7 @@ namespace components::expressions {
                 if (i > 0) {
                     stream << ", ";
                 }
-                stream << children().at(i)->to_string_impl();
+                stream << reinterpret_cast<const compare_expression_ptr&>(children().at(i))->to_string_impl();
             }
             stream << "]";
         } else {
@@ -86,6 +109,17 @@ namespace components::expressions {
         return type_ == other->type_ && key_left_ == other->key_left_ && key_right_ == other->key_right_ &&
                value_ == other->value_ && children_.size() == other->children_.size() &&
                std::equal(children_.begin(), children_.end(), other->children_.begin());
+    }
+
+    void compare_expression_t::serialize_impl(serializer::base_serializer_t* serializer) const {
+        serializer->start_array(6);
+        serializer->append("type", serializer::serialization_type::expression_compare);
+        serializer->append("compare type", type_);
+        serializer->append("key left", key_left_);
+        serializer->append("key right", key_right_);
+        serializer->append("value", value_);
+        serializer->append("child expressions", children_);
+        serializer->end_array();
     }
 
     compare_expression_ptr make_compare_expression(std::pmr::memory_resource* resource,

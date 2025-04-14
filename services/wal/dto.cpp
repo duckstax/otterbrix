@@ -1,11 +1,16 @@
 #include "dto.hpp"
 
+#include <components/serialization/deserializer.hpp>
+#include <components/serialization/serializer.hpp>
+
 #include <absl/crc/crc32c.h>
 #include <chrono>
 #include <msgpack.hpp>
 #include <unistd.h>
 
 namespace services::wal {
+
+    using buffer_element_t = char;
 
     void append_crc32(buffer_t& storage, crc32_t crc32) {
         storage.push_back(buffer_element_t(crc32 >> 24 & 0xff));
@@ -51,6 +56,32 @@ namespace services::wal {
         append_payload(storage, input, data_size);
         append_crc32(storage, static_cast<uint32_t>(last_crc32_));
         return static_cast<uint32_t>(last_crc32_);
+    }
+
+    crc32_t pack(buffer_t& storage,
+                 crc32_t last_crc32,
+                 id_t id,
+                 const components::logical_plan::node_ptr& data,
+                 const components::logical_plan::parameter_node_ptr& params) {
+        components::serializer::msgpack_serializer_t serializer(data->resource());
+        serializer.start_array(4);
+        serializer.append("crc", static_cast<uint64_t>(last_crc32));
+        serializer.append("id", static_cast<uint64_t>(id));
+        serializer.append("node", data);
+        serializer.append("params", params);
+        serializer.end_array();
+        auto buffer = serializer.result();
+
+        return pack(storage, buffer.data(), buffer.size());
+    }
+
+    void unpack(buffer_t& storage, wal_entry_t& entry) {
+        components::serializer::msgpack_deserializer_t deserializer(storage);
+
+        entry.last_crc32_ = deserializer.deserialize_uint64(0);
+        entry.id_ = deserializer.deserialize_uint64(1);
+        entry.entry_ = deserializer.deserialize_logical_node(2);
+        entry.params_ = deserializer.deserialize_parameters(3);
     }
 
     id_t unpack_wal_id(buffer_t& storage) {

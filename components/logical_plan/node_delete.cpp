@@ -1,6 +1,10 @@
 #include "node_delete.hpp"
 #include "node_limit.hpp"
 #include "node_match.hpp"
+#include <components/serialization/deserializer.hpp>
+
+#include <components/serialization/serializer.hpp>
+
 #include <sstream>
 
 namespace components::logical_plan {
@@ -12,6 +16,15 @@ namespace components::logical_plan {
         : node_t(resource, node_type::delete_t, collection) {
         append_child(match);
         append_child(limit);
+    }
+
+    node_ptr node_delete_t::deserialize(serializer::base_deserializer_t* deserializer) {
+        collection_full_name_t collection = deserializer->deserialize_collection(1);
+        auto children = deserializer->deserialize_nodes(2);
+        return make_node_delete(deserializer->resource(),
+                                collection,
+                                reinterpret_cast<const node_match_ptr&>(children.at(0)),
+                                reinterpret_cast<const node_limit_ptr&>(children.at(1)));
     }
 
     hash_t node_delete_t::hash_impl() const { return 0; }
@@ -30,6 +43,14 @@ namespace components::logical_plan {
         }
         stream << "}";
         return stream.str();
+    }
+
+    void node_delete_t::serialize_impl(serializer::base_serializer_t* serializer) const {
+        serializer->start_array(3);
+        serializer->append("type", serializer::serialization_type::logical_node_delete);
+        serializer->append("collection", collection_);
+        serializer->append("child nodes", children_);
+        serializer->end_array();
     }
 
     node_delete_ptr make_node_delete_many(std::pmr::memory_resource* resource,
@@ -52,20 +73,6 @@ namespace components::logical_plan {
                                      const node_match_ptr& match,
                                      const node_limit_ptr& limit) {
         return {new node_delete_t{resource, collection, match, limit}};
-    }
-
-    node_delete_ptr to_node_delete(const msgpack::object& msg_object, std::pmr::memory_resource* resource) {
-        if (msg_object.type != msgpack::type::ARRAY) {
-            throw msgpack::type_error();
-        }
-        if (msg_object.via.array.size != 4) {
-            throw msgpack::type_error();
-        }
-        auto database = msg_object.via.array.ptr[0].as<std::string>();
-        auto collection = msg_object.via.array.ptr[1].as<std::string>();
-        auto match = to_node_match(msg_object.via.array.ptr[2], resource);
-        auto limit = to_node_limit(msg_object.via.array.ptr[3], resource);
-        return make_node_delete(resource, {database, collection}, match, limit);
     }
 
 } // namespace components::logical_plan

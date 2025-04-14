@@ -1,6 +1,9 @@
 #include "manager_disk.hpp"
 #include "result.hpp"
 #include "route.hpp"
+#include <components/serialization/deserializer.hpp>
+#include <components/serialization/serializer.hpp>
+
 #include <components/index/disk/route.hpp>
 #include <core/system_command.hpp>
 #include <services/collection/collection.hpp>
@@ -371,8 +374,11 @@ namespace services::disk {
 
     void manager_disk_t::write_index_impl(const components::logical_plan::node_create_index_ptr& index) {
         if (metafile_indexes_) {
-            msgpack::sbuffer buf;
-            msgpack::pack(buf, index);
+            components::serializer::msgpack_serializer_t serializer(resource());
+            serializer.start_array(1);
+            serializer.append("index", index);
+            serializer.end_array();
+            auto buf = serializer.result();
             auto size = buf.size();
             metafile_indexes_->write(&size, sizeof(size), metafile_indexes_->file_size());
             metafile_indexes_->write(buf.data(), buf.size(), metafile_indexes_->file_size());
@@ -411,14 +417,14 @@ namespace services::disk {
                 if (bytes_read == count_byte_by_size) {
                     offset += count_byte_by_size;
                     std::memcpy(&size, size_str.get(), count_byte_by_size);
-                    std::unique_ptr<char[]> buf(new char[size]);
-                    metafile_indexes_->read(buf.get(), size, offset);
+                    std::pmr::string buf(resource());
+                    buf.resize(size);
+                    metafile_indexes_->read(buf.data(), size, offset);
                     offset += std::int64_t(size);
-                    msgpack::unpacked msg;
-                    msgpack::unpack(msg, buf.get(), size);
-                    auto index = components::logical_plan::to_node_create_index(msg.get(), resource());
+                    components::serializer::msgpack_deserializer_t deserializer(buf);
+                    auto index = deserializer.deserialize_logical_node(0);
                     if (collection.empty() || index->collection_name() == collection) {
-                        res.push_back(index);
+                        res.push_back(reinterpret_cast<const components::logical_plan::node_create_index_ptr&>(index));
                     }
                 } else {
                     break;

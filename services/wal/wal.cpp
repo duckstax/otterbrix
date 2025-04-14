@@ -16,6 +16,7 @@
 #include <components/logical_plan/node_drop_database.hpp>
 #include <components/logical_plan/node_insert.hpp>
 #include <components/logical_plan/node_update.hpp>
+#include <components/serialization/deserializer.hpp>
 
 namespace services::wal {
 
@@ -396,19 +397,17 @@ namespace services::wal {
             auto output = read(start, finish);
             record.crc32 = read_crc32(output, record.size);
             if (record.crc32 == static_cast<uint32_t>(absl::ComputeCrc32c({output.data(), record.size}))) {
-                msgpack::unpacked msg;
-                msgpack::unpack(msg, output.data(), record.size);
-                const auto& o = msg.get();
-                record.last_crc32 = o.via.array.ptr[0].as<crc32_t>();
-                record.id = o.via.array.ptr[1].as<services::wal::id_t>();
-                record.type = static_cast<components::logical_plan::node_type>(o.via.array.ptr[2].as<char>());
-                record.set_data(o.via.array.ptr[3], o.via.array.ptr[4], resource());
+                components::serializer::msgpack_deserializer_t deserializer(output);
+                record.last_crc32 = deserializer.deserialize_uint64(0);
+                record.id = deserializer.deserialize_uint64(1);
+                record.data = deserializer.deserialize_logical_node(2);
+                record.params = deserializer.deserialize_parameters(3);
             } else {
-                record.type = components::logical_plan::node_type::unused;
+                record.data = nullptr;
                 //todo: error wal content
             }
         } else {
-            record.type = components::logical_plan::node_type::unused;
+            record.data = nullptr;
         }
         return record;
     }

@@ -11,10 +11,8 @@ namespace components::expressions {
 
     class scalar_expression_t : public expression_i {
     public:
-        using param_storage = std::variant<core::parameter_id_t, key_t, expression_ptr>;
-
         scalar_expression_t(const scalar_expression_t&) = delete;
-        scalar_expression_t(scalar_expression_t&&) = default;
+        scalar_expression_t(scalar_expression_t&&) noexcept = default;
 
         scalar_expression_t(std::pmr::memory_resource* resource, scalar_type type, const key_t& key);
 
@@ -24,6 +22,8 @@ namespace components::expressions {
 
         void append_param(const param_storage& param);
 
+        static expression_ptr deserialize(serializer::base_deserializer_t* deserializer);
+
     private:
         scalar_type type_;
         key_t key_;
@@ -32,6 +32,7 @@ namespace components::expressions {
         hash_t hash_impl() const final;
         std::string to_string_impl() const final;
         bool equal_impl(const expression_i* rhs) const final;
+        void serialize_impl(serializer::base_serializer_t* serializer) const final;
     };
 
     scalar_expression_ptr

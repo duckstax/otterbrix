@@ -4,9 +4,6 @@
 #include "key.hpp"
 #include <memory>
 #include <memory_resource>
-#include <msgpack.hpp>
-#include <msgpack/adaptor/list.hpp>
-#include <msgpack/zone.hpp>
 
 namespace components::expressions {
 
@@ -32,24 +29,26 @@ namespace components::expressions {
         const key_t& key_left() const;
         const key_t& key_right() const;
         core::parameter_id_t value() const;
-        const std::pmr::vector<compare_expression_ptr>& children() const;
+        const std::pmr::vector<expression_ptr>& children() const;
 
         void set_type(compare_type type);
-        void append_child(const compare_expression_ptr& child);
+        void append_child(const expression_ptr& child);
 
         bool is_union() const;
+
+        static expression_ptr deserialize(serializer::base_deserializer_t* deserializer);
 
     private:
         compare_type type_;
         key_t key_left_;
         key_t key_right_;
         core::parameter_id_t value_;
-        std::pmr::vector<compare_expression_ptr> children_;
-        bool union_;
+        std::pmr::vector<expression_ptr> children_;
 
         hash_t hash_impl() const final;
         std::string to_string_impl() const final;
         bool equal_impl(const expression_i* rhs) const final;
+        void serialize_impl(serializer::base_serializer_t* serializer) const final;
     };
 
     compare_expression_ptr make_compare_expression(std::pmr::memory_resource* resource,

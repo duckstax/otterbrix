@@ -1,4 +1,9 @@
 #include "node_create_collection.hpp"
+
+#include <components/serialization/deserializer.hpp>
+
+#include <components/serialization/serializer.hpp>
+
 #include <sstream>
 
 namespace components::logical_plan {
@@ -7,12 +12,23 @@ namespace components::logical_plan {
                                                        const collection_full_name_t& collection)
         : node_t(resource, node_type::create_collection_t, collection) {}
 
+    node_ptr node_create_collection_t::deserialize(serializer::base_deserializer_t* deserializer) {
+        return make_node_create_collection(deserializer->resource(), deserializer->deserialize_collection(1));
+    }
+
     hash_t node_create_collection_t::hash_impl() const { return 0; }
 
     std::string node_create_collection_t::to_string_impl() const {
         std::stringstream stream;
         stream << "$create_collection: " << database_name() << "." << collection_name();
         return stream.str();
+    }
+
+    void node_create_collection_t::serialize_impl(serializer::base_serializer_t* serializer) const {
+        serializer->start_array(2);
+        serializer->append("type", serializer::serialization_type::logical_node_create_collection);
+        serializer->append("collection", collection_);
+        serializer->end_array();
     }
 
     node_create_collection_ptr make_node_create_collection(std::pmr::memory_resource* resource,

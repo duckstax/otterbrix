@@ -2,6 +2,8 @@
 
 #include "operator_get.hpp"
 
+#include <components/expressions/key.hpp>
+
 namespace services::collection::operators::get {
 
     class simple_value_t : public operator_get_t {

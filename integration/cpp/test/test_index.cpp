@@ -1,4 +1,6 @@
 #include "test_config.hpp"
+#include <components/expressions/compare_expression.hpp>
+
 #include <catch2/catch.hpp>
 #include <unistd.h>
 

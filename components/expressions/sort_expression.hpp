@@ -11,12 +11,14 @@ namespace components::expressions {
     class sort_expression_t : public expression_i {
     public:
         sort_expression_t(const sort_expression_t&) = delete;
-        sort_expression_t(sort_expression_t&&) = default;
+        sort_expression_t(sort_expression_t&&) noexcept = default;
 
         sort_expression_t(const key_t& key, sort_order order);
 
         sort_order order() const;
         const key_t& key() const;
+
+        static expression_ptr deserialize(serializer::base_deserializer_t* deserializer);
 
     private:
         sort_order order_;
@@ -25,6 +27,7 @@ namespace components::expressions {
         hash_t hash_impl() const final;
         std::string to_string_impl() const final;
         bool equal_impl(const expression_i* rhs) const final;
+        void serialize_impl(serializer::base_serializer_t* serializer) const final;
     };
 
     sort_expression_ptr make_sort_expression(const key_t& key, sort_order order);

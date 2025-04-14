@@ -1,25 +1,10 @@
 #include "scalar_expression.hpp"
 #include <boost/container_hash/hash.hpp>
+#include <components/serialization/deserializer.hpp>
+#include <components/serialization/serializer.hpp>
 #include <sstream>
 
 namespace components::expressions {
-
-    template<class OStream>
-    OStream& operator<<(OStream& stream, const scalar_expression_t::param_storage& param) {
-        std::visit(
-            [&stream](const auto& p) {
-                using type = std::decay_t<decltype(p)>;
-                if constexpr (std::is_same_v<type, core::parameter_id_t>) {
-                    stream << "#" << p;
-                } else if constexpr (std::is_same_v<type, key_t>) {
-                    stream << "\"$" << p << "\"";
-                } else if constexpr (std::is_same_v<type, expression_ptr>) {
-                    stream << p->to_string();
-                }
-            },
-            param);
-        return stream;
-    }
 
     template<class OStream>
     OStream& operator<<(OStream& stream, const scalar_expression_t* expr) {
@@ -64,10 +49,19 @@ namespace components::expressions {
 
     const key_t& scalar_expression_t::key() const { return key_; }
 
-    const std::pmr::vector<scalar_expression_t::param_storage>& scalar_expression_t::params() const { return params_; }
+    const std::pmr::vector<param_storage>& scalar_expression_t::params() const { return params_; }
 
-    void scalar_expression_t::append_param(const scalar_expression_t::param_storage& param) {
-        params_.push_back(param);
+    void scalar_expression_t::append_param(const param_storage& param) { params_.push_back(param); }
+
+    expression_ptr scalar_expression_t::deserialize(serializer::base_deserializer_t* deserializer) {
+        auto type = deserializer->deserialize_scalar_type(1);
+        auto key = deserializer->deserialize_key(2);
+        auto params = deserializer->deserialize_param_storages(3);
+        auto res = make_scalar_expression(deserializer->resource(), type, key);
+        for (const auto& param : params) {
+            res->append_param(param);
+        }
+        return res;
     }
 
     hash_t scalar_expression_t::hash_impl() const {
@@ -102,6 +96,14 @@ namespace components::expressions {
         auto* other = static_cast<const scalar_expression_t*>(rhs);
         return type_ == other->type_ && key_ == other->key_ && params_.size() == other->params_.size() &&
                std::equal(params_.begin(), params_.end(), other->params_.begin());
+    }
+    void scalar_expression_t::serialize_impl(serializer::base_serializer_t* serializer) const {
+        serializer->start_array(4);
+        serializer->append("type", serializer::serialization_type::expression_scalar);
+        serializer->append("scalar type", type_);
+        serializer->append("key", key_);
+        serializer->append("parameters", params_);
+        serializer->end_array();
     }
 
     scalar_expression_ptr

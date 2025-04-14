@@ -237,7 +237,7 @@ void normalize(compare_expression_ptr& expr) {
 }
 
 void normalize_union(compare_expression_ptr& expr) {
-    if (expr->type() == compare_type::invalid && expr->is_union()) {
+    if (!expr->is_union()) {
         expr->set_type(compare_type::union_and);
     }
 }
@@ -297,7 +297,8 @@ void parse_find_condition_dict_(std::pmr::memory_resource* resource,
         auto union_condition = parent_condition;
         if (is_union_compare_condition(type)) {
             parent_condition->append_child(make_compare_union_expression(resource, type));
-            union_condition = parent_condition->children().at(parent_condition->children().size() - 1).get();
+            union_condition = reinterpret_cast<compare_expression_t*>(
+                parent_condition->children().at(parent_condition->children().size() - 1).get());
         }
         if (prev_key.empty()) {
             parse_find_condition_(resource, union_condition, condition[it], key, std::string(), aggregate, params);
@@ -336,7 +337,7 @@ expression_ptr parse_find_condition_(std::pmr::memory_resource* resource,
                               params);
     }
     if (res_condition->children().size() == 1) {
-        compare_expression_ptr child = res_condition->children()[0];
+        compare_expression_ptr child = reinterpret_cast<const compare_expression_ptr&>(res_condition->children()[0]);
         normalize(child);
         return child;
     }
@@ -344,17 +345,7 @@ expression_ptr parse_find_condition_(std::pmr::memory_resource* resource,
     return res_condition;
 }
 
-aggregate_expression_t::param_storage parse_aggregate_param(const py::handle& condition, parameter_node_t* parms) {
-    auto value = to_value(condition, parms->parameters().tape());
-    if (value.physical_type() == components::types::physical_type::STRING && !value.as_string().empty() &&
-        value.as_string().at(0) == '$') {
-        return ex_key_t(value.as_string().substr(1));
-    } else {
-        return parms->add_parameter(value);
-    }
-}
-
-scalar_expression_t::param_storage parse_scalar_param(const py::handle& condition, parameter_node_t* params) {
+components::expressions::param_storage parse_param(const py::handle& condition, parameter_node_t* params) {
     auto value = to_value(condition, params->parameters().tape());
     if (value.physical_type() == components::types::physical_type::STRING && !value.as_string().empty() &&
         value.as_string().at(0) == '$') {
@@ -379,10 +370,10 @@ expression_ptr parse_group_expr(std::pmr::memory_resource* resource,
                     expr->append_param(parse_group_expr(resource, {}, condition[it], aggregate, params));
                 } else if (py::isinstance<py::list>(condition[it]) || py::isinstance<py::tuple>(condition[it])) {
                     for (const auto& value : condition[it]) {
-                        expr->append_param(parse_aggregate_param(value, params));
+                        expr->append_param(parse_param(value, params));
                     }
                 } else {
-                    expr->append_param(parse_aggregate_param(condition[it], params));
+                    expr->append_param(parse_param(condition[it], params));
                 }
                 return expr;
             } else if (is_scalar_type(key_type)) {
@@ -392,17 +383,17 @@ expression_ptr parse_group_expr(std::pmr::memory_resource* resource,
                     expr->append_param(parse_group_expr(resource, {}, condition[it], aggregate, params));
                 } else if (py::isinstance<py::list>(condition[it]) || py::isinstance<py::tuple>(condition[it])) {
                     for (const auto& value : condition[it]) {
-                        expr->append_param(parse_scalar_param(value, params));
+                        expr->append_param(parse_param(value, params));
                     }
                 } else {
-                    expr->append_param(parse_scalar_param(condition[it], params));
+                    expr->append_param(parse_param(condition[it], params));
                 }
                 return expr;
             }
         }
     } else {
         auto expr = make_scalar_expression(resource, scalar_type::get_field, key.empty() ? ex_key_t() : ex_key_t(key));
-        expr->append_param(parse_scalar_param(condition, params));
+        expr->append_param(parse_param(condition, params));
         return expr;
     }
     return nullptr;

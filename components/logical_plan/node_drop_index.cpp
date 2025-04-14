@@ -1,4 +1,9 @@
 #include "node_drop_index.hpp"
+
+#include <components/serialization/deserializer.hpp>
+
+#include <components/serialization/serializer.hpp>
+
 #include <sstream>
 
 namespace components::logical_plan {
@@ -11,6 +16,12 @@ namespace components::logical_plan {
 
     const std::string& node_drop_index_t::name() const noexcept { return name_; }
 
+    node_ptr node_drop_index_t::deserialize(serializer::base_deserializer_t* deserializer) {
+        auto collection = deserializer->deserialize_collection(1);
+        auto name = deserializer->deserialize_string(2);
+        return make_node_drop_index(deserializer->resource(), collection, name);
+    }
+
     hash_t node_drop_index_t::hash_impl() const { return 0; }
 
     std::string node_drop_index_t::to_string_impl() const {
@@ -19,22 +30,18 @@ namespace components::logical_plan {
         return stream.str();
     }
 
+    void node_drop_index_t::serialize_impl(serializer::base_serializer_t* serializer) const {
+        serializer->start_array(3);
+        serializer->append("type", serializer::serialization_type::logical_node_drop_index);
+        serializer->append("collection", collection_);
+        serializer->append("name", name_);
+        serializer->end_array();
+    }
+
     node_drop_index_ptr make_node_drop_index(std::pmr::memory_resource* resource,
                                              const collection_full_name_t& collection,
                                              const std::string& name) {
         return {new node_drop_index_t{resource, collection, name}};
-    }
-    node_drop_index_ptr to_node_drop_index(const msgpack::object& msg_object, std::pmr::memory_resource* resource) {
-        if (msg_object.type != msgpack::type::ARRAY) {
-            throw msgpack::type_error();
-        }
-        if (msg_object.via.array.size != 53) {
-            throw msgpack::type_error();
-        }
-        auto database = msg_object.via.array.ptr[0].as<std::string>();
-        auto collection = msg_object.via.array.ptr[1].as<std::string>();
-        auto name = msg_object.via.array.ptr[2].as<std::string>();
-        return make_node_drop_index(resource, {database, collection}, name);
     }
 
 } // namespace components::logical_plan

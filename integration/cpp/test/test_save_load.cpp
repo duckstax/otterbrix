@@ -18,7 +18,7 @@ using components::expressions::compare_type;
 using key = components::expressions::key_t;
 using id_par = core::parameter_id_t;
 
-uint gen_doc_number(uint n_db, uint n_col, uint n_doc) { return 10000 * n_db + 100 * n_col + n_doc; }
+uint64_t gen_doc_number(uint n_db, uint n_col, uint n_doc) { return 10000 * n_db + 100 * n_col + n_doc; }
 
 cursor_t_ptr find_doc(otterbrix::wrapper_dispatcher_t* dispatcher,
                       impl::base_document* tape,
@@ -108,6 +108,7 @@ TEST_CASE("integration::cpp::test_save_load::disk+wal") {
                     auto session_doc = otterbrix::session_id_t();
                     dispatcher->insert_one(session_doc, db_name, col_name, doc);
                 }
+                REQUIRE(dispatcher->size(otterbrix::session_id_t(), db_name, col_name) == count_documents);
             }
         }
     }

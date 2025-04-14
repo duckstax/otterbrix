@@ -24,7 +24,14 @@ namespace otterbrix::impl {
 
     void session_block_t::set_value(const session_id_t& session, bool value) {
         std::lock_guard lock(write_mutex_);
-        insert_or_assign(session, value);
+        // it is possible that there is someone trying to create new session with the same id
+        //! if this is a problem, solution will be to generate a new session
+        auto it = insert_or_assign(session, value);
+        if (!value && !it.second) {
+            // if value == true, it is a return call and should be possible
+            // if value == false and there is already a session here, then it should be illegal or fixed here
+            throw std::runtime_error("session_block_t::set_value: session is already present");
+        }
     }
 
     void session_block_t::remove_session(const session_id_t& session) {

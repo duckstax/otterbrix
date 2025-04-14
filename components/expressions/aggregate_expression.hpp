@@ -11,10 +11,8 @@ namespace components::expressions {
 
     class aggregate_expression_t : public expression_i {
     public:
-        using param_storage = std::variant<core::parameter_id_t, key_t, expression_ptr>;
-
         aggregate_expression_t(const aggregate_expression_t&) = delete;
-        aggregate_expression_t(aggregate_expression_t&&) = default;
+        aggregate_expression_t(aggregate_expression_t&&) noexcept = default;
 
         aggregate_expression_t(std::pmr::memory_resource* resource, aggregate_type type, const key_t& key);
 
@@ -24,6 +22,8 @@ namespace components::expressions {
 
         void append_param(const param_storage& param);
 
+        static expression_ptr deserialize(serializer::base_deserializer_t* deserializer);
+
     private:
         aggregate_type type_;
         key_t key_;
@@ -32,6 +32,7 @@ namespace components::expressions {
         hash_t hash_impl() const final;
         std::string to_string_impl() const final;
         bool equal_impl(const expression_i* rhs) const final;
+        void serialize_impl(serializer::base_serializer_t* serializer) const final;
     };
 
     aggregate_expression_ptr
