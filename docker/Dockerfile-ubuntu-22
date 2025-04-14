@@ -41,7 +41,7 @@ RUN cmake .. -G Ninja -DCMAKE_TOOLCHAIN_FILE=./build/Release/generators/conan_to
 
 RUN ctest -C Release -V --output-on-failure --timeout 60
 
-RUN cd integration/python/ && catchsegv pytest -v -s
+RUN cd integration/python/ && pytest -v -s
 
 # Multistage build is faster and resulting image will be smaller
 FROM mcr.microsoft.com/dotnet/sdk:7.0
