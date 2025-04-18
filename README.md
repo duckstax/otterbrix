@@ -85,32 +85,38 @@ Otterbrix seamlessly integrates with column-oriented memory format and can repre
 
 OtterBrix introduces a multi-dimensional document model that bridges document-oriented storage with analytical databases:
 
-┌────────────────────────────────────────┐  
-│            Application Layer           │  
-└────────────────────┬───────────────────┘  
-                     │  
-┌────────────────────┴───────────────────┐  
-│           OtterBrix Engine             │  
-├─────────────────────────────────────────┤  
-│ ┌─────────────┐        ┌──────────────┐ │  
-│ │  SQL Query  │        │  DataFrame   │ │  
-│ │  Interface  │        │  Interface  │ │  
-│ └─────────────┘        └──────────────┘ │  
-├─────────────────────────────────────────┤  
-│ ┌─────────────────────────────────────┐ │  
-│ │    Multi-Dimensional Model │ │  
-│ └─────────────────────────────────────┘ │  
-├─────────────────────────────────────────┤  
-│ ┌───────────┐ ┌──────────┐ ┌─────────┐ │  
-│ │ Structure │ │ Array of │ │ Hybrid  │ │  
-│ │ of Arrays │ │ Struct   │ │ Storage │ │  
-│ └───────────┘ └──────────┘ └─────────┘ │  
-└────────────────────┬───────────────────┘  
-                     │  
-┌────────────────────┴───────────────────┐  
-│            Data Sources                │  
-│  (JSON, Parquet, CSV, Custom Formats)  │  
+Here's your diagram in proper Markdown format using code blocks, so it renders cleanly and keeps the alignment intact:
+
+<pre>
+┌────────────────────────────────────────┐
+│            Application Layer           │
+└────────────────────┬───────────────────┘
+                     │
+┌────────────────────┴────────────────────┐
+│           OtterBrix Engine              │
+├─────────────────────────────────────────┤
+│ ┌─────────────┐        ┌──────────────┐ │
+│ │  SQL Query  │        │  DataFrame   │ │
+│ │  Interface  │        │  Interface   │ │
+│ └─────────────┘        └──────────────┘ │
+├─────────────────────────────────────────┤
+│ ┌─────────────────────────────────────┐ │
+│ │    Multi-Modal Storage              │ │
+│ └─────────────────────────────────────┘ │
+├─────────────────────────────────────────┤
+│ ┌───────────┐ ┌──────────┐ ┌─────────┐  │
+│ │ rows      │ │ columns  │ │ ML      │  │
+│ │           │ │          │ │ Storage │  │
+│ └───────────┘ └──────────┘ └─────────┘  │
+└────────────────────┬────────────────────┘
+                     │
+┌────────────────────┴───────────────────┐
+│            Data Sources                │
+│  (JSON, Parquet, CSV, Custom Formats)  │
 └────────────────────────────────────────┘
+</pre>
+
+You can paste this directly into your Markdown file or viewer that supports fenced code blocks (like GitHub, GitLab, or most modern Markdown renderers).
 
 ### **Innovative Hybrid Memory Layout**
 
