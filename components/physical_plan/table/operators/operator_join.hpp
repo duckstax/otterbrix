@@ -2,6 +2,7 @@
 
 #include <components/logical_plan/node_join.hpp>
 #include <components/physical_plan/base/operators/operator.hpp>
+#include <expressions/compare_expression.hpp>
 
 namespace services::table::operators {
 

@@ -14,7 +14,10 @@ namespace services::table::operators {
                 auto filter = std::make_unique<components::table::conjunction_and_filter_t>();
                 filter->child_filters.reserve(exresssion->children().size());
                 for (const auto& child : exresssion->children()) {
-                    filter->child_filters.emplace_back(transform_predicate(child, types, parameters));
+                    filter->child_filters.emplace_back(transform_predicate(
+                        reinterpret_cast<const components::expressions::compare_expression_ptr&>(child),
+                        types,
+                        parameters));
                 }
                 return filter;
             }
@@ -22,7 +25,10 @@ namespace services::table::operators {
                 auto filter = std::make_unique<components::table::conjunction_or_filter_t>();
                 filter->child_filters.reserve(exresssion->children().size());
                 for (const auto& child : exresssion->children()) {
-                    filter->child_filters.emplace_back(transform_predicate(child, types, parameters));
+                    filter->child_filters.emplace_back(transform_predicate(
+                        reinterpret_cast<const components::expressions::compare_expression_ptr&>(child),
+                        types,
+                        parameters));
                 }
                 return filter;
             }

@@ -60,7 +60,12 @@ namespace services::table::operators {
         switch (expr->type()) {
             case components::expressions::compare_type::union_and: {
                 for (const auto& child_expr : expr->children()) {
-                    if (!check_expr_general(child_expr, parameters, chunk, str_index_map, row)) {
+                    if (!check_expr_general(
+                            reinterpret_cast<const components::expressions::compare_expression_ptr&>(child_expr),
+                            parameters,
+                            chunk,
+                            str_index_map,
+                            row)) {
                         return false;
                     }
                 }
@@ -68,14 +73,24 @@ namespace services::table::operators {
             }
             case components::expressions::compare_type::union_or: {
                 for (const auto& child_expr : expr->children()) {
-                    if (check_expr_general(child_expr, parameters, chunk, str_index_map, row)) {
+                    if (check_expr_general(
+                            reinterpret_cast<const components::expressions::compare_expression_ptr&>(child_expr),
+                            parameters,
+                            chunk,
+                            str_index_map,
+                            row)) {
                         return true;
                     }
                 }
                 return false;
             }
             case components::expressions::compare_type::union_not:
-                return !check_expr_general(expr->children().front(), parameters, chunk, str_index_map, row);
+                return !check_expr_general(
+                    reinterpret_cast<const components::expressions::compare_expression_ptr&>(expr->children().front()),
+                    parameters,
+                    chunk,
+                    str_index_map,
+                    row);
             case components::expressions::compare_type::eq:
                 return check_expr<std::equal_to<>>(expr, parameters, chunk, str_index_map, row);
             case components::expressions::compare_type::ne:
