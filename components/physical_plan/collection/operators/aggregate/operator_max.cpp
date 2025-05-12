@@ -13,7 +13,7 @@ namespace services::collection::operators::aggregate {
         auto resource = left_ && left_->output() ? left_->output()->resource() : context_->resource();
         auto doc = components::document::make_document(resource);
         if (left_ && left_->output()) {
-            const auto& documents = std::get<std::pmr::vector<document_ptr>>(left_->output()->data());
+            const auto& documents = left_->output()->documents();
             auto max = std::max_element(documents.cbegin(),
                                         documents.cend(),
                                         [&](const document_ptr& doc1, const document_ptr& doc2) {

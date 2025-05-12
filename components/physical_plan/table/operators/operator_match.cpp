@@ -124,14 +124,14 @@ namespace services::table::operators {
             return;
         }
         if (left_->output()) {
-            const auto& chunk = std::get<components::vector::data_chunk_t>(left_->output()->data());
+            const auto& chunk = left_->output()->data_chunk();
             auto types = chunk.types();
             std::unordered_map<std::string, size_t> name_index_map;
             for (size_t i = 0; i < types.size(); i++) {
                 name_index_map.emplace(types[i].alias(), i);
             }
             output_ = base::operators::make_operator_data(left_->output()->resource(), types);
-            auto& out_chunk = std::get<components::vector::data_chunk_t>(output_->data());
+            auto& out_chunk = output_->data_chunk();
             for (size_t i = 0; i < chunk.size(); i++) {
                 if (check_expr_general(expression_, &pipeline_context->parameters, chunk, name_index_map, i)) {
                     for (size_t j = 0; j < chunk.column_count(); j++) {

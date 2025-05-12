@@ -23,7 +23,10 @@ namespace services::base::operators {
         ptr copy() const;
 
         std::size_t size() const;
-        data_t& data();
+        std::pmr::vector<components::document::document_ptr>& documents();
+        const std::pmr::vector<components::document::document_ptr>& documents() const;
+        components::vector::data_chunk_t& data_chunk();
+        const components::vector::data_chunk_t& data_chunk() const;
         std::pmr::memory_resource* resource();
         void append(components::document::document_ptr document);
         void append(components::vector::vector_t row);

@@ -14,7 +14,7 @@ namespace services::collection::operators::merge {
         }
         if (left_ && left_->output()) {
             output_ = base::operators::make_operator_data(context_->resource());
-            const auto& left_documents = std::get<std::pmr::vector<document_ptr>>(left_->output()->data());
+            const auto& left_documents = left_->output()->documents();
             for (const auto& document : context_->document_storage()) {
                 auto it =
                     std::find_if(left_documents.cbegin(), left_documents.cend(), [&document](const document_ptr& doc) {

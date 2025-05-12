@@ -13,10 +13,10 @@ namespace services::collection::operators::aggregate {
     }
 
     void operator_aggregate_t::set_value(document_ptr& doc, std::string_view key) const {
-        doc->set(key, std::get<std::pmr::vector<document_ptr>>(output_->data()).at(0), key_impl());
+        doc->set(key, output_->documents().at(0), key_impl());
     }
 
     components::document::value_t operator_aggregate_t::value() const {
-        return std::get<std::pmr::vector<document_ptr>>(output_->data()).at(0)->get_value(key_impl());
+        return output_->documents().at(0)->get_value(key_impl());
     }
 } // namespace services::collection::operators::aggregate

@@ -183,8 +183,8 @@ namespace services::table::operators {
     bool operator_join_t::check_predicate_(components::pipeline::context_t* context,
                                            size_t row_left,
                                            size_t row_right) const {
-        const auto& chunk_left = std::get<components::vector::data_chunk_t>(left_->output()->data());
-        const auto& chunk_right = std::get<components::vector::data_chunk_t>(right_->output()->data());
+        const auto& chunk_left = left_->output()->data_chunk();
+        const auto& chunk_right = right_->output()->data_chunk();
         return check_expr_general(expression_,
                                   &context->parameters,
                                   chunk_left,
@@ -200,8 +200,8 @@ namespace services::table::operators {
             return;
         }
         if (left_->output() && right_->output()) {
-            const auto& chunk_left = std::get<components::vector::data_chunk_t>(left_->output()->data());
-            const auto& chunk_right = std::get<components::vector::data_chunk_t>(right_->output()->data());
+            const auto& chunk_left = left_->output()->data_chunk();
+            const auto& chunk_right = right_->output()->data_chunk();
 
             auto res_types = chunk_left.types();
             for (const auto& type : chunk_right.types()) {
@@ -254,17 +254,15 @@ namespace services::table::operators {
 
             if (context_) {
                 // Same reason as above
-                trace(context_->log(),
-                      "operator_join::result_size(): {}",
-                      std::get<components::vector::data_chunk_t>(output_->data()).size());
+                trace(context_->log(), "operator_join::result_size(): {}", output_->size());
             }
         }
     }
 
     void operator_join_t::inner_join_(components::pipeline::context_t* context) {
-        const auto& chunk_left = std::get<components::vector::data_chunk_t>(left_->output()->data());
-        const auto& chunk_right = std::get<components::vector::data_chunk_t>(right_->output()->data());
-        auto& chunk_res = std::get<components::vector::data_chunk_t>(output_->data());
+        const auto& chunk_left = left_->output()->data_chunk();
+        const auto& chunk_right = right_->output()->data_chunk();
+        auto& chunk_res = output_->data_chunk();
         // TODO: fix edge case with same data type in both chunks
         assert(chunk_res.column_count() == chunk_left.column_count() + chunk_right.column_count());
         for (size_t i = 0; i < chunk_left.size(); i++) {
@@ -282,14 +280,13 @@ namespace services::table::operators {
     }
 
     void operator_join_t::outer_full_join_(components::pipeline::context_t* context) {
-        const auto& chunk_left = std::get<components::vector::data_chunk_t>(left_->output()->data());
-        const auto& chunk_right = std::get<components::vector::data_chunk_t>(right_->output()->data());
-        auto& chunk_res = std::get<components::vector::data_chunk_t>(output_->data());
+        const auto& chunk_left = left_->output()->data_chunk();
+        const auto& chunk_right = right_->output()->data_chunk();
+        auto& chunk_res = output_->data_chunk();
         // TODO: fix edge case with same data type in both chunks
         assert(chunk_res.column_count() == chunk_left.column_count() + chunk_right.column_count());
 
-        std::vector<bool> visited_right(std::get<components::vector::data_chunk_t>(right_->output()->data()).size(),
-                                        false);
+        std::vector<bool> visited_right(right_->output()->size(), false);
 
         for (size_t i = 0; i < chunk_left.size(); i++) {
             bool visited_left = false;
@@ -332,9 +329,9 @@ namespace services::table::operators {
     }
 
     void operator_join_t::outer_left_join_(components::pipeline::context_t* context) {
-        const auto& chunk_left = std::get<components::vector::data_chunk_t>(left_->output()->data());
-        const auto& chunk_right = std::get<components::vector::data_chunk_t>(right_->output()->data());
-        auto& chunk_res = std::get<components::vector::data_chunk_t>(output_->data());
+        const auto& chunk_left = left_->output()->data_chunk();
+        const auto& chunk_right = right_->output()->data_chunk();
+        auto& chunk_res = output_->data_chunk();
         // TODO: fix edge case with same data type in both chunks
 
         for (size_t i = 0; i < chunk_left.size(); i++) {
@@ -363,9 +360,9 @@ namespace services::table::operators {
     }
 
     void operator_join_t::outer_right_join_(components::pipeline::context_t* context) {
-        const auto& chunk_left = std::get<components::vector::data_chunk_t>(left_->output()->data());
-        const auto& chunk_right = std::get<components::vector::data_chunk_t>(right_->output()->data());
-        auto& chunk_res = std::get<components::vector::data_chunk_t>(output_->data());
+        const auto& chunk_left = left_->output()->data_chunk();
+        const auto& chunk_right = right_->output()->data_chunk();
+        auto& chunk_res = output_->data_chunk();
         // TODO: fix edge case with same data type in both chunks
 
         for (size_t i = 0; i < chunk_right.size(); i++) {
@@ -394,9 +391,9 @@ namespace services::table::operators {
     }
 
     void operator_join_t::cross_join_(components::pipeline::context_t* context) {
-        const auto& chunk_left = std::get<components::vector::data_chunk_t>(left_->output()->data());
-        const auto& chunk_right = std::get<components::vector::data_chunk_t>(right_->output()->data());
-        auto& chunk_res = std::get<components::vector::data_chunk_t>(output_->data());
+        const auto& chunk_left = left_->output()->data_chunk();
+        const auto& chunk_right = right_->output()->data_chunk();
+        auto& chunk_res = output_->data_chunk();
         // TODO: fix edge case with same data type in both chunks
         assert(chunk_res.column_count() == chunk_left.column_count() + chunk_right.column_count());
         for (size_t i = 0; i < chunk_left.size(); i++) {

@@ -31,21 +31,19 @@ namespace services::table::operators {
 
     void operator_group_t::on_execute_impl(components::pipeline::context_t* pipeline_context) {
         if (left_ && left_->output()) {
-            output_ = base::operators::make_operator_data(
-                left_->output()->resource(),
-                std::get<components::vector::data_chunk_t>(left_->output()->data()).types());
+            output_ =
+                base::operators::make_operator_data(left_->output()->resource(), left_->output()->data_chunk().types());
             create_list_documents();
             calc_aggregate_values(pipeline_context);
-            output_ = base::operators::make_operator_data(
-                left_->output()->resource(),
-                impl::transpose(left_->output()->resource(),
-                                transposed_output_,
-                                std::get<components::vector::data_chunk_t>(left_->output()->data()).types()));
+            output_ = base::operators::make_operator_data(left_->output()->resource(),
+                                                          impl::transpose(left_->output()->resource(),
+                                                                          transposed_output_,
+                                                                          left_->output()->data_chunk().types()));
         }
     }
 
     void operator_group_t::create_list_documents() {
-        auto& chunk = std::get<components::vector::data_chunk_t>(left_->output()->data());
+        auto& chunk = left_->output()->data_chunk();
 
         auto matrix = impl::transpose(left_->output()->resource(), chunk);
 
@@ -83,7 +81,7 @@ namespace services::table::operators {
     }
 
     void operator_group_t::calc_aggregate_values(components::pipeline::context_t* pipeline_context) {
-        auto types = std::get<components::vector::data_chunk_t>(left_->output()->data()).types();
+        auto types = left_->output()->data_chunk().types();
         for (const auto& value : values_) {
             auto& aggregator = value.aggregator;
             for (size_t i = 0; i < transposed_output_.size(); i++) {

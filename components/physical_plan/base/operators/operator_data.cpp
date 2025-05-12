@@ -41,7 +41,21 @@ namespace services::base::operators {
         }
     }
 
-    data_t& operator_data_t::data() { return data_; }
+    std::pmr::vector<components::document::document_ptr>& operator_data_t::documents() {
+        return std::get<std::pmr::vector<components::document::document_ptr>>(data_);
+    }
+
+    const std::pmr::vector<components::document::document_ptr>& operator_data_t::documents() const {
+        return std::get<std::pmr::vector<components::document::document_ptr>>(data_);
+    }
+
+    components::vector::data_chunk_t& operator_data_t::data_chunk() {
+        return std::get<components::vector::data_chunk_t>(data_);
+    }
+
+    const components::vector::data_chunk_t& operator_data_t::data_chunk() const {
+        return std::get<components::vector::data_chunk_t>(data_);
+    }
 
     std::pmr::memory_resource* operator_data_t::resource() { return resource_; }
 

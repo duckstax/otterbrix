@@ -11,7 +11,7 @@ namespace services::table::operators::aggregate {
 
     components::types::logical_value_t operator_avg_t::aggregate_impl() {
         if (left_ && left_->output()) {
-            const auto& chunk = std::get<components::vector::data_chunk_t>(left_->output()->data());
+            const auto& chunk = left_->output()->data_chunk();
             auto it = std::find_if(chunk.data.begin(), chunk.data.end(), [&](const components::vector::vector_t& v) {
                 return v.type().alias() == key_.as_string();
             });

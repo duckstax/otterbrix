@@ -13,17 +13,14 @@ namespace services::table::operators {
     void operator_update::on_execute_impl(components::pipeline::context_t* pipeline_context) {
         if (left_ && left_->output()) {
             // TODO: update indexes
-            if (std::get<components::vector::data_chunk_t>(left_->output()->data()).size() == 0) {
+            if (left_->output()->size() == 0) {
                 if (upsert_) {
-                    output_ = base::operators::make_operator_data(
-                        context_->resource(),
-                        std::get<components::vector::data_chunk_t>(left_->output()->data()).types());
+                    output_ = base::operators::make_operator_data(context_->resource(),
+                                                                  left_->output()->data_chunk().types());
 
                     components::table::table_append_state state(context_->resource());
                     context_->table_storage().table().initialize_append(state);
-                    context_->table_storage().table().append(
-                        std::get<components::vector::data_chunk_t>(output_->data()),
-                        state);
+                    context_->table_storage().table().append(output_->data_chunk(), state);
                 }
             } else {
                 modified_ = base::operators::make_operator_write_data<size_t>(context_->resource());

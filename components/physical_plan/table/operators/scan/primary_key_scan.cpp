@@ -21,11 +21,7 @@ namespace services::table::operators {
         for (int64_t i = 0; i < context_->table_storage().table().column_count(); i++) {
             column_indices.emplace_back(i);
         }
-        context_->table_storage().table().fetch(std::get<components::vector::data_chunk_t>(output_->data()),
-                                                column_indices,
-                                                rows_,
-                                                rows_.size(),
-                                                state);
+        context_->table_storage().table().fetch(output_->data_chunk(), column_indices, rows_, rows_.size(), state);
     }
 
 } // namespace services::table::operators

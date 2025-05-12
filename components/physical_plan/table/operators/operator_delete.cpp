@@ -8,7 +8,7 @@ namespace services::table::operators {
 
     void operator_delete::on_execute_impl(components::pipeline::context_t* pipeline_context) {
         modified_ = base::operators::make_operator_write_data<size_t>(context_->resource());
-        auto& chunk = std::get<components::vector::data_chunk_t>(left_->output()->data());
+        auto& chunk = left_->output()->data_chunk();
         auto state = context_->table_storage().table().initialize_delete({});
         context_->table_storage().table().delete_rows(*state, chunk.data[0], chunk.size());
 

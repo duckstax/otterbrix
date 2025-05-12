@@ -77,14 +77,14 @@ TEST_CASE("operator::group::sort") {
             REQUIRE(doc->get_bool("three") == is2);
             REQUIRE(doc->get_bool("five") == is3);
         };
-        check(std::get<std::pmr::vector<document_ptr>>(sort->output()->data()).at(0), false, false, false);
-        check(std::get<std::pmr::vector<document_ptr>>(sort->output()->data()).at(1), false, false, true);
-        check(std::get<std::pmr::vector<document_ptr>>(sort->output()->data()).at(2), false, true, false);
-        check(std::get<std::pmr::vector<document_ptr>>(sort->output()->data()).at(3), false, true, true);
-        check(std::get<std::pmr::vector<document_ptr>>(sort->output()->data()).at(4), true, false, false);
-        check(std::get<std::pmr::vector<document_ptr>>(sort->output()->data()).at(5), true, false, true);
-        check(std::get<std::pmr::vector<document_ptr>>(sort->output()->data()).at(6), true, true, false);
-        check(std::get<std::pmr::vector<document_ptr>>(sort->output()->data()).at(7), true, true, true);
+        check(sort->output()->documents().at(0), false, false, false);
+        check(sort->output()->documents().at(1), false, false, true);
+        check(sort->output()->documents().at(2), false, true, false);
+        check(sort->output()->documents().at(3), false, true, true);
+        check(sort->output()->documents().at(4), true, false, false);
+        check(sort->output()->documents().at(5), true, false, true);
+        check(sort->output()->documents().at(6), true, true, false);
+        check(sort->output()->documents().at(7), true, true, true);
     }
 }
 
@@ -110,12 +110,12 @@ TEST_CASE("operator::group::all") {
         sort->on_execute(nullptr);
         REQUIRE(sort->output()->size() == 8);
 
-        auto doc0 = std::get<std::pmr::vector<document_ptr>>(sort->output()->data()).at(0);
+        auto doc0 = sort->output()->documents().at(0);
         REQUIRE(doc0->get_long("count") == 26);
         REQUIRE(doc0->get_long("sum") == 1268);
         REQUIRE(std::fabs(doc0->get_double("avg") - 48.77) < 0.01);
 
-        auto doc1 = std::get<std::pmr::vector<document_ptr>>(sort->output()->data()).at(1);
+        auto doc1 = sort->output()->documents().at(1);
         REQUIRE(doc1->get_long("count") == 7);
         REQUIRE(doc1->get_long("sum") == 365);
         REQUIRE(std::fabs(doc1->get_double("avg") - 52.14) < 0.01);
