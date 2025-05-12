@@ -90,7 +90,7 @@ wrapper_cursor& wrapper_cursor::sort(py::object sorter, py::object order) {
     if (py::isinstance<py::dict>(sorter)) {
         ptr_->sort(to_sorter(sorter));
     } else {
-        ptr_->sort(services::storage::sort::sorter_t(py::str(sorter).cast<std::string>(), to_order(order)));
+        ptr_->sort(services::collection::sort::sorter_t(py::str(sorter).cast<std::string>(), to_order(order)));
     }
     return *this;
 }

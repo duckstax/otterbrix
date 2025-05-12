@@ -13,9 +13,9 @@ namespace services::collection::operators::merge {
             return; //limit = 0
         }
         if (left_ && left_->output()) {
-            output_ = make_operator_data(context_->resource());
-            const auto& left_documents = left_->output()->documents();
-            for (const auto& document : context_->storage()) {
+            output_ = base::operators::make_operator_data(context_->resource());
+            const auto& left_documents = std::get<std::pmr::vector<document_ptr>>(left_->output()->data());
+            for (const auto& document : context_->document_storage()) {
                 auto it =
                     std::find_if(left_documents.cbegin(), left_documents.cend(), [&document](const document_ptr& doc) {
                         return get_document_id(doc) == document.first;
