@@ -3,6 +3,7 @@
 #include <components/physical_plan/base/operators/operator.hpp>
 
 #include <components/logical_plan/node_limit.hpp>
+#include <expressions/compare_expression.hpp>
 
 namespace services::table::operators {
 

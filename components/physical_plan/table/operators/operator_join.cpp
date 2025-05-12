@@ -67,14 +67,15 @@ namespace services::table::operators {
         switch (expr->type()) {
             case components::expressions::compare_type::union_and: {
                 for (const auto& child_expr : expr->children()) {
-                    if (!check_expr_general(child_expr,
-                                            parameters,
-                                            chunk_left,
-                                            chunk_right,
-                                            str_index_map_left,
-                                            str_index_map_right,
-                                            row_left,
-                                            row_right)) {
+                    if (!check_expr_general(
+                            reinterpret_cast<const components::expressions::compare_expression_ptr&>(child_expr),
+                            parameters,
+                            chunk_left,
+                            chunk_right,
+                            str_index_map_left,
+                            str_index_map_right,
+                            row_left,
+                            row_right)) {
                         return false;
                     }
                 }
@@ -82,28 +83,30 @@ namespace services::table::operators {
             }
             case components::expressions::compare_type::union_or: {
                 for (const auto& child_expr : expr->children()) {
-                    if (check_expr_general(child_expr,
-                                           parameters,
-                                           chunk_left,
-                                           chunk_right,
-                                           str_index_map_left,
-                                           str_index_map_right,
-                                           row_left,
-                                           row_right)) {
+                    if (check_expr_general(
+                            reinterpret_cast<const components::expressions::compare_expression_ptr&>(child_expr),
+                            parameters,
+                            chunk_left,
+                            chunk_right,
+                            str_index_map_left,
+                            str_index_map_right,
+                            row_left,
+                            row_right)) {
                         return true;
                     }
                 }
                 return false;
             }
             case components::expressions::compare_type::union_not:
-                return !check_expr_general(expr->children().front(),
-                                           parameters,
-                                           chunk_left,
-                                           chunk_right,
-                                           str_index_map_left,
-                                           str_index_map_right,
-                                           row_left,
-                                           row_right);
+                return !check_expr_general(
+                    reinterpret_cast<const components::expressions::compare_expression_ptr&>(expr->children().front()),
+                    parameters,
+                    chunk_left,
+                    chunk_right,
+                    str_index_map_left,
+                    str_index_map_right,
+                    row_left,
+                    row_right);
             case components::expressions::compare_type::eq:
                 return check_expr<std::equal_to<>>(expr,
                                                    parameters,
