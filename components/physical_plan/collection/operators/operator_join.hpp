@@ -3,7 +3,7 @@
 #include "predicates/predicate.hpp"
 
 #include <components/logical_plan/node_join.hpp>
-#include <components/physical_plan/collection/operators/operator.hpp>
+#include <components/physical_plan/base/operators/operator.hpp>
 
 namespace services::collection::operators {
 

@@ -16,20 +16,20 @@ namespace services::collection::operators {
         // TODO: worth to create separate update_join operator or mutable_join with callback
         if (left_ && left_->output() && right_ && right_->output()) {
             auto tape = std::make_unique<components::document::impl::base_document>(context_->resource());
-            if (left_->output()->documents().empty() && right_->output()->documents().empty()) {
+            if (std::get<std::pmr::vector<document_ptr>>(left_->output()->data()).empty() && std::get<std::pmr::vector<document_ptr>>(right_->output()->data()).empty()) {
                 if (upsert_) {
-                    output_ = make_operator_data(context_->resource());
+                    output_ = base::operators::make_operator_data(context_->resource());
                     auto new_doc = components::document::make_document(context_->resource());
                     for (const auto& expr : updates_) {
                         expr->execute(new_doc, nullptr, tape.get(), &pipeline_context->parameters);
                     }
-                    context_->storage().insert_or_assign(get_document_id(new_doc), new_doc);
+                    context_->document_storage().insert_or_assign(get_document_id(new_doc), new_doc);
                     context_->index_engine()->insert_document(new_doc, pipeline_context);
                     output_->append(new_doc);
                 }
             } else {
-                modified_ = make_operator_write_data(context_->resource());
-                no_modified_ = make_operator_write_data(context_->resource());
+                modified_ = base::operators::make_operator_write_data<document_id_t>(context_->resource());
+                no_modified_ = base::operators::make_operator_write_data<document_id_t>(context_->resource());
                 for (auto& doc_left : left_->output()->documents()) {
                     for (auto& doc_right : right_->output()->documents()) {
                         if (match_predicate_->check(doc_left, doc_right, &pipeline_context->parameters)) {
@@ -51,21 +51,21 @@ namespace services::collection::operators {
             }
         } else if (left_ && left_->output()) {
             auto tape = std::make_unique<components::document::impl::base_document>(context_->resource());
-            if (left_->output()->documents().empty()) {
+            if (std::get<std::pmr::vector<document_ptr>>(left_->output()->data()).empty()) {
                 if (upsert_) {
-                    output_ = make_operator_data(context_->resource());
+                    output_ = base::operators::make_operator_data(context_->resource());
                     auto new_doc = components::document::make_document(context_->resource());
                     for (const auto& expr : updates_) {
                         expr->execute(new_doc, nullptr, tape.get(), &pipeline_context->parameters);
                     }
-                    context_->storage().insert_or_assign(get_document_id(new_doc), new_doc);
+                    context_->document_storage().insert_or_assign(get_document_id(new_doc), new_doc);
                     context_->index_engine()->insert_document(new_doc, pipeline_context);
                     output_->append(new_doc);
                 }
             } else {
-                modified_ = make_operator_write_data(context_->resource());
-                no_modified_ = make_operator_write_data(context_->resource());
-                for (auto& document : left_->output()->documents()) {
+                modified_ = base::operators::make_operator_write_data<document_id_t>(context_->resource());
+                no_modified_ = base::operators::make_operator_write_data<document_id_t>(context_->resource());
+                for (auto& document : std::get<std::pmr::vector<document_ptr>>(left_->output()->data())) {
                     context_->index_engine()->delete_document(document, pipeline_context); //todo: can optimized
                     bool modified = false;
                     for (const auto& expr : updates_) {

@@ -8,6 +8,8 @@
 
 namespace components::document {
 
+    using types::compare_t;
+
     document_t::document_t()
         : mut_src_(nullptr)
         , element_ind_(nullptr)

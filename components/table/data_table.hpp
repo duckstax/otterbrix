@@ -22,7 +22,7 @@ namespace components::table {
 
         void initialize_scan(table_scan_state& state,
                              const std::vector<storage_index_t>& column_ids,
-                             table_filter_set_t* table_filters = nullptr);
+                             const table_filter_t* filter = nullptr);
 
         uint64_t max_threads() const;
 
@@ -42,7 +42,7 @@ namespace components::table {
         initialize_update(const std::vector<std::unique_ptr<bound_constraint_t>>& bound_constraints);
         void update(table_update_state& state,
                     vector::vector_t& row_ids,
-                    const std::vector<uint64_t>& column_ids,
+                    // const std::vector<uint64_t>& column_ids,
                     vector::data_chunk_t& data);
         void update_column(vector::vector_t& row_ids,
                            const std::vector<uint64_t>& column_path,

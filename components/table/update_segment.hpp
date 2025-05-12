@@ -1,5 +1,7 @@
 #pragma once
 
+#include "column_state.hpp"
+
 #include <components/types/logical_value.hpp>
 #include <components/vector/indexing_vector.hpp>
 #include <components/vector/validation.hpp>
@@ -18,6 +20,8 @@ namespace components::vector {
 } // namespace components::vector
 
 namespace components::table {
+    class constant_filter_t;
+    class table_filter_t;
     struct update_info_t;
     struct update_node_t;
     struct undo_buffer_pointer_t;
@@ -162,6 +166,7 @@ namespace components::table {
                     uint64_t count,
                     vector::vector_t& base_data);
         void fetch_row(uint64_t row_id, vector::vector_t& result, uint64_t result_idx);
+        bool check_row(uint64_t row_id, const table_filter_t* filter);
 
         void cleanup_update(update_info_t& info);
 
@@ -189,6 +194,8 @@ namespace components::table {
         void merge_update(Args&&... args);
         template<typename... Args>
         void fetch_row(Args&&... args) const;
+        template<typename... Args>
+        bool check_row(Args&&... args) const;
         template<typename... Args>
         void fetch_committed_range(Args&&... args) const;
 
@@ -261,6 +268,10 @@ namespace components::table {
         template<typename T>
         static void
         templated_fetch_row(update_info_t& info, uint64_t row_index, vector::vector_t& result, uint64_t result_index);
+
+        static bool check_row_validity(update_info_t& info, uint64_t row_index, const table_filter_t* filter);
+        template<typename T>
+        static bool templated_check_row(update_info_t& info, uint64_t row_index, const table_filter_t* filter);
 
         types::physical_type type_;
         std::unique_ptr<update_node_t> root_;
@@ -551,6 +562,59 @@ namespace components::table {
                 throw std::runtime_error("unhandled physical types");
         }
     }
+    template<typename... Args>
+    bool update_segment_t::check_row(Args&&... args) const {
+        switch (type_) {
+            case types::physical_type::BIT:
+                check_row_validity(std::forward<Args>(args)...);
+                break;
+            case types::physical_type::BOOL:
+            case types::physical_type::INT8:
+                templated_check_row<int8_t>(std::forward<Args>(args)...);
+                break;
+            case types::physical_type::INT16:
+                templated_check_row<int16_t>(std::forward<Args>(args)...);
+                break;
+            case types::physical_type::INT32:
+                templated_check_row<int32_t>(std::forward<Args>(args)...);
+                break;
+            case types::physical_type::INT64:
+                templated_check_row<int64_t>(std::forward<Args>(args)...);
+                break;
+            case types::physical_type::UINT8:
+                templated_check_row<uint8_t>(std::forward<Args>(args)...);
+                break;
+            case types::physical_type::UINT16:
+                templated_check_row<uint16_t>(std::forward<Args>(args)...);
+                break;
+            case types::physical_type::UINT32:
+                templated_check_row<uint32_t>(std::forward<Args>(args)...);
+                break;
+            case types::physical_type::UINT64:
+                templated_check_row<uint64_t>(std::forward<Args>(args)...);
+                break;
+                // case types::physical_type::INT128:
+                // 	templated_check_row<int128_t>(std::forward<Args>(args)...);
+                break;
+                // case types::physical_type::UINT128:
+                // 	templated_check_row<uint128_t>(std::forward<Args>(args)...);
+                break;
+            case types::physical_type::FLOAT:
+                templated_check_row<float>(std::forward<Args>(args)...);
+                break;
+            case types::physical_type::DOUBLE:
+                templated_check_row<double>(std::forward<Args>(args)...);
+                break;
+                // case types::physical_type::INTERVAL:
+                // 	templated_check_row<interval_t>(std::forward<Args>(args)...);
+                break;
+            case types::physical_type::STRING:
+                templated_check_row<std::string_view>(std::forward<Args>(args)...);
+                break;
+            default:
+                throw std::runtime_error("unhandled physical types");
+        }
+    }
 
     template<typename... Args>
     void update_segment_t::fetch_committed_range(Args&&... args) const {
@@ -831,6 +895,21 @@ namespace components::table {
                 result_data[result_index] = info_data[it - tuples];
             }
         });
+    }
+
+    template<typename T>
+    bool update_segment_t::templated_check_row(update_info_t& info, uint64_t row_index, const table_filter_t* filter) {
+        bool result = true;
+        update_info_t::update_for_transaction(info, [&](update_info_t* current) {
+            auto info_data = current->data<T>();
+            auto tuples = current->tuples();
+            auto it = std::lower_bound(tuples, tuples + current->N, row_index);
+            if (it != tuples + current->N && *it == row_index) {
+                const auto& const_filter = filter->cast<constant_filter_t>();
+                result = const_filter.compare(info_data[it - tuples]);
+            }
+        });
+        return result;
     }
 
 } // namespace components::table

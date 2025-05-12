@@ -2,9 +2,9 @@
 #include <components/document/document.hpp>
 #include <components/tests/generaty.hpp>
 
-using components::document::compare_t;
 using components::document::document_t;
 using components::document::impl::error_code_t;
+using components::types::compare_t;
 
 TEST_CASE("document_t::is/get value") {
     auto allocator = std::pmr::synchronized_pool_resource();

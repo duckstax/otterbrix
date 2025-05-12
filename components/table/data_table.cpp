@@ -90,9 +90,9 @@ namespace components::table {
 
     void data_table_t::initialize_scan(table_scan_state& state,
                                        const std::vector<storage_index_t>& column_ids,
-                                       table_filter_set_t* table_filters) {
-        state.initialize(column_ids, table_filters);
-        row_groups_->initialize_scan(state.table_state, column_ids, table_filters);
+                                       const table_filter_t* filter) {
+        state.initialize(column_ids, filter);
+        row_groups_->initialize_scan(state.table_state, column_ids);
     }
 
     void data_table_t::initialize_scan_with_offset(table_scan_state& state,
@@ -207,7 +207,7 @@ namespace components::table {
     std::unique_ptr<table_delete_state>
     data_table_t::initialize_delete(const std::vector<std::unique_ptr<bound_constraint_t>>& bound_constraints) {
         std::vector<types::complex_logical_type> types;
-        auto result = std::make_unique<table_delete_state>(resource_, types);
+        auto result = std::make_unique<table_delete_state>(resource_);
         if (result->has_delete_constraints) {
             for (uint64_t i = 0; i < column_definitions_.size(); i++) {
                 result->col_ids.emplace_back(column_definitions_[i].storage_oid());
@@ -252,6 +252,43 @@ namespace components::table {
         auto result = std::make_unique<table_update_state>();
         result->constraint = initialize_constraint_state(bound_constraints);
         return result;
+    }
+
+    void data_table_t::update(table_update_state& state,
+                              vector::vector_t& row_ids,
+                              // const std::vector<uint64_t>& column_ids,
+                              vector::data_chunk_t& data) {
+        assert(row_ids.type().to_physical_type() == types::physical_type::INT64);
+
+        auto count = data.size();
+        if (count == 0) {
+            return;
+        }
+        vector::vector_t max_row_id_vec(resource_, types::logical_value_t(static_cast<int64_t>(MAX_ROW_ID)));
+        vector::vector_t row_ids_slice(resource_, types::logical_type::BIGINT);
+        vector::data_chunk_t updates_slice(resource_, data.types());
+        vector::indexing_vector_t sel_local_update(resource_, count);
+        vector::indexing_vector_t sel_global_update(resource_, count);
+
+        auto update_count = count - vector::vector_ops::compare<std::greater_equal<>>(row_ids,
+                                                                                      max_row_id_vec,
+                                                                                      count,
+                                                                                      &sel_local_update,
+                                                                                      &sel_global_update);
+        if (update_count > 0) {
+            updates_slice.slice(data, sel_global_update, update_count);
+            updates_slice.flatten();
+            row_ids_slice.slice(row_ids, sel_global_update, update_count);
+            row_ids_slice.flatten(update_count);
+
+            // For now ids are fixed
+            std::vector<uint64_t> column_ids;
+            column_ids.reserve(column_count());
+            for (size_t i = 0; i < column_count(); i++) {
+                column_ids.emplace_back(i);
+            }
+            row_groups_->update(row_ids_slice.data<int64_t>(), column_ids, updates_slice);
+        }
     }
 
     void data_table_t::update_column(vector::vector_t& row_ids,

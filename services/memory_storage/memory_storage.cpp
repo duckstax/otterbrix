@@ -137,7 +137,7 @@ namespace services {
                              make_cursor(resource(), error_code_t::collection_dropped));
         } else {
             auto sub_cursor = std::make_unique<sub_cursor_t>(collection->resource(), collection->name());
-            for (const auto& doc : collection->storage()) {
+            for (const auto& doc : collection->document_storage()) {
                 sub_cursor->append(doc.second);
             }
             auto cursor = make_cursor(collection->resource());

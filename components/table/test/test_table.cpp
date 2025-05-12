@@ -324,6 +324,27 @@ TEST_CASE("data_table_t") {
             }
         }
     }
+    INFO("Scan with predicates") {
+        std::vector<storage_index_t> column_indices;
+        column_indices.reserve(data_table->column_count());
+        for (int64_t i = 0; i < data_table->column_count(); i++) {
+            column_indices.emplace_back(i);
+        }
+        table_scan_state state(std::pmr::get_default_resource());
+        auto conj_and = std::make_unique<conjunction_and_filter_t>();
+        conj_and->child_filters.emplace_back(
+            std::make_unique<constant_filter_t>(components::expressions::compare_type::gte,
+                                                logical_value_t{uint64_t(test_size * 0.25f)},
+                                                0));
+        conj_and->child_filters.emplace_back(std::make_unique<constant_filter_t>(
+            components::expressions::compare_type::all_true,
+            logical_value_t{std::string{"long_string_with_index_" + std::to_string(uint64_t(test_size * 0.75f))}},
+            1));
+        data_chunk_t result(std::pmr::get_default_resource(), data_table->copy_types());
+        data_table->initialize_scan(state, column_indices, conj_and.get());
+        // TODO: fix that
+        //data_table->scan(result, state);
+    }
     INFO("Delete") {
         vector_t v(std::pmr::get_default_resource(), logical_type::BIGINT, test_size / 2);
         for (size_t i = 0; i < test_size; i += 2) {

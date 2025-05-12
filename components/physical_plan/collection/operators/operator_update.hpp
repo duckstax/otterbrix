@@ -2,7 +2,7 @@
 
 #include <components/document/document.hpp>
 #include <components/expressions/update_expression.hpp>
-#include <components/physical_plan/collection/operators/operator.hpp>
+#include <components/physical_plan/base/operators/operator.hpp>
 
 #include "predicates/predicate.hpp"
 

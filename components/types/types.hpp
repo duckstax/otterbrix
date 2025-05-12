@@ -9,6 +9,13 @@ namespace components::types {
     class logical_value_t;
     class logical_type_extention;
 
+    enum class compare_t
+    {
+        less = -1,
+        equals = 0,
+        more = 1
+    };
+
     // order change may break physical_value comparators
     enum class physical_type : uint8_t
     {

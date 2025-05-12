@@ -5,6 +5,8 @@
 #include <components/physical_plan/collection/operators/scan/full_scan.hpp>
 #include <components/physical_plan/collection/operators/scan/index_scan.hpp>
 #include <components/physical_plan/collection/operators/scan/transfer_scan.hpp>
+#include <components/index/index_engine.hpp>
+#include <services/collection/collection.hpp>
 
 namespace services::collection::planner::impl {
 
@@ -27,13 +29,13 @@ namespace services::collection::planner::impl {
         //}
         if (context_) {
             if (is_can_index_find_by_predicate(expr->type()) &&
-                search_index(context_->index_engine(), {expr->key_left()})) {
+                components::index::search_index(context_->index_engine(), {expr->key_left()})) {
                 return boost::intrusive_ptr(new operators::index_scan(context_, expr, limit));
             }
-            auto predicate = operators::predicates::create_predicate(context_, expr);
+            auto predicate = operators::predicates::create_predicate(expr);
             return boost::intrusive_ptr(new operators::full_scan(context_, std::move(predicate), limit));
         } else {
-            auto predicate = operators::predicates::create_predicate(context_, expr);
+            auto predicate = operators::predicates::create_predicate(expr);
             return boost::intrusive_ptr(new operators::operator_match_t(context_, std::move(predicate), limit));
         }
     }

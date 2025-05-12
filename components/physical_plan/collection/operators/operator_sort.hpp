@@ -1,13 +1,13 @@
 #pragma once
 
-#include <components/physical_plan/collection/operators/operator.hpp>
+#include <components/physical_plan/base/operators/operator.hpp>
 #include <components/physical_plan/collection/operators/sort/sort.hpp>
 
 namespace services::collection::operators {
 
     class operator_sort_t final : public read_only_operator_t {
     public:
-        using order = services::storage::sort::order;
+        using order = sort::order;
 
         explicit operator_sort_t(context_collection_t* context);
 
@@ -15,7 +15,7 @@ namespace services::collection::operators {
         void add(const std::vector<std::string>& keys, order order_ = order::ascending);
 
     private:
-        services::storage::sort::sorter_t sorter_;
+        sort::sorter_t sorter_;
 
         void on_execute_impl(components::pipeline::context_t* pipeline_context) final;
     };

@@ -4,7 +4,7 @@
 #include <components/log/log.hpp>
 #include <components/logical_plan/node.hpp>
 #include <components/logical_plan/param_storage.hpp>
-#include <components/physical_plan/collection/operators/operator.hpp>
+#include <components/physical_plan/base/operators/operator.hpp>
 #include <components/session/session.hpp>
 #include <core/btree/btree.hpp>
 #include <core/excutor.hpp>

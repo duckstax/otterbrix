@@ -1,5 +1,5 @@
 #include "operator_group.hpp"
-#include <components/physical_plan/collection/operators/operator_empty.hpp>
+#include <components/physical_plan/base/operators/operator_empty.hpp>
 #include <services/collection/collection.hpp>
 
 namespace services::collection::operators {
@@ -26,14 +26,14 @@ namespace services::collection::operators {
 
     void operator_group_t::on_execute_impl(components::pipeline::context_t* pipeline_context) {
         if (left_ && left_->output()) {
-            output_ = make_operator_data(left_->output()->resource());
+            output_ = base::operators::make_operator_data(left_->output()->resource());
             create_list_documents();
             calc_aggregate_values(pipeline_context);
         }
     }
 
     void operator_group_t::create_list_documents() {
-        for (const auto& doc : left_->output()->documents()) {
+        for (const auto& doc : std::get<std::pmr::vector<document_ptr>>(left_->output()->data())) {
             auto new_doc = components::document::make_document(doc->get_allocator());
             auto tape = std::make_unique<components::document::impl::base_document>(doc->get_allocator());
             bool is_valid = true;
@@ -48,8 +48,10 @@ namespace services::collection::operators {
             }
             if (is_valid) {
                 bool is_new = true;
-                for (std::size_t i = 0; i < output_->documents().size(); ++i) {
-                    if (document_t::is_equals_documents(new_doc, output_->documents().at(i))) {
+                for (std::size_t i = 0; i < std::get<std::pmr::vector<document_ptr>>(output_->data()).size(); ++i) {
+                    if (document_t::is_equals_documents(
+                            new_doc,
+                            std::get<std::pmr::vector<document_ptr>>(output_->data()).at(i))) {
                         input_documents_.at(i)->append(doc);
                         is_new = false;
                         break;
@@ -57,7 +59,7 @@ namespace services::collection::operators {
                 }
                 if (is_new) {
                     output_->append(new_doc);
-                    auto input_doc = make_operator_data(doc->get_allocator());
+                    auto input_doc = base::operators::make_operator_data(doc->get_allocator());
                     input_doc->append(doc);
                     input_documents_.push_back(std::move(input_doc));
                 }
@@ -68,11 +70,11 @@ namespace services::collection::operators {
     void operator_group_t::calc_aggregate_values(components::pipeline::context_t* pipeline_context) {
         for (const auto& value : values_) {
             auto& aggregator = value.aggregator;
-            for (std::size_t i = 0; i < output_->documents().size(); ++i) {
-                auto& document = output_->documents().at(i);
+            for (std::size_t i = 0; i < std::get<std::pmr::vector<document_ptr>>(output_->data()).size(); ++i) {
+                auto& document = std::get<std::pmr::vector<document_ptr>>(output_->data()).at(i);
                 aggregator->clear(); //todo: need copy aggregator
-                aggregator->set_children(
-                    boost::intrusive_ptr(new operator_empty_t(context_, input_documents_.at(i)->copy())));
+                aggregator->set_children(boost::intrusive_ptr(
+                    new base::operators::operator_empty_t(context_, input_documents_.at(i)->copy())));
                 aggregator->on_execute(pipeline_context);
                 aggregator->set_value(document, value.name);
             }

@@ -1,8 +1,8 @@
 #pragma once
 
+#include <components/physical_plan/base/operators/operator.hpp>
 #include <components/physical_plan/collection/operators/aggregate/operator_aggregate.hpp>
 #include <components/physical_plan/collection/operators/get/operator_get.hpp>
-#include <components/physical_plan/collection/operators/operator.hpp>
 
 namespace services::collection::operators {
 
@@ -27,7 +27,7 @@ namespace services::collection::operators {
     private:
         std::pmr::vector<group_key_t> keys_;
         std::pmr::vector<group_value_t> values_;
-        std::pmr::vector<operator_data_ptr> input_documents_;
+        std::pmr::vector<base::operators::operator_data_ptr> input_documents_;
 
         void on_execute_impl(components::pipeline::context_t* pipeline_context) final;
 

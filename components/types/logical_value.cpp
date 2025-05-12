@@ -1,5 +1,7 @@
 #include "logical_value.hpp"
 
+#include <stdexcept>
+
 namespace components::types {
 
     logical_value_t::logical_value_t(complex_logical_type type)
@@ -310,8 +312,10 @@ namespace components::types {
     void logical_value_t::set_alias(const std::string& alias) { type_.set_alias(alias); }
 
     bool logical_value_t::operator==(const logical_value_t& rhs) const {
-        if (type_ == rhs.type_) {
-            return true;
+        if (type_ != rhs.type_) {
+            assert(false && "can not compare types");
+            // TODO: add numeric types comparasing
+            return false;
         } else {
             switch (type_.type()) {
                 case logical_type::BOOLEAN:
@@ -413,6 +417,16 @@ namespace components::types {
     bool logical_value_t::operator<=(const logical_value_t& rhs) const { return !(*this > rhs); }
 
     bool logical_value_t::operator>=(const logical_value_t& rhs) const { return !(*this < rhs); }
+
+    compare_t logical_value_t::compare(const logical_value_t& rhs) const {
+        if (*this == rhs) {
+            return compare_t::equals;
+        } else if (*this < rhs) {
+            return compare_t::less;
+        } else {
+            return compare_t::more;
+        }
+    }
 
     const std::vector<logical_value_t>& logical_value_t::children() const {
         // TODO: check type
@@ -533,6 +547,60 @@ namespace components::types {
         result.value_ = std::make_unique<std::vector<logical_value_t>>(values);
         return result;
     }
+
+    logical_value_t logical_value_t::sum(const logical_value_t& value1, const logical_value_t& value2) {
+        if (value1.is_null()) {
+            return value2;
+        }
+        if (value2.is_null()) {
+            return value1;
+        }
+
+        switch (value1.type().type()) {
+            case logical_type::BOOLEAN:
+                return logical_value_t{value1.value<bool>() + value2.value<bool>()};
+            case logical_type::TINYINT:
+                return logical_value_t{value1.value<int8_t>() + value2.value<int8_t>()};
+            case logical_type::SMALLINT:
+                return logical_value_t{value1.value<int16_t>() + value2.value<int16_t>()};
+            case logical_type::INTEGER:
+                return logical_value_t{value1.value<int32_t>() + value2.value<int32_t>()};
+            case logical_type::BIGINT:
+                return logical_value_t{value1.value<int64_t>() + value2.value<int64_t>()};
+            // case logical_type::HUGEINT:
+            //     return logical_value_t{value1.value<int128_t>() + value2.value<int128_t>()};
+            case logical_type::TIMESTAMP_SEC:
+                return logical_value_t{value1.value<std::chrono::seconds>() + value2.value<std::chrono::seconds>()};
+            case logical_type::TIMESTAMP_MS:
+                return logical_value_t{value1.value<std::chrono::milliseconds>() +
+                                       value2.value<std::chrono::milliseconds>()};
+            case logical_type::TIMESTAMP_US:
+                return logical_value_t{value1.value<std::chrono::microseconds>() +
+                                       value2.value<std::chrono::microseconds>()};
+            case logical_type::TIMESTAMP_NS:
+                return logical_value_t{value1.value<std::chrono::nanoseconds>() +
+                                       value2.value<std::chrono::nanoseconds>()};
+            case logical_type::FLOAT:
+                return logical_value_t{value1.value<float>() + value2.value<float>()};
+            case logical_type::DOUBLE:
+                return logical_value_t{value1.value<double>() + value2.value<double>()};
+            case logical_type::UTINYINT:
+                return logical_value_t{value1.value<uint8_t>() + value2.value<uint8_t>()};
+            case logical_type::USMALLINT:
+                return logical_value_t{value1.value<uint16_t>() + value2.value<uint16_t>()};
+            case logical_type::UINTEGER:
+                return logical_value_t{value1.value<uint32_t>() + value2.value<uint32_t>()};
+            case logical_type::UBIGINT:
+                return logical_value_t{value1.value<uint64_t>() + value2.value<uint64_t>()};
+            // case logical_type::UHUGEINT:
+            //     return logical_value_t{value1.value<uint128_t>() + value2.value<uint128_t>()};
+            case logical_type::STRING_LITERAL:
+                return logical_value_t{value1.value<const std::string&>() + value2.value<const std::string&>()};
+            default:
+                throw std::runtime_error("logical_value_t::sum unable to summate given types");
+        }
+    }
+
     bool serialize_type_matches(const complex_logical_type& expected_type, const complex_logical_type& actual_type) {
         if (expected_type.type() != actual_type.type()) {
             return false;

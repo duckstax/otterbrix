@@ -16,11 +16,11 @@ namespace services::collection::operators {
 
     void operator_sort_t::on_execute_impl(components::pipeline::context_t*) {
         if (left_ && left_->output()) {
-            output_ = make_operator_data(left_->output()->resource());
-            for (const auto& document : left_->output()->documents()) {
+            output_ = base::operators::make_operator_data(left_->output()->resource());
+            for (const auto& document : std::get<std::pmr::vector<document_ptr>>(left_->output()->data())) {
                 output_->append(document);
             }
-            auto& documents = output_->documents();
+            auto& documents = std::get<std::pmr::vector<document_ptr>>(output_->data());
             std::sort(documents.begin(), documents.end(), sorter_);
         }
     }

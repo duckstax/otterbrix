@@ -1,6 +1,6 @@
 #include "sort.hpp"
 
-namespace services::storage::sort {
+namespace services::collection::sort {
 
     sorter_t::sorter_t(const std::string& key, order order_) { add(key, order_); }
 
@@ -11,4 +11,4 @@ namespace services::storage::sort {
         });
     }
 
-} // namespace services::storage::sort
+} // namespace services::collection::sort

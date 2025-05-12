@@ -13,9 +13,9 @@ namespace services::collection::operators::merge {
             return; //limit = 0
         }
         if (left_ && right_ && left_->output() && right_->output()) {
-            output_ = make_operator_data(left_->output()->resource());
-            const auto& right_documents = right_->output()->documents();
-            for (const auto& left_document : left_->output()->documents()) {
+            output_ = base::operators::make_operator_data(left_->output()->resource());
+            const auto& right_documents = std::get<std::pmr::vector<document_ptr>>(right_->output()->data());
+            for (const auto& left_document : std::get<std::pmr::vector<document_ptr>>(left_->output()->data())) {
                 auto it = std::find_if(right_documents.cbegin(),
                                        right_documents.cend(),
                                        [&left_document](const document_ptr& doc) {

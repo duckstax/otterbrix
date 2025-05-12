@@ -35,6 +35,8 @@ namespace components::types {
         bool operator<=(const logical_value_t& rhs) const;
         bool operator>=(const logical_value_t& rhs) const;
 
+        compare_t compare(const logical_value_t& rhs) const;
+
         const std::vector<logical_value_t>& children() const;
 
         static logical_value_t create_struct(const std::vector<logical_value_t>& fields);
@@ -52,6 +54,8 @@ namespace components::types {
                                           const std::vector<logical_value_t>& values);
         static logical_value_t create_list(const complex_logical_type& type,
                                            const std::vector<logical_value_t>& values);
+
+        static logical_value_t sum(const logical_value_t& value1, const logical_value_t& value2);
 
     private:
         complex_logical_type type_;
@@ -82,6 +86,34 @@ namespace components::types {
     logical_value_t::logical_value_t(T value)
         : type_(complex_logical_type::to_logical_type<T>())
         , value_(value) {
+        assert(type_ != logical_type::INVALID);
+    }
+
+    template<>
+    inline logical_value_t::logical_value_t(std::chrono::nanoseconds value)
+        : type_(complex_logical_type::to_logical_type<std::chrono::nanoseconds>())
+        , value_(value.count()) {
+        assert(type_ != logical_type::INVALID);
+    }
+
+    template<>
+    inline logical_value_t::logical_value_t(std::chrono::microseconds value)
+        : type_(complex_logical_type::to_logical_type<std::chrono::microseconds>())
+        , value_(value.count()) {
+        assert(type_ != logical_type::INVALID);
+    }
+
+    template<>
+    inline logical_value_t::logical_value_t(std::chrono::milliseconds value)
+        : type_(complex_logical_type::to_logical_type<std::chrono::milliseconds>())
+        , value_(value.count()) {
+        assert(type_ != logical_type::INVALID);
+    }
+
+    template<>
+    inline logical_value_t::logical_value_t(std::chrono::seconds value)
+        : type_(complex_logical_type::to_logical_type<std::chrono::seconds>())
+        , value_(value.count()) {
         assert(type_ != logical_type::INVALID);
     }
 

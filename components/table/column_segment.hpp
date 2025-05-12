@@ -57,6 +57,8 @@ namespace components::table {
                   vector::vector_t& result,
                   uint64_t result_offset,
                   scan_vector_type scan_type);
+
+        bool check_predicate(uint64_t row_id, const table_filter_t* filter);
         void fetch_row(column_fetch_state& state, int64_t row_id, vector::vector_t& result, uint64_t result_idx);
 
         static uint64_t filter_indexing(vector::indexing_vector_t& indexing,

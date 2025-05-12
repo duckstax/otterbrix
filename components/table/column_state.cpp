@@ -8,6 +8,61 @@
 
 namespace components::table {
 
+    bool constant_filter_t::compare(const types::logical_value_t& value) const {
+        auto comp = value.compare(constant);
+        if (comp == types::compare_t::equals) {
+            switch (filter_type) {
+                case expressions::compare_type::eq:
+                case expressions::compare_type::gte:
+                case expressions::compare_type::lte:
+                case expressions::compare_type::all_true:
+                    return true;
+                default:
+                    return false;
+            }
+        } else if (comp == types::compare_t::less) {
+            switch (filter_type) {
+                case expressions::compare_type::ne:
+                case expressions::compare_type::lt:
+                case expressions::compare_type::lte:
+                case expressions::compare_type::all_true:
+                    return true;
+                default:
+                    return false;
+            }
+        } else {
+            switch (filter_type) {
+                case expressions::compare_type::ne:
+                case expressions::compare_type::gt:
+                case expressions::compare_type::gte:
+                case expressions::compare_type::all_true:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+    }
+
+    bool constant_filter_t::equals(const table_filter_t& other) const {
+        return constant == other.cast<constant_filter_t>().constant && table_filter_t::equals(other);
+    }
+
+    std::unique_ptr<table_filter_t> constant_filter_t::copy() const {
+        return std::make_unique<constant_filter_t>(filter_type, constant, table_index);
+    }
+
+    bool conjunction_filter_t::equals(const table_filter_t& other) const {
+        return table_filter_t::equals(other) && child_filters == other.cast<conjunction_filter_t>().child_filters;
+    }
+
+    std::unique_ptr<table_filter_t> conjunction_or_filter_t::copy() const {
+        return std::make_unique<conjunction_or_filter_t>();
+    }
+
+    std::unique_ptr<table_filter_t> conjunction_and_filter_t::copy() const {
+        return std::make_unique<conjunction_and_filter_t>();
+    }
+
     void column_scan_state::initialize(const types::complex_logical_type& type,
                                        const std::vector<storage_index_t>& children) {
         if (type.type() == types::logical_type::VALIDITY) {

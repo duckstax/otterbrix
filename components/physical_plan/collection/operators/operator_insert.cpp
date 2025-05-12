@@ -11,8 +11,8 @@ namespace services::collection::operators {
 
     void operator_insert::on_execute_impl(components::pipeline::context_t* pipeline_context) {
         if (left_ && left_->output()) {
-            modified_ = make_operator_write_data(context_->resource());
-            output_ = make_operator_data(context_->resource());
+            modified_ = base::operators::make_operator_write_data<document_id_t>(context_->resource());
+            output_ = base::operators::make_operator_data(context_->resource());
             bool simple_insert = true;
             for (const auto& k_pair : key_translation_) {
                 if (k_pair.first != k_pair.second) {
@@ -23,7 +23,7 @@ namespace services::collection::operators {
             for (const auto& document : left_->output()->documents()) {
                 auto id = get_document_id(document);
                 if (simple_insert) {
-                    context_->storage().insert_or_assign(id, document);
+                    context_->document_storage().insert_or_assign(id, document);
                     context_->index_engine()->insert_document(document, pipeline_context);
                     output_->append(document);
                 } else {
@@ -32,7 +32,7 @@ namespace services::collection::operators {
                     for (const auto& k_pair : key_translation_) {
                         res_doc->set(k_pair.first.as_string(), document, k_pair.second.as_string());
                     }
-                    context_->storage().insert_or_assign(id, res_doc);
+                    context_->document_storage().insert_or_assign(id, res_doc);
                     context_->index_engine()->insert_document(res_doc, pipeline_context);
                     output_->append(res_doc);
                 }
