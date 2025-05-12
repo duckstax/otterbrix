@@ -22,10 +22,10 @@ TEST_CASE("operator_merge::and") {
     auto cond2 = make_compare_expression(&resource, compare_type::lte, key("count"), core::parameter_id_t(2));
     operator_and_t op_and(d(collection), components::logical_plan::limit_t::unlimit());
     op_and.set_children(boost::intrusive_ptr(new full_scan(d(collection),
-                                                           predicates::create_predicate(d(collection), cond1),
+                                                           predicates::create_predicate(cond1),
                                                            components::logical_plan::limit_t::unlimit())),
                         boost::intrusive_ptr(new full_scan(d(collection),
-                                                           predicates::create_predicate(d(collection), cond2),
+                                                           predicates::create_predicate(cond2),
                                                            components::logical_plan::limit_t::unlimit())));
     components::logical_plan::storage_parameters parameters(&resource);
     add_parameter(parameters, core::parameter_id_t(1), new_value(50));
@@ -45,10 +45,10 @@ TEST_CASE("operator_merge::or") {
     auto cond2 = make_compare_expression(&resource, compare_type::gt, key("count"), core::parameter_id_t(2));
     operator_or_t op_or(d(collection), components::logical_plan::limit_t::unlimit());
     op_or.set_children(boost::intrusive_ptr(new full_scan(d(collection),
-                                                          predicates::create_predicate(d(collection), cond1),
+                                                          predicates::create_predicate(cond1),
                                                           components::logical_plan::limit_t::unlimit())),
                        boost::intrusive_ptr(new full_scan(d(collection),
-                                                          predicates::create_predicate(d(collection), cond2),
+                                                          predicates::create_predicate(cond2),
                                                           components::logical_plan::limit_t::unlimit())));
     components::logical_plan::storage_parameters parameters(&resource);
     add_parameter(parameters, core::parameter_id_t(1), new_value(10));
@@ -67,7 +67,7 @@ TEST_CASE("operator_merge::not") {
     auto cond = make_compare_expression(&resource, compare_type::gt, key("count"), core::parameter_id_t(1));
     operator_not_t op_not(d(collection), components::logical_plan::limit_t::unlimit());
     op_not.set_children(boost::intrusive_ptr(new full_scan(d(collection),
-                                                           predicates::create_predicate(d(collection), cond),
+                                                           predicates::create_predicate(cond),
                                                            components::logical_plan::limit_t::unlimit())));
     components::logical_plan::storage_parameters parameters(&resource);
     add_parameter(parameters, core::parameter_id_t(1), new_value(10));
@@ -99,16 +99,16 @@ TEST_CASE("operator_merge::complex") {
     auto op_and =
         create_operator_merge(d(collection), compare_type::union_and, components::logical_plan::limit_t::unlimit());
     op_or->set_children(boost::intrusive_ptr(new full_scan(d(collection),
-                                                           predicates::create_predicate(d(collection), cond_or1),
+                                                           predicates::create_predicate(cond_or1),
                                                            components::logical_plan::limit_t::unlimit())),
                         boost::intrusive_ptr(new full_scan(d(collection),
-                                                           predicates::create_predicate(d(collection), cond_or2),
+                                                           predicates::create_predicate(cond_or2),
                                                            components::logical_plan::limit_t::unlimit())));
     op_and->set_children(boost::intrusive_ptr(new full_scan(d(collection),
-                                                            predicates::create_predicate(d(collection), cond_and1),
+                                                            predicates::create_predicate(cond_and1),
                                                             components::logical_plan::limit_t::unlimit())),
                          boost::intrusive_ptr(new full_scan(d(collection),
-                                                            predicates::create_predicate(d(collection), cond_and2),
+                                                            predicates::create_predicate(cond_and2),
                                                             components::logical_plan::limit_t::unlimit())));
     op->set_children(std::move(op_or), std::move(op_and));
     components::logical_plan::storage_parameters parameters(&resource);

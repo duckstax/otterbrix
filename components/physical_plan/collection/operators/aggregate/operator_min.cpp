@@ -13,12 +13,12 @@ namespace services::collection::operators::aggregate {
         auto resource = left_ && left_->output() ? left_->output()->resource() : context_->resource();
         auto doc = components::document::make_document(resource);
         if (left_ && left_->output()) {
-            const auto& documents = left_->output()->documents();
+            const auto& documents = std::get<std::pmr::vector<document_ptr>>(left_->output()->data());
             auto min = std::min_element(documents.cbegin(),
                                         documents.cend(),
                                         [&](const document_ptr& doc1, const document_ptr& doc2) {
                                             return doc1->compare(key_.as_string(), doc2, key_.as_string()) ==
-                                                   components::document::compare_t::less;
+                                                   components::types::compare_t::less;
                                         });
             if (min != documents.cend()) {
                 doc->set(key_result_, *min, key_.as_string());

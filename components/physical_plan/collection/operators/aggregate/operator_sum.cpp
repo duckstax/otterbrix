@@ -13,11 +13,11 @@ namespace services::collection::operators::aggregate {
         auto resource = left_ && left_->output() ? left_->output()->resource() : context_->resource();
         auto result = components::document::make_document(resource);
         if (left_ && left_->output()) {
-            const auto& documents = left_->output()->documents();
+            const auto& documents = std::get<std::pmr::vector<document_ptr>>(left_->output()->data());
             auto tape = std::make_unique<components::document::impl::base_document>(resource);
             components::document::value_t sum_{};
             std::for_each(documents.cbegin(), documents.cend(), [&](const document_ptr& doc) {
-                sum_ = sum(sum_, get_value_from_document(doc, key_), tape.get());
+                sum_ = sum(sum_, doc->get_value(key_.as_string()), tape.get(), resource);
             });
             result->set(key_result_, sum_);
         } else {

@@ -9,6 +9,9 @@
 
 #include "segment_tree.hpp"
 
+#include <expressions/forward.hpp>
+#include <types/logical_value.hpp>
+
 namespace components::table {
     class row_group_t;
     struct table_append_state;
@@ -64,61 +67,75 @@ namespace components::table {
 
     class table_filter_t {
     public:
-        explicit table_filter_t(table_filter_type filter_type)
+        explicit table_filter_t(expressions::compare_type filter_type)
             : filter_type(filter_type) {}
         virtual ~table_filter_t() = default;
 
-        table_filter_type filter_type;
+        expressions::compare_type filter_type;
 
         virtual std::unique_ptr<table_filter_t> copy() const = 0;
-        virtual bool equals(const table_filter_t& other) const { return filter_type != other.filter_type; }
+        virtual bool equals(const table_filter_t& other) const { return filter_type == other.filter_type; }
 
         template<class TARGET>
         TARGET& cast() {
-            if (filter_type != TARGET::TYPE) {
-                throw std::logic_error("Failed to cast table to type - table filter type mismatch");
-            }
             return reinterpret_cast<TARGET&>(*this);
         }
 
         template<class TARGET>
         const TARGET& cast() const {
-            if (filter_type != TARGET::TYPE) {
-                throw std::logic_error("Failed to cast table to type - table filter type mismatch");
-            }
             return reinterpret_cast<const TARGET&>(*this);
         }
     };
 
+    class constant_filter_t : public table_filter_t {
+    public:
+        constant_filter_t(expressions::compare_type comparison_type,
+                          types::logical_value_t constant,
+                          uint64_t table_index)
+            : table_filter_t(comparison_type)
+            , constant(std::move(constant))
+            , table_index(table_index) {}
+
+        bool compare(const types::logical_value_t& value) const;
+        template<typename T>
+        bool compare(T value) const;
+        bool equals(const table_filter_t& other) const override;
+        std::unique_ptr<table_filter_t> copy() const override;
+
+        types::logical_value_t constant;
+        uint64_t table_index;
+    };
+
+    template<typename T>
+    bool constant_filter_t::compare(T value) const {
+        // TODO: do a proper template here:
+        return compare(types::logical_value_t(value));
+    }
+
     class conjunction_filter_t : public table_filter_t {
     public:
-        explicit conjunction_filter_t(table_filter_type filter_type)
+        explicit conjunction_filter_t(expressions::compare_type filter_type)
             : table_filter_t(filter_type) {}
         ~conjunction_filter_t() override = default;
 
-        bool equals(const table_filter_t& other) const override { return table_filter_t::equals(other); }
+        bool equals(const table_filter_t& other) const override;
 
         std::vector<std::unique_ptr<table_filter_t>> child_filters;
     };
 
     class conjunction_or_filter_t : public conjunction_filter_t {
     public:
-        static constexpr table_filter_type TYPE = table_filter_type::CONJUNCTION_OR;
-
         conjunction_or_filter_t()
-            : conjunction_filter_t(table_filter_type::CONJUNCTION_OR) {}
-        bool equals(const table_filter_t& other) const override;
+            : conjunction_filter_t(expressions::compare_type::union_or) {}
+
         std::unique_ptr<table_filter_t> copy() const override;
     };
 
     class conjunction_and_filter_t : public conjunction_filter_t {
     public:
-        static constexpr table_filter_type TYPE = table_filter_type::CONJUNCTION_AND;
-
         conjunction_and_filter_t()
-            : conjunction_filter_t(table_filter_type::CONJUNCTION_AND) {}
+            : conjunction_filter_t(expressions::compare_type::union_and) {}
 
-        bool equals(const table_filter_t& other) const override;
         std::unique_ptr<table_filter_t> copy() const override;
     };
 

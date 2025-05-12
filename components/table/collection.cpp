@@ -41,9 +41,7 @@ namespace components::table {
 
     row_group_t* collection_t::row_group(int64_t index) { return row_groups_->segment_at(index); }
 
-    void collection_t::initialize_scan(collection_scan_state& state,
-                                       const std::vector<storage_index_t>& column_ids,
-                                       table_filter_set_t* table_filters) {
+    void collection_t::initialize_scan(collection_scan_state& state, const std::vector<storage_index_t>& column_ids) {
         auto row_group = row_groups_->root_segment();
         assert(row_group);
         state.row_groups = row_groups_.get();
@@ -96,7 +94,7 @@ namespace components::table {
 
         table_scan_state state(resource_);
         state.initialize(column_ids, nullptr);
-        initialize_scan(state.local_state, column_ids, nullptr);
+        initialize_scan(state.local_state, column_ids);
 
         while (true) {
             chunk.reset();

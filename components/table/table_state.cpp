@@ -173,7 +173,7 @@ namespace components::table {
 
     const std::vector<storage_index_t>& collection_scan_state::column_ids() { return parent_.column_ids(); }
 
-    scan_filter_info& collection_scan_state::filter_info() { return parent_.filter_info(); }
+    const table_filter_t* collection_scan_state::filter() { return parent_.filter; }
 
     bool collection_scan_state::scan(vector::data_chunk_t& result) {
         while (row_group) {
@@ -223,19 +223,16 @@ namespace components::table {
         : table_state(resource, *this)
         , local_state(resource, *this) {}
 
-    void table_scan_state::initialize(std::vector<storage_index_t> column_ids, table_filter_set_t* table_filters) {
+    void table_scan_state::initialize(std::vector<storage_index_t> column_ids,
+                                      const table_filter_t* table_filter_tree) {
         column_ids_ = std::move(column_ids);
-        if (table_filters) {
-            filters.initialize(*table_filters, column_ids);
-        }
+        filter = table_filter_tree;
     }
 
     const std::vector<storage_index_t>& table_scan_state::column_ids() {
         assert(!column_ids_.empty());
         return column_ids_;
     }
-
-    scan_filter_info& table_scan_state::filter_info() { return filters; }
 
     bool collection_scan_state::scan_committed(vector::data_chunk_t& result, table_scan_type type) {
         while (row_group) {

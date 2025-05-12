@@ -18,8 +18,8 @@ namespace services::collection::operators {
             return;
         }
         if (left_->output()) {
-            output_ = make_operator_data(left_->output()->resource());
-            for (auto& doc : left_->output()->documents()) {
+            output_ = base::operators::make_operator_data(left_->output()->resource());
+            for (auto& doc : std::get<std::pmr::vector<document_ptr>>(left_->output()->data())) {
                 if (predicate_->check(doc, pipeline_context ? &pipeline_context->parameters : nullptr)) {
                     output_->append(doc);
                     ++count;

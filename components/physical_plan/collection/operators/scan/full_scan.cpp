@@ -17,8 +17,8 @@ namespace services::collection::operators {
         if (!limit_.check(count)) {
             return; //limit = 0
         }
-        output_ = make_operator_data(context_->resource());
-        for (auto& it : context_->storage()) {
+        output_ = base::operators::make_operator_data(context_->resource());
+        for (auto& it : context_->document_storage()) {
             if (predicate_->check(it.second, pipeline_context ? &pipeline_context->parameters : nullptr)) {
                 output_->append(it.second);
                 ++count;
