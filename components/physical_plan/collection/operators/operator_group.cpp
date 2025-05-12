@@ -33,7 +33,7 @@ namespace services::collection::operators {
     }
 
     void operator_group_t::create_list_documents() {
-        for (const auto& doc : std::get<std::pmr::vector<document_ptr>>(left_->output()->data())) {
+        for (const auto& doc : left_->output()->documents()) {
             auto new_doc = components::document::make_document(doc->get_allocator());
             auto tape = std::make_unique<components::document::impl::base_document>(doc->get_allocator());
             bool is_valid = true;
@@ -48,10 +48,8 @@ namespace services::collection::operators {
             }
             if (is_valid) {
                 bool is_new = true;
-                for (std::size_t i = 0; i < std::get<std::pmr::vector<document_ptr>>(output_->data()).size(); ++i) {
-                    if (document_t::is_equals_documents(
-                            new_doc,
-                            std::get<std::pmr::vector<document_ptr>>(output_->data()).at(i))) {
+                for (std::size_t i = 0; i < output_->size(); ++i) {
+                    if (document_t::is_equals_documents(new_doc, output_->documents().at(i))) {
                         input_documents_.at(i)->append(doc);
                         is_new = false;
                         break;
@@ -70,8 +68,8 @@ namespace services::collection::operators {
     void operator_group_t::calc_aggregate_values(components::pipeline::context_t* pipeline_context) {
         for (const auto& value : values_) {
             auto& aggregator = value.aggregator;
-            for (std::size_t i = 0; i < std::get<std::pmr::vector<document_ptr>>(output_->data()).size(); ++i) {
-                auto& document = std::get<std::pmr::vector<document_ptr>>(output_->data()).at(i);
+            for (std::size_t i = 0; i < output_->documents().size(); ++i) {
+                auto& document = output_->documents().at(i);
                 aggregator->clear(); //todo: need copy aggregator
                 aggregator->set_children(boost::intrusive_ptr(
                     new base::operators::operator_empty_t(context_, input_documents_.at(i)->copy())));

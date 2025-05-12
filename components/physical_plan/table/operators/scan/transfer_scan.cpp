@@ -25,7 +25,7 @@ namespace services::table::operators {
         components::table::table_scan_state state(std::pmr::get_default_resource());
         context_->table_storage().table().initialize_scan(state, column_indices);
         // TODO: check limit inside scan
-        context_->table_storage().table().scan(std::get<components::vector::data_chunk_t>(output_->data()), state);
+        context_->table_storage().table().scan(output_->data_chunk(), state);
     }
 
 } // namespace services::table::operators

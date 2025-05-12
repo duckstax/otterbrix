@@ -24,7 +24,7 @@ namespace services::table::operators {
         }
         context_->table_storage().table().append(data_, state);
         output_ = base::operators::make_operator_data(context_->resource(), data_.types(), data_.size());
-        data_.copy(std::get<components::vector::data_chunk_t>(output_->data()), 0);
+        data_.copy(output_->data_chunk(), 0);
     }
 
 } // namespace services::table::operators

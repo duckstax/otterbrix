@@ -74,7 +74,7 @@ namespace services::table::operators {
             transform_predicate(exresssion_, types, pipeline_context ? &pipeline_context->parameters : nullptr);
         context_->table_storage().table().initialize_scan(state, column_indices, filter.get());
         // TODO: check limit inside scan
-        context_->table_storage().table().scan(std::get<components::vector::data_chunk_t>(output_->data()), state);
+        context_->table_storage().table().scan(output_->data_chunk(), state);
     }
 
 } // namespace services::table::operators

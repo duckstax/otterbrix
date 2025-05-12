@@ -245,7 +245,7 @@ namespace services::collection::executor {
                                                                              collection ? collection->name()
                                                                                         : collection_full_name_t{});
             if (plan->output()) {
-                for (const auto& document : std::get<std::pmr::vector<document_ptr>>(plan->output()->data())) {
+                for (const auto& document : plan->output()->documents()) {
                     cursor->append(document);
                 }
             }
@@ -267,8 +267,7 @@ namespace services::collection::executor {
         trace(log_, "executor::execute_plan : operators::operator_type::update");
 
         if (plan->output()) {
-            auto new_id = components::document::get_document_id(
-                std::get<std::pmr::vector<document_ptr>>(plan->output()->data()).front());
+            auto new_id = components::document::get_document_id(plan->output()->documents().front());
             std::pmr::vector<document_id_t> documents{resource()};
             documents.emplace_back(new_id);
             actor_zeta::send(collection->disk(),
@@ -322,14 +321,14 @@ namespace services::collection::executor {
                                           operators::operator_ptr plan) {
         trace(log_,
               "executor::execute_plan : operators::operator_type::insert {}",
-              plan->output() ? std::get<std::pmr::vector<document_ptr>>(plan->output()->data()).size() : 0);
+              plan->output() ? plan->output()->documents().size() : 0);
         actor_zeta::send(collection->disk(),
                          address(),
                          disk::handler_id(disk::route::write_documents),
                          session,
                          collection->name().database,
                          collection->name().collection,
-                         plan->output() ? std::move(std::get<std::pmr::vector<document_ptr>>(plan->output()->data()))
+                         plan->output() ? std::move(plan->output()->documents())
                                         : std::pmr::vector<document_ptr>{resource()});
 
         auto cursor = make_cursor(resource());

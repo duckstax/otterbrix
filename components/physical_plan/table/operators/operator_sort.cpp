@@ -17,7 +17,7 @@ namespace services::table::operators {
 
     void operator_sort_t::on_execute_impl(components::pipeline::context_t*) {
         if (left_ && left_->output()) {
-            auto& chunk = std::get<components::vector::data_chunk_t>(left_->output()->data());
+            auto& chunk = left_->output()->data_chunk();
             // TODO: sort inplace
             auto matrix = impl::transpose(left_->output()->resource(), chunk);
             std::sort(matrix.begin(), matrix.end(), sorter_);

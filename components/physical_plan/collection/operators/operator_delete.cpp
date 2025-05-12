@@ -14,7 +14,7 @@ namespace services::collection::operators {
             for (auto& doc_left : std::get<std::pmr::vector<document_ptr>>(left_->output()->data())) {
                 for (auto& doc_right : std::get<std::pmr::vector<document_ptr>>(right_->output()->data())) {
                     if (match_predicate_->check(doc_left, doc_right, &pipeline_context->parameters)) {
-                        const auto id = get_document_id(doc_left);
+                        const auto id = components::document::get_document_id(doc_left);
                         auto it = context_->document_storage().find(id);
                         if (it != context_->document_storage().end()) {
                             context_->document_storage().erase(it);
@@ -26,9 +26,9 @@ namespace services::collection::operators {
                 }
             }
         } else if (left_ && left_->output()) {
-            modified_ = make_operator_write_data(context_->resource());
+            modified_ = base::operators::make_operator_write_data<document_id_t>(context_->resource());
             for (const auto& document : std::get<std::pmr::vector<document_ptr>>(left_->output()->data()))) {
-                const auto id = get_document_id(document);
+                const auto id = components::document::get_document_id(document);
                 auto it = context_->document_storage().find(id);
                 if (it != context_->document_storage().end()) {
                     context_->document_storage().erase(it);
