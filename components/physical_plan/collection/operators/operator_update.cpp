@@ -10,7 +10,7 @@ namespace services::collection::operators {
 
     void operator_update::on_execute_impl(components::pipeline::context_t* pipeline_context) {
         if (left_ && left_->output()) {
-            if (std::get<std::pmr::vector<document_ptr>>(left_->output()->data()).empty()) {
+            if (left_->output()->documents().empty()) {
                 if (upsert_) {
                     output_ = base::operators::make_operator_data(context_->resource());
                     auto new_doc = make_upsert_document(update_);
@@ -21,7 +21,7 @@ namespace services::collection::operators {
             } else {
                 modified_ = base::operators::make_operator_write_data<document_id_t>(context_->resource());
                 no_modified_ = base::operators::make_operator_write_data<document_id_t>(context_->resource());
-                for (auto& document : std::get<std::pmr::vector<document_ptr>>(left_->output()->data())) {
+                for (auto& document : left_->output()->documents()) {
                     context_->index_engine()->delete_document(document, pipeline_context); //todo: can optimized
                     if (document->update(update_)) {
                         modified_->append(get_document_id(document));

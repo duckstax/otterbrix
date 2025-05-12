@@ -91,8 +91,7 @@ namespace services::collection::executor {
         suspend_plan.plan->on_execute(&suspend_plan.pipeline_context);
         if (suspend_plan.plan->is_executed()) {
             if (suspend_plan.plan->output()) {
-                for (const auto& document :
-                     std::get<std::pmr::vector<document_ptr>>(suspend_plan.plan->output()->data())) {
+                for (const auto& document : suspend_plan.plan->output()->documents()) {
                     res->append(document);
                 }
             }
