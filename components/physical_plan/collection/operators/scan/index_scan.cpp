@@ -35,7 +35,7 @@ namespace services::collection::operators {
                          const components::expressions::compare_expression_ptr& expr,
                          const components::logical_plan::limit_t& limit,
                          const components::logical_plan::storage_parameters* parameters,
-                         operator_data_ptr& result) {
+                         base::operators::operator_data_ptr& result) {
         auto ranges = search_range_by_index(index, expr, parameters);
         int count = 0;
         for (const auto& range : ranges) {
@@ -69,7 +69,7 @@ namespace services::collection::operators {
             if (!limit_.check(0)) {
                 return; //limit = 0
             }
-            output_ = make_operator_data(context_->resource());
+            output_ = base::operators::make_operator_data(context_->resource());
             if (index) {
                 search_by_index(index, expr_, limit_, &pipeline_context->parameters, output_);
             }
@@ -83,7 +83,7 @@ namespace services::collection::operators {
         if (!limit_.check(0)) {
             return; //limit = 0
         }
-        output_ = make_operator_data(context_->resource());
+        output_ = base::operators::make_operator_data(context_->resource());
         if (index) {
             search_by_index(index, expr_, limit_, &pipeline_context->parameters, output_);
         }

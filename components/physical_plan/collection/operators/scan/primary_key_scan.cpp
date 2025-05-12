@@ -11,10 +11,10 @@ namespace services::collection::operators {
     void primary_key_scan::append(document_id_t id) { ids_.push_back(id); }
 
     void primary_key_scan::on_execute_impl(components::pipeline::context_t*) {
-        output_ = make_operator_data(context_->resource());
+        output_ = base::operators::make_operator_data(context_->resource());
         for (const auto& id : ids_) {
-            auto it = context_->storage().find(id);
-            if (it != context_->storage().end()) {
+            auto it = context_->document_storage().find(id);
+            if (it != context_->document_storage().end()) {
                 output_->append(it->second);
             }
         }

@@ -2,6 +2,15 @@ project(physical_plan)
 
 
 set(${PROJECT_NAME}_SOURCES
+        base/operators/operator.cpp
+        base/operators/operator_data.cpp
+        base/operators/operator_write_data.cpp
+        base/operators/operator_empty.cpp
+        base/operators/operator_raw_data.cpp
+        base/operators/aggregation.cpp
+        base/operators/operator_add_index.cpp
+        base/operators/operator_drop_index.cpp
+
         collection/operators/aggregate/operator_aggregate.cpp
         collection/operators/aggregate/operator_count.cpp
         collection/operators/aggregate/operator_min.cpp
@@ -27,12 +36,6 @@ set(${PROJECT_NAME}_SOURCES
 
         collection/operators/sort/sort.cpp
 
-        collection/operators/operator_data.cpp
-        collection/operators/operator_write_data.cpp
-        collection/operators/operator.cpp
-        collection/operators/operator_add_index.cpp
-        collection/operators/operator_drop_index.cpp
-        collection/operators/operator_empty.cpp
         collection/operators/operator_insert.cpp
         collection/operators/operator_delete.cpp
         collection/operators/operator_update.cpp
@@ -40,8 +43,40 @@ set(${PROJECT_NAME}_SOURCES
         collection/operators/operator_group.cpp
         collection/operators/operator_sort.cpp
         collection/operators/operator_join.cpp
-        collection/operators/aggregation.cpp
-        collection/operators/operator_raw_data.cpp
+
+        table/operators/aggregate/operator_aggregate.cpp
+        table/operators/aggregate/operator_count.cpp
+        table/operators/aggregate/operator_min.cpp
+        table/operators/aggregate/operator_max.cpp
+        table/operators/aggregate/operator_sum.cpp
+        table/operators/aggregate/operator_avg.cpp
+
+        table/operators/get/operator_get.cpp
+        table/operators/get/simple_value.cpp
+
+        # aren`t used for now
+        #table/operators/merge/operator_merge.cpp
+        #table/operators/merge/operator_and.cpp
+        #table/operators/merge/operator_or.cpp
+        #table/operators/merge/operator_not.cpp
+
+        table/operators/scan/full_scan.cpp
+        #TODO: indexes are not supported in tables
+        #table/operators/scan/index_scan.cpp
+        table/operators/scan/primary_key_scan.cpp
+        table/operators/scan/transfer_scan.cpp
+
+        table/operators/sort/sort.cpp
+
+        table/operators/operator_insert.cpp
+        table/operators/operator_delete.cpp
+        table/operators/operator_update.cpp
+        table/operators/operator_match.cpp
+        table/operators/operator_group.cpp
+        table/operators/operator_sort.cpp
+        table/operators/operator_join.cpp
+
+        table/operators/transformation.cpp
 )
 
 add_library(otterbrix_${PROJECT_NAME}
@@ -58,6 +93,7 @@ target_link_libraries(
         otterbrix_${PROJECT_NAME} PUBLIC
         otterbrix::document
         otterbrix::types
+        otterbrix::vector
         otterbrix::cursor
         otterbrix::session
         otterbrix::context

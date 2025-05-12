@@ -12,15 +12,15 @@ namespace services::collection::operators {
         if (left_ && left_->output()) {
             if (left_->output()->documents().empty()) {
                 if (upsert_) {
-                    output_ = make_operator_data(context_->resource());
+                    output_ = base::operators::make_operator_data(context_->resource());
                     auto new_doc = make_upsert_document(update_);
-                    context_->storage().insert_or_assign(get_document_id(new_doc), new_doc);
+                    context_->document_storage().insert_or_assign(get_document_id(new_doc), new_doc);
                     context_->index_engine()->insert_document(new_doc, pipeline_context);
                     output_->append(new_doc);
                 }
             } else {
-                modified_ = make_operator_write_data(context_->resource());
-                no_modified_ = make_operator_write_data(context_->resource());
+                modified_ = base::operators::make_operator_write_data<document_id_t>(context_->resource());
+                no_modified_ = base::operators::make_operator_write_data<document_id_t>(context_->resource());
                 for (auto& document : left_->output()->documents()) {
                     context_->index_engine()->delete_document(document, pipeline_context); //todo: can optimized
                     if (document->update(update_)) {

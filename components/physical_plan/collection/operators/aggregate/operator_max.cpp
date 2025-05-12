@@ -18,7 +18,7 @@ namespace services::collection::operators::aggregate {
                                         documents.cend(),
                                         [&](const document_ptr& doc1, const document_ptr& doc2) {
                                             return doc1->compare(key_.as_string(), doc2, key_.as_string()) ==
-                                                   components::document::compare_t::less;
+                                                   components::types::compare_t::less;
                                         });
             if (max != documents.cend()) {
                 doc->set(key_result_, *max, key_.as_string());

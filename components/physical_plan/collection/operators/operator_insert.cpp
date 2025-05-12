@@ -16,11 +16,11 @@ namespace services::collection::operators {
             //todo: error not unique keys
             return;
         }
-        modified_ = make_operator_write_data(context_->resource());
-        output_ = make_operator_data(context_->resource());
+        modified_ = base::operators::make_operator_write_data<document_id_t>(context_->resource());
+        output_ = base::operators::make_operator_data(context_->resource());
         for (const auto& document : documents_) {
             auto id = get_document_id(document);
-            context_->storage().insert_or_assign(id, document);
+            context_->document_storage().insert_or_assign(id, document);
             context_->index_engine()->insert_document(document, pipeline_context);
             output_->append(document);
             modified_->append(std::move(id));

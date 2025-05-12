@@ -18,7 +18,7 @@ namespace services::collection::operators {
             return;
         }
         if (left_->output()) {
-            output_ = make_operator_data(left_->output()->resource());
+            output_ = base::operators::make_operator_data(left_->output()->resource());
             for (auto& doc : left_->output()->documents()) {
                 if (predicate_->check(doc, pipeline_context ? &pipeline_context->parameters : nullptr)) {
                     output_->append(doc);

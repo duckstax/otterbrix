@@ -4,9 +4,6 @@
 
 namespace services::collection::operators::predicates {
 
-    predicate::predicate(context_collection_t* context)
-        : context_(context) {}
-
     bool predicate::check(const components::document::document_ptr& document,
                           const components::logical_plan::storage_parameters* parameters) {
         return check_impl(document, nullptr, parameters);
@@ -17,9 +14,8 @@ namespace services::collection::operators::predicates {
         return check_impl(document_left, document_right, parameters);
     }
 
-    predicate_ptr create_predicate(context_collection_t* context,
-                                   const components::expressions::compare_expression_ptr& expr) {
-        auto result = create_simple_predicate(context, expr);
+    predicate_ptr create_predicate(const components::expressions::compare_expression_ptr& expr) {
+        auto result = create_simple_predicate(expr);
         if (result) {
             return result;
         }

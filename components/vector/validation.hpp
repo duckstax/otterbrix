@@ -80,6 +80,7 @@ namespace components::vector {
         void slice(const validity_mask_t& other, uint64_t offset, uint64_t count);
         void
         slice_in_place(const validity_mask_t& other, uint64_t target_offset, uint64_t source_offset, uint64_t count);
+        void combine(const validity_mask_t& other, size_t count);
         void reset(uint64_t target_count) {
             validity_mask_ = nullptr;
             validity_data_.reset();
