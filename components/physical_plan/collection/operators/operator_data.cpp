@@ -6,6 +6,15 @@ namespace services::collection::operators {
         : resource_(resource)
         , documents_(resource) {}
 
+    operator_data_t::operator_data_t(std::pmr::memory_resource* resource,
+                                     const std::pmr::vector<document_ptr>& documents)
+        : resource_(resource)
+        , documents_(documents) {}
+
+    operator_data_t::operator_data_t(std::pmr::memory_resource* resource, std::pmr::vector<document_ptr>&& documents)
+        : resource_(resource)
+        , documents_(std::move(documents)) {}
+
     operator_data_t::ptr operator_data_t::copy() const {
         auto copy_data = make_operator_data(resource_);
         copy_data->documents_.reserve(documents_.size());
