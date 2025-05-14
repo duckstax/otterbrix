@@ -12,6 +12,7 @@
 #include <components/logical_plan/node_group.hpp>
 #include <components/tests/generaty.hpp>
 #include <core/non_thread_scheduler/scheduler_test.hpp>
+#include <logical_plan/node_data.hpp>
 #include <services/wal/manager_wal_replicate.hpp>
 #include <services/wal/wal.hpp>
 
@@ -101,7 +102,7 @@ TEST_CASE("insert one test") {
         REQUIRE(entry.crc32_ == crc32);
         REQUIRE(entry.entry_->database_name() == database_name);
         REQUIRE(entry.entry_->collection_name() == collection_name);
-        auto doc = reinterpret_cast<const node_insert_ptr&>(entry.entry_)->documents().front();
+        auto doc = reinterpret_cast<const node_data_ptr&>(entry.entry_->children().front())->documents().front();
         REQUIRE(doc->get_string("/_id") == gen_id(num, &resource));
         REQUIRE(doc->get_long("/count") == num);
         REQUIRE(doc->get_string("/countStr") == std::pmr::string(std::to_string(num), &resource));
@@ -175,9 +176,9 @@ TEST_CASE("insert many test") {
         REQUIRE(entry.crc32_ == crc32);
         REQUIRE(entry.entry_->database_name() == database_name);
         REQUIRE(entry.entry_->collection_name() == collection_name);
-        REQUIRE(reinterpret_cast<const node_insert_ptr&>(entry.entry_)->documents().size() == 5);
+        REQUIRE(reinterpret_cast<const node_data_ptr&>(entry.entry_->children().front())->documents().size() == 5);
         int num = 0;
-        for (const auto& doc : reinterpret_cast<const node_insert_ptr&>(entry.entry_)->documents()) {
+        for (const auto& doc : reinterpret_cast<const node_data_ptr&>(entry.entry_->children().front())->documents()) {
             ++num;
             REQUIRE(doc->get_string("/_id") == gen_id(num, &resource));
             REQUIRE(doc->get_long("/count") == num);
@@ -401,7 +402,7 @@ TEST_CASE("test read record") {
         REQUIRE(record.data->type() == node_type::insert_t);
         REQUIRE(record.data->database_name() == database_name);
         REQUIRE(record.data->collection_name() == collection_name);
-        auto doc = reinterpret_cast<const components::logical_plan::node_insert_ptr&>(record.data)->documents().front();
+        auto doc = reinterpret_cast<const node_data_ptr&>(record.data->children().front())->documents().front();
         REQUIRE(doc->get_string("/_id") == gen_id(num, &resource));
         REQUIRE(doc->get_long("/count") == num);
         REQUIRE(doc->get_string("/countStr") == std::pmr::string(std::to_string(num), &resource));

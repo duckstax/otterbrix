@@ -5,17 +5,19 @@
 namespace services::collection::operators {
 
     primary_key_scan::primary_key_scan(context_collection_t* context)
-        : read_only_operator_t(context, operator_type::match)
-        , ids_(context->resource()) {}
-
-    void primary_key_scan::append(document_id_t id) { ids_.push_back(id); }
+        : read_only_operator_t(context, operator_type::match) {}
 
     void primary_key_scan::on_execute_impl(components::pipeline::context_t*) {
-        output_ = make_operator_data(context_->resource());
-        for (const auto& id : ids_) {
-            auto it = context_->storage().find(id);
-            if (it != context_->storage().end()) {
-                output_->append(it->second);
+        if (left_ && left_->output()) {
+            output_ = make_operator_data(context_->resource());
+            for (const auto& doc : left_->output()->documents()) {
+                auto it = context_->storage().find(get_document_id(doc));
+                if (it != context_->storage().end()) {
+                    //todo: error not unique keys
+                    output_ = nullptr;
+                    return;
+                }
+                output_->append(doc);
             }
         }
     }

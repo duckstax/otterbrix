@@ -14,6 +14,8 @@ namespace services::collection::operators {
         using ptr = boost::intrusive_ptr<operator_data_t>;
 
         explicit operator_data_t(std::pmr::memory_resource* resource);
+        explicit operator_data_t(std::pmr::memory_resource* resource, const std::pmr::vector<document_ptr>& documents);
+        explicit operator_data_t(std::pmr::memory_resource* resource, std::pmr::vector<document_ptr>&& documents);
 
         ptr copy() const;
 
