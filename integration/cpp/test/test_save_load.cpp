@@ -187,13 +187,16 @@ TEST_CASE("integration::cpp::test_save_load::disk+wal") {
                                                                          core::parameter_id_t{1}));
                     auto params = components::logical_plan::make_parameter_node(dispatcher->resource());
                     params->add_parameter(core::parameter_id_t{1}, new_value(5));
-                    auto update_one = components::logical_plan::make_node_update_one(
-                        dispatcher->resource(),
-                        {db_name, col_name},
-                        match,
-                        components::document::document_t::document_from_json(R"({"$set": {"count": 0}})",
-                                                                             dispatcher->resource()),
-                        false);
+                    params->add_parameter(core::parameter_id_t{2}, new_value(0));
+                    components::expressions::update_expr_ptr update_expr =
+                        new components::expressions::update_expr_set_t(components::expressions::key_t{"count"});
+                    update_expr->left() =
+                        new components::expressions::update_expr_get_const_value_t(core::parameter_id_t{2});
+                    auto update_one = components::logical_plan::make_node_update_one(dispatcher->resource(),
+                                                                                     {db_name, col_name},
+                                                                                     match,
+                                                                                     {update_expr},
+                                                                                     false);
                     wal.update_one(session, address, update_one, params);
                 }
 
@@ -207,13 +210,16 @@ TEST_CASE("integration::cpp::test_save_load::disk+wal") {
                                                                          core::parameter_id_t{1}));
                     auto params = components::logical_plan::make_parameter_node(dispatcher->resource());
                     params->add_parameter(core::parameter_id_t{1}, new_value(5));
-                    auto update_many = components::logical_plan::make_node_update_many(
-                        dispatcher->resource(),
-                        {db_name, col_name},
-                        match,
-                        components::document::document_t::document_from_json(R"({"$set": {"count": 1000}})",
-                                                                             dispatcher->resource()),
-                        false);
+                    params->add_parameter(core::parameter_id_t{2}, new_value(1000));
+                    components::expressions::update_expr_ptr update_expr =
+                        new components::expressions::update_expr_set_t(components::expressions::key_t{"count"});
+                    update_expr->left() =
+                        new components::expressions::update_expr_get_const_value_t(core::parameter_id_t{2});
+                    auto update_many = components::logical_plan::make_node_update_many(dispatcher->resource(),
+                                                                                       {db_name, col_name},
+                                                                                       match,
+                                                                                       {update_expr},
+                                                                                       false);
                     wal.update_many(session, address, update_many, params);
                 }
             }

@@ -52,6 +52,15 @@ namespace components::serializer {
         end_array();
     }
 
+    void base_serializer_t::append(std::string_view key,
+                                   const std::pmr::vector<expressions::update_expr_ptr>& expressions) {
+        start_array(expressions.size());
+        for (const auto& expr : expressions) {
+            expr->serialize(this);
+        }
+        end_array();
+    }
+
     void base_serializer_t::append(std::string_view key, const std::pmr::vector<expressions::param_storage>& params) {
         start_array(params.size());
         for (const auto& p : params) {
@@ -87,6 +96,10 @@ namespace components::serializer {
     void base_serializer_t::append(std::string_view key, const logical_plan::node_ptr& node) { node->serialize(this); }
 
     void base_serializer_t::append(std::string_view key, const expressions::expression_ptr& expr) {
+        expr->serialize(this);
+    }
+
+    void base_serializer_t::append(std::string_view key, const expressions::update_expr_ptr& expr) {
         expr->serialize(this);
     }
 
@@ -154,6 +167,14 @@ namespace components::serializer {
 
     void json_serializer_t::append(std::string_view key, expressions::sort_order order) {
         working_tree_.top()->emplace_back(static_cast<int8_t>(order));
+    }
+
+    void json_serializer_t::append(std::string_view key, expressions::update_expr_type type) {
+        working_tree_.top()->emplace_back(static_cast<uint8_t>(type));
+    }
+
+    void json_serializer_t::append(std::string_view key, expressions::update_expr_get_value_t::side_t side) {
+        working_tree_.top()->emplace_back(static_cast<uint8_t>(side));
     }
 
     void json_serializer_t::append(std::string_view key, logical_plan::limit_t limit) {
@@ -260,6 +281,14 @@ namespace components::serializer {
 
     void msgpack_serializer_t::append(std::string_view key, expressions::sort_order order) {
         packer_.pack(static_cast<int8_t>(order));
+    }
+
+    void msgpack_serializer_t::append(std::string_view key, expressions::update_expr_type type) {
+        packer_.pack(static_cast<uint8_t>(type));
+    }
+
+    void msgpack_serializer_t::append(std::string_view key, expressions::update_expr_get_value_t::side_t side) {
+        packer_.pack(static_cast<uint8_t>(side));
     }
 
     void msgpack_serializer_t::append(std::string_view key, logical_plan::limit_t limit) {

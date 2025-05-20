@@ -122,7 +122,7 @@ TEST_CASE("serialization") {
                            R"_([[12,["database","collection"],)_"
                            R"_([17,3,"count",null,1,[]]],)_"
                            R"_([11,["database","collection"],-1]]],)_"
-                           R"_([21,[[1,90]]]])_");
+                           R"_([22,[[1,90]]]])_");
             json_deserializer_t deserializer(res);
             auto deserialized_res = deserializer.deserialize(0);
             REQUIRE(std::holds_alternative<node_ptr>(deserialized_res));

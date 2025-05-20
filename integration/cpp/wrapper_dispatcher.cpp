@@ -194,7 +194,7 @@ namespace otterbrix {
     auto wrapper_dispatcher_t::update_one(const components::session::session_id_t& session,
                                           components::logical_plan::node_match_ptr condition,
                                           components::logical_plan::parameter_node_ptr params,
-                                          document_ptr update,
+                                          const std::pmr::vector<components::expressions::update_expr_ptr>& updates,
                                           bool upsert) -> cursor_t_ptr {
         trace(log_,
               "wrapper_dispatcher_t::update_one session: {}, database: {} collection: {} ",
@@ -205,7 +205,7 @@ namespace otterbrix {
         auto plan = components::logical_plan::make_node_update_one(resource(),
                                                                    condition->collection_full_name(),
                                                                    condition,
-                                                                   update,
+                                                                   updates,
                                                                    upsert);
         actor_zeta::send(manager_dispatcher_,
                          address(),
@@ -220,7 +220,7 @@ namespace otterbrix {
     auto wrapper_dispatcher_t::update_many(const components::session::session_id_t& session,
                                            components::logical_plan::node_match_ptr condition,
                                            components::logical_plan::parameter_node_ptr params,
-                                           document_ptr update,
+                                           const std::pmr::vector<components::expressions::update_expr_ptr>& updates,
                                            bool upsert) -> cursor_t_ptr {
         trace(log_,
               "wrapper_dispatcher_t::update_many session: {}, database: {} collection: {} ",
@@ -231,7 +231,7 @@ namespace otterbrix {
         auto plan = components::logical_plan::make_node_update_many(resource(),
                                                                     condition->collection_full_name(),
                                                                     condition,
-                                                                    update,
+                                                                    updates,
                                                                     upsert);
         actor_zeta::send(manager_dispatcher_,
                          address(),

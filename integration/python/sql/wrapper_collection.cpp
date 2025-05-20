@@ -110,13 +110,20 @@ namespace otterbrix {
             auto plan = components::logical_plan::make_node_aggregate(ptr_->resource(), {database_, name_});
             auto params = components::logical_plan::make_parameter_node(ptr_->resource());
             to_statement(ptr_->resource(), pack_to_match(cond), plan.get(), params.get());
-            auto update = to_document(fields, ptr_->resource());
+            auto update_doc = to_document(fields, ptr_->resource());
+            std::pmr::vector<components::expressions::update_expr_ptr> updates(ptr_->resource());
+            for (const auto& [key, value] : *update_doc->get_dict("$set")->json_trie()->as_object()) {
+                updates.emplace_back(new components::expressions::update_expr_set_t(
+                    components::expressions::key_t{key->get_mut()->get_string().take_value()}));
+                auto id = params->add_parameter(components::document::value_t(*value->get_mut()));
+                updates.back()->left() = new components::expressions::update_expr_get_const_value_t(id);
+            }
             auto session_tmp = otterbrix::session_id_t();
             auto cur = ptr_->update_one(
                 session_tmp,
                 reinterpret_cast<const components::logical_plan::node_match_ptr&>(plan->children().front()),
                 params,
-                std::move(update),
+                updates,
                 upsert);
             if (cur->is_error()) {
                 debug(log_, "wrapper_collection::update_one has result error while update");
@@ -137,13 +144,20 @@ namespace otterbrix {
             auto plan = components::logical_plan::make_node_aggregate(ptr_->resource(), {database_, name_});
             auto params = components::logical_plan::make_parameter_node(ptr_->resource());
             to_statement(ptr_->resource(), pack_to_match(cond), plan.get(), params.get());
-            auto update = to_document(fields, ptr_->resource());
+            auto update_doc = to_document(fields, ptr_->resource());
+            std::pmr::vector<components::expressions::update_expr_ptr> updates(ptr_->resource());
+            for (const auto& [key, value] : *update_doc->get_dict("$set")->json_trie()->as_object()) {
+                updates.emplace_back(new components::expressions::update_expr_set_t(
+                    components::expressions::key_t{key->get_mut()->get_string().take_value()}));
+                auto id = params->add_parameter(components::document::value_t(*value->get_mut()));
+                updates.back()->left() = new components::expressions::update_expr_get_const_value_t(id);
+            }
             auto session_tmp = otterbrix::session_id_t();
             auto cur = ptr_->update_many(
                 session_tmp,
                 reinterpret_cast<const components::logical_plan::node_match_ptr&>(plan->children().front()),
                 params,
-                std::move(update),
+                updates,
                 upsert);
             if (cur->is_error()) {
                 debug(log_, "wrapper_collection::update_many has result error while update");

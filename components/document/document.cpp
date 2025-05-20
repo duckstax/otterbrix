@@ -803,6 +803,72 @@ namespace components::document {
         return result;
     }
 
+    bool document_t::update(std::string_view json_pointer, const value_t& update) {
+        bool result = false;
+        auto elem = update.get_element();
+        switch (elem->physical_type()) {
+            case types::physical_type::BOOL: {
+                auto new_value = elem->get_bool().value();
+                if (get_as<decltype(new_value)>(json_pointer) != new_value) {
+                    set(json_pointer, new_value);
+                    result = true;
+                }
+                break;
+            }
+            case types::physical_type::UINT8:
+            case types::physical_type::UINT16:
+            case types::physical_type::UINT32:
+            case types::physical_type::UINT64: {
+                auto new_value = elem->get_uint64().value();
+                if (get_as<decltype(new_value)>(json_pointer) != new_value) {
+                    set(json_pointer, new_value);
+                    result = true;
+                }
+                break;
+            }
+            case types::physical_type::INT8:
+            case types::physical_type::INT16:
+            case types::physical_type::INT32:
+            case types::physical_type::INT64: {
+                auto new_value = elem->get_int64().value();
+                if (get_as<decltype(new_value)>(json_pointer) != new_value) {
+                    set(json_pointer, new_value);
+                    result = true;
+                }
+                break;
+            }
+            case types::physical_type::UINT128:
+            case types::physical_type::INT128: {
+                auto new_value = elem->get_int128().value();
+                if (get_as<decltype(new_value)>(json_pointer) != new_value) {
+                    set(json_pointer, new_value);
+                    result = true;
+                }
+                break;
+            }
+            case types::physical_type::FLOAT:
+            case types::physical_type::DOUBLE: {
+                auto new_value = elem->get_double().value();
+                if (get_as<decltype(new_value)>(json_pointer) != new_value) {
+                    set(json_pointer, new_value);
+                    result = true;
+                }
+                break;
+            }
+            case types::physical_type::STRING: {
+                auto new_value = elem->get_string().value();
+                if (get_as<decltype(new_value)>(json_pointer) != new_value) {
+                    set(json_pointer, new_value);
+                    result = true;
+                }
+                break;
+            }
+            default:
+                break;
+        }
+        return result;
+    }
+
     std::pmr::string serialize_document(const document_ptr& document) { return document->to_json(); }
 
     document_ptr deserialize_document(const std::string& text, document_t::allocator_type* allocator) {

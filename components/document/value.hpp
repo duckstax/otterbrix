@@ -64,8 +64,12 @@ namespace components::document {
 
     std::string to_string(const value_t& value);
 
-    value_t
-    sum(const value_t& value1, const value_t& value2, impl::base_document* tape, std::pmr::memory_resource* resource);
+    value_t sum(const value_t& value1, const value_t& value2, impl::base_document* tape);
+    value_t subtract(const value_t& value1, const value_t& value2, impl::base_document* tape);
+    value_t mult(const value_t& value1, const value_t& value2, impl::base_document* tape);
+    value_t divide(const value_t& value1, const value_t& value2, impl::base_document* tape);
+    value_t modulus(const value_t& value1, const value_t& value2, impl::base_document* tape);
+    value_t negate(const value_t& value, impl::base_document* tape);
 
     template<typename T>
     value_t::value_t(impl::base_document* tape, T value) {

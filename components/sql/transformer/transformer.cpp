@@ -3,7 +3,7 @@
 
 namespace components::sql::transform {
 
-    logical_plan::node_ptr transformer::transform(Node& node, logical_plan::parameter_node_t* statement) {
+    logical_plan::node_ptr transformer::transform(Node& node, logical_plan::parameter_node_t* params) {
         // TODO: Error handling
         switch (node.type) {
             case T_CreatedbStmt:
@@ -15,13 +15,13 @@ namespace components::sql::transform {
             case T_DropStmt:
                 return transform_drop(pg_cast<DropStmt>(node));
             case T_SelectStmt:
-                return transform_select(pg_cast<SelectStmt>(node), statement);
+                return transform_select(pg_cast<SelectStmt>(node), params);
             case T_UpdateStmt:
-                return transform_update(pg_cast<UpdateStmt>(node), statement);
+                return transform_update(pg_cast<UpdateStmt>(node), params);
             case T_InsertStmt:
                 return transform_insert(pg_cast<InsertStmt>(node));
             case T_DeleteStmt:
-                return transform_delete(pg_cast<DeleteStmt>(node), statement);
+                return transform_delete(pg_cast<DeleteStmt>(node), params);
             case T_IndexStmt:
                 return transform_create_index(pg_cast<IndexStmt>(node));
             default:

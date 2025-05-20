@@ -281,14 +281,12 @@ TEST_CASE("update one test") {
                                                                               core::parameter_id_t{1}));
         auto params = make_parameter_node(&resource);
         params->add_parameter(core::parameter_id_t{1}, num);
-        auto update = components::document::document_t::document_from_json(R"({"$set": {"count": )" +
-                                                                               std::to_string(num + 10) + "}}",
-                                                                           &resource);
-        auto data = components::logical_plan::make_node_update_one(&resource,
-                                                                   {database_name, collection_name},
-                                                                   match,
-                                                                   update,
-                                                                   num % 2 == 0);
+        params->add_parameter(core::parameter_id_t{2}, num + 10);
+
+        update_expr_ptr update = new update_expr_set_t(components::expressions::key_t{"count"});
+        update->left() = new update_expr_get_const_value_t(core::parameter_id_t{2});
+
+        auto data = make_node_update_one(&resource, {database_name, collection_name}, match, {update}, num % 2 == 0);
         auto session = components::session::session_id_t();
         auto address = actor_zeta::base::address_t::address_t::empty_address();
         test_wal.wal->update_one(session, address, data, params);
@@ -307,10 +305,15 @@ TEST_CASE("update one test") {
         REQUIRE(match->type() == compare_type::eq);
         REQUIRE(match->key_left() == components::expressions::key_t{"count"});
         REQUIRE(match->value() == core::parameter_id_t{1});
-        REQUIRE(record.params->parameters().parameters.size() == 1);
+        REQUIRE(record.params->parameters().parameters.size() == 2);
         REQUIRE(get_parameter(&record.params->parameters(), core::parameter_id_t{1}).as_int() == num);
-        auto doc = reinterpret_cast<const components::logical_plan::node_update_ptr&>(record.data)->update();
-        REQUIRE(doc->get_dict("$set")->get_long("count") == num + 10);
+        auto updates = reinterpret_cast<const components::logical_plan::node_update_ptr&>(record.data)->updates();
+        {
+            REQUIRE(updates.front()->type() == update_expr_type::set);
+            REQUIRE(reinterpret_cast<const update_expr_get_const_value_ptr&>(updates.front()->left())->id() ==
+                    core::parameter_id_t{2});
+            REQUIRE(get_parameter(&record.params->parameters(), core::parameter_id_t{2}).as_int() == num + 10);
+        }
         REQUIRE(reinterpret_cast<const components::logical_plan::node_update_ptr&>(record.data)->upsert() ==
                 (num % 2 == 0));
         index = test_wal.wal->test_next_record(index);
@@ -331,13 +334,12 @@ TEST_CASE("update many test") {
                                                                               core::parameter_id_t{1}));
         auto params = make_parameter_node(&resource);
         params->add_parameter(core::parameter_id_t{1}, num);
-        auto update =
-            document_t::document_from_json(R"({"$set": {"count": )" + std::to_string(num + 10) + "}}", &resource);
-        auto data = components::logical_plan::make_node_update_many(&resource,
-                                                                    {database_name, collection_name},
-                                                                    match,
-                                                                    update,
-                                                                    num % 2 == 0);
+        params->add_parameter(core::parameter_id_t{2}, num + 10);
+
+        update_expr_ptr update = new update_expr_set_t(components::expressions::key_t{"count"});
+        update->left() = new update_expr_get_const_value_t(core::parameter_id_t{2});
+
+        auto data = make_node_update_many(&resource, {database_name, collection_name}, match, {update}, num % 2 == 0);
         auto session = components::session::session_id_t();
         auto address = actor_zeta::base::address_t::address_t::empty_address();
         test_wal.wal->update_many(session, address, data, params);
@@ -356,10 +358,15 @@ TEST_CASE("update many test") {
         REQUIRE(match->type() == compare_type::eq);
         REQUIRE(match->key_left() == components::expressions::key_t{"count"});
         REQUIRE(match->value() == core::parameter_id_t{1});
-        REQUIRE(record.params->parameters().parameters.size() == 1);
+        REQUIRE(record.params->parameters().parameters.size() == 2);
         REQUIRE(get_parameter(&record.params->parameters(), core::parameter_id_t{1}).as_int() == num);
-        auto doc = reinterpret_cast<const components::logical_plan::node_update_ptr&>(record.data)->update();
-        REQUIRE(doc->get_dict("$set")->get_long("count") == num + 10);
+        auto updates = reinterpret_cast<const components::logical_plan::node_update_ptr&>(record.data)->updates();
+        {
+            REQUIRE(updates.front()->type() == update_expr_type::set);
+            REQUIRE(reinterpret_cast<const update_expr_get_const_value_ptr&>(updates.front()->left())->id() ==
+                    core::parameter_id_t{2});
+            REQUIRE(get_parameter(&record.params->parameters(), core::parameter_id_t{2}).as_int() == num + 10);
+        }
         REQUIRE(reinterpret_cast<const components::logical_plan::node_update_ptr&>(record.data)->upsert() ==
                 (num % 2 == 0));
         index = test_wal.wal->test_next_record(index);

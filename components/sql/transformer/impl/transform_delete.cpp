@@ -6,7 +6,7 @@
 using namespace components::expressions;
 
 namespace components::sql::transform {
-    logical_plan::node_ptr transformer::transform_delete(DeleteStmt& node, logical_plan::parameter_node_t* statement) {
+    logical_plan::node_ptr transformer::transform_delete(DeleteStmt& node, logical_plan::parameter_node_t* params) {
         if (!node.whereClause) {
             return logical_plan::make_node_delete_many(
                 resource,
@@ -21,6 +21,6 @@ namespace components::sql::transform {
             collection,
             logical_plan::make_node_match(resource,
                                           collection,
-                                          impl::transform_a_expr(statement, pg_ptr_cast<A_Expr>(node.whereClause))));
+                                          impl::transform_a_expr(params, pg_ptr_cast<A_Expr>(node.whereClause))));
     }
 } // namespace components::sql::transform

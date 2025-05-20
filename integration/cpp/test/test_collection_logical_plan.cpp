@@ -194,12 +194,13 @@ TEST_CASE("integration::cpp::test_collection::logical_plan") {
                 dispatcher->resource(),
                 {database_name, collection_name},
                 make_compare_expression(dispatcher->resource(), compare_type::lt, key{"count"}, id_par{1}));
-            auto doc = make_document(dispatcher->resource());
-            doc->set_dict("$set");
-            doc->get_dict("$set")->set("count", 1000);
-            auto upd = make_node_update_many(dispatcher->resource(), {database_name, collection_name}, match, doc);
+            expressions::update_expr_ptr update_expr = new expressions::update_expr_set_t(expressions::key_t{"count"});
+            update_expr->left() = new expressions::update_expr_get_const_value_t(id_par{2});
+            auto upd =
+                make_node_update_many(dispatcher->resource(), {database_name, collection_name}, match, {update_expr});
             auto params = logical_plan::make_parameter_node(dispatcher->resource());
             params->add_parameter(id_par{1}, new_value(20));
+            params->add_parameter(id_par{2}, new_value(1000));
             auto cur = dispatcher->execute_plan(session, upd, params);
             REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 20);

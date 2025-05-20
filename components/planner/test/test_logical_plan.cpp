@@ -240,16 +240,19 @@ TEST_CASE("logical_plan::update") {
         make_node_match(&resource,
                         {database_name, collection_name},
                         make_compare_expression(&resource, compare_type::eq, key("key"), core::parameter_id_t(1)));
-    auto update = document_t::document_from_json(R"_({"$set": {"count": 100}})_", &resource);
+
+    update_expr_ptr update = new update_expr_set_t(components::expressions::key_t{"count"});
+    update->left() = new update_expr_get_const_value_t(core::parameter_id_t(0));
+
     components::logical_plan::storage_parameters parameters{&resource};
     {
-        auto node = make_node_update_many(&resource, {database_name, collection_name}, match, update, true);
+        auto node = make_node_update_many(&resource, {database_name, collection_name}, match, {update}, true);
         components::planner::planner_t planner;
         auto node_update = planner.create_plan(&resource, node);
         REQUIRE(node_update->to_string() == R"_($update: {$upsert: 1, $match: {"key": {$eq: #1}}, $limit: -1})_");
     }
     {
-        auto node = make_node_update_one(&resource, {database_name, collection_name}, match, update, false);
+        auto node = make_node_update_one(&resource, {database_name, collection_name}, match, {update}, false);
         components::planner::planner_t planner;
         auto node_update = planner.create_plan(&resource, node);
         REQUIRE(node_update->to_string() == R"_($update: {$upsert: 0, $match: {"key": {$eq: #1}}, $limit: 1})_");

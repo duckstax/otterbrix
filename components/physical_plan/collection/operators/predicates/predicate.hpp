@@ -36,4 +36,6 @@ namespace services::collection::operators::predicates {
     predicate_ptr create_predicate(context_collection_t* context,
                                    const components::expressions::compare_expression_ptr& expr);
 
+    predicate_ptr create_all_true_predicate(std::pmr::memory_resource* resource);
+
 } // namespace services::collection::operators::predicates

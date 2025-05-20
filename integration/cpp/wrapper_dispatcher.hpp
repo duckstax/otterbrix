@@ -12,6 +12,7 @@
 
 #include <components/cursor/cursor.hpp>
 #include <components/document/document.hpp>
+#include <components/expressions/update_expression.hpp>
 #include <components/log/log.hpp>
 #include <components/logical_plan/node_aggregate.hpp>
 #include <components/logical_plan/node_create_index.hpp>
@@ -70,12 +71,12 @@ namespace otterbrix {
         [[deprecated]] auto update_one(const session_id_t& session,
                                        components::logical_plan::node_match_ptr condition,
                                        components::logical_plan::parameter_node_ptr params,
-                                       document_ptr update,
+                                       const std::pmr::vector<components::expressions::update_expr_ptr>& updates,
                                        bool upsert) -> components::cursor::cursor_t_ptr;
         [[deprecated]] auto update_many(const session_id_t& session,
                                         components::logical_plan::node_match_ptr condition,
                                         components::logical_plan::parameter_node_ptr params,
-                                        document_ptr update,
+                                        const std::pmr::vector<components::expressions::update_expr_ptr>& updates,
                                         bool upsert) -> components::cursor::cursor_t_ptr;
         [[deprecated]] auto size(const session_id_t& session,
                                  const database_name_t& database,

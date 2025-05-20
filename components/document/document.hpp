@@ -184,6 +184,7 @@ namespace components::document {
         value_t get_value(std::string_view json_pointer);
 
         bool update(const ptr& update);
+        bool update(std::string_view json_pointer, const value_t& update);
 
         static ptr document_from_json(const std::string& json, document_t::allocator_type* allocator);
 
