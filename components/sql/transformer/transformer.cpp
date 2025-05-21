@@ -19,7 +19,7 @@ namespace components::sql::transform {
             case T_UpdateStmt:
                 return transform_update(pg_cast<UpdateStmt>(node), params);
             case T_InsertStmt:
-                return transform_insert(pg_cast<InsertStmt>(node));
+                return transform_insert(pg_cast<InsertStmt>(node), params);
             case T_DeleteStmt:
                 return transform_delete(pg_cast<DeleteStmt>(node), params);
             case T_IndexStmt:

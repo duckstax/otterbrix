@@ -4,6 +4,7 @@
 #include <components/sql/parser/parser.h>
 #include <components/sql/transformer/transformer.hpp>
 #include <components/sql/transformer/utils.hpp>
+#include <logical_plan/node_aggregate.hpp>
 #include <logical_plan/node_data.hpp>
 
 using namespace components::sql;
@@ -94,5 +95,23 @@ TEST_CASE("sql::insert_into") {
         REQUIRE(doc5->get_long("id") == 5);
         REQUIRE(doc5->get_string("name") == "Name5");
         REQUIRE(doc5->get_long("count") == 5);
+    }
+
+    SECTION("insert from select") {
+        components::logical_plan::parameter_node_t agg(&resource);
+        auto select = raw_parser(R"_(INSERT INTO table2 (column1, column2, column3)
+SELECT column1, column2, column3
+FROM table1
+WHERE condition = true;)_")
+                          ->lst.front()
+                          .data;
+        auto node = transformer.transform(transform::pg_cell_to_node_cast(select), &agg);
+        REQUIRE(node->type() == components::logical_plan::node_type::insert_t);
+        REQUIRE(node->database_name() == "");
+        REQUIRE(node->collection_name() == "table2");
+        REQUIRE(reinterpret_cast<components::logical_plan::node_aggregate_ptr&>(node->children().front())
+                    ->database_name() == "");
+        REQUIRE(reinterpret_cast<components::logical_plan::node_aggregate_ptr&>(node->children().front())
+                    ->collection_name() == "table1");
     }
 }

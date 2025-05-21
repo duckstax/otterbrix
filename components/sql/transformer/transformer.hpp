@@ -18,7 +18,7 @@ namespace components::sql::transform {
         logical_plan::node_ptr transform_drop(DropStmt& node);
         logical_plan::node_ptr transform_select(SelectStmt& node, logical_plan::parameter_node_t* params);
         logical_plan::node_ptr transform_update(UpdateStmt& node, logical_plan::parameter_node_t* params);
-        logical_plan::node_ptr transform_insert(InsertStmt& node);
+        logical_plan::node_ptr transform_insert(InsertStmt& node, logical_plan::parameter_node_t* params);
         logical_plan::node_ptr transform_delete(DeleteStmt& node, logical_plan::parameter_node_t* params);
         logical_plan::node_ptr transform_create_index(IndexStmt& node);
 
