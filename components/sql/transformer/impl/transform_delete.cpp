@@ -15,10 +15,15 @@ namespace components::sql::transform {
                                               rangevar_to_collection(node.relation),
                                               make_compare_expression(resource, compare_type::all_true)));
         }
-        auto collection = rangevar_to_collection(node.relation);
+        collection_full_name_t collection = rangevar_to_collection(node.relation);
+        collection_full_name_t collection_from = {};
+        if (!node.usingClause->lst.empty()) {
+            collection_from = rangevar_to_collection(pg_ptr_cast<RangeVar>(node.usingClause->lst.front().data));
+        }
         return logical_plan::make_node_delete_many(
             resource,
             collection,
+            collection_from,
             logical_plan::make_node_match(resource,
                                           collection,
                                           impl::transform_a_expr(params, pg_ptr_cast<A_Expr>(node.whereClause))));
