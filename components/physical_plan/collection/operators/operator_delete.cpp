@@ -10,6 +10,7 @@ namespace services::collection::operators {
     void operator_delete::on_execute_impl(components::pipeline::context_t* pipeline_context) {
         // TODO: worth to create separate update_join operator or mutable_join with callback
         if (left_ && left_->output() && right_ && right_->output()) {
+            modified_ = make_operator_write_data(context_->resource());
             for (auto& doc_left : left_->output()->documents()) {
                 for (auto& doc_right : right_->output()->documents()) {
                     if (match_predicate_->check(doc_left, doc_right, &pipeline_context->parameters)) {

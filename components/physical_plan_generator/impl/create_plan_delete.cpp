@@ -28,15 +28,15 @@ namespace services::collection::planner::impl {
             }
         }
         auto limit = static_cast<components::logical_plan::node_limit_t*>(node_limit.get())->limit();
-        if (node_delete->collection_from().empty()) {
+        if (node_delete->collection_from().empty() && !node_raw_data) {
             auto plan = boost::intrusive_ptr(new operators::operator_delete(context.at(node->collection_full_name())));
             plan->set_children(create_plan_match(context, node_match, limit));
 
             return plan;
         } else {
             auto expr =
-                reinterpret_cast<const components::expressions::compare_expression_ptr*>(&node->expressions()[0]);
-            auto predicate = operators::predicates::create_predicate(context.at(collection_full_name_t{}), *expr);
+                reinterpret_cast<const components::expressions::compare_expression_ptr*>(&node_match->expressions()[0]);
+            auto predicate = operators::predicates::create_predicate(nullptr, *expr);
 
             auto plan = boost::intrusive_ptr(
                 new operators::operator_delete(context.at(node->collection_full_name()), std::move(predicate)));
@@ -52,7 +52,7 @@ namespace services::collection::planner::impl {
                                        operators::predicates::create_all_true_predicate(node->resource()),
                                        limit)),
                                    boost::intrusive_ptr(new operators::full_scan(
-                                       context.at(node->collection_full_name()),
+                                       context.at(node_delete->collection_from()),
                                        operators::predicates::create_all_true_predicate(node->resource()),
                                        limit)));
             }

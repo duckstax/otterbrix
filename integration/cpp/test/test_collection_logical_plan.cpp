@@ -16,6 +16,7 @@
 
 static const database_name_t database_name = "testdatabase";
 static const collection_name_t collection_name = "testcollection";
+static const collection_name_t other_collection_name = "othertestcollection";
 static const collection_name_t collection_left = "testcollection_left_join";
 static const collection_name_t collection_right = "testcollection_right_join";
 
@@ -49,7 +50,7 @@ TEST_CASE("integration::cpp::test_collection::logical_plan") {
         }
         {
             auto session = otterbrix::session_id_t();
-            dispatcher->create_collection(session, database_name, collection_name);
+            dispatcher->create_collection(session, database_name, other_collection_name);
         }
         {
             auto session = otterbrix::session_id_t();
@@ -122,6 +123,21 @@ TEST_CASE("integration::cpp::test_collection::logical_plan") {
         }
     }
 
+    INFO("insert from select") {
+        auto ins = logical_plan::make_node_insert(dispatcher->resource(), {database_name, other_collection_name});
+        ins->append_child(logical_plan::make_node_aggregate(dispatcher->resource(), {database_name, collection_name}));
+        {
+            auto session = otterbrix::session_id_t();
+            auto cur = dispatcher->execute_plan(session, ins);
+            REQUIRE(cur->is_success());
+            REQUIRE(cur->size() == kNumInserts);
+        }
+        {
+            auto session = otterbrix::session_id_t();
+            REQUIRE(dispatcher->size(session, database_name, collection_name) == kNumInserts);
+        }
+    }
+
     INFO("delete") {
         {
             auto session = otterbrix::session_id_t();
@@ -169,6 +185,30 @@ TEST_CASE("integration::cpp::test_collection::logical_plan") {
             auto cur = dispatcher->execute_plan(session, agg, params);
             REQUIRE_FALSE(cur->is_success());
             REQUIRE(cur->size() == 0);
+        }
+    }
+
+    INFO("delete using") {
+        auto expr = components::expressions::make_compare_expression(dispatcher->resource(),
+                                                                     compare_type::eq,
+                                                                     key{"count"},
+                                                                     key{"count"});
+        auto del =
+            logical_plan::make_node_delete_many(dispatcher->resource(),
+                                                {database_name, other_collection_name},
+                                                {database_name, collection_name},
+                                                logical_plan::make_node_match(dispatcher->resource(),
+                                                                              {database_name, other_collection_name},
+                                                                              std::move(expr)));
+        {
+            auto session = otterbrix::session_id_t();
+            auto cur = dispatcher->execute_plan(session, del);
+            REQUIRE(cur->is_success());
+            REQUIRE(cur->size() == 91);
+        }
+        {
+            auto session = otterbrix::session_id_t();
+            REQUIRE(dispatcher->size(session, database_name, other_collection_name) == 9);
         }
     }
 
@@ -238,6 +278,69 @@ TEST_CASE("integration::cpp::test_collection::logical_plan") {
             REQUIRE(cur->size() == 20);
         }
     }
+
+    INFO("update from") {
+        std::pmr::vector<document_ptr> data;
+        {
+            auto session = otterbrix::session_id_t();
+            auto agg =
+                logical_plan::make_node_aggregate(dispatcher->resource(), {database_name, other_collection_name});
+            auto cur = dispatcher->execute_plan(session, agg);
+            REQUIRE(cur->size() == 9);
+            data.reserve(cur->size());
+            for (int num = 0; num < cur->size(); ++num) {
+                REQUIRE(cur->has_next());
+                cur->next();
+                data.emplace_back(cur->get());
+            }
+        }
+        {
+            auto session = otterbrix::session_id_t();
+
+            auto params = logical_plan::make_parameter_node(dispatcher->resource());
+            params->add_parameter(id_par{1}, new_value(2));
+
+            expressions::update_expr_ptr update_expr = new expressions::update_expr_set_t(expressions::key_t{"count"});
+            expressions::update_expr_ptr calculate_expr =
+                new expressions::update_expr_calculate_t(expressions::update_expr_type::mult);
+            calculate_expr->left() =
+                new expressions::update_expr_get_value_t(expressions::key_t{"count"},
+                                                         expressions::update_expr_get_value_t::side_t::from);
+            calculate_expr->right() = new expressions::update_expr_get_const_value_t(id_par{1});
+            update_expr->left() = std::move(calculate_expr);
+
+            auto expr = components::expressions::make_compare_expression(dispatcher->resource(),
+                                                                         compare_type::eq,
+                                                                         key{"count"},
+                                                                         key{"count"});
+
+            auto update = logical_plan::make_node_update_many(
+                dispatcher->resource(),
+                {database_name, other_collection_name},
+                logical_plan::make_node_match(dispatcher->resource(),
+                                              {database_name, other_collection_name},
+                                              std::move(expr)),
+                {std::move(update_expr)},
+                false);
+            update->append_child(logical_plan::make_node_raw_data(dispatcher->resource(), data));
+            auto cur = dispatcher->execute_plan(session, update, params);
+            REQUIRE(cur->is_success());
+            REQUIRE(cur->size() == 9);
+        }
+        {
+            auto session = otterbrix::session_id_t();
+            auto agg =
+                logical_plan::make_node_aggregate(dispatcher->resource(), {database_name, other_collection_name});
+            auto cur = dispatcher->execute_plan(session, agg);
+            REQUIRE(cur->size() == 9);
+            for (int num = 0; num < cur->size(); ++num) {
+                REQUIRE(cur->has_next());
+                cur->next();
+                REQUIRE((91 + num) * 2 == cur->get()->get_long("count"));
+            }
+        }
+    }
+
     INFO("join with outside data") {
         std::pmr::vector<components::document::document_ptr> documents_left(dispatcher->resource());
         std::pmr::vector<components::document::document_ptr> documents_right(dispatcher->resource());
