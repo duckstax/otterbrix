@@ -112,11 +112,29 @@ namespace otterbrix {
             to_statement(ptr_->resource(), pack_to_match(cond), plan.get(), params.get());
             auto update_doc = to_document(fields, ptr_->resource());
             std::pmr::vector<components::expressions::update_expr_ptr> updates(ptr_->resource());
-            for (const auto& [key, value] : *update_doc->get_dict("$set")->json_trie()->as_object()) {
-                updates.emplace_back(new components::expressions::update_expr_set_t(
-                    components::expressions::key_t{key->get_mut()->get_string().take_value()}));
-                auto id = params->add_parameter(components::document::value_t(*value->get_mut()));
-                updates.back()->left() = new components::expressions::update_expr_get_const_value_t(id);
+            if (update_doc->is_exists("$set")) {
+                for (const auto& [key, value] : *update_doc->get_dict("$set")->json_trie()->as_object()) {
+                    updates.emplace_back(new components::expressions::update_expr_set_t(
+                        components::expressions::key_t{key->get_mut()->get_string().take_value()}));
+                    auto id = params->add_parameter(components::document::value_t(*value->get_mut()));
+                    updates.back()->left() = new components::expressions::update_expr_get_const_value_t(id);
+                }
+            }
+            if (update_doc->is_exists("$inc")) {
+                for (const auto& [key, value] : *update_doc->get_dict("$inc")->json_trie()->as_object()) {
+                    auto key_str = key->get_mut()->get_string().take_value();
+                    updates.emplace_back(new components::expressions::update_expr_set_t(
+                        components::expressions::key_t{key->get_mut()->get_string().take_value()}));
+                    components::expressions::update_expr_ptr calculate_expr =
+                        new components::expressions::update_expr_calculate_t(
+                            components::expressions::update_expr_type::add);
+                    calculate_expr->left() = new components::expressions::update_expr_get_value_t(
+                        components::expressions::key_t{key_str},
+                        components::expressions::update_expr_get_value_t::side_t::to);
+                    auto id = params->add_parameter(components::document::value_t(*value->get_mut()));
+                    calculate_expr->right() = new components::expressions::update_expr_get_const_value_t(id);
+                    updates.back()->left() = std::move(calculate_expr);
+                }
             }
             auto session_tmp = otterbrix::session_id_t();
             auto cur = ptr_->update_one(
@@ -146,11 +164,29 @@ namespace otterbrix {
             to_statement(ptr_->resource(), pack_to_match(cond), plan.get(), params.get());
             auto update_doc = to_document(fields, ptr_->resource());
             std::pmr::vector<components::expressions::update_expr_ptr> updates(ptr_->resource());
-            for (const auto& [key, value] : *update_doc->get_dict("$set")->json_trie()->as_object()) {
-                updates.emplace_back(new components::expressions::update_expr_set_t(
-                    components::expressions::key_t{key->get_mut()->get_string().take_value()}));
-                auto id = params->add_parameter(components::document::value_t(*value->get_mut()));
-                updates.back()->left() = new components::expressions::update_expr_get_const_value_t(id);
+            if (update_doc->is_exists("$set")) {
+                for (const auto& [key, value] : *update_doc->get_dict("$set")->json_trie()->as_object()) {
+                    updates.emplace_back(new components::expressions::update_expr_set_t(
+                        components::expressions::key_t{key->get_mut()->get_string().take_value()}));
+                    auto id = params->add_parameter(components::document::value_t(*value->get_mut()));
+                    updates.back()->left() = new components::expressions::update_expr_get_const_value_t(id);
+                }
+            }
+            if (update_doc->is_exists("$inc")) {
+                for (const auto& [key, value] : *update_doc->get_dict("$inc")->json_trie()->as_object()) {
+                    auto key_str = key->get_mut()->get_string().take_value();
+                    updates.emplace_back(new components::expressions::update_expr_set_t(
+                        components::expressions::key_t{key->get_mut()->get_string().take_value()}));
+                    components::expressions::update_expr_ptr calculate_expr =
+                        new components::expressions::update_expr_calculate_t(
+                            components::expressions::update_expr_type::add);
+                    calculate_expr->left() = new components::expressions::update_expr_get_value_t(
+                        components::expressions::key_t{key_str},
+                        components::expressions::update_expr_get_value_t::side_t::to);
+                    auto id = params->add_parameter(components::document::value_t(*value->get_mut()));
+                    calculate_expr->right() = new components::expressions::update_expr_get_const_value_t(id);
+                    updates.back()->left() = std::move(calculate_expr);
+                }
             }
             auto session_tmp = otterbrix::session_id_t();
             auto cur = ptr_->update_many(
