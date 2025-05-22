@@ -27,7 +27,7 @@ namespace services::collection::planner {
             case node_type::delete_t:
                 return impl::create_plan_delete(context, node);
             case node_type::insert_t:
-                return impl::create_plan_insert(context, node);
+                return impl::create_plan_insert(context, node, std::move(limit));
             case node_type::match_t:
                 return impl::create_plan_match(context, node, std::move(limit));
             case node_type::group_t:

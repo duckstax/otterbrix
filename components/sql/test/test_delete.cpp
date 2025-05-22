@@ -37,4 +37,9 @@ TEST_CASE("sql::delete_from_where") {
         "DELETE FROM TestDatabase.TestCollection WHERE NOT (number = 10) AND NOT(name = 'doc 10' OR count = 2);",
         R"_($delete: {$match: {$and: [$not: ["number": {$eq: #0}], $not: [$or: ["name": {$eq: #1}, "count": {$eq: #2}]]]}, $limit: -1})_",
         vec({new_value(10l), new_value(std::pmr::string("doc 10")), new_value(2l)}));
+
+    TEST_SIMPLE_DELETE("DELETE FROM TestDatabase.TestCollection USING TestDatabase.OtherTestCollection WHERE "
+                       "TestCollection.number = OtherTestCollection.number;",
+                       R"_($delete: {$match: {"number": {$eq: "number"}}, $limit: -1})_",
+                       vec());
 }

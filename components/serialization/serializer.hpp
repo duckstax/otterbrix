@@ -3,6 +3,7 @@
 #include <components/document/document.hpp>
 #include <components/expressions/expression.hpp>
 #include <components/expressions/key.hpp>
+#include <components/expressions/update_expression.hpp>
 #include <components/logical_plan/node.hpp>
 #include <components/logical_plan/param_storage.hpp>
 
@@ -47,6 +48,7 @@ namespace components::serializer {
         expression_aggregate,
         expression_scalar,
         expression_sort,
+        expression_update,
 
         parameters,
 
@@ -77,6 +79,8 @@ namespace components::serializer {
         virtual void append(std::string_view key, expressions::compare_type type) = 0;
         virtual void append(std::string_view key, expressions::scalar_type type) = 0;
         virtual void append(std::string_view key, expressions::sort_order order) = 0;
+        virtual void append(std::string_view key, expressions::update_expr_type type) = 0;
+        virtual void append(std::string_view key, expressions::update_expr_get_value_t::side_t side) = 0;
         virtual void append(std::string_view key, logical_plan::limit_t limit) = 0;
 
         void append(std::string_view key, const std::pmr::vector<logical_plan::node_ptr>& nodes);
@@ -84,6 +88,7 @@ namespace components::serializer {
         void append(std::string_view key, const std::pmr::vector<expressions::key_t>& keys);
         void append(std::string_view key, const std::pmr::vector<core::parameter_id_t>& params);
         void append(std::string_view key, const std::pmr::vector<expressions::expression_ptr>& expressions);
+        void append(std::string_view key, const std::pmr::vector<expressions::update_expr_ptr>& expressions);
         void append(std::string_view key, const std::pmr::vector<expressions::param_storage>& params);
         void append(std::string_view key, const collection_full_name_t& collection);
         void append(std::string_view key, const expressions::param_storage& param);
@@ -95,6 +100,7 @@ namespace components::serializer {
 
         void append(std::string_view key, const logical_plan::node_ptr& node);
         void append(std::string_view key, const expressions::expression_ptr& expr);
+        void append(std::string_view key, const expressions::update_expr_ptr& expr);
         void append(std::string_view key, const logical_plan::parameter_node_ptr& params);
 
     protected:
@@ -121,6 +127,8 @@ namespace components::serializer {
         void append(std::string_view key, expressions::compare_type type) override;
         void append(std::string_view key, expressions::scalar_type type) override;
         void append(std::string_view key, expressions::sort_order order) override;
+        void append(std::string_view key, expressions::update_expr_type type) override;
+        void append(std::string_view key, expressions::update_expr_get_value_t::side_t side) override;
         void append(std::string_view key, logical_plan::limit_t limit) override;
         void append(std::string_view key, const std::string& str) override;
         void append(std::string_view key, const document::document_ptr& doc) override;
@@ -152,6 +160,8 @@ namespace components::serializer {
         void append(std::string_view key, expressions::compare_type type) override;
         void append(std::string_view key, expressions::scalar_type type) override;
         void append(std::string_view key, expressions::sort_order order) override;
+        void append(std::string_view key, expressions::update_expr_type type) override;
+        void append(std::string_view key, expressions::update_expr_get_value_t::side_t side) override;
         void append(std::string_view key, logical_plan::limit_t limit) override;
         void append(std::string_view key, const std::string& str) override;
         void append(std::string_view key, const document::document_ptr& doc) override;

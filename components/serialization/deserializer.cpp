@@ -108,6 +108,17 @@ namespace components::serializer {
         return res;
     }
 
+    std::pmr::vector<expressions::update_expr_ptr> base_deserializer_t::deserialize_update_expressions(size_t index) {
+        advance_array(index);
+        std::pmr::vector<expressions::update_expr_ptr> res(resource());
+        res.reserve(current_array_size());
+        for (size_t i = 0; i < current_array_size(); i++) {
+            res.emplace_back(deserialize_update_expression(i));
+        }
+        pop_array();
+        return res;
+    }
+
     std::pair<core::parameter_id_t, document::value_t>
     base_deserializer_t::deserialize_param_pair(document::impl::base_document* tape, size_t index) {
         advance_array(index);
@@ -126,6 +137,13 @@ namespace components::serializer {
     expressions::expression_ptr base_deserializer_t::deserialize_expression(size_t index) {
         advance_array(index);
         auto res = expressions::expression_i::deserialize(this);
+        pop_array();
+        return res;
+    }
+
+    expressions::update_expr_ptr base_deserializer_t::deserialize_update_expression(size_t index) {
+        advance_array(index);
+        auto res = expressions::update_expr_t::deserialize(this);
         pop_array();
         return res;
     }
@@ -177,6 +195,14 @@ namespace components::serializer {
 
     expressions::sort_order json_deserializer_t::deserialize_sort_order(size_t index) {
         return static_cast<expressions::sort_order>(working_tree_.top()->at(index).as_int64());
+    }
+
+    expressions::update_expr_type json_deserializer_t::deserialize_update_expr_type(size_t index) {
+        return static_cast<expressions::update_expr_type>(working_tree_.top()->at(index).as_int64());
+    }
+
+    expressions::update_expr_get_value_t::side_t json_deserializer_t::deserialize_update_expr_side(size_t index) {
+        return static_cast<expressions::update_expr_get_value_t::side_t>(working_tree_.top()->at(index).as_int64());
     }
 
     logical_plan::index_type json_deserializer_t::deserialize_index_type(size_t index) {
@@ -282,6 +308,14 @@ namespace components::serializer {
 
     expressions::sort_order msgpack_deserializer_t::deserialize_sort_order(size_t index) {
         return static_cast<expressions::sort_order>(working_tree_.top()->ptr[index].via.i64);
+    }
+
+    expressions::update_expr_type msgpack_deserializer_t::deserialize_update_expr_type(size_t index) {
+        return static_cast<expressions::update_expr_type>(working_tree_.top()->ptr[index].via.u64);
+    }
+
+    expressions::update_expr_get_value_t::side_t msgpack_deserializer_t::deserialize_update_expr_side(size_t index) {
+        return static_cast<expressions::update_expr_get_value_t::side_t>(working_tree_.top()->ptr[index].via.u64);
     }
 
     logical_plan::index_type msgpack_deserializer_t::deserialize_index_type(size_t index) {

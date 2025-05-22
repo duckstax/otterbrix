@@ -37,35 +37,35 @@ namespace components::sql::transform::impl {
     }
 
     compare_expression_ptr
-    transform_a_expr(logical_plan::parameter_node_t* statement, A_Expr* node, logical_plan::node_ptr* func_node) {
+    transform_a_expr(logical_plan::parameter_node_t* params, A_Expr* node, logical_plan::node_ptr* func_node) {
         switch (node->kind) {
             case AEXPR_AND: // fall-through
             case AEXPR_OR: {
                 compare_expression_ptr left;
                 compare_expression_ptr right;
                 if (nodeTag(node->lexpr) == T_A_Expr) {
-                    left = transform_a_expr(statement, pg_ptr_cast<A_Expr>(node->lexpr));
+                    left = transform_a_expr(params, pg_ptr_cast<A_Expr>(node->lexpr));
                 } else if (nodeTag(node->lexpr) == T_A_Indirection) {
-                    left = transform_a_indirection(statement, pg_ptr_cast<A_Indirection>(node->lexpr));
+                    left = transform_a_indirection(params, pg_ptr_cast<A_Indirection>(node->lexpr));
                 } else {
                     auto func = pg_ptr_cast<FuncCall>(node->lexpr);
-                    *func_node = transform_function(*func, statement);
+                    *func_node = transform_function(*func, params);
                     if (nodeTag(node->rexpr) == T_A_Expr) {
-                        return transform_a_expr(statement, pg_ptr_cast<A_Expr>(node->rexpr));
+                        return transform_a_expr(params, pg_ptr_cast<A_Expr>(node->rexpr));
                     } else {
-                        return transform_a_indirection(statement, pg_ptr_cast<A_Indirection>(node->rexpr));
+                        return transform_a_indirection(params, pg_ptr_cast<A_Indirection>(node->rexpr));
                     }
                 }
                 if (nodeTag(node->rexpr) == T_A_Expr) {
-                    right = transform_a_expr(statement, pg_ptr_cast<A_Expr>(node->rexpr));
+                    right = transform_a_expr(params, pg_ptr_cast<A_Expr>(node->rexpr));
                 } else if (nodeTag(node->rexpr) == T_A_Indirection) {
-                    right = transform_a_indirection(statement, pg_ptr_cast<A_Indirection>(node->rexpr));
+                    right = transform_a_indirection(params, pg_ptr_cast<A_Indirection>(node->rexpr));
                 } else {
                     auto func = pg_ptr_cast<FuncCall>(node->rexpr);
-                    *func_node = transform_function(*func, statement);
+                    *func_node = transform_function(*func, params);
                     return left;
                 }
-                auto expr = make_compare_union_expression(statement->parameters().resource(),
+                auto expr = make_compare_union_expression(params->parameters().resource(),
                                                           node->kind == AEXPR_AND ? compare_type::union_and
                                                                                   : compare_type::union_or);
                 auto append = [&expr](compare_expression_ptr& e) {
@@ -87,44 +87,44 @@ namespace components::sql::transform::impl {
                        nodeTag(node->rexpr) == T_A_Const || nodeTag(node->lexpr) == T_TypeCast ||
                        nodeTag(node->rexpr) == T_TypeCast);
                 if (nodeTag(node) == T_A_Indirection) {
-                    return transform_a_indirection(statement, pg_ptr_cast<A_Indirection>(node));
+                    return transform_a_indirection(params, pg_ptr_cast<A_Indirection>(node));
                 }
                 if (nodeTag(node->lexpr) == T_ColumnRef) {
                     auto key_left = strVal(pg_ptr_cast<ColumnRef>(node->lexpr)->fields->lst.back().data);
                     if (nodeTag(node->rexpr) == T_ColumnRef) {
                         auto key_right = strVal(pg_ptr_cast<ColumnRef>(node->rexpr)->fields->lst.back().data);
-                        return make_compare_expression(statement->parameters().resource(),
+                        return make_compare_expression(params->parameters().resource(),
                                                        get_compare_type(strVal(node->name->lst.front().data)),
                                                        components::expressions::key_t{key_left},
                                                        components::expressions::key_t{key_right});
                     }
                     return make_compare_expression(
-                        statement->parameters().resource(),
+                        params->parameters().resource(),
                         get_compare_type(strVal(node->name->lst.front().data)),
                         components::expressions::key_t{key_left},
-                        statement->add_parameter(get_value(node->rexpr, statement->parameters().tape()).first));
+                        params->add_parameter(get_value(node->rexpr, params->parameters().tape()).first));
                 } else {
                     auto key = strVal(pg_ptr_cast<ColumnRef>(node->rexpr)->fields->lst.back().data);
                     return make_compare_expression(
-                        statement->parameters().resource(),
+                        params->parameters().resource(),
                         get_compare_type(strVal(node->name->lst.back().data)),
                         components::expressions::key_t{key},
-                        statement->add_parameter(get_value(node->lexpr, statement->parameters().tape()).first));
+                        params->add_parameter(get_value(node->lexpr, params->parameters().tape()).first));
                 }
             }
             case AEXPR_NOT: {
                 assert(nodeTag(node->rexpr) == T_A_Expr || nodeTag(node->rexpr) == T_A_Indirection);
                 compare_expression_ptr right;
                 if (nodeTag(node->rexpr) == T_A_Expr) {
-                    right = transform_a_expr(statement, pg_ptr_cast<A_Expr>(node->rexpr));
+                    right = transform_a_expr(params, pg_ptr_cast<A_Expr>(node->rexpr));
                 } else if (nodeTag(node->rexpr) == T_A_Indirection) {
-                    right = transform_a_indirection(statement, pg_ptr_cast<A_Indirection>(node->rexpr));
+                    right = transform_a_indirection(params, pg_ptr_cast<A_Indirection>(node->rexpr));
                 } else {
                     auto func = pg_ptr_cast<FuncCall>(node->rexpr);
-                    *func_node = transform_function(*func, statement);
+                    *func_node = transform_function(*func, params);
                     return right;
                 }
-                auto expr = make_compare_union_expression(statement->parameters().resource(), compare_type::union_not);
+                auto expr = make_compare_union_expression(params->parameters().resource(), compare_type::union_not);
                 if (expr->type() == right->type()) {
                     for (auto& child : right->children()) {
                         expr->append_child(child);
@@ -138,33 +138,31 @@ namespace components::sql::transform::impl {
                 throw std::runtime_error("Unsupported node type: " + expr_kind_to_string(node->kind));
         }
     }
-    components::expressions::compare_expression_ptr transform_a_indirection(logical_plan::parameter_node_t* statement,
+    components::expressions::compare_expression_ptr transform_a_indirection(logical_plan::parameter_node_t* params,
                                                                             A_Indirection* node) {
         if (node->arg->type == T_A_Expr) {
-            return transform_a_expr(statement, pg_ptr_cast<A_Expr>(node->arg));
+            return transform_a_expr(params, pg_ptr_cast<A_Expr>(node->arg));
         } else if (node->arg->type == T_A_Indirection) {
-            return transform_a_indirection(statement, pg_ptr_cast<A_Indirection>(node->arg));
+            return transform_a_indirection(params, pg_ptr_cast<A_Indirection>(node->arg));
         } else {
             throw std::runtime_error("Unsupported node type: " + node_tag_to_string(node->type));
         }
     }
 
-    logical_plan::node_ptr transform_function(RangeFunction& node, logical_plan::parameter_node_t* statement) {
+    logical_plan::node_ptr transform_function(RangeFunction& node, logical_plan::parameter_node_t* params) {
         auto func_call = pg_ptr_cast<FuncCall>(pg_ptr_cast<List>(node.functions->lst.front().data)->lst.front().data);
-        return transform_function(*func_call, statement);
+        return transform_function(*func_call, params);
     }
 
-    logical_plan::node_ptr transform_function(FuncCall& node, logical_plan::parameter_node_t* statement) {
+    logical_plan::node_ptr transform_function(FuncCall& node, logical_plan::parameter_node_t* params) {
         std::string funcname = strVal(node.funcname->lst.front().data);
         std::pmr::vector<core::parameter_id_t> args;
         args.reserve(node.args->lst.size());
         for (const auto& arg : node.args->lst) {
-            auto v = impl::get_value(pg_ptr_cast<Node>(arg.data), statement->parameters().tape());
-            args.emplace_back(statement->add_parameter(v.first));
+            auto v = impl::get_value(pg_ptr_cast<Node>(arg.data), params->parameters().tape());
+            args.emplace_back(params->add_parameter(v.first));
         }
-        return logical_plan::make_node_function(statement->parameters().resource(),
-                                                std::move(funcname),
-                                                std::move(args));
+        return logical_plan::make_node_function(params->parameters().resource(), std::move(funcname), std::move(args));
     }
 
 } // namespace components::sql::transform::impl

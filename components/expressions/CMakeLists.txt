@@ -6,6 +6,7 @@ set(SOURCE_${PROJECT_NAME}
         aggregate_expression.cpp
         scalar_expression.cpp
         sort_expression.cpp
+        update_expression.cpp
 )
 
 add_library(otterbrix_${PROJECT_NAME}
@@ -18,6 +19,7 @@ set_property(TARGET otterbrix_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 
 target_link_libraries(
         otterbrix_${PROJECT_NAME} PRIVATE
+        otterbrix::document
         otterbrix::serialization
         Boost::boost
         absl::int128

@@ -175,8 +175,9 @@ TEST_CASE("operator::update") {
 
         auto cond = make_compare_expression(&resource, compare_type::gt, key("count"), core::parameter_id_t(1));
         auto cond_check = make_compare_expression(&resource, compare_type::eq, key("count"), core::parameter_id_t(2));
-        auto script_update =
-            components::document::document_t::document_from_json(R"({"$set": {"count": 999}})", &resource);
+
+        update_expr_ptr script_update = new update_expr_set_t(components::expressions::key_t{"count"});
+        script_update->left() = new update_expr_get_const_value_t(core::parameter_id_t(2));
         {
             full_scan scan(d(collection),
                            predicates::create_predicate(d(collection), cond_check),
@@ -185,7 +186,7 @@ TEST_CASE("operator::update") {
             REQUIRE(scan.output()->size() == 0);
         }
 
-        operator_update update_(d(collection), std::move(script_update), false);
+        operator_update update_(d(collection), {script_update}, false);
         update_.set_children(boost::intrusive_ptr(new full_scan(d(collection),
                                                                 predicates::create_predicate(d(collection), cond),
                                                                 components::logical_plan::limit_t::unlimit())));
@@ -207,8 +208,8 @@ TEST_CASE("operator::update") {
 
         auto cond = make_compare_expression(&resource, compare_type::gt, key("count"), core::parameter_id_t(1));
         auto cond_check = make_compare_expression(&resource, compare_type::eq, key("count"), core::parameter_id_t(2));
-        auto script_update =
-            components::document::document_t::document_from_json(R"({"$set": {"count": 999}})", &resource);
+        update_expr_ptr script_update = new update_expr_set_t(components::expressions::key_t{"count"});
+        script_update->left() = new update_expr_get_const_value_t(core::parameter_id_t(2));
         {
             full_scan scan(d(collection),
                            predicates::create_predicate(d(collection), cond_check),
@@ -217,7 +218,7 @@ TEST_CASE("operator::update") {
             REQUIRE(scan.output()->size() == 0);
         }
 
-        operator_update update_(d(collection), std::move(script_update), false);
+        operator_update update_(d(collection), {script_update}, false);
         update_.set_children(boost::intrusive_ptr(new full_scan(d(collection),
                                                                 predicates::create_predicate(d(collection), cond),
                                                                 components::logical_plan::limit_t(1))));
@@ -239,8 +240,8 @@ TEST_CASE("operator::update") {
 
         auto cond = make_compare_expression(&resource, compare_type::gt, key("count"), core::parameter_id_t(1));
         auto cond_check = make_compare_expression(&resource, compare_type::eq, key("count"), core::parameter_id_t(2));
-        auto script_update =
-            components::document::document_t::document_from_json(R"({"$set": {"count": 999}})", &resource);
+        update_expr_ptr script_update = new update_expr_set_t(components::expressions::key_t{"count"});
+        script_update->left() = new update_expr_get_const_value_t(core::parameter_id_t(2));
         {
             full_scan scan(d(collection),
                            predicates::create_predicate(d(collection), cond_check),
@@ -249,7 +250,7 @@ TEST_CASE("operator::update") {
             REQUIRE(scan.output()->size() == 0);
         }
 
-        operator_update update_(d(collection), std::move(script_update), false);
+        operator_update update_(d(collection), {script_update}, false);
         update_.set_children(boost::intrusive_ptr(new full_scan(d(collection),
                                                                 predicates::create_predicate(d(collection), cond),
                                                                 components::logical_plan::limit_t(5))));
@@ -425,6 +426,7 @@ TEST_CASE("operator::index::delete_and_update") {
         auto cond_check = make_compare_expression(&resource, compare_type::eq, key("count"), core::parameter_id_t(1));
         components::logical_plan::storage_parameters parameters_check(&resource);
         add_parameter(parameters_check, core::parameter_id_t(1), new_value(50));
+        add_parameter(parameters_check, core::parameter_id_t(2), new_value(0));
         components::pipeline::context_t pipeline_context_check(std::move(parameters_check));
         {
             index_scan scan(d(collection), cond_check, components::logical_plan::limit_t::unlimit());
@@ -432,9 +434,9 @@ TEST_CASE("operator::index::delete_and_update") {
             REQUIRE(scan.output()->size() == 1);
         }
         {
-            auto script_update =
-                components::document::document_t::document_from_json(R"({"$set": {"count": 0}})", &resource);
-            operator_update update(d(collection), script_update, false);
+            update_expr_ptr script_update = new update_expr_set_t(components::expressions::key_t{"count"});
+            script_update->left() = new update_expr_get_const_value_t(core::parameter_id_t(2));
+            operator_update update(d(collection), {script_update}, false);
             update.set_children(boost::intrusive_ptr(
                 new index_scan(d(collection), cond_check, components::logical_plan::limit_t::unlimit())));
             update.on_execute(&pipeline_context_check);

@@ -59,6 +59,11 @@ namespace components::logical_plan {
 
     std::unordered_set<collection_full_name_t, collection_name_hash> node_t::collection_dependencies() {
         std::unordered_set<collection_full_name_t, collection_name_hash> dependencies{collection_full_name()};
+        if (type_ == node_type::update_t) {
+            dependencies.insert(reinterpret_cast<node_update_t*>(this)->collection_from());
+        } else if (type_ == node_type::delete_t) {
+            dependencies.insert(reinterpret_cast<node_delete_t*>(this)->collection_from());
+        }
         for (const auto& child : children_) {
             child->collection_dependencies_(dependencies);
         }
@@ -150,6 +155,11 @@ namespace components::logical_plan {
     void node_t::collection_dependencies_(
         std::unordered_set<collection_full_name_t, collection_name_hash>& upper_dependencies) {
         upper_dependencies.insert(collection_full_name());
+        if (type_ == node_type::update_t) {
+            upper_dependencies.insert(reinterpret_cast<node_update_t*>(this)->collection_from());
+        } else if (type_ == node_type::delete_t) {
+            upper_dependencies.insert(reinterpret_cast<node_delete_t*>(this)->collection_from());
+        }
         for (const auto& child : children_) {
             child->collection_dependencies_(upper_dependencies);
         }

@@ -6,6 +6,7 @@
 #include <components/sql/transformer/utils.hpp>
 
 using namespace components::sql;
+using namespace components::expressions;
 
 #define TEST_SIMPLE_UPDATE(QUERY, RESULT, PARAMS, FIELDS)                                                              \
     SECTION(QUERY) {                                                                                                   \
@@ -21,49 +22,62 @@ using namespace components::sql;
         }                                                                                                              \
         REQUIRE(node->database_name() == "testdatabase");                                                              \
         REQUIRE(node->collection_name() == "testcollection");                                                          \
-        auto doc = static_cast<components::logical_plan::node_update_t&>(*node).update();                              \
-        auto dict = doc->get_dict("$set");                                                                             \
-        REQUIRE(dict->count() == FIELDS.size());                                                                       \
-        for (auto f : FIELDS) {                                                                                        \
-            REQUIRE(dict->is_equals(f.first, f.second));                                                               \
-        }                                                                                                              \
+        auto updates = static_cast<components::logical_plan::node_update_t&>(*node).updates();                         \
+        REQUIRE(updates == FIELDS);                                                                                    \
     }
 
 using v = components::document::value_t;
 using vec = std::vector<v>;
-using fields = std::vector<std::pair<std::string, v>>;
+using fields = std::pmr::vector<update_expr_ptr>;
 
 TEST_CASE("sql::update") {
     auto resource = std::pmr::synchronized_pool_resource();
     auto tape = std::make_unique<components::document::impl::base_document>(&resource);
     auto new_value = [&](auto value) { return v{tape.get(), value}; };
 
-    TEST_SIMPLE_UPDATE("UPDATE TestDatabase.TestCollection SET count = 10;",
-                       R"_($update: {$upsert: 0, $match: {$all_true}, $limit: -1})_",
-                       vec({}),
-                       fields({{"count", new_value(10ul)}}));
+    {
+        fields f;
+        f.emplace_back(new update_expr_set_t(components::expressions::key_t{"count"}));
+        f.back()->left() = new update_expr_get_const_value_t(core::parameter_id_t{0});
+        TEST_SIMPLE_UPDATE("UPDATE TestDatabase.TestCollection SET count = 10;",
+                           R"_($update: {$upsert: 0, $match: {$all_true}, $limit: -1})_",
+                           vec({new_value(10ul)}),
+                           f);
+    }
 
-    TEST_SIMPLE_UPDATE("UPDATE TestDatabase.TestCollection SET name = 'new name';",
-                       R"_($update: {$upsert: 0, $match: {$all_true}, $limit: -1})_",
-                       vec({}),
-                       fields({{"name", new_value(std::pmr::string("new name", &resource))}}));
+    {
+        fields f;
+        f.emplace_back(new update_expr_set_t(components::expressions::key_t{"name"}));
+        f.back()->left() = new update_expr_get_const_value_t(core::parameter_id_t{0});
+        TEST_SIMPLE_UPDATE("UPDATE TestDatabase.TestCollection SET name = 'new name';",
+                           R"_($update: {$upsert: 0, $match: {$all_true}, $limit: -1})_",
+                           vec({new_value("new name")}),
+                           f);
+    }
 
-    TEST_SIMPLE_UPDATE("UPDATE TestDatabase.TestCollection SET is_doc = true;",
-                       R"_($update: {$upsert: 0, $match: {$all_true}, $limit: -1})_",
-                       vec({}),
-                       fields({{"is_doc", new_value(true)}}));
+    {
+        fields f;
+        f.emplace_back(new update_expr_set_t(components::expressions::key_t{"is_doc"}));
+        f.back()->left() = new update_expr_get_const_value_t(core::parameter_id_t{0});
+        TEST_SIMPLE_UPDATE("UPDATE TestDatabase.TestCollection SET is_doc = true;",
+                           R"_($update: {$upsert: 0, $match: {$all_true}, $limit: -1})_",
+                           vec({new_value(true)}),
+                           f);
+    }
 
-    TEST_SIMPLE_UPDATE("UPDATE TestDatabase.TestCollection SET is_doc = false;",
-                       R"_($update: {$upsert: 0, $match: {$all_true}, $limit: -1})_",
-                       vec({}),
-                       fields({{"is_doc", new_value(false)}}));
-
-    TEST_SIMPLE_UPDATE("UPDATE TestDatabase.TestCollection SET count = 10, name = 'new name', is_doc = true;",
-                       R"_($update: {$upsert: 0, $match: {$all_true}, $limit: -1})_",
-                       vec({}),
-                       fields({{"count", new_value(10ul)},
-                               {"name", new_value(std::pmr::string("new name"))},
-                               {"is_doc", new_value(true)}}));
+    {
+        fields f;
+        f.emplace_back(new update_expr_set_t(components::expressions::key_t{"count"}));
+        f.back()->left() = new update_expr_get_const_value_t(core::parameter_id_t{0});
+        f.emplace_back(new update_expr_set_t(components::expressions::key_t{"name"}));
+        f.back()->left() = new update_expr_get_const_value_t(core::parameter_id_t{1});
+        f.emplace_back(new update_expr_set_t(components::expressions::key_t{"is_doc"}));
+        f.back()->left() = new update_expr_get_const_value_t(core::parameter_id_t{2});
+        TEST_SIMPLE_UPDATE("UPDATE TestDatabase.TestCollection SET count = 10, name = 'new name', is_doc = true;",
+                           R"_($update: {$upsert: 0, $match: {$all_true}, $limit: -1})_",
+                           vec({new_value(10ul), new_value("new name"), new_value(true)}),
+                           f);
+    }
 }
 
 TEST_CASE("sql::update_where") {
@@ -71,32 +85,96 @@ TEST_CASE("sql::update_where") {
     auto tape = std::make_unique<components::document::impl::base_document>(&resource);
     auto new_value = [&](auto value) { return v{tape.get(), value}; };
 
-    TEST_SIMPLE_UPDATE("UPDATE TestDatabase.TestCollection SET count = 10 WHERE id = 1;",
-                       R"_($update: {$upsert: 0, $match: {"id": {$eq: #0}}, $limit: -1})_",
-                       vec({new_value(1l)}),
-                       fields({{"count", new_value(10ul)}}));
+    {
+        fields f;
+        f.emplace_back(new update_expr_set_t(components::expressions::key_t{"count"}));
+        f.back()->left() = new update_expr_get_const_value_t(core::parameter_id_t{0});
+        TEST_SIMPLE_UPDATE("UPDATE TestDatabase.TestCollection SET count = 10 WHERE id = 1;",
+                           R"_($update: {$upsert: 0, $match: {"id": {$eq: #1}}, $limit: -1})_",
+                           vec({new_value(10ul), new_value(1ul)}),
+                           f);
+    }
 
-    TEST_SIMPLE_UPDATE("UPDATE TestDatabase.TestCollection SET name = 'new name' WHERE name = 'old_name';",
-                       R"_($update: {$upsert: 0, $match: {"name": {$eq: #0}}, $limit: -1})_",
-                       vec({new_value(std::string_view("old_name"))}),
-                       fields({{"name", new_value(std::string_view("new name"))}}));
+    {
+        fields f;
+        f.emplace_back(new update_expr_set_t(components::expressions::key_t{"name"}));
+        f.back()->left() = new update_expr_get_const_value_t(core::parameter_id_t{0});
+        TEST_SIMPLE_UPDATE("UPDATE TestDatabase.TestCollection SET name = 'new name' WHERE name = 'old_name';",
+                           R"_($update: {$upsert: 0, $match: {"name": {$eq: #1}}, $limit: -1})_",
+                           vec({new_value("new name"), new_value("old_name")}),
+                           f);
+    }
 
-    TEST_SIMPLE_UPDATE("UPDATE TestDatabase.TestCollection SET is_doc = true WHERE is_doc = false;",
-                       R"_($update: {$upsert: 0, $match: {"is_doc": {$eq: #0}}, $limit: -1})_",
-                       vec({new_value(false)}),
-                       fields({{"is_doc", new_value(true)}}));
+    {
+        fields f;
+        f.emplace_back(new update_expr_set_t(components::expressions::key_t{"is_doc"}));
+        f.back()->left() = new update_expr_get_const_value_t(core::parameter_id_t{0});
+        TEST_SIMPLE_UPDATE("UPDATE TestDatabase.TestCollection SET is_doc = true WHERE is_doc = false;",
+                           R"_($update: {$upsert: 0, $match: {"is_doc": {$eq: #1}}, $limit: -1})_",
+                           vec({new_value(true), new_value(false)}),
+                           f);
+    }
 
-    TEST_SIMPLE_UPDATE("UPDATE TestDatabase.TestCollection SET is_doc = false WHERE id > 10;",
-                       R"_($update: {$upsert: 0, $match: {"id": {$gt: #0}}, $limit: -1})_",
-                       vec({new_value(10l)}),
-                       fields({{"is_doc", new_value(false)}}));
+    {
+        fields f;
+        f.emplace_back(new update_expr_set_t(components::expressions::key_t{"count"}));
+        f.back()->left() = new update_expr_get_const_value_t(core::parameter_id_t{0});
+        f.emplace_back(new update_expr_set_t(components::expressions::key_t{"name"}));
+        f.back()->left() = new update_expr_get_const_value_t(core::parameter_id_t{1});
+        f.emplace_back(new update_expr_set_t(components::expressions::key_t{"is_doc"}));
+        f.back()->left() = new update_expr_get_const_value_t(core::parameter_id_t{2});
+        TEST_SIMPLE_UPDATE(
+            "UPDATE TestDatabase.TestCollection SET count = 10, name = 'new name', is_doc = true "
+            "WHERE id > 10 AND name = 'old_name' AND is_doc = false;",
+            R"_($update: {$upsert: 0, $match: {$and: ["id": {$gt: #3}, "name": {$eq: #4}, "is_doc": {$eq: #5}]}, $limit: -1})_",
+            vec({new_value(10ul),
+                 new_value("new name"),
+                 new_value(true),
+                 new_value(10ul),
+                 new_value("old_name"),
+                 new_value(false)}),
+            f);
+    }
+}
 
-    TEST_SIMPLE_UPDATE(
-        "UPDATE TestDatabase.TestCollection SET count = 10, name = 'new name', is_doc = true "
-        "WHERE id > 10 AND name = 'old_name' AND is_doc = false;",
-        R"_($update: {$upsert: 0, $match: {$and: ["id": {$gt: #0}, "name": {$eq: #1}, "is_doc": {$eq: #2}]}, $limit: -1})_",
-        vec({new_value(10l), new_value(std::string_view("old_name")), new_value(false)}),
-        fields({{"count", new_value(10ul)},
-                {"name", new_value(std::string_view("new name"))},
-                {"is_doc", new_value(true)}}));
+TEST_CASE("sql::update_from") {
+    auto resource = std::pmr::synchronized_pool_resource();
+    auto tape = std::make_unique<components::document::impl::base_document>(&resource);
+    auto new_value = [&](auto value) { return v{tape.get(), value}; };
+
+    {
+        fields f;
+        f.emplace_back(new update_expr_set_t(components::expressions::key_t{"price"}));
+        update_expr_ptr calculate = new update_expr_calculate_t(update_expr_type::mult);
+        calculate->left() = new update_expr_get_value_t(components::expressions::key_t{"price"},
+                                                        update_expr_get_value_t::side_t::undefined);
+        calculate->right() = new update_expr_get_const_value_t(core::parameter_id_t{0});
+        f.back()->left() = std::move(calculate);
+        TEST_SIMPLE_UPDATE(R"_(UPDATE TestDatabase.TestCollection SET price = price * 1.5;)_",
+                           R"_($update: {$upsert: 0, $match: {$all_true}, $limit: -1})_",
+                           vec({new_value(1.5f)}),
+                           f);
+    }
+
+    {
+        fields f;
+        f.emplace_back(new update_expr_set_t(components::expressions::key_t{"price"}));
+        update_expr_ptr calculate_1 = new update_expr_calculate_t(update_expr_type::mult);
+        calculate_1->left() =
+            new update_expr_get_value_t(components::expressions::key_t{"price"}, update_expr_get_value_t::side_t::from);
+        calculate_1->right() = new update_expr_get_value_t(components::expressions::key_t{"discount"},
+                                                           update_expr_get_value_t::side_t::to);
+        update_expr_ptr calculate_2 = new update_expr_calculate_t(update_expr_type::sub);
+        calculate_2->left() =
+            new update_expr_get_value_t(components::expressions::key_t{"price"}, update_expr_get_value_t::side_t::from);
+        calculate_2->right() = std::move(calculate_1);
+        f.back()->left() = std::move(calculate_2);
+        TEST_SIMPLE_UPDATE(R"_(UPDATE TestDatabase.TestCollection
+SET price = OtherTestCollection.price - (OtherTestCollection.price * TestCollection.discount)
+FROM OtherTestCollection
+WHERE TestCollection.id = OtherTestCollection.id;)_",
+                           R"_($update: {$upsert: 0, $match: {"id": {$eq: "id"}}, $limit: -1})_",
+                           vec({}),
+                           f);
+    }
 }

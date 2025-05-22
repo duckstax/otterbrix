@@ -27,6 +27,8 @@ namespace components::serializer {
         virtual expressions::compare_type deserialize_compare_type(size_t index) = 0;
         virtual expressions::scalar_type deserialize_scalar_type(size_t index) = 0;
         virtual expressions::sort_order deserialize_sort_order(size_t index) = 0;
+        virtual expressions::update_expr_type deserialize_update_expr_type(size_t index) = 0;
+        virtual expressions::update_expr_get_value_t::side_t deserialize_update_expr_side(size_t index) = 0;
         virtual logical_plan::index_type deserialize_index_type(size_t index) = 0;
         virtual logical_plan::join_type deserialize_join_type(size_t index) = 0;
         virtual logical_plan::limit_t deserialize_limit(size_t index) = 0;
@@ -44,11 +46,13 @@ namespace components::serializer {
         std::pmr::vector<document_ptr> deserialize_documents(size_t index);
         std::pmr::vector<logical_plan::node_ptr> deserialize_nodes(size_t index);
         std::pmr::vector<expressions::expression_ptr> deserialize_expressions(size_t index);
+        std::pmr::vector<expressions::update_expr_ptr> deserialize_update_expressions(size_t index);
         std::pair<core::parameter_id_t, document::value_t> deserialize_param_pair(document::impl::base_document* tape,
                                                                                   size_t size);
 
         logical_plan::node_ptr deserialize_logical_node(size_t index);
         expressions::expression_ptr deserialize_expression(size_t index);
+        expressions::update_expr_ptr deserialize_update_expression(size_t index);
         logical_plan::parameter_node_ptr deserialize_parameters(size_t index);
 
     protected:
@@ -71,6 +75,8 @@ namespace components::serializer {
         expressions::compare_type deserialize_compare_type(size_t index) override;
         expressions::scalar_type deserialize_scalar_type(size_t index) override;
         expressions::sort_order deserialize_sort_order(size_t index) override;
+        expressions::update_expr_type deserialize_update_expr_type(size_t index) override;
+        expressions::update_expr_get_value_t::side_t deserialize_update_expr_side(size_t index) override;
         logical_plan::index_type deserialize_index_type(size_t index) override;
         logical_plan::join_type deserialize_join_type(size_t index) override;
         logical_plan::limit_t deserialize_limit(size_t index) override;
@@ -103,6 +109,8 @@ namespace components::serializer {
         expressions::compare_type deserialize_compare_type(size_t index) override;
         expressions::scalar_type deserialize_scalar_type(size_t index) override;
         expressions::sort_order deserialize_sort_order(size_t index) override;
+        expressions::update_expr_type deserialize_update_expr_type(size_t index) override;
+        expressions::update_expr_get_value_t::side_t deserialize_update_expr_side(size_t index) override;
         logical_plan::index_type deserialize_index_type(size_t index) override;
         logical_plan::join_type deserialize_join_type(size_t index) override;
         logical_plan::limit_t deserialize_limit(size_t index) override;

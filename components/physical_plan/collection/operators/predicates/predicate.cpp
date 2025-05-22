@@ -28,4 +28,9 @@ namespace services::collection::operators::predicates {
         return nullptr;
     }
 
+    predicate_ptr create_all_true_predicate(std::pmr::memory_resource* resource) {
+        return create_simple_predicate(
+            nullptr,
+            make_compare_expression(resource, components::expressions::compare_type::all_true));
+    }
 } // namespace services::collection::operators::predicates
