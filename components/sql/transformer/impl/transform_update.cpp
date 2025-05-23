@@ -134,12 +134,16 @@ namespace components::sql::transform {
         std::pmr::vector<update_expr_ptr> updates(resource);
         collection_full_name_t to = rangevar_to_collection(node.relation);
         collection_full_name_t from;
+        bool function_flag = false;
 
         if (!node.fromClause->lst.empty()) {
             // has from
             auto from_first = node.fromClause->lst.front().data;
             if (nodeTag(from_first) == T_RangeVar) {
                 from = rangevar_to_collection(pg_ptr_cast<RangeVar>(from_first));
+            } else if (nodeTag(from_first) == T_RangeFunction) {
+                function_flag = true;
+                from = alias_to_collection(pg_ptr_cast<RangeFunction>(node.fromClause->lst.front().data)->alias);
             } else {
                 throw parser_exception_t{"undefined token in UPDATE FROM", ""};
             }
@@ -147,7 +151,6 @@ namespace components::sql::transform {
         // set
         {
             for (auto target : node.targetList->lst) {
-                // TODO: SET is hardcoded to be from a const value here:
                 auto res = pg_ptr_cast<ResTarget>(target.data);
                 updates.emplace_back(new update_expr_set_t(expressions::key_t{res->name}));
                 updates.back()->left() = transform_update_expr(res->val, to, from, params);
@@ -165,10 +168,16 @@ namespace components::sql::transform {
                 logical_plan::make_node_match(resource, to, make_compare_expression(resource, compare_type::all_true));
         }
 
+        logical_plan::node_ptr res;
         if (from.empty()) {
-            return logical_plan::make_node_update_many(resource, to, match, updates, false);
+            res = logical_plan::make_node_update_many(resource, to, match, updates, false);
         } else {
-            return logical_plan::make_node_update_many(resource, to, from, match, updates, false);
+            res = logical_plan::make_node_update_many(resource, to, from, match, updates, false);
         }
+        if (function_flag) {
+            res->append_child(
+                impl::transform_function(*pg_ptr_cast<RangeFunction>(node.fromClause->lst.front().data), params));
+        }
+        return res;
     }
 } // namespace components::sql::transform

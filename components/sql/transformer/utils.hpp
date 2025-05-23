@@ -21,6 +21,8 @@ namespace components::sql::transform {
 
     bool string_to_double(const char* buf, size_t len, double& result /*, char decimal_separator*/);
 
+    static collection_full_name_t alias_to_collection(Alias* alias) { return {database_name_t(), alias->aliasname}; }
+
     static collection_full_name_t rangevar_to_collection(RangeVar* table) {
         return {table->schemaname ? table->schemaname : database_name_t(), table->relname};
     }
