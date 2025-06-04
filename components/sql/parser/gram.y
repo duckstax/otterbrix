@@ -11727,7 +11727,7 @@ cdb_string:
  *****************************************************************************/
 
 InsertStmt:
-			opt_with_clause INSERT INTO qualified_name insert_rest returning_clause
+			opt_with_clause INSERT INTO relation_expr_opt_alias insert_rest returning_clause
 				{
 					$5->relation = $4;
 					$5->returningList = $6;
@@ -15469,14 +15469,22 @@ qualified_name:
 					switch (list_length($2))
 					{
 						case 1:
-							$$->catalogname = NULL;
-							$$->schemaname = $1;
+						    $$->uid = NULL;
+							$$->catalogname = $1;
+							$$->schemaname = NULL;
 							$$->relname = strVal(linitial($2));
 							break;
 						case 2:
+						    $$->uid = NULL;
 							$$->catalogname = $1;
 							$$->schemaname = strVal(linitial($2));
 							$$->relname = strVal(lsecond($2));
+							break;
+						case 3:
+						    $$->uid = $1;
+							$$->catalogname = strVal(linitial($2));
+							$$->schemaname = strVal(lsecond($2));
+							$$->relname = strVal(lthird($2));
 							break;
 						default:
 							//ereport(ERROR, mdxn: ereport NameListToString

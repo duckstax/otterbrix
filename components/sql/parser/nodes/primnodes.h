@@ -70,6 +70,7 @@ typedef enum OnCommitAction
 */
 typedef struct RangeVar {
     NodeTag type;
+    char* uid;           /* the unique identifier, or NULL */
     char* catalogname;   /* the catalog (database) name, or NULL */
     char* schemaname;    /* the schema name, or NULL */
     char* relname;       /* the relation/sequence name */

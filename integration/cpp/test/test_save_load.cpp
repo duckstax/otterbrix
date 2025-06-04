@@ -135,7 +135,7 @@ TEST_CASE("integration::cpp::test_save_load::disk+wal") {
                 auto session = otterbrix::session_id_t();
                 auto address = actor_zeta::address_t::empty_address();
                 auto insert_one =
-                    components::logical_plan::make_node_insert(dispatcher->resource(), {db_name, col_name}, doc);
+                    components::logical_plan::make_node_insert(dispatcher->resource(), {db_name, col_name}, {doc});
                 wal.insert_one(session, address, insert_one);
 
                 {

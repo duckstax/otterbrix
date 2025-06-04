@@ -1,6 +1,93 @@
 #include "value.hpp"
+#include <boost/math/special_functions/factorials.hpp>
+#include <cmath>
 
 namespace components::document {
+
+    // This could be useful in other places, but for now it is here
+    // Default only accepts int as amount
+    constexpr int128_t operator<<(int128_t lhs, int128_t amount) { return lhs << static_cast<int>(amount); }
+    constexpr int128_t operator>>(int128_t lhs, int128_t amount) { return lhs >> static_cast<int>(amount); }
+
+    // there is no std::shift_left operator
+    template<typename T = void>
+    struct shift_left;
+    template<typename T = void>
+    struct shift_right;
+    template<typename T = void>
+    struct pow;
+    template<typename T = void>
+    struct sqrt;
+    template<typename T = void>
+    struct cbrt;
+    template<typename T = void>
+    struct fact;
+    template<typename T = void>
+    struct abs;
+
+    template<>
+    struct shift_left<void> {
+        template<typename T, typename U>
+        constexpr auto operator()(T&& t, U&& u) const {
+            return std::forward<T>(t) << std::forward<U>(u);
+        }
+    };
+
+    template<>
+    struct shift_right<void> {
+        template<typename T, typename U>
+        constexpr auto operator()(T&& t, U&& u) const {
+            return std::forward<T>(t) >> std::forward<U>(u);
+        }
+    };
+
+    template<>
+    struct pow<void> {
+        template<typename T, typename U>
+        constexpr auto operator()(T&& t, U&& u) const {
+            if constexpr (std::is_same<T, int128_t>::value) {
+                return t ^ u;
+            } else {
+                return std::pow(std::forward<T>(t), std::forward<U>(u));
+            }
+        }
+    };
+
+    template<>
+    struct sqrt<void> {
+        template<typename T>
+        constexpr auto operator()(T&& x) const {
+            return std::sqrt(std::forward<T>(x));
+        }
+    };
+
+    template<>
+    struct cbrt<void> {
+        template<typename T>
+        constexpr auto operator()(T&& x) const {
+            return std::cbrt(std::forward<T>(x));
+        }
+    };
+
+    template<>
+    struct fact<void> {
+        template<typename T>
+        constexpr auto operator()(T&& x) const {
+            return boost::math::factorial<double>(std::forward<T>(x));
+        }
+    };
+
+    template<>
+    struct abs<void> {
+        template<typename T>
+        constexpr auto operator()(T&& x) const {
+            if constexpr (std::is_same<T, int128_t>::value) {
+                return x < 0 ? -x : x;
+            } else {
+                return std::abs<T>(std::forward<T>(x));
+            }
+        }
+    };
 
     value_t::value_t(impl::element element)
         : element_(element) {}
@@ -129,8 +216,20 @@ namespace components::document {
 
     const impl::element* value_t::get_element() const noexcept { return &element_; }
 
-    template<typename T, typename OP, typename GET>
+    template<typename, typename = void>
+    constexpr bool has_operator = false;
+    template<typename T>
+    constexpr bool has_operator<T, std::void_t<decltype(std::declval<T>().operator())>> = true;
+
+    template<typename OP, typename GET>
+    value_t op(const value_t& value, impl::base_document* tape, GET getter_function) {
+        OP operation{};
+        return value_t{tape, operation((value.*getter_function)())};
+    }
+
+    template<typename OP, typename GET>
     value_t op(const value_t& value1, const value_t& value2, impl::base_document* tape, GET getter_function) {
+        using T = typename std::invoke_result<decltype(getter_function), value_t>::type;
         OP operation{};
         if (!value1) {
             return value_t{tape, operation(T(), (value2.*getter_function)())};
@@ -149,24 +248,24 @@ namespace components::document {
         auto type = value1 ? value1.physical_type() : value2.physical_type();
         switch (type) {
             case types::physical_type::BOOL:
-                return op<bool, std::plus<>>(value1, value2, tape, &value_t::as_bool);
+                return op<std::plus<>>(value1, value2, tape, &value_t::as_bool);
             case types::physical_type::UINT8:
             case types::physical_type::UINT16:
             case types::physical_type::UINT32:
             case types::physical_type::UINT64:
-                return op<uint64_t, std::plus<>>(value1, value2, tape, &value_t::as_unsigned);
+                return op<std::plus<>>(value1, value2, tape, &value_t::as_unsigned);
             case types::physical_type::INT8:
             case types::physical_type::INT16:
             case types::physical_type::INT32:
             case types::physical_type::INT64:
-                return op<int64_t, std::plus<>>(value1, value2, tape, &value_t::as_int);
+                return op<std::plus<>>(value1, value2, tape, &value_t::as_int);
             case types::physical_type::UINT128:
             case types::physical_type::INT128:
-                return op<int128_t, std::plus<>>(value1, value2, tape, &value_t::as_int128);
+                return op<std::plus<>>(value1, value2, tape, &value_t::as_int128);
             case types::physical_type::FLOAT:
-                return op<float, std::plus<>>(value1, value2, tape, &value_t::as_float);
+                return op<std::plus<>>(value1, value2, tape, &value_t::as_float);
             case types::physical_type::DOUBLE:
-                return op<double, std::plus<>>(value1, value2, tape, &value_t::as_double);
+                return op<std::plus<>>(value1, value2, tape, &value_t::as_double);
             case types::physical_type::STRING:
                 return value_t{tape, std::string(value1.as_string()) + std::string(value2.as_string())};
             default: // special values can't be added
@@ -182,25 +281,24 @@ namespace components::document {
         auto type = value1 ? value1.physical_type() : value2.physical_type();
         switch (type) {
             case types::physical_type::BOOL:
-                return op<bool, std::minus<>>(value1, value2, tape, &value_t::as_bool);
+                return op<std::minus<>>(value1, value2, tape, &value_t::as_bool);
             case types::physical_type::UINT8:
             case types::physical_type::UINT16:
             case types::physical_type::UINT32:
             case types::physical_type::UINT64:
-                return op<uint64_t, std::minus<>>(value1, value2, tape, &value_t::as_unsigned);
+                return op<std::minus<>>(value1, value2, tape, &value_t::as_unsigned);
             case types::physical_type::INT8:
             case types::physical_type::INT16:
             case types::physical_type::INT32:
             case types::physical_type::INT64:
-                return op<int64_t, std::minus<>>(value1, value2, tape, &value_t::as_int);
+                return op<std::minus<>>(value1, value2, tape, &value_t::as_int);
             case types::physical_type::UINT128:
             case types::physical_type::INT128:
-                return op<int128_t, std::minus<>>(value1, value2, tape, &value_t::as_int128);
+                return op<std::minus<>>(value1, value2, tape, &value_t::as_int128);
             case types::physical_type::FLOAT:
-                return op<float, std::minus<>>(value1, value2, tape, &value_t::as_float);
+                return op<std::minus<>>(value1, value2, tape, &value_t::as_float);
             case types::physical_type::DOUBLE:
-                return op<double, std::minus<>>(value1, value2, tape, &value_t::as_double);
-            case types::physical_type::STRING:
+                return op<std::minus<>>(value1, value2, tape, &value_t::as_double);
             default: // special values and strings can't be subtructed
                 return value1;
         }
@@ -214,25 +312,24 @@ namespace components::document {
         auto type = value1 ? value1.physical_type() : value2.physical_type();
         switch (type) {
             case types::physical_type::BOOL:
-                return op<bool, std::multiplies<>>(value1, value2, tape, &value_t::as_bool);
+                return op<std::multiplies<>>(value1, value2, tape, &value_t::as_bool);
             case types::physical_type::UINT8:
             case types::physical_type::UINT16:
             case types::physical_type::UINT32:
             case types::physical_type::UINT64:
-                return op<uint64_t, std::multiplies<>>(value1, value2, tape, &value_t::as_unsigned);
+                return op<std::multiplies<>>(value1, value2, tape, &value_t::as_unsigned);
             case types::physical_type::INT8:
             case types::physical_type::INT16:
             case types::physical_type::INT32:
             case types::physical_type::INT64:
-                return op<int64_t, std::multiplies<>>(value1, value2, tape, &value_t::as_int);
+                return op<std::multiplies<>>(value1, value2, tape, &value_t::as_int);
             case types::physical_type::UINT128:
             case types::physical_type::INT128:
-                return op<int128_t, std::multiplies<>>(value1, value2, tape, &value_t::as_int128);
+                return op<std::multiplies<>>(value1, value2, tape, &value_t::as_int128);
             case types::physical_type::FLOAT:
-                return op<float, std::multiplies<>>(value1, value2, tape, &value_t::as_float);
+                return op<std::multiplies<>>(value1, value2, tape, &value_t::as_float);
             case types::physical_type::DOUBLE:
-                return op<double, std::multiplies<>>(value1, value2, tape, &value_t::as_double);
-            case types::physical_type::STRING:
+                return op<std::multiplies<>>(value1, value2, tape, &value_t::as_double);
             default: // special values and strings can't be multiplied
                 return value1;
         }
@@ -247,25 +344,24 @@ namespace components::document {
         auto type = value1 ? value1.physical_type() : value2.physical_type();
         switch (type) {
             case types::physical_type::BOOL:
-                return op<bool, std::divides<>>(value1, value2, tape, &value_t::as_bool);
+                return op<std::divides<>>(value1, value2, tape, &value_t::as_bool);
             case types::physical_type::UINT8:
             case types::physical_type::UINT16:
             case types::physical_type::UINT32:
             case types::physical_type::UINT64:
-                return op<uint64_t, std::divides<>>(value1, value2, tape, &value_t::as_unsigned);
+                return op<std::divides<>>(value1, value2, tape, &value_t::as_unsigned);
             case types::physical_type::INT8:
             case types::physical_type::INT16:
             case types::physical_type::INT32:
             case types::physical_type::INT64:
-                return op<int64_t, std::divides<>>(value1, value2, tape, &value_t::as_int);
+                return op<std::divides<>>(value1, value2, tape, &value_t::as_int);
             case types::physical_type::UINT128:
             case types::physical_type::INT128:
-                return op<int128_t, std::divides<>>(value1, value2, tape, &value_t::as_int128);
+                return op<std::divides<>>(value1, value2, tape, &value_t::as_int128);
             case types::physical_type::FLOAT:
-                return op<float, std::divides<>>(value1, value2, tape, &value_t::as_float);
+                return op<std::divides<>>(value1, value2, tape, &value_t::as_float);
             case types::physical_type::DOUBLE:
-                return op<double, std::divides<>>(value1, value2, tape, &value_t::as_double);
-            case types::physical_type::STRING:
+                return op<std::divides<>>(value1, value2, tape, &value_t::as_double);
             default: // special values and strings can't be divided
                 return value1;
         }
@@ -279,52 +375,326 @@ namespace components::document {
         auto type = value1 ? value1.physical_type() : value2.physical_type();
         switch (type) {
             case types::physical_type::BOOL:
-                return op<bool, std::modulus<>>(value1, value2, tape, &value_t::as_bool);
+                return op<std::modulus<>>(value1, value2, tape, &value_t::as_bool);
             case types::physical_type::UINT8:
             case types::physical_type::UINT16:
             case types::physical_type::UINT32:
             case types::physical_type::UINT64:
-                return op<uint64_t, std::modulus<>>(value1, value2, tape, &value_t::as_unsigned);
+                return op<std::modulus<>>(value1, value2, tape, &value_t::as_unsigned);
             case types::physical_type::INT8:
             case types::physical_type::INT16:
             case types::physical_type::INT32:
             case types::physical_type::INT64:
-                return op<int64_t, std::modulus<>>(value1, value2, tape, &value_t::as_int);
+                return op<std::modulus<>>(value1, value2, tape, &value_t::as_int);
             case types::physical_type::UINT128:
             case types::physical_type::INT128:
-                return op<int128_t, std::modulus<>>(value1, value2, tape, &value_t::as_int128);
-            case types::physical_type::STRING:
+                return op<std::modulus<>>(value1, value2, tape, &value_t::as_int128);
             default: // special values, strings, floats and double can't be modulated
                 return value1;
         }
     }
 
-    value_t negate(const value_t& value, impl::base_document* tape) {
-        if (!value) {
-            return value;
+    value_t exponent(const value_t& value1, const value_t& value2, impl::base_document* tape) {
+        if (!value1 && !value2) {
+            return value1;
         }
-        switch (value.physical_type()) {
+
+        auto type = value1 ? value1.physical_type() : value2.physical_type();
+        switch (type) {
             case types::physical_type::BOOL:
-                return value_t{tape, !value.as_bool()};
+                return op<pow<>>(value1, value2, tape, &value_t::as_bool);
             case types::physical_type::UINT8:
             case types::physical_type::UINT16:
             case types::physical_type::UINT32:
             case types::physical_type::UINT64:
-                return value_t{tape, int64_t{0} - static_cast<int64_t>(value.as_unsigned())};
+                return op<pow<>>(value1, value2, tape, &value_t::as_unsigned);
             case types::physical_type::INT8:
             case types::physical_type::INT16:
             case types::physical_type::INT32:
             case types::physical_type::INT64:
-                return value_t{tape, int64_t{0} - value.as_int()};
+                return op<pow<>>(value1, value2, tape, &value_t::as_int);
             case types::physical_type::UINT128:
             case types::physical_type::INT128:
-                return value_t{tape, int128_t{0} - value.as_int128()};
+                return op<pow<>>(value1, value2, tape, &value_t::as_int128);
             case types::physical_type::FLOAT:
-                return value_t{tape, float{0} - value.as_float()};
+                return op<pow<>>(value1, value2, tape, &value_t::as_float);
             case types::physical_type::DOUBLE:
-                return value_t{tape, double{0} - value.as_double()};
-            default: // special values and strings can't be negated
+                return op<pow<>>(value1, value2, tape, &value_t::as_double);
+            default: // special values and strings can't be multiplied
+                return value1;
+        }
+    }
+
+    value_t sqr_root(const value_t& value, impl::base_document* tape) {
+        if (!value) {
+            return value;
+        }
+
+        switch (value.physical_type()) {
+            case types::physical_type::BOOL:
+                return op<sqrt<>>(value, tape, &value_t::as_bool);
+            case types::physical_type::UINT8:
+            case types::physical_type::UINT16:
+            case types::physical_type::UINT32:
+            case types::physical_type::UINT64:
+                return op<sqrt<>>(value, tape, &value_t::as_unsigned);
+            case types::physical_type::INT8:
+            case types::physical_type::INT16:
+            case types::physical_type::INT32:
+            case types::physical_type::INT64:
+                return op<sqrt<>>(value, tape, &value_t::as_int);
+            case types::physical_type::FLOAT:
+                return op<sqrt<>>(value, tape, &value_t::as_float);
+            case types::physical_type::DOUBLE:
+                return op<sqrt<>>(value, tape, &value_t::as_double);
+            default: // special values and strings can't be multiplied; int128 is undefined
                 return value;
+        }
+    }
+
+    value_t cube_root(const value_t& value, impl::base_document* tape) {
+        if (!value) {
+            return value;
+        }
+
+        switch (value.physical_type()) {
+            case types::physical_type::BOOL:
+                return op<cbrt<>>(value, tape, &value_t::as_bool);
+            case types::physical_type::UINT8:
+            case types::physical_type::UINT16:
+            case types::physical_type::UINT32:
+            case types::physical_type::UINT64:
+                return op<cbrt<>>(value, tape, &value_t::as_unsigned);
+            case types::physical_type::INT8:
+            case types::physical_type::INT16:
+            case types::physical_type::INT32:
+            case types::physical_type::INT64:
+                return op<cbrt<>>(value, tape, &value_t::as_int);
+            case types::physical_type::FLOAT:
+                return op<cbrt<>>(value, tape, &value_t::as_float);
+            case types::physical_type::DOUBLE:
+                return op<cbrt<>>(value, tape, &value_t::as_double);
+            default: // special values and strings can't be multiplied; int128 is undefined
+                return value;
+        }
+    }
+
+    value_t factorial(const value_t& value, impl::base_document* tape) {
+        if (!value) {
+            return value;
+        }
+
+        switch (value.physical_type()) {
+            case types::physical_type::BOOL:
+                return op<fact<>>(value, tape, &value_t::as_bool);
+            case types::physical_type::UINT8:
+            case types::physical_type::UINT16:
+            case types::physical_type::UINT32:
+            case types::physical_type::UINT64:
+                return op<fact<>>(value, tape, &value_t::as_unsigned);
+            case types::physical_type::INT8:
+            case types::physical_type::INT16:
+            case types::physical_type::INT32:
+            case types::physical_type::INT64:
+                return op<fact<>>(value, tape, &value_t::as_int);
+            case types::physical_type::FLOAT:
+                return op<fact<>>(value, tape, &value_t::as_float);
+            case types::physical_type::DOUBLE:
+                return op<fact<>>(value, tape, &value_t::as_double);
+            default: // special values and strings can't be multiplied; int128 is undefined
+                return value;
+        }
+    }
+
+    value_t absolute(const value_t& value, impl::base_document* tape) {
+        if (!value) {
+            return value;
+        }
+
+        switch (value.physical_type()) {
+            case types::physical_type::BOOL:
+                return op<abs<>>(value, tape, &value_t::as_bool);
+            case types::physical_type::UINT8:
+            case types::physical_type::UINT16:
+            case types::physical_type::UINT32:
+            case types::physical_type::UINT64:
+                //special for int128
+                return value;
+            case types::physical_type::INT8:
+            case types::physical_type::INT16:
+            case types::physical_type::INT32:
+            case types::physical_type::INT64:
+                return op<abs<>>(value, tape, &value_t::as_int);
+            case types::physical_type::UINT128:
+            case types::physical_type::INT128:
+                return op<abs<>>(value, tape, &value_t::as_int128);
+            case types::physical_type::FLOAT:
+                return op<abs<>>(value, tape, &value_t::as_float);
+            case types::physical_type::DOUBLE:
+                return op<abs<>>(value, tape, &value_t::as_double);
+            default: // special values and strings can't be multiplied
+                return value;
+        }
+    }
+
+    value_t bit_and(const value_t& value1, const value_t& value2, impl::base_document* tape) {
+        if (!value1 && !value2) {
+            return value1;
+        }
+
+        auto type = value1 ? value1.physical_type() : value2.physical_type();
+        switch (type) {
+            case types::physical_type::BOOL:
+                return op<std::bit_and<>>(value1, value2, tape, &value_t::as_bool);
+            case types::physical_type::UINT8:
+            case types::physical_type::UINT16:
+            case types::physical_type::UINT32:
+            case types::physical_type::UINT64:
+                return op<std::bit_and<>>(value1, value2, tape, &value_t::as_unsigned);
+            case types::physical_type::INT8:
+            case types::physical_type::INT16:
+            case types::physical_type::INT32:
+            case types::physical_type::INT64:
+                return op<std::bit_and<>>(value1, value2, tape, &value_t::as_int);
+            case types::physical_type::UINT128:
+            case types::physical_type::INT128:
+                return op<std::bit_and<>>(value1, value2, tape, &value_t::as_int128);
+            default: // special values, floats and strings can't bitwised
+                return value1;
+        }
+    }
+
+    value_t bit_or(const value_t& value1, const value_t& value2, impl::base_document* tape) {
+        if (!value1 && !value2) {
+            return value1;
+        }
+
+        auto type = value1 ? value1.physical_type() : value2.physical_type();
+        switch (type) {
+            case types::physical_type::BOOL:
+                return op<std::bit_or<>>(value1, value2, tape, &value_t::as_bool);
+            case types::physical_type::UINT8:
+            case types::physical_type::UINT16:
+            case types::physical_type::UINT32:
+            case types::physical_type::UINT64:
+                return op<std::bit_or<>>(value1, value2, tape, &value_t::as_unsigned);
+            case types::physical_type::INT8:
+            case types::physical_type::INT16:
+            case types::physical_type::INT32:
+            case types::physical_type::INT64:
+                return op<std::bit_or<>>(value1, value2, tape, &value_t::as_int);
+            case types::physical_type::UINT128:
+            case types::physical_type::INT128:
+                return op<std::bit_or<>>(value1, value2, tape, &value_t::as_int128);
+            default: // special values, floats and strings can't bitwised
+                return value1;
+        }
+    }
+
+    value_t bit_xor(const value_t& value1, const value_t& value2, impl::base_document* tape) {
+        if (!value1 && !value2) {
+            return value1;
+        }
+
+        auto type = value1 ? value1.physical_type() : value2.physical_type();
+        switch (type) {
+            case types::physical_type::BOOL:
+                return op<std::bit_xor<>>(value1, value2, tape, &value_t::as_bool);
+            case types::physical_type::UINT8:
+            case types::physical_type::UINT16:
+            case types::physical_type::UINT32:
+            case types::physical_type::UINT64:
+                return op<std::bit_xor<>>(value1, value2, tape, &value_t::as_unsigned);
+            case types::physical_type::INT8:
+            case types::physical_type::INT16:
+            case types::physical_type::INT32:
+            case types::physical_type::INT64:
+                return op<std::bit_xor<>>(value1, value2, tape, &value_t::as_int);
+            case types::physical_type::UINT128:
+            case types::physical_type::INT128:
+                return op<std::bit_xor<>>(value1, value2, tape, &value_t::as_int128);
+            default: // special values, floats and strings can't bitwised
+                return value1;
+        }
+    }
+
+    value_t bit_not(const value_t& value, impl::base_document* tape) {
+        if (!value) {
+            return value;
+        }
+
+        switch (value.physical_type()) {
+            case types::physical_type::BOOL:
+                return op<std::bit_not<>>(value, tape, &value_t::as_bool);
+            case types::physical_type::UINT8:
+            case types::physical_type::UINT16:
+            case types::physical_type::UINT32:
+            case types::physical_type::UINT64:
+                return op<std::bit_not<>>(value, tape, &value_t::as_unsigned);
+            case types::physical_type::INT8:
+            case types::physical_type::INT16:
+            case types::physical_type::INT32:
+            case types::physical_type::INT64:
+                return op<std::bit_not<>>(value, tape, &value_t::as_int);
+            case types::physical_type::UINT128:
+            case types::physical_type::INT128:
+                return op<std::bit_not<>>(value, tape, &value_t::as_int128);
+            default: // special values, floats and strings can't bitwised
+                return value;
+        }
+    }
+
+    value_t bit_shift_l(const value_t& value1, const value_t& value2, impl::base_document* tape) {
+        if (!value1 && !value2) {
+            return value1;
+        }
+
+        auto type = value1 ? value1.physical_type() : value2.physical_type();
+        switch (type) {
+            case types::physical_type::BOOL:
+                return op<shift_left<>>(value1, value2, tape, &value_t::as_bool);
+            case types::physical_type::UINT8:
+            case types::physical_type::UINT16:
+            case types::physical_type::UINT32:
+            case types::physical_type::UINT64:
+                return op<shift_left<>>(value1, value2, tape, &value_t::as_unsigned);
+            case types::physical_type::INT8:
+            case types::physical_type::INT16:
+            case types::physical_type::INT32:
+            case types::physical_type::INT64:
+                return op<shift_left<>>(value1, value2, tape, &value_t::as_int);
+            case types::physical_type::UINT128:
+            case types::physical_type::INT128:
+                return op<shift_left<>>(value1, value2, tape, &value_t::as_int128);
+            default: // special values and strings can't bitwised, float can't be shifted
+                return value1;
+        }
+    }
+
+    value_t bit_shift_r(const value_t& value1, const value_t& value2, impl::base_document* tape) {
+        if (!value1 && !value2) {
+            return value1;
+        }
+
+        auto type = value1 ? value1.physical_type() : value2.physical_type();
+        switch (type) {
+            case types::physical_type::BOOL:
+                return op<shift_right<>>(value1, value2, tape, &value_t::as_bool);
+            case types::physical_type::UINT8:
+            case types::physical_type::UINT16:
+            case types::physical_type::UINT32:
+            case types::physical_type::UINT64:
+                return op<shift_right<>>(value1, value2, tape, &value_t::as_unsigned);
+            case types::physical_type::INT8:
+            case types::physical_type::INT16:
+            case types::physical_type::INT32:
+            case types::physical_type::INT64:
+                return op<shift_right<>>(value1, value2, tape, &value_t::as_int);
+            case types::physical_type::UINT128:
+            case types::physical_type::INT128:
+                return op<shift_right<>>(value1, value2, tape, &value_t::as_int128);
+            default: // special values and strings can't bitwised, float can't be shifted
+                return value1;
         }
     }
 

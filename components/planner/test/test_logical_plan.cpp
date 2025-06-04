@@ -187,7 +187,7 @@ TEST_CASE("logical_plan::insert") {
         REQUIRE(node->to_string() == R"_($insert: {$raw_data: {$documents: 5}})_");
     }
     {
-        auto plan = make_node_insert(&resource, {database_name, collection_name}, gen_doc(1, &resource));
+        auto plan = make_node_insert(&resource, {database_name, collection_name}, {gen_doc(1, &resource)});
         components::planner::planner_t planner;
         auto node = planner.create_plan(&resource, plan);
         REQUIRE(node->to_string() == R"_($insert: {$raw_data: {$documents: 1}})_");

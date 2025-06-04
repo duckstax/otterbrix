@@ -11,12 +11,17 @@ namespace components::logical_plan {
     public:
         explicit node_insert_t(std::pmr::memory_resource* resource, const collection_full_name_t& collection);
 
+        std::pmr::vector<std::pair<expressions::key_t, expressions::key_t>>& key_translation();
+        const std::pmr::vector<std::pair<expressions::key_t, expressions::key_t>>& key_translation() const;
+
         static node_ptr deserialize(serializer::base_deserializer_t* deserializer);
 
     private:
         hash_t hash_impl() const final;
         std::string to_string_impl() const final;
         void serialize_impl(serializer::base_serializer_t* serializer) const final;
+
+        std::pmr::vector<std::pair<expressions::key_t, expressions::key_t>> key_translation_;
     };
 
     using node_insert_ptr = boost::intrusive_ptr<node_insert_t>;
@@ -31,8 +36,10 @@ namespace components::logical_plan {
                                      const collection_full_name_t& collection,
                                      std::pmr::vector<components::document::document_ptr>&& documents);
 
-    node_insert_ptr make_node_insert(std::pmr::memory_resource* resource,
-                                     const collection_full_name_t& collection,
-                                     components::document::document_ptr document);
+    node_insert_ptr
+    make_node_insert(std::pmr::memory_resource* resource,
+                     const collection_full_name_t& collection,
+                     std::pmr::vector<components::document::document_ptr>&& documents,
+                     std::pmr::vector<std::pair<expressions::key_t, expressions::key_t>>&& key_translation);
 
 } // namespace components::logical_plan

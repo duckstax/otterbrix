@@ -18,6 +18,7 @@ namespace components::logical_plan {
 
 namespace components::expressions {
 
+    // TODO: add math operations: exponentiation, square root, cube root, factorial, absolute value, bitwise operations
     enum class update_expr_type : uint8_t
     {
         set,
@@ -28,7 +29,18 @@ namespace components::expressions {
         mult,
         div,
         mod,
-        neg
+        exp,
+        sqr_root,
+        cube_root,
+        factorial,
+        abs,
+        // bitwise:
+        AND,
+        OR,
+        XOR,
+        NOT,
+        shift_left,
+        shift_right
     };
 
     class update_expr_t;

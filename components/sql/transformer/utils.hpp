@@ -21,8 +21,13 @@ namespace components::sql::transform {
 
     bool string_to_double(const char* buf, size_t len, double& result /*, char decimal_separator*/);
 
+    inline std::string construct(const char* ptr) { return ptr ? ptr : std::string(); }
+
     static collection_full_name_t rangevar_to_collection(RangeVar* table) {
-        return {table->schemaname ? table->schemaname : database_name_t(), table->relname};
+        return {construct(table->uid),
+                construct(table->catalogname),
+                construct(table->schemaname),
+                construct(table->relname)};
     }
 
     static logical_plan::join_type jointype_to_ql(JoinExpr* join) {

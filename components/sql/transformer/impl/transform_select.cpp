@@ -3,7 +3,6 @@
 #include <components/expressions/expression.hpp>
 #include <components/expressions/sort_expression.hpp>
 #include <components/logical_plan/node_aggregate.hpp>
-#include <components/logical_plan/node_function.hpp>
 #include <components/logical_plan/node_group.hpp>
 #include <components/logical_plan/node_join.hpp>
 #include <components/logical_plan/node_match.hpp>
@@ -98,9 +97,6 @@ namespace components::sql::transform {
                 agg = logical_plan::make_node_aggregate(resource, {});
                 join_dfs(resource, pg_ptr_cast<JoinExpr>(from_first), join, params);
                 agg->append_child(join);
-            } else if (nodeTag(from_first) == T_RangeFunction) {
-                agg = logical_plan::make_node_aggregate(resource, {});
-                agg->append_child(impl::transform_function(*pg_ptr_cast<RangeFunction>(from_first), params));
             }
         } else {
             throw parser_exception_t{"otterbrix currently does not support SELECT without FROM", ""};

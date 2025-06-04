@@ -38,6 +38,7 @@ A_Expr* makeSimpleA_Expr(A_Expr_Kind kind, char* name, Node* lexpr, Node* rexpr,
 RangeVar* makeRangeVar(char* schemaname, char* relname, int location) {
     RangeVar* r = makeNode(RangeVar);
 
+    r->uid = NULL;
     r->catalogname = NULL;
     r->schemaname = schemaname;
     r->relname = relname;

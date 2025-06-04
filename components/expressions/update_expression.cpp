@@ -50,7 +50,17 @@ namespace components::expressions {
             case update_expr_type::mult:
             case update_expr_type::div:
             case update_expr_type::mod:
-            case update_expr_type::neg:
+            case update_expr_type::exp:
+            case update_expr_type::sqr_root:
+            case update_expr_type::cube_root:
+            case update_expr_type::factorial:
+            case update_expr_type::abs:
+            case update_expr_type::AND:
+            case update_expr_type::OR:
+            case update_expr_type::XOR:
+            case update_expr_type::NOT:
+            case update_expr_type::shift_left:
+            case update_expr_type::shift_right:
                 return update_expr_calculate_t::deserialize(deserializer);
             default:
                 assert(false && "incorrect update_expr_type");
@@ -86,7 +96,17 @@ namespace components::expressions {
             case update_expr_type::mult:
             case update_expr_type::div:
             case update_expr_type::mod:
-            case update_expr_type::neg:
+            case update_expr_type::exp:
+            case update_expr_type::sqr_root:
+            case update_expr_type::cube_root:
+            case update_expr_type::factorial:
+            case update_expr_type::abs:
+            case update_expr_type::AND:
+            case update_expr_type::OR:
+            case update_expr_type::XOR:
+            case update_expr_type::NOT:
+            case update_expr_type::shift_left:
+            case update_expr_type::shift_right:
                 return *reinterpret_cast<const update_expr_calculate_ptr&>(lhs) ==
                        *reinterpret_cast<const update_expr_calculate_ptr&>(rhs);
             default:
@@ -250,8 +270,38 @@ namespace components::expressions {
             case update_expr_type::mod:
                 output_ = modulus(left_->output(), right_->output(), tape);
                 break;
-            case update_expr_type::neg:
-                output_ = negate(left_->output(), tape);
+            case update_expr_type::exp:
+                output_ = exponent(left_->output(), right_->output(), tape);
+                break;
+            case update_expr_type::sqr_root:
+                output_ = sqr_root(left_->output(), tape);
+                break;
+            case update_expr_type::cube_root:
+                output_ = cube_root(left_->output(), tape);
+                break;
+            case update_expr_type::factorial:
+                output_ = factorial(left_->output(), tape);
+                break;
+            case update_expr_type::abs:
+                output_ = absolute(left_->output(), tape);
+                break;
+            case update_expr_type::AND:
+                output_ = bit_and(left_->output(), right_->output(), tape);
+                break;
+            case update_expr_type::OR:
+                output_ = bit_or(left_->output(), right_->output(), tape);
+                break;
+            case update_expr_type::XOR:
+                output_ = bit_xor(left_->output(), right_->output(), tape);
+                break;
+            case update_expr_type::NOT:
+                output_ = bit_not(left_->output(), tape);
+                break;
+            case update_expr_type::shift_left:
+                output_ = bit_shift_l(left_->output(), right_->output(), tape);
+                break;
+            case update_expr_type::shift_right:
+                output_ = bit_shift_r(left_->output(), right_->output(), tape);
                 break;
             default:
                 break;
