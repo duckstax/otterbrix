@@ -62,9 +62,9 @@ namespace otterbrix {
     auto wrapper_dispatcher_t::load() -> void {
         session_id_t session;
         trace(log_, "wrapper_dispatcher_t::load session: {}", session.data());
-        init(session);
-        actor_zeta::send(manager_dispatcher_, address(), core::handler_id(core::route::load), session);
-        wait(session);
+        session_id_t approved_session = init(session);
+        actor_zeta::send(manager_dispatcher_, address(), core::handler_id(core::route::load), approved_session);
+        wait(approved_session);
     }
 
     auto wrapper_dispatcher_t::create_database(const session_id_t& session, const database_name_t& database)
@@ -98,16 +98,15 @@ namespace otterbrix {
                                           const collection_name_t& collection,
                                           document_ptr document) -> cursor_t_ptr {
         trace(log_, "wrapper_dispatcher_t::insert_one session: {}, collection name: {} ", session.data(), collection);
-        init(session);
+        session_id_t approved_session = init(session);
         auto plan = components::logical_plan::make_node_insert(resource(), {database, collection}, document);
         actor_zeta::send(manager_dispatcher_,
                          address(),
                          dispatcher::handler_id(dispatcher::route::execute_plan),
-                         session,
+                         approved_session,
                          plan,
                          components::logical_plan::make_parameter_node(resource()));
-        wait(session);
-        return std::move(cursor_store_);
+        return wait_result(approved_session);
     }
 
     auto wrapper_dispatcher_t::insert_many(const session_id_t& session,
@@ -115,16 +114,15 @@ namespace otterbrix {
                                            const collection_name_t& collection,
                                            const std::pmr::vector<document_ptr>& documents) -> cursor_t_ptr {
         trace(log_, "wrapper_dispatcher_t::insert_many session: {}, collection name: {} ", session.data(), collection);
-        init(session);
+        session_id_t approved_session = init(session);
         auto plan = components::logical_plan::make_node_insert(resource(), {database, collection}, documents);
         actor_zeta::send(manager_dispatcher_,
                          address(),
                          dispatcher::handler_id(dispatcher::route::execute_plan),
-                         session,
+                         approved_session,
                          plan,
                          components::logical_plan::make_parameter_node(resource()));
-        wait(session);
-        return std::move(cursor_store_);
+        return wait_result(approved_session);
     }
 
     auto wrapper_dispatcher_t::find(const session_id_t& session,
@@ -157,17 +155,16 @@ namespace otterbrix {
               session.data(),
               condition->collection_full_name().database,
               condition->collection_full_name().collection);
-        init(session);
+        session_id_t approved_session = init(session);
         auto plan =
             components::logical_plan::make_node_delete_one(resource(), condition->collection_full_name(), condition);
         actor_zeta::send(manager_dispatcher_,
                          address(),
                          dispatcher::handler_id(dispatcher::route::execute_plan),
-                         session,
+                         approved_session,
                          plan,
                          std::move(params));
-        wait(session);
-        return std::move(cursor_store_);
+        return wait_result(approved_session);
     }
 
     auto wrapper_dispatcher_t::delete_many(const components::session::session_id_t& session,
@@ -178,17 +175,16 @@ namespace otterbrix {
               session.data(),
               condition->collection_full_name().database,
               condition->collection_full_name().collection);
-        init(session);
+        session_id_t approved_session = init(session);
         auto plan =
             components::logical_plan::make_node_delete_many(resource(), condition->collection_full_name(), condition);
         actor_zeta::send(manager_dispatcher_,
                          address(),
                          dispatcher::handler_id(dispatcher::route::execute_plan),
-                         session,
+                         approved_session,
                          plan,
                          std::move(params));
-        wait(session);
-        return std::move(cursor_store_);
+        return wait_result(approved_session);
     }
 
     auto wrapper_dispatcher_t::update_one(const components::session::session_id_t& session,
@@ -201,7 +197,7 @@ namespace otterbrix {
               session.data(),
               condition->collection_full_name().database,
               condition->collection_full_name().collection);
-        init(session);
+        session_id_t approved_session = init(session);
         auto plan = components::logical_plan::make_node_update_one(resource(),
                                                                    condition->collection_full_name(),
                                                                    condition,
@@ -210,11 +206,10 @@ namespace otterbrix {
         actor_zeta::send(manager_dispatcher_,
                          address(),
                          dispatcher::handler_id(dispatcher::route::execute_plan),
-                         session,
+                         approved_session,
                          plan,
                          std::move(params));
-        wait(session);
-        return std::move(cursor_store_);
+        return wait_result(approved_session);
     }
 
     auto wrapper_dispatcher_t::update_many(const components::session::session_id_t& session,
@@ -227,7 +222,7 @@ namespace otterbrix {
               session.data(),
               condition->collection_full_name().database,
               condition->collection_full_name().collection);
-        init(session);
+        session_id_t approved_session = init(session);
         auto plan = components::logical_plan::make_node_update_many(resource(),
                                                                     condition->collection_full_name(),
                                                                     condition,
@@ -236,26 +231,24 @@ namespace otterbrix {
         actor_zeta::send(manager_dispatcher_,
                          address(),
                          dispatcher::handler_id(dispatcher::route::execute_plan),
-                         session,
+                         approved_session,
                          plan,
                          std::move(params));
-        wait(session);
-        return std::move(cursor_store_);
+        return wait_result(approved_session);
     }
 
     auto wrapper_dispatcher_t::size(const session_id_t& session,
                                     const database_name_t& database,
                                     const collection_name_t& collection) -> size_t {
         trace(log_, "wrapper_dispatcher_t::size session: {}, collection name : {} ", session.data(), collection);
-        init(session);
+        session_id_t approved_session = init(session);
         actor_zeta::send(manager_dispatcher_,
                          address(),
                          collection::handler_id(collection::route::size),
-                         session,
+                         approved_session,
                          database,
                          collection);
-        wait(session);
-        return std::move(size_store_);
+        return wait_size(approved_session);
     }
 
     auto wrapper_dispatcher_t::create_index(const session_id_t& session,
@@ -312,17 +305,46 @@ namespace otterbrix {
 
     void wrapper_dispatcher_t::execute_plan_finish(const session_id_t& session, cursor_t_ptr cursor) {
         trace(log_, "wrapper_dispatcher_t::execute_plan_finish session: {} {}", session.data(), cursor->is_success());
+        std::unique_lock<std::mutex> lk(output_mtx_);
         cursor_store_ = std::move(cursor);
         notify(session);
     }
 
     auto wrapper_dispatcher_t::size_finish(const session_id_t& session, size_t size) -> void {
         trace(log_, "wrapper_dispatcher_t::size_finish session: {} {}", session.data(), size);
+        std::unique_lock<std::mutex> lk(output_mtx_);
         size_store_ = size;
         notify(session);
     }
 
-    void wrapper_dispatcher_t::init(const session_id_t& session) { blocker_.set_value(session, false); }
+    session_id_t wrapper_dispatcher_t::init(const session_id_t& session) {
+        session_id_t res_session = session;
+        while (!blocker_.set_value(res_session, false)) {
+            res_session = session_id_t();
+            trace(log_, "wrapper_dispatcher_t::init session hash collision! New session is: {}", res_session.data());
+        }
+        return res_session;
+    }
+
+    components::cursor::cursor_t_ptr wrapper_dispatcher_t::wait_result(const session_id_t& session) {
+        std::unique_lock<std::mutex> lk(output_mtx_);
+        cv_.wait(lk, [this, &session]() { return blocker_.value(session); });
+        blocker_.remove_session(session);
+
+        if (cursor_store_->is_error()) {
+            //todo: handling error
+            std::cerr << cursor_store_->get_error().what << std::endl;
+        }
+
+        return std::move(cursor_store_);
+    }
+
+    size_t wrapper_dispatcher_t::wait_size(const session_id_t& session) {
+        std::unique_lock<std::mutex> lk(output_mtx_);
+        cv_.wait(lk, [this, &session]() { return blocker_.value(session); });
+        blocker_.remove_session(session);
+        return std::move(size_store_);
+    }
 
     void wrapper_dispatcher_t::wait(const session_id_t& session) {
         std::unique_lock<std::mutex> lk(output_mtx_);
@@ -332,28 +354,23 @@ namespace otterbrix {
 
     void wrapper_dispatcher_t::notify(const session_id_t& session) {
         blocker_.set_value(session, true);
-        cv_.notify_one();
+        // multiple threads can be waiting
+        cv_.notify_all();
     }
 
     cursor_t_ptr wrapper_dispatcher_t::send_plan(const session_id_t& session,
                                                  components::logical_plan::node_ptr node,
                                                  components::logical_plan::parameter_node_ptr params) {
         trace(log_, "wrapper_dispatcher_t::send_plan session: {}, {} ", session.data(), node->to_string());
-        init(session);
+        session_id_t approved_session = init(session);
         assert(params);
         actor_zeta::send(manager_dispatcher_,
                          address(),
                          dispatcher::handler_id(dispatcher::route::execute_plan),
-                         session,
+                         approved_session,
                          std::move(node),
                          std::move(params));
-        wait(session);
-        if (cursor_store_->is_error()) {
-            //todo: handling error
-            std::cerr << cursor_store_->get_error().what << std::endl;
-        }
-
-        return std::move(cursor_store_);
+        return wait_result(approved_session);
     }
 
 } // namespace otterbrix

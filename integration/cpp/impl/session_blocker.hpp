@@ -2,7 +2,6 @@
 
 #include <components/session/session.hpp>
 #include <memory_resource>
-#include <mutex>
 #include <shared_mutex>
 #include <unordered_map>
 
@@ -14,12 +13,12 @@ namespace otterbrix::impl {
         bool empty() noexcept;
         size_t size() noexcept;
         void clear() noexcept;
-        void set_value(const components::session::session_id_t& session, bool value);
+        // return false if there is a hash conflict
+        bool set_value(const components::session::session_id_t& session, bool value);
         void remove_session(const components::session::session_id_t& session);
         bool value(const components::session::session_id_t& session);
 
     private:
-        std::mutex write_mutex_;
-        std::shared_mutex read_mutex_;
+        std::shared_mutex mutex_;
     };
 } // namespace otterbrix::impl
