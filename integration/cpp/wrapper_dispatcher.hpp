@@ -108,7 +108,10 @@ namespace otterbrix {
         auto execute_plan_finish(const session_id_t& session, components::cursor::cursor_t_ptr cursor) -> void;
         auto size_finish(const session_id_t& session, size_t size) -> void;
 
-        void init(const session_id_t& session);
+        // due to hashing, incoming session can be unusable, and has to be replaced
+        session_id_t init(const session_id_t& session);
+        components::cursor::cursor_t_ptr wait_result(const session_id_t& session);
+        size_t wait_size(const session_id_t& session);
         void wait(const session_id_t& session);
         void notify(const session_id_t& session);
 
