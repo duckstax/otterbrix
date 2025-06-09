@@ -78,8 +78,8 @@ TEST_CASE("document_t::tiny int") {
     auto allocator = std::pmr::synchronized_pool_resource();
     auto doc = make_document(&allocator);
 
-    std::string_view key("/countUnsignedInt");
-    uint16_t value = 3;
+    std::string_view key("/countInt");
+    int8_t value = std::numeric_limits<int8_t>::max();
     doc->set(key, value);
 
     REQUIRE(doc->is_exists(key));
@@ -96,24 +96,60 @@ TEST_CASE("document_t::tiny int") {
     REQUIRE(is_equals(doc->get_double(key), double(value)));
 }
 
+TEST_CASE("document_t::tiny negative int") {
+    auto allocator = std::pmr::synchronized_pool_resource();
+    auto doc = make_document(&allocator);
+
+    std::string_view key("/countInt");
+    int8_t value = std::numeric_limits<int8_t>::min();
+    doc->set(key, value);
+
+    REQUIRE(doc->is_exists(key));
+    REQUIRE(doc->is_tinyint(key));
+    REQUIRE(doc->get_tinyint(key));
+    REQUIRE(doc->get_smallint(key) == value);
+    REQUIRE(doc->get_int(key) == value);
+    REQUIRE(doc->get_long(key) == value);
+    REQUIRE(doc->get_hugeint(key) == value);
+    REQUIRE(is_equals(doc->get_float(key), float(value)));
+    REQUIRE(is_equals(doc->get_double(key), double(value)));
+}
+
 TEST_CASE("document_t::small int") {
     auto allocator = std::pmr::synchronized_pool_resource();
     auto doc = make_document(&allocator);
 
-    std::string_view key("/countUnsignedInt");
-    uint16_t value = 3;
+    std::string_view key("/countInt");
+    int16_t value = std::numeric_limits<int16_t>::max();
     doc->set(key, value);
 
     REQUIRE(doc->is_exists(key));
     REQUIRE(doc->is_smallint(key));
     REQUIRE(doc->get_smallint(key) == value);
-    REQUIRE(doc->get_tinyint(key));
     REQUIRE(doc->get_int(key) == value);
     REQUIRE(doc->get_long(key) == value);
     REQUIRE(doc->get_hugeint(key) == value);
     REQUIRE(doc->get_usmallint(key) == value);
     REQUIRE(doc->get_uint(key) == value);
     REQUIRE(doc->get_ulong(key) == value);
+    REQUIRE(is_equals(doc->get_float(key), float(value)));
+    REQUIRE(is_equals(doc->get_double(key), double(value)));
+}
+
+TEST_CASE("document_t::small negative int") {
+    auto allocator = std::pmr::synchronized_pool_resource();
+    auto doc = make_document(&allocator);
+
+    std::string_view key("/countInt");
+    int16_t value = std::numeric_limits<int16_t>::min();
+    doc->set(key, value);
+
+    REQUIRE(doc->is_exists(key));
+    REQUIRE(doc->is_smallint(key));
+    REQUIRE(doc->get_smallint(key) == value);
+    REQUIRE(doc->get_int(key) == value);
+    REQUIRE(doc->get_long(key) == value);
+    REQUIRE(doc->get_hugeint(key) == value);
     REQUIRE(is_equals(doc->get_float(key), float(value)));
     REQUIRE(is_equals(doc->get_double(key), double(value)));
 }
@@ -123,20 +159,68 @@ TEST_CASE("document_t::int") {
     auto doc = make_document(&allocator);
 
     std::string_view key("/countInt");
-    int32_t value = 3;
+    int32_t value = std::numeric_limits<int32_t>::max();
     doc->set(key, value);
 
     REQUIRE(doc->is_exists(key));
     REQUIRE(doc->is_int(key));
     REQUIRE(doc->get_int(key) == value);
-    REQUIRE(doc->get_tinyint(key));
-    REQUIRE(doc->get_smallint(key) == value);
     REQUIRE(doc->get_long(key) == value);
     REQUIRE(doc->get_hugeint(key) == value);
-    REQUIRE(doc->get_utinyint(key) == value);
-    REQUIRE(doc->get_usmallint(key) == value);
     REQUIRE(doc->get_uint(key) == value);
     REQUIRE(doc->get_ulong(key) == value);
+    REQUIRE(is_equals(doc->get_float(key), float(value)));
+    REQUIRE(is_equals(doc->get_double(key), double(value)));
+}
+
+TEST_CASE("document_t::negative int") {
+    auto allocator = std::pmr::synchronized_pool_resource();
+    auto doc = make_document(&allocator);
+
+    std::string_view key("/countInt");
+    int32_t value = std::numeric_limits<int32_t>::min();
+    doc->set(key, value);
+
+    REQUIRE(doc->is_exists(key));
+    REQUIRE(doc->is_int(key));
+    REQUIRE(doc->get_int(key) == value);
+    REQUIRE(doc->get_long(key) == value);
+    REQUIRE(doc->get_hugeint(key) == value);
+    REQUIRE(is_equals(doc->get_float(key), float(value)));
+    REQUIRE(is_equals(doc->get_double(key), double(value)));
+}
+
+TEST_CASE("document_t::big int") {
+    auto allocator = std::pmr::synchronized_pool_resource();
+    auto doc = make_document(&allocator);
+
+    std::string_view key("/countInt");
+    constexpr int64_t value = std::numeric_limits<int64_t>::max();
+    constexpr auto v1 = std::numeric_limits<int128_t>::max();
+    constexpr auto v2 = std::numeric_limits<int128_t>::min();
+    doc->set(key, value);
+
+    REQUIRE(doc->is_exists(key));
+    REQUIRE(doc->is_long(key));
+    REQUIRE(doc->get_long(key) == value);
+    REQUIRE(doc->get_hugeint(key) == value);
+    REQUIRE(doc->get_ulong(key) == value);
+    REQUIRE(is_equals(doc->get_float(key), float(value)));
+    REQUIRE(is_equals(doc->get_double(key), double(value)));
+}
+
+TEST_CASE("document_t::negative big int") {
+    auto allocator = std::pmr::synchronized_pool_resource();
+    auto doc = make_document(&allocator);
+
+    std::string_view key("/countInt");
+    int64_t value = std::numeric_limits<int64_t>::min();
+    doc->set(key, value);
+
+    REQUIRE(doc->is_exists(key));
+    REQUIRE(doc->is_long(key));
+    REQUIRE(doc->get_long(key) == value);
+    REQUIRE(doc->get_hugeint(key) == value);
     REQUIRE(is_equals(doc->get_float(key), float(value)));
     REQUIRE(is_equals(doc->get_double(key), double(value)));
 }
@@ -146,7 +230,7 @@ TEST_CASE("document_t::unsigned tiny int") {
     auto doc = make_document(&allocator);
 
     std::string_view key("/countUnsignedInt");
-    uint16_t value = 3;
+    int8_t value = std::numeric_limits<int8_t>::max();
     doc->set(key, value);
 
     REQUIRE(doc->is_exists(key));
@@ -169,18 +253,16 @@ TEST_CASE("document_t::unsigned small int") {
     auto doc = make_document(&allocator);
 
     std::string_view key("/countUnsignedInt");
-    uint16_t value = 3;
+    int16_t value = std::numeric_limits<int16_t>::max();
     doc->set(key, value);
 
     REQUIRE(doc->is_exists(key));
     REQUIRE(doc->is_usmallint(key));
     REQUIRE(doc->get_usmallint(key) == value);
-    REQUIRE(doc->get_tinyint(key));
     REQUIRE(doc->get_smallint(key) == value);
     REQUIRE(doc->get_int(key) == value);
     REQUIRE(doc->get_long(key) == value);
     REQUIRE(doc->get_hugeint(key) == value);
-    REQUIRE(doc->get_utinyint(key) == value);
     REQUIRE(doc->get_uint(key) == value);
     REQUIRE(doc->get_ulong(key) == value);
     REQUIRE(is_equals(doc->get_float(key), float(value)));
@@ -192,19 +274,16 @@ TEST_CASE("document_t::unsigned int") {
     auto doc = make_document(&allocator);
 
     std::string_view key("/countUnsignedInt");
-    uint32_t value = 3;
+    int32_t value = std::numeric_limits<int32_t>::max();
     doc->set(key, value);
 
     REQUIRE(doc->is_exists(key));
     REQUIRE(doc->is_uint(key));
     REQUIRE(doc->get_uint(key) == value);
-    REQUIRE(doc->get_tinyint(key));
-    REQUIRE(doc->get_smallint(key) == value);
     REQUIRE(doc->get_int(key) == value);
     REQUIRE(doc->get_long(key) == value);
     REQUIRE(doc->get_hugeint(key) == value);
-    REQUIRE(doc->get_utinyint(key) == value);
-    REQUIRE(doc->get_usmallint(key) == value);
+    REQUIRE(doc->get_uint(key) == value);
     REQUIRE(doc->get_ulong(key) == value);
     REQUIRE(is_equals(doc->get_float(key), float(value)));
     REQUIRE(is_equals(doc->get_double(key), double(value)));
@@ -233,12 +312,26 @@ TEST_CASE("document_t::hugeint") {
     REQUIRE(is_equals(doc->get_double(key), double(value)));
 }
 
-TEST_CASE("document_t::float") {
+TEST_CASE("document_t::float min") {
     auto allocator = std::pmr::synchronized_pool_resource();
     auto doc = make_document(&allocator);
 
     std::string_view key("/valueFloat");
-    float value = 2.3f;
+    float value = std::numeric_limits<float>::min();
+    doc->set(key, value);
+
+    REQUIRE(doc->is_exists(key));
+    REQUIRE(doc->is_float(key));
+    REQUIRE(is_equals(doc->get_float(key), value));
+    REQUIRE(is_equals(doc->get_double(key), double(value)));
+}
+
+TEST_CASE("document_t::float max") {
+    auto allocator = std::pmr::synchronized_pool_resource();
+    auto doc = make_document(&allocator);
+
+    std::string_view key("/valueFloat");
+    float value = std::numeric_limits<float>::max();
     doc->set(key, value);
 
     REQUIRE(doc->is_exists(key));
