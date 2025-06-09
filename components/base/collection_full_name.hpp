@@ -10,7 +10,7 @@ using schema_name_t = std::string;
 using collection_name_t = std::string;
 
 struct collection_full_name_t {
-    uid_name_t uid;
+    uid_name_t unique_identifier;
     database_name_t database;
     schema_name_t schema;
     collection_name_t collection;
@@ -27,11 +27,11 @@ struct collection_full_name_t {
         , schema(schema)
         , collection(collection) {}
 
-    collection_full_name_t(const uid_name_t& uid,
+    collection_full_name_t(const uid_name_t& unique_identifier,
                            const database_name_t& database,
                            const schema_name_t& schema,
                            const collection_name_t& collection)
-        : uid(uid)
+        : unique_identifier(unique_identifier)
         , database(database)
         , schema(schema)
         , collection(collection) {}
@@ -46,21 +46,25 @@ struct collection_full_name_t {
         return s.str();
     }
 
-    bool empty() const noexcept { return uid.empty() && database.empty() && schema.empty() && collection.empty(); }
+    bool empty() const noexcept {
+        return unique_identifier.empty() && database.empty() && schema.empty() && collection.empty();
+    }
 };
 
 inline bool operator==(const collection_full_name_t& c1, const collection_full_name_t& c2) {
-    return c1.uid == c2.uid && c1.database == c2.database && c1.schema == c2.schema && c1.collection == c2.collection;
+    return c1.unique_identifier == c2.unique_identifier && c1.database == c2.database && c1.schema == c2.schema &&
+           c1.collection == c2.collection;
 }
 
 inline bool operator<(const collection_full_name_t& c1, const collection_full_name_t& c2) {
-    return c1.uid < c2.uid || c1.database < c2.database || (c1.database == c2.database && c1.schema < c2.schema) ||
+    return c1.unique_identifier < c2.unique_identifier || c1.database < c2.database ||
+           (c1.database == c2.database && c1.schema < c2.schema) ||
            (c1.database == c2.database && c1.schema == c2.schema && c1.collection < c2.collection);
 }
 
 struct collection_name_hash {
     inline std::size_t operator()(const collection_full_name_t& key) const {
-        return std::hash<std::string>()(key.uid) ^ std::hash<std::string>()(key.database) ^
+        return std::hash<std::string>()(key.unique_identifier) ^ std::hash<std::string>()(key.database) ^
                std::hash<std::string>()(key.schema) ^ std::hash<std::string>()(key.collection);
     }
 };
