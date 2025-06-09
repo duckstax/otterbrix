@@ -171,13 +171,16 @@ TEST_CASE("operator::update") {
         components::logical_plan::storage_parameters parameters(&resource);
         add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         add_parameter(parameters, core::parameter_id_t(2), new_value(999));
+        add_parameter(parameters, core::parameter_id_t(3), new_value(9999));
         components::pipeline::context_t pipeline_context(std::move(parameters));
 
         auto cond = make_compare_expression(&resource, compare_type::gt, key("count"), core::parameter_id_t(1));
         auto cond_check = make_compare_expression(&resource, compare_type::eq, key("count"), core::parameter_id_t(2));
 
-        update_expr_ptr script_update = new update_expr_set_t(components::expressions::key_t{"count"});
-        script_update->left() = new update_expr_get_const_value_t(core::parameter_id_t(2));
+        update_expr_ptr script_update_1 = new update_expr_set_t(components::expressions::key_t{"count"});
+        script_update_1->left() = new update_expr_get_const_value_t(core::parameter_id_t(2));
+        update_expr_ptr script_update_2 = new update_expr_set_t(components::expressions::key_t{"countArray/0"});
+        script_update_2->left() = new update_expr_get_const_value_t(core::parameter_id_t(3));
         {
             full_scan scan(d(collection),
                            predicates::create_predicate(d(collection), cond_check),
@@ -186,7 +189,7 @@ TEST_CASE("operator::update") {
             REQUIRE(scan.output()->size() == 0);
         }
 
-        operator_update update_(d(collection), {script_update}, false);
+        operator_update update_(d(collection), {script_update_1, script_update_2}, false);
         update_.set_children(boost::intrusive_ptr(new full_scan(d(collection),
                                                                 predicates::create_predicate(d(collection), cond),
                                                                 components::logical_plan::limit_t::unlimit())));
@@ -197,6 +200,8 @@ TEST_CASE("operator::update") {
                            components::logical_plan::limit_t::unlimit());
             scan.on_execute(&pipeline_context);
             REQUIRE(scan.output()->size() == 10);
+            REQUIRE(scan.output()->documents().front()->get_value("countArray/0") ==
+                    pipeline_context.parameters.parameters.at(core::parameter_id_t(3)));
         }
     }
 
@@ -204,12 +209,15 @@ TEST_CASE("operator::update") {
         components::logical_plan::storage_parameters parameters(&resource);
         add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         add_parameter(parameters, core::parameter_id_t(2), new_value(999));
+        add_parameter(parameters, core::parameter_id_t(3), new_value(9999));
         components::pipeline::context_t pipeline_context(std::move(parameters));
 
         auto cond = make_compare_expression(&resource, compare_type::gt, key("count"), core::parameter_id_t(1));
         auto cond_check = make_compare_expression(&resource, compare_type::eq, key("count"), core::parameter_id_t(2));
-        update_expr_ptr script_update = new update_expr_set_t(components::expressions::key_t{"count"});
-        script_update->left() = new update_expr_get_const_value_t(core::parameter_id_t(2));
+        update_expr_ptr script_update_1 = new update_expr_set_t(components::expressions::key_t{"count"});
+        script_update_1->left() = new update_expr_get_const_value_t(core::parameter_id_t(2));
+        update_expr_ptr script_update_2 = new update_expr_set_t(components::expressions::key_t{"countArray/0"});
+        script_update_2->left() = new update_expr_get_const_value_t(core::parameter_id_t(3));
         {
             full_scan scan(d(collection),
                            predicates::create_predicate(d(collection), cond_check),
@@ -218,7 +226,7 @@ TEST_CASE("operator::update") {
             REQUIRE(scan.output()->size() == 0);
         }
 
-        operator_update update_(d(collection), {script_update}, false);
+        operator_update update_(d(collection), {script_update_1, script_update_2}, false);
         update_.set_children(boost::intrusive_ptr(new full_scan(d(collection),
                                                                 predicates::create_predicate(d(collection), cond),
                                                                 components::logical_plan::limit_t(1))));
@@ -229,6 +237,8 @@ TEST_CASE("operator::update") {
                            components::logical_plan::limit_t::unlimit());
             scan.on_execute(&pipeline_context);
             REQUIRE(scan.output()->size() == 1);
+            REQUIRE(scan.output()->documents().front()->get_value("countArray/0") ==
+                    pipeline_context.parameters.parameters.at(core::parameter_id_t(3)));
         }
     }
 
@@ -236,12 +246,15 @@ TEST_CASE("operator::update") {
         components::logical_plan::storage_parameters parameters(&resource);
         add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         add_parameter(parameters, core::parameter_id_t(2), new_value(999));
+        add_parameter(parameters, core::parameter_id_t(3), new_value(9999));
         components::pipeline::context_t pipeline_context(std::move(parameters));
 
         auto cond = make_compare_expression(&resource, compare_type::gt, key("count"), core::parameter_id_t(1));
         auto cond_check = make_compare_expression(&resource, compare_type::eq, key("count"), core::parameter_id_t(2));
-        update_expr_ptr script_update = new update_expr_set_t(components::expressions::key_t{"count"});
-        script_update->left() = new update_expr_get_const_value_t(core::parameter_id_t(2));
+        update_expr_ptr script_update_1 = new update_expr_set_t(components::expressions::key_t{"count"});
+        script_update_1->left() = new update_expr_get_const_value_t(core::parameter_id_t(2));
+        update_expr_ptr script_update_2 = new update_expr_set_t(components::expressions::key_t{"countArray/0"});
+        script_update_2->left() = new update_expr_get_const_value_t(core::parameter_id_t(3));
         {
             full_scan scan(d(collection),
                            predicates::create_predicate(d(collection), cond_check),
@@ -250,7 +263,7 @@ TEST_CASE("operator::update") {
             REQUIRE(scan.output()->size() == 0);
         }
 
-        operator_update update_(d(collection), {script_update}, false);
+        operator_update update_(d(collection), {script_update_1, script_update_2}, false);
         update_.set_children(boost::intrusive_ptr(new full_scan(d(collection),
                                                                 predicates::create_predicate(d(collection), cond),
                                                                 components::logical_plan::limit_t(5))));
@@ -261,6 +274,8 @@ TEST_CASE("operator::update") {
                            components::logical_plan::limit_t::unlimit());
             scan.on_execute(&pipeline_context);
             REQUIRE(scan.output()->size() == 5);
+            REQUIRE(scan.output()->documents().front()->get_value("countArray/0") ==
+                    pipeline_context.parameters.parameters.at(core::parameter_id_t(3)));
         }
     }
 }
