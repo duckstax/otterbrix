@@ -471,10 +471,10 @@ namespace components::document::impl {
                 return absl::int128(tape_.template next_tape_value<uint32_t>());
             }
             case types::physical_type::INT64: {
-                return cast_from<int64_t, absl::int128>(tape_);
+                return absl::int128(tape_.template next_tape_value<int64_t>());
             }
             case types::physical_type::UINT64: {
-                return cast_from<uint64_t, absl::int128>(tape_);
+                return absl::int128(tape_.template next_tape_value<uint64_t>());
             }
             case types::physical_type::INT128: {
                 return tape_.template next_tape_value<absl::int128>();
