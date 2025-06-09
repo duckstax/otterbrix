@@ -47,11 +47,17 @@ namespace components::document {
                 append(value, types::physical_type::BOOL);
             } else if constexpr (std::is_signed_v<T>) {
                 if constexpr (sizeof(T) == 1) {
-                    append(value, types::physical_type::INT8);
+                    uint64_t tape_data;
+                    std::memcpy(&tape_data, &value, sizeof(value));
+                    append(tape_data, types::physical_type::INT8);
                 } else if constexpr (sizeof(T) == 2) {
-                    append(value, types::physical_type::INT16);
+                    uint64_t tape_data;
+                    std::memcpy(&tape_data, &value, sizeof(value));
+                    append(tape_data, types::physical_type::INT16);
                 } else if constexpr (sizeof(T) == 4) {
-                    append(value, types::physical_type::INT32);
+                    uint64_t tape_data;
+                    std::memcpy(&tape_data, &value, sizeof(value));
+                    append(tape_data, types::physical_type::INT32);
                 } else if constexpr (sizeof(T) == 8) {
                     append2(0, value, types::physical_type::INT64);
                 }

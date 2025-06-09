@@ -884,7 +884,8 @@ namespace components::document {
                 return std::numeric_limits<T>::digits10 + 1;
             }
         } else {
-            return std::numeric_limits<T>::max_digits10 + 3;
+            // additional 3 for point and exponent symbols
+            return std::numeric_limits<T>::max_digits10 + 3 + 3;
         }
     }
 
