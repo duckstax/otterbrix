@@ -29,8 +29,7 @@ constexpr std::size_t count_documents = 5;
 void test_insert_one(wal_replicate_t* wal, std::pmr::memory_resource* resource) {
     for (int num = 1; num <= 5; ++num) {
         auto document = gen_doc(num, resource);
-        auto data =
-            components::logical_plan::make_node_insert(resource, {database_name, collection_name}, std::move(document));
+        auto data = make_node_insert(resource, {database_name, collection_name}, {std::move(document)});
         auto session = components::session::session_id_t();
         auto address = actor_zeta::base::address_t::address_t::empty_address();
         wal->insert_one(session, address, data);

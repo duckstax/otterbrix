@@ -7,12 +7,12 @@ using namespace components::expressions;
 
 namespace components::sql::transform {
     logical_plan::node_ptr transformer::transform_create_index(IndexStmt& node) {
-        if (!(node.relation->relname && node.relation->schemaname && node.idxname)) {
+        if (!(node.relation->relname && node.relation->catalogname && node.idxname)) {
             throw parser_exception_t{"incorrect create index arguments", ""};
         }
 
         auto create_index = logical_plan::make_node_create_index(resource,
-                                                                 {node.relation->schemaname, node.relation->relname},
+                                                                 {node.relation->catalogname, node.relation->relname},
                                                                  node.idxname);
         for (auto key : node.indexParams->lst) {
             create_index->keys().emplace_back(pg_ptr_cast<IndexElem>(key.data)->name);

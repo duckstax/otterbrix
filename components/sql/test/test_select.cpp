@@ -32,6 +32,8 @@ TEST_CASE("sql::select_from_where") {
 
     TEST_SIMPLE_UPDATE(R"_(SELECT * FROM TestDatabase.TestCollection;)_", R"_($aggregate: {})_", vec());
 
+    TEST_SIMPLE_UPDATE(R"_(SELECT * FROM UID.TestDatabase.TestSchema.TestCollection;)_", R"_($aggregate: {})_", vec());
+
     TEST_SIMPLE_UPDATE(R"_(SELECT * FROM TestDatabase.TestCollection WHERE number = 10;)_",
                        R"_($aggregate: {$match: {"number": {$eq: #0}}})_",
                        vec({new_value(10l)}));

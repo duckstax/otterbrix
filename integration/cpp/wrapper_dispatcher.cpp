@@ -99,7 +99,7 @@ namespace otterbrix {
                                           document_ptr document) -> cursor_t_ptr {
         trace(log_, "wrapper_dispatcher_t::insert_one session: {}, collection name: {} ", session.data(), collection);
         session_id_t approved_session = init(session);
-        auto plan = components::logical_plan::make_node_insert(resource(), {database, collection}, document);
+        auto plan = components::logical_plan::make_node_insert(resource(), {database, collection}, {document});
         actor_zeta::send(manager_dispatcher_,
                          address(),
                          dispatcher::handler_id(dispatcher::route::execute_plan),

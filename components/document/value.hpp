@@ -69,7 +69,17 @@ namespace components::document {
     value_t mult(const value_t& value1, const value_t& value2, impl::base_document* tape);
     value_t divide(const value_t& value1, const value_t& value2, impl::base_document* tape);
     value_t modulus(const value_t& value1, const value_t& value2, impl::base_document* tape);
-    value_t negate(const value_t& value, impl::base_document* tape);
+    value_t exponent(const value_t& value1, const value_t& value2, impl::base_document* tape);
+    value_t sqr_root(const value_t& value, impl::base_document* tape);
+    value_t cube_root(const value_t& value, impl::base_document* tape);
+    value_t factorial(const value_t& value, impl::base_document* tape);
+    value_t absolute(const value_t& value, impl::base_document* tape);
+    value_t bit_and(const value_t& value1, const value_t& value2, impl::base_document* tape);
+    value_t bit_or(const value_t& value1, const value_t& value2, impl::base_document* tape);
+    value_t bit_xor(const value_t& value1, const value_t& value2, impl::base_document* tape);
+    value_t bit_not(const value_t& value, impl::base_document* tape);
+    value_t bit_shift_l(const value_t& value1, const value_t& value2, impl::base_document* tape);
+    value_t bit_shift_r(const value_t& value1, const value_t& value2, impl::base_document* tape);
 
     template<typename T>
     value_t::value_t(impl::base_document* tape, T value) {

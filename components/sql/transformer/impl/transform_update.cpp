@@ -52,6 +52,13 @@ namespace components::sql::transform {
                     case AEXPR_OP: {
                         update_expr_ptr res;
                         auto t = pg_ptr_cast<ResTarget>(expr->name->lst.front().data);
+                        //sqr_root,
+                        //cube_root,
+                        //// bitwise:
+                        //AND,
+                        //OR,
+                        //XOR,
+                        //NOT,
                         switch (*t->name) {
                             case '+':
                                 res = new update_expr_calculate_t(update_expr_type::add);
@@ -68,9 +75,40 @@ namespace components::sql::transform {
                             case '%':
                                 res = new update_expr_calculate_t(update_expr_type::mod);
                                 break;
-                            case '!':
-                                res = new update_expr_calculate_t(update_expr_type::neg);
+                            case '^':
+                                res = new update_expr_calculate_t(update_expr_type::exp);
                                 break;
+                            case '!':
+                                res = new update_expr_calculate_t(update_expr_type::factorial);
+                                break;
+                            case '@':
+                                res = new update_expr_calculate_t(update_expr_type::abs);
+                                break;
+                            case '<':
+                                res = new update_expr_calculate_t(update_expr_type::shift_left);
+                                break;
+                            case '>':
+                                res = new update_expr_calculate_t(update_expr_type::shift_right);
+                                break;
+                            case '~':
+                                res = new update_expr_calculate_t(update_expr_type::NOT);
+                                break;
+                            case '&':
+                                res = new update_expr_calculate_t(update_expr_type::AND);
+                                break;
+                            case '#':
+                                res = new update_expr_calculate_t(update_expr_type::XOR);
+                                break;
+                            case '|': {
+                                if (*std::next(t->name) == '/') {
+                                    res = new update_expr_calculate_t(update_expr_type::sqr_root);
+                                } else if (*std::next(t->name) == '|') {
+                                    res = new update_expr_calculate_t(update_expr_type::cube_root);
+                                } else {
+                                    res = new update_expr_calculate_t(update_expr_type::OR);
+                                }
+                                break;
+                            }
                         }
                         assert(res);
                         res->left() = transform_update_expr(expr->lexpr, to, from, params);
