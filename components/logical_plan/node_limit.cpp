@@ -29,7 +29,7 @@ namespace components::logical_plan {
 
     node_ptr node_limit_t::deserialize(serializer::base_deserializer_t* deserializer) {
         auto collection = deserializer->deserialize_collection(1);
-        auto limit = deserializer->deserialize_limit(2);
+        auto limit = limit_t(deserializer->deserialize_int64(2));
         return make_node_limit(deserializer->resource(), collection, limit);
     }
 
@@ -45,7 +45,7 @@ namespace components::logical_plan {
         serializer->start_array(3);
         serializer->append("type", serializer::serialization_type::logical_node_limit);
         serializer->append("collection", collection_);
-        serializer->append("limit", limit_);
+        serializer->append("limit", static_cast<int64_t>(limit_.limit()));
         serializer->end_array();
     }
 

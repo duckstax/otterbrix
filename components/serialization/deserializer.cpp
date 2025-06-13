@@ -7,41 +7,6 @@ namespace components::serializer {
     base_deserializer_t::base_deserializer_t(const std::pmr::string& input)
         : input_(input) {}
 
-    base_deserializer_t::deserialization_result base_deserializer_t::deserialize(size_t index) {
-        advance_array(index);
-        auto type = current_type();
-        pop_array();
-        switch (type) {
-            case serialization_type::logical_node_aggregate:
-            case serialization_type::logical_node_create_collection:
-            case serialization_type::logical_node_create_database:
-            case serialization_type::logical_node_create_index:
-            case serialization_type::logical_node_data:
-            case serialization_type::logical_node_delete:
-            case serialization_type::logical_node_drop_collection:
-            case serialization_type::logical_node_drop_database:
-            case serialization_type::logical_node_drop_index:
-            case serialization_type::logical_node_insert:
-            case serialization_type::logical_node_join:
-            case serialization_type::logical_node_limit:
-            case serialization_type::logical_node_match:
-            case serialization_type::logical_node_group:
-            case serialization_type::logical_node_sort:
-            case serialization_type::logical_node_function:
-            case serialization_type::logical_node_update:
-                return deserialize_logical_node(index);
-            case serialization_type::expression_compare:
-            case serialization_type::expression_aggregate:
-            case serialization_type::expression_scalar:
-            case serialization_type::expression_sort:
-                return deserialize_expression(index);
-            case serialization_type::parameters:
-                return deserialize_parameters(index);
-            default:
-                assert(false);
-        }
-    }
-
     std::pmr::vector<expressions::key_t> base_deserializer_t::deserialize_keys(size_t index) {
         std::pmr::vector<expressions::key_t> res(resource());
         advance_array(index);
@@ -86,34 +51,12 @@ namespace components::serializer {
         return res;
     }
 
-    std::pmr::vector<logical_plan::node_ptr> base_deserializer_t::deserialize_nodes(size_t index) {
-        advance_array(index);
-        std::pmr::vector<logical_plan::node_ptr> res(resource());
-        res.reserve(current_array_size());
-        for (size_t i = 0; i < current_array_size(); i++) {
-            res.emplace_back(deserialize_logical_node(i));
-        }
-        pop_array();
-        return res;
-    }
-
     std::pmr::vector<expressions::expression_ptr> base_deserializer_t::deserialize_expressions(size_t index) {
         advance_array(index);
         std::pmr::vector<logical_plan::expression_ptr> res(resource());
         res.reserve(current_array_size());
         for (size_t i = 0; i < current_array_size(); i++) {
             res.emplace_back(deserialize_expression(i));
-        }
-        pop_array();
-        return res;
-    }
-
-    std::pmr::vector<expressions::update_expr_ptr> base_deserializer_t::deserialize_update_expressions(size_t index) {
-        advance_array(index);
-        std::pmr::vector<expressions::update_expr_ptr> res(resource());
-        res.reserve(current_array_size());
-        for (size_t i = 0; i < current_array_size(); i++) {
-            res.emplace_back(deserialize_update_expression(i));
         }
         pop_array();
         return res;
@@ -127,30 +70,9 @@ namespace components::serializer {
         return res;
     }
 
-    logical_plan::node_ptr base_deserializer_t::deserialize_logical_node(size_t index) {
-        advance_array(index);
-        auto res = logical_plan::node_t::deserialize(this);
-        pop_array();
-        return res;
-    }
-
     expressions::expression_ptr base_deserializer_t::deserialize_expression(size_t index) {
         advance_array(index);
         auto res = expressions::expression_i::deserialize(this);
-        pop_array();
-        return res;
-    }
-
-    expressions::update_expr_ptr base_deserializer_t::deserialize_update_expression(size_t index) {
-        advance_array(index);
-        auto res = expressions::update_expr_t::deserialize(this);
-        pop_array();
-        return res;
-    }
-
-    logical_plan::parameter_node_ptr base_deserializer_t::deserialize_parameters(size_t index) {
-        advance_array(index);
-        auto res = logical_plan::parameter_node_t::deserialize(this);
         pop_array();
         return res;
     }
@@ -176,6 +98,8 @@ namespace components::serializer {
     }
 
     bool json_deserializer_t::deserialize_bool(size_t index) { return working_tree_.top()->at(index).as_bool(); }
+
+    int64_t json_deserializer_t::deserialize_int64(size_t index) { return working_tree_.top()->at(index).as_int64(); }
 
     uint64_t json_deserializer_t::deserialize_uint64(size_t index) {
         return working_tree_.top()->at(index).as_uint64();
@@ -213,9 +137,6 @@ namespace components::serializer {
         return static_cast<logical_plan::join_type>(working_tree_.top()->at(index).as_int64());
     }
 
-    logical_plan::limit_t json_deserializer_t::deserialize_limit(size_t index) {
-        return logical_plan::limit_t(working_tree_.top()->at(index).as_int64());
-    }
     core::parameter_id_t json_deserializer_t::deserialize_param_id(size_t index) {
         return core::parameter_id_t(working_tree_.top()->at(index).as_int64());
     }
@@ -290,6 +211,8 @@ namespace components::serializer {
 
     bool msgpack_deserializer_t::deserialize_bool(size_t index) { return working_tree_.top()->ptr[index].via.boolean; }
 
+    int64_t msgpack_deserializer_t::deserialize_int64(size_t index) { return working_tree_.top()->ptr[index].via.i64; }
+
     uint64_t msgpack_deserializer_t::deserialize_uint64(size_t index) {
         return working_tree_.top()->ptr[index].via.u64;
     }
@@ -324,10 +247,6 @@ namespace components::serializer {
 
     logical_plan::join_type msgpack_deserializer_t::deserialize_join_type(size_t index) {
         return static_cast<logical_plan::join_type>(working_tree_.top()->ptr[index].via.u64);
-    }
-
-    logical_plan::limit_t msgpack_deserializer_t::deserialize_limit(size_t index) {
-        return static_cast<logical_plan::limit_t>(working_tree_.top()->ptr[index].via.i64);
     }
 
     core::parameter_id_t msgpack_deserializer_t::deserialize_param_id(size_t index) {

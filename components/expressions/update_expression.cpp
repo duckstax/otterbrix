@@ -135,7 +135,9 @@ namespace components::expressions {
 
     update_expr_ptr update_expr_set_t::deserialize(serializer::base_deserializer_t* deserializer) {
         update_expr_ptr res = new update_expr_set_t(deserializer->deserialize_key(2));
-        res->left() = deserializer->deserialize_update_expression(3);
+        deserializer->advance_array(3);
+        res->left() = update_expr_t::deserialize(deserializer);
+        deserializer->pop_array();
         return res;
     }
 
@@ -245,8 +247,12 @@ namespace components::expressions {
 
     update_expr_ptr update_expr_calculate_t::deserialize(serializer::base_deserializer_t* deserializer) {
         update_expr_ptr res = new update_expr_calculate_t(deserializer->deserialize_update_expr_type(1));
-        res->left() = deserializer->deserialize_update_expression(2);
-        res->right() = deserializer->deserialize_update_expression(3);
+        deserializer->advance_array(2);
+        res->left() = update_expr_t::deserialize(deserializer);
+        deserializer->pop_array();
+        deserializer->advance_array(3);
+        res->right() = update_expr_t::deserialize(deserializer);
+        deserializer->pop_array();
         return res;
     }
 

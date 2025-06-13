@@ -39,9 +39,12 @@ TEST_CASE("serialization") {
                            R"_([17,3,"some key",null,1,[]],)_"
                            R"_([17,4,"some other key",null,2,[]]]]])_");
             json_deserializer_t deserializer(res);
-            auto deserialized_res = deserializer.deserialize(0);
-            REQUIRE(std::holds_alternative<expression_ptr>(deserialized_res));
-            REQUIRE(expr_and->to_string() == std::get<expression_ptr>(deserialized_res)->to_string());
+            deserializer.advance_array(0);
+            auto type = deserializer.current_type();
+            assert(type == serialization_type::expression_compare);
+            auto deserialized_res = compare_expression_t::deserialize(&deserializer);
+            deserializer.pop_array();
+            REQUIRE(expr_and->to_string() == deserialized_res->to_string());
         }
         {
             msgpack_serializer_t serializer(&resource);
@@ -51,9 +54,11 @@ TEST_CASE("serialization") {
             auto res = serializer.result();
             // res is not stored in a readable format
             msgpack_deserializer_t deserializer(res);
-            auto deserialized_res = deserializer.deserialize(0);
-            REQUIRE(std::holds_alternative<expression_ptr>(deserialized_res));
-            REQUIRE(expr_and->to_string() == std::get<expression_ptr>(deserialized_res)->to_string());
+            deserializer.advance_array(0);
+            auto type = deserializer.current_type();
+            assert(type == serialization_type::expression_compare);
+            auto deserialized_res = compare_expression_t::deserialize(&deserializer);
+            deserializer.pop_array();
         }
     }
     {
@@ -83,9 +88,12 @@ TEST_CASE("serialization") {
                            R"_([[19,4,null,["price","quantity"]]]],)_"
                            R"_([18,5,"avg_quantity",["quantity"]]]]])_");
             json_deserializer_t deserializer(res);
-            auto deserialized_res = deserializer.deserialize(0);
-            REQUIRE(std::holds_alternative<node_ptr>(deserialized_res));
-            REQUIRE(node_group->to_string() == std::get<node_ptr>(deserialized_res)->to_string());
+            deserializer.advance_array(0);
+            auto type = deserializer.current_type();
+            assert(type == serialization_type::logical_node_group);
+            auto deserialized_res = node_t::deserialize(&deserializer);
+            REQUIRE(node_group->to_string() == deserialized_res->to_string());
+            deserializer.pop_array();
         }
         {
             msgpack_serializer_t serializer(&resource);
@@ -94,9 +102,12 @@ TEST_CASE("serialization") {
             serializer.end_array();
             auto res = serializer.result();
             msgpack_deserializer_t deserializer(res);
-            auto deserialized_res = deserializer.deserialize(0);
-            REQUIRE(std::holds_alternative<node_ptr>(deserialized_res));
-            REQUIRE(node_group->to_string() == std::get<node_ptr>(deserialized_res)->to_string());
+            deserializer.advance_array(0);
+            auto type = deserializer.current_type();
+            assert(type == serialization_type::logical_node_group);
+            auto deserialized_res = node_t::deserialize(&deserializer);
+            REQUIRE(node_group->to_string() == deserialized_res->to_string());
+            deserializer.pop_array();
         }
     }
     {
@@ -124,13 +135,22 @@ TEST_CASE("serialization") {
                            R"_([11,["database","collection"],-1]]],)_"
                            R"_([22,[[1,90]]]])_");
             json_deserializer_t deserializer(res);
-            auto deserialized_res = deserializer.deserialize(0);
-            REQUIRE(std::holds_alternative<node_ptr>(deserialized_res));
-            REQUIRE(node_delete->to_string() == std::get<node_ptr>(deserialized_res)->to_string());
-            deserialized_res = deserializer.deserialize(1);
-            REQUIRE(std::holds_alternative<parameter_node_ptr>(deserialized_res));
-            REQUIRE(params->parameters().parameters ==
-                    std::get<parameter_node_ptr>(deserialized_res)->parameters().parameters);
+            deserializer.advance_array(0);
+            {
+                auto type = deserializer.current_type();
+                assert(type == serialization_type::logical_node_delete);
+                auto deserialized_res = node_t::deserialize(&deserializer);
+                REQUIRE(node_delete->to_string() == deserialized_res->to_string());
+            }
+            deserializer.pop_array();
+            deserializer.advance_array(1);
+            {
+                auto type = deserializer.current_type();
+                assert(type == serialization_type::parameters);
+                auto deserialized_res = parameter_node_t::deserialize(&deserializer);
+                REQUIRE(params->parameters().parameters == deserialized_res->parameters().parameters);
+            }
+            deserializer.pop_array();
         }
         {
             msgpack_serializer_t serializer(&resource);
@@ -140,13 +160,22 @@ TEST_CASE("serialization") {
             serializer.end_array();
             auto res = serializer.result();
             msgpack_deserializer_t deserializer(res);
-            auto deserialized_res = deserializer.deserialize(0);
-            REQUIRE(std::holds_alternative<node_ptr>(deserialized_res));
-            REQUIRE(node_delete->to_string() == std::get<node_ptr>(deserialized_res)->to_string());
-            deserialized_res = deserializer.deserialize(1);
-            REQUIRE(std::holds_alternative<parameter_node_ptr>(deserialized_res));
-            REQUIRE(params->parameters().parameters ==
-                    std::get<parameter_node_ptr>(deserialized_res)->parameters().parameters);
+            deserializer.advance_array(0);
+            {
+                auto type = deserializer.current_type();
+                assert(type == serialization_type::logical_node_delete);
+                auto deserialized_res = node_t::deserialize(&deserializer);
+                REQUIRE(node_delete->to_string() == deserialized_res->to_string());
+            }
+            deserializer.pop_array();
+            deserializer.advance_array(1);
+            {
+                auto type = deserializer.current_type();
+                assert(type == serialization_type::parameters);
+                auto deserialized_res = parameter_node_t::deserialize(&deserializer);
+                REQUIRE(params->parameters().parameters == deserialized_res->parameters().parameters);
+            }
+            deserializer.pop_array();
         }
     }
 }

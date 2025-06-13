@@ -55,9 +55,6 @@ namespace components::serializer {
         invalid = 255
     };
 
-    // TODO:
-    // This is a prototype serializer with extreamly specialized methods
-    // Future versions will be simplified
     class base_serializer_t {
     public:
         explicit base_serializer_t(std::pmr::memory_resource* resource);
@@ -69,6 +66,7 @@ namespace components::serializer {
         virtual void end_array() = 0;
 
         virtual void append(std::string_view key, bool val) = 0;
+        virtual void append(std::string_view key, int64_t val) = 0;
         virtual void append(std::string_view key, uint64_t val) = 0;
         virtual void append(std::string_view key, core::parameter_id_t val) = 0;
         virtual void append(std::string_view key, serialization_type type) = 0;
@@ -81,7 +79,6 @@ namespace components::serializer {
         virtual void append(std::string_view key, expressions::sort_order order) = 0;
         virtual void append(std::string_view key, expressions::update_expr_type type) = 0;
         virtual void append(std::string_view key, expressions::update_expr_get_value_t::side_t side) = 0;
-        virtual void append(std::string_view key, logical_plan::limit_t limit) = 0;
 
         void append(std::string_view key, const std::pmr::vector<logical_plan::node_ptr>& nodes);
         void append(std::string_view key, const std::pmr::vector<document::document_ptr>& documents);
@@ -101,7 +98,6 @@ namespace components::serializer {
         void append(std::string_view key, const logical_plan::node_ptr& node);
         void append(std::string_view key, const expressions::expression_ptr& expr);
         void append(std::string_view key, const expressions::update_expr_ptr& expr);
-        void append(std::string_view key, const logical_plan::parameter_node_ptr& params);
 
     protected:
         pmr_string_stream result_;
@@ -117,6 +113,7 @@ namespace components::serializer {
         void end_array() override;
 
         void append(std::string_view key, bool val) override;
+        void append(std::string_view key, int64_t val) override;
         void append(std::string_view key, uint64_t val) override;
         void append(std::string_view key, core::parameter_id_t val) override;
         void append(std::string_view key, serialization_type type) override;
@@ -129,7 +126,6 @@ namespace components::serializer {
         void append(std::string_view key, expressions::sort_order order) override;
         void append(std::string_view key, expressions::update_expr_type type) override;
         void append(std::string_view key, expressions::update_expr_get_value_t::side_t side) override;
-        void append(std::string_view key, logical_plan::limit_t limit) override;
         void append(std::string_view key, const std::string& str) override;
         void append(std::string_view key, const document::document_ptr& doc) override;
         void append(std::string_view key, const document::value_t& val) override;
@@ -150,6 +146,7 @@ namespace components::serializer {
         void end_array() override;
 
         void append(std::string_view key, bool val) override;
+        void append(std::string_view key, int64_t val) override;
         void append(std::string_view key, uint64_t val) override;
         void append(std::string_view key, core::parameter_id_t val) override;
         void append(std::string_view key, serialization_type type) override;
@@ -162,7 +159,6 @@ namespace components::serializer {
         void append(std::string_view key, expressions::sort_order order) override;
         void append(std::string_view key, expressions::update_expr_type type) override;
         void append(std::string_view key, expressions::update_expr_get_value_t::side_t side) override;
-        void append(std::string_view key, logical_plan::limit_t limit) override;
         void append(std::string_view key, const std::string& str) override;
         void append(std::string_view key, const document::document_ptr& doc) override;
         void append(std::string_view key, const document::value_t& val) override;

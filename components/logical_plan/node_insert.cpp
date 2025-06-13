@@ -23,11 +23,16 @@ namespace components::logical_plan {
 
     node_ptr node_insert_t::deserialize(serializer::base_deserializer_t* deserializer) {
         auto collection = deserializer->deserialize_collection(1);
-        auto children = deserializer->deserialize_nodes(2);
+
         auto res = make_node_insert(deserializer->resource(), collection);
-        for (const auto& child : children) {
-            res->append_child(child);
+        deserializer->advance_array(2);
+        for (size_t i = 0; i < deserializer->current_array_size(); i++) {
+            deserializer->advance_array(i);
+            res->append_child(node_t::deserialize(deserializer));
+            deserializer->pop_array();
         }
+        deserializer->pop_array();
+
         std::pmr::vector<std::pair<expressions::key_t, expressions::key_t>> key_translation(deserializer->resource());
         deserializer->advance_array(3);
         for (size_t i = 0; i < deserializer->current_array_size(); i++) {

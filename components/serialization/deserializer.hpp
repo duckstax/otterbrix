@@ -14,7 +14,6 @@ namespace components::serializer {
 
         std::pmr::memory_resource* resource() const { return input_.get_allocator().resource(); }
 
-        deserialization_result deserialize(size_t index);
         virtual size_t root_array_size() const = 0;
         virtual size_t current_array_size() const = 0;
         virtual void advance_array(size_t index) = 0;
@@ -22,6 +21,7 @@ namespace components::serializer {
         virtual serialization_type current_type() = 0;
 
         virtual bool deserialize_bool(size_t index) = 0;
+        virtual int64_t deserialize_int64(size_t index) = 0;
         virtual uint64_t deserialize_uint64(size_t index) = 0;
         virtual expressions::aggregate_type deserialize_aggregate_type(size_t index) = 0;
         virtual expressions::compare_type deserialize_compare_type(size_t index) = 0;
@@ -31,7 +31,6 @@ namespace components::serializer {
         virtual expressions::update_expr_get_value_t::side_t deserialize_update_expr_side(size_t index) = 0;
         virtual logical_plan::index_type deserialize_index_type(size_t index) = 0;
         virtual logical_plan::join_type deserialize_join_type(size_t index) = 0;
-        virtual logical_plan::limit_t deserialize_limit(size_t index) = 0;
         virtual core::parameter_id_t deserialize_param_id(size_t index) = 0;
         virtual expressions::key_t deserialize_key(size_t index) = 0;
         virtual std::string deserialize_string(size_t index) = 0;
@@ -44,16 +43,11 @@ namespace components::serializer {
         std::pmr::vector<expressions::key_t> deserialize_keys(size_t index);
         std::pmr::vector<expressions::param_storage> deserialize_param_storages(size_t index);
         std::pmr::vector<document_ptr> deserialize_documents(size_t index);
-        std::pmr::vector<logical_plan::node_ptr> deserialize_nodes(size_t index);
         std::pmr::vector<expressions::expression_ptr> deserialize_expressions(size_t index);
-        std::pmr::vector<expressions::update_expr_ptr> deserialize_update_expressions(size_t index);
         std::pair<core::parameter_id_t, document::value_t> deserialize_param_pair(document::impl::base_document* tape,
                                                                                   size_t size);
 
-        logical_plan::node_ptr deserialize_logical_node(size_t index);
         expressions::expression_ptr deserialize_expression(size_t index);
-        expressions::update_expr_ptr deserialize_update_expression(size_t index);
-        logical_plan::parameter_node_ptr deserialize_parameters(size_t index);
 
     protected:
         std::pmr::string input_;
@@ -70,6 +64,7 @@ namespace components::serializer {
         serialization_type current_type() override;
 
         bool deserialize_bool(size_t index) override;
+        int64_t deserialize_int64(size_t index) override;
         uint64_t deserialize_uint64(size_t index) override;
         expressions::aggregate_type deserialize_aggregate_type(size_t index) override;
         expressions::compare_type deserialize_compare_type(size_t index) override;
@@ -79,7 +74,6 @@ namespace components::serializer {
         expressions::update_expr_get_value_t::side_t deserialize_update_expr_side(size_t index) override;
         logical_plan::index_type deserialize_index_type(size_t index) override;
         logical_plan::join_type deserialize_join_type(size_t index) override;
-        logical_plan::limit_t deserialize_limit(size_t index) override;
         core::parameter_id_t deserialize_param_id(size_t index) override;
         expressions::key_t deserialize_key(size_t index) override;
         std::string deserialize_string(size_t index) override;
@@ -104,6 +98,7 @@ namespace components::serializer {
         serialization_type current_type() override;
 
         bool deserialize_bool(size_t index) override;
+        int64_t deserialize_int64(size_t index) override;
         uint64_t deserialize_uint64(size_t index) override;
         expressions::aggregate_type deserialize_aggregate_type(size_t index) override;
         expressions::compare_type deserialize_compare_type(size_t index) override;
@@ -113,7 +108,6 @@ namespace components::serializer {
         expressions::update_expr_get_value_t::side_t deserialize_update_expr_side(size_t index) override;
         logical_plan::index_type deserialize_index_type(size_t index) override;
         logical_plan::join_type deserialize_join_type(size_t index) override;
-        logical_plan::limit_t deserialize_limit(size_t index) override;
         core::parameter_id_t deserialize_param_id(size_t index) override;
         expressions::key_t deserialize_key(size_t index) override;
         std::string deserialize_string(size_t index) override;
