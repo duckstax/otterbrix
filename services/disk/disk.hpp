@@ -7,7 +7,7 @@
 
 #include "metadata.hpp"
 
-#include <base/collection_full_name.hpp>
+#include <components/base/collection_full_name.hpp>
 
 namespace services::disk {
 

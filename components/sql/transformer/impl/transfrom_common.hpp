@@ -2,9 +2,9 @@
 #include <components/document/value.hpp>
 #include <components/expressions/compare_expression.hpp>
 #include <components/expressions/scalar_expression.hpp>
+#include <components/logical_plan/node_function.hpp>
 #include <components/sql/transformer/transformer.hpp>
 #include <components/sql/transformer/utils.hpp>
-#include <logical_plan/node_function.hpp>
 
 namespace components::sql::transform::impl {
 

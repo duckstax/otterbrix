@@ -11,7 +11,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-#include <log/log.hpp>
+#include <components/log/log.hpp>
 
 #include "forward.hpp"
 #include "integration/cpp/wrapper_dispatcher.hpp"

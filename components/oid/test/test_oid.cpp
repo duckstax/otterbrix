@@ -1,5 +1,5 @@
 #include <catch2/catch.hpp>
-#include <oid/oid.hpp>
+#include <components/oid/oid.hpp>
 
 using namespace oid;
 

@@ -4,15 +4,15 @@
 
 #include <absl/crc/crc32c.h>
 #include <actor-zeta.hpp>
-#include <log/log.hpp>
+#include <components/log/log.hpp>
 #include <string>
 #include <thread>
 
 #include <components/document/document.hpp>
+#include <components/logical_plan/node_data.hpp>
 #include <components/logical_plan/node_group.hpp>
 #include <components/tests/generaty.hpp>
 #include <core/non_thread_scheduler/scheduler_test.hpp>
-#include <logical_plan/node_data.hpp>
 #include <services/wal/manager_wal_replicate.hpp>
 #include <services/wal/wal.hpp>
 

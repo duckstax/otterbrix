@@ -2,7 +2,6 @@
 
 #include <components/document/msgpack/msgpack_encoder.hpp>
 #include <components/expressions/key.hpp>
-#include <logical_plan/node_limit.hpp>
 
 namespace components::serializer {
 

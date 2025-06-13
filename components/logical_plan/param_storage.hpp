@@ -6,7 +6,7 @@
 #include <components/document/value.hpp>
 #include <core/pmr.hpp>
 
-#include <expressions/forward.hpp>
+#include <components/expressions/forward.hpp>
 
 namespace components::serializer {
     class base_deserializer_t;

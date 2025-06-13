@@ -8,7 +8,7 @@
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
 
-#include <log/log.hpp>
+#include <components/log/log.hpp>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>

@@ -1,9 +1,7 @@
 #pragma once
 
-#include <actor-zeta.hpp>
-#include <base/collection_full_name.hpp>
+#include <components/base/collection_full_name.hpp>
 #include <components/document/document.hpp>
-#include <list>
 #include <services/wal/base.hpp>
 #include <vector>
 

@@ -1,10 +1,10 @@
 #include "create_plan_match.hpp"
 #include <components/expressions/compare_expression.hpp>
 #include <components/physical_plan/collection/operators/merge/operator_merge.hpp>
+#include <components/physical_plan/collection/operators/operator_match.hpp>
 #include <components/physical_plan/collection/operators/scan/full_scan.hpp>
 #include <components/physical_plan/collection/operators/scan/index_scan.hpp>
 #include <components/physical_plan/collection/operators/scan/transfer_scan.hpp>
-#include <physical_plan/collection/operators/operator_match.hpp>
 
 namespace services::collection::planner::impl {
 

@@ -1,11 +1,11 @@
 #include "create_plan_delete.hpp"
 #include "create_plan_match.hpp"
+#include <components/expressions/compare_expression.hpp>
 #include <components/logical_plan/node_delete.hpp>
 #include <components/logical_plan/node_limit.hpp>
 #include <components/physical_plan/collection/operators/operator_delete.hpp>
-#include <expressions/compare_expression.hpp>
-#include <physical_plan/collection/operators/predicates/predicate.hpp>
-#include <physical_plan/collection/operators/scan/full_scan.hpp>
+#include <components/physical_plan/collection/operators/predicates/predicate.hpp>
+#include <components/physical_plan/collection/operators/scan/full_scan.hpp>
 
 #include "create_plan_data.hpp"
 
