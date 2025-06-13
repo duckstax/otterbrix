@@ -1,9 +1,9 @@
 #include <catch2/catch.hpp>
 
+#include <components/log/log.hpp>
 #include <core/b_plus_tree/b_plus_tree.hpp>
 #include <core/file/file_system.hpp>
 #include <cstdint>
-#include <log/log.hpp>
 #include <thread>
 
 #if defined(__linux__)

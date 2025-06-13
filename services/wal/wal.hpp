@@ -3,10 +3,10 @@
 #include <actor-zeta.hpp>
 
 #include <boost/filesystem.hpp>
-#include <log/log.hpp>
+#include <components/log/log.hpp>
 
+#include <components/configuration/configuration.hpp>
 #include <components/session/session.hpp>
-#include <configuration/configuration.hpp>
 #include <core/file/file_system.hpp>
 
 #include "dto.hpp"

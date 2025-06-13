@@ -2,8 +2,8 @@
 
 #include "agent_disk.hpp"
 #include "index_agent_disk.hpp"
+#include <components/configuration/configuration.hpp>
 #include <components/log/log.hpp>
-#include <configuration/configuration.hpp>
 #include <core/excutor.hpp>
 
 namespace services::collection {

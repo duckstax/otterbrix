@@ -1,10 +1,9 @@
 #pragma once
 
 #include <actor-zeta.hpp>
-#include <base/collection_full_name.hpp>
+#include <components/base/collection_full_name.hpp>
 #include <components/document/document.hpp>
 #include <components/session/session.hpp>
-#include <memory_resource>
 #include <variant>
 
 namespace services::disk {
