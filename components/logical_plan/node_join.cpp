@@ -19,11 +19,15 @@ namespace components::logical_plan {
     node_ptr node_join_t::deserialize(serializer::base_deserializer_t* deserializer) {
         auto type = deserializer->deserialize_join_type(1);
         auto collection = deserializer->deserialize_collection(2);
-        auto children = deserializer->deserialize_nodes(3);
         auto res = make_node_join(deserializer->resource(), collection, type);
-        for (const auto& child : children) {
-            res->append_child(child);
+        deserializer->advance_array(3);
+        for (size_t i = 0; i < deserializer->current_array_size(); i++) {
+            deserializer->advance_array(i);
+            res->append_child(node_t::deserialize(deserializer));
+            deserializer->pop_array();
         }
+        deserializer->pop_array();
+
         return res;
     }
 

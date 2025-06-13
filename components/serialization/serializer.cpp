@@ -103,10 +103,6 @@ namespace components::serializer {
         expr->serialize(this);
     }
 
-    void base_serializer_t::append(std::string_view key, const logical_plan::parameter_node_ptr& params) {
-        params->serialize(this);
-    }
-
     // TODO: use memory_resource to initialize root_arr_
     json_serializer_t::json_serializer_t(std::pmr::memory_resource* resource)
         : base_serializer_t(resource) {}
@@ -130,6 +126,8 @@ namespace components::serializer {
     }
 
     void json_serializer_t::append(std::string_view key, bool val) { working_tree_.top()->emplace_back(val); }
+
+    void json_serializer_t::append(std::string_view key, int64_t val) { working_tree_.top()->emplace_back(val); }
 
     void json_serializer_t::append(std::string_view key, uint64_t val) { working_tree_.top()->emplace_back(val); }
 
@@ -175,10 +173,6 @@ namespace components::serializer {
 
     void json_serializer_t::append(std::string_view key, expressions::update_expr_get_value_t::side_t side) {
         working_tree_.top()->emplace_back(static_cast<uint8_t>(side));
-    }
-
-    void json_serializer_t::append(std::string_view key, logical_plan::limit_t limit) {
-        working_tree_.top()->emplace_back(limit.limit());
     }
 
     void json_serializer_t::append(std::string_view key, const std::string& str) {
@@ -247,6 +241,8 @@ namespace components::serializer {
 
     void msgpack_serializer_t::append(std::string_view key, bool val) { packer_.pack(val); }
 
+    void msgpack_serializer_t::append(std::string_view key, int64_t val) { packer_.pack(val); }
+
     void msgpack_serializer_t::append(std::string_view key, uint64_t val) { packer_.pack(val); }
 
     void msgpack_serializer_t::append(std::string_view key, core::parameter_id_t val) { packer_.pack(val.t); }
@@ -289,10 +285,6 @@ namespace components::serializer {
 
     void msgpack_serializer_t::append(std::string_view key, expressions::update_expr_get_value_t::side_t side) {
         packer_.pack(static_cast<uint8_t>(side));
-    }
-
-    void msgpack_serializer_t::append(std::string_view key, logical_plan::limit_t limit) {
-        packer_.pack(limit.limit());
     }
 
     void msgpack_serializer_t::append(std::string_view key, const std::string& str) { packer_.pack(str); }

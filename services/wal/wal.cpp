@@ -400,8 +400,13 @@ namespace services::wal {
                 components::serializer::msgpack_deserializer_t deserializer(output);
                 record.last_crc32 = deserializer.deserialize_uint64(0);
                 record.id = deserializer.deserialize_uint64(1);
-                record.data = deserializer.deserialize_logical_node(2);
-                record.params = deserializer.deserialize_parameters(3);
+
+                deserializer.advance_array(2);
+                record.data = components::logical_plan::node_t::deserialize(&deserializer);
+                deserializer.pop_array();
+                deserializer.advance_array(3);
+                record.params = components::logical_plan::parameter_node_t::deserialize(&deserializer);
+                deserializer.pop_array();
             } else {
                 record.data = nullptr;
                 //todo: error wal content

@@ -24,11 +24,20 @@ namespace components::logical_plan {
 
     node_ptr node_delete_t::deserialize(serializer::base_deserializer_t* deserializer) {
         collection_full_name_t collection = deserializer->deserialize_collection(1);
-        auto children = deserializer->deserialize_nodes(2);
+
+        deserializer->advance_array(2);
+        deserializer->advance_array(0);
+        auto match = node_match_t::deserialize(deserializer);
+        deserializer->pop_array();
+        deserializer->advance_array(1);
+        auto limit = node_limit_t::deserialize(deserializer);
+        deserializer->pop_array();
+        deserializer->pop_array();
+
         return make_node_delete(deserializer->resource(),
                                 collection,
-                                reinterpret_cast<const node_match_ptr&>(children.at(0)),
-                                reinterpret_cast<const node_limit_ptr&>(children.at(1)));
+                                reinterpret_cast<const node_match_ptr&>(match),
+                                reinterpret_cast<const node_limit_ptr&>(limit));
     }
 
     hash_t node_delete_t::hash_impl() const { return 0; }

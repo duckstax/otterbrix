@@ -14,10 +14,14 @@ namespace components::logical_plan {
     node_ptr node_aggregate_t::deserialize(serializer::base_deserializer_t* deserializer) {
         collection_full_name_t collection = deserializer->deserialize_collection(1);
         auto res = make_node_aggregate(deserializer->resource(), collection);
-        auto children = deserializer->deserialize_nodes(2);
-        for (const auto& child : children) {
-            res->append_child(child);
+
+        deserializer->advance_array(2);
+        for (size_t i = 0; i < deserializer->current_array_size(); i++) {
+            deserializer->advance_array(i);
+            res->append_child(node_t::deserialize(deserializer));
+            deserializer->pop_array();
         }
+        deserializer->pop_array();
         return res;
     }
 

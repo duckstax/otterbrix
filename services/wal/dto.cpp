@@ -68,7 +68,7 @@ namespace services::wal {
         serializer.append("crc", static_cast<uint64_t>(last_crc32));
         serializer.append("id", static_cast<uint64_t>(id));
         serializer.append("node", data);
-        serializer.append("params", params);
+        params->serialize(&serializer);
         serializer.end_array();
         auto buffer = serializer.result();
 
@@ -80,8 +80,13 @@ namespace services::wal {
 
         entry.last_crc32_ = deserializer.deserialize_uint64(0);
         entry.id_ = deserializer.deserialize_uint64(1);
-        entry.entry_ = deserializer.deserialize_logical_node(2);
-        entry.params_ = deserializer.deserialize_parameters(3);
+
+        deserializer.advance_array(2);
+        entry.entry_ = components::logical_plan::node_t::deserialize(&deserializer);
+        deserializer.pop_array();
+        deserializer.advance_array(3);
+        entry.params_ = components::logical_plan::parameter_node_t::deserialize(&deserializer);
+        deserializer.pop_array();
     }
 
     id_t unpack_wal_id(buffer_t& storage) {

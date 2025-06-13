@@ -422,7 +422,10 @@ namespace services::disk {
                     metafile_indexes_->read(buf.data(), size, offset);
                     offset += std::int64_t(size);
                     components::serializer::msgpack_deserializer_t deserializer(buf);
-                    auto index = deserializer.deserialize_logical_node(0);
+
+                    deserializer.advance_array(0);
+                    auto index = components::logical_plan::node_t::deserialize(&deserializer);
+                    deserializer.pop_array();
                     if (collection.empty() || index->collection_name() == collection) {
                         res.push_back(reinterpret_cast<const components::logical_plan::node_create_index_ptr&>(index));
                     }

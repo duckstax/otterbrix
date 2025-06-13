@@ -32,14 +32,31 @@ namespace components::logical_plan {
     node_ptr node_update_t::deserialize(serializer::base_deserializer_t* deserializer) {
         auto collection_to = deserializer->deserialize_collection(1);
         auto collection_from = deserializer->deserialize_collection(2);
-        auto children = deserializer->deserialize_nodes(3);
-        auto updates = deserializer->deserialize_update_expressions(4);
+
+        deserializer->advance_array(3);
+        deserializer->advance_array(0);
+        auto match = node_match_t::deserialize(deserializer);
+        deserializer->pop_array();
+        deserializer->advance_array(1);
+        auto limit = node_limit_t::deserialize(deserializer);
+        deserializer->pop_array();
+        deserializer->pop_array();
+
+        deserializer->advance_array(4);
+        std::pmr::vector<expressions::update_expr_ptr> updates(deserializer->resource());
+        updates.reserve(deserializer->current_array_size());
+        for (size_t i = 0; i < deserializer->current_array_size(); i++) {
+            deserializer->advance_array(i);
+            updates.emplace_back(expressions::update_expr_t::deserialize(deserializer));
+            deserializer->pop_array();
+        }
+        deserializer->pop_array();
         auto upsert = deserializer->deserialize_bool(5);
         return make_node_update(deserializer->resource(),
                                 collection_to,
                                 collection_from,
-                                reinterpret_cast<const node_match_ptr&>(children.at(0)),
-                                reinterpret_cast<const node_limit_ptr&>(children.at(1)),
+                                reinterpret_cast<const node_match_ptr&>(match),
+                                reinterpret_cast<const node_limit_ptr&>(limit),
                                 updates,
                                 upsert);
     }
