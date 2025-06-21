@@ -30,6 +30,7 @@ namespace components::vector {
     }
 
     struct unified_vector_format {
+        unified_vector_format();
         unified_vector_format(std::pmr::memory_resource* resource, uint64_t capacity);
         unified_vector_format(const unified_vector_format& other) = delete;
         unified_vector_format& operator=(const unified_vector_format& other) = delete;
