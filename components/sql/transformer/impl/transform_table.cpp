@@ -15,24 +15,31 @@ namespace components::sql::transform {
             case OBJECT_TABLE: {
                 auto drop_name = reinterpret_cast<List*>(node.objects->lst.front().data)->lst;
                 // It is guaranteed to be a table ref, but in form of a list of strings
-                switch (drop_name.size()) {
-                    case 1: { // table
+                enum table_name
+                {
+                    table = 1,
+                    database_table = 2,
+                    database_schema_table = 3,
+                    uuid_database_schema_table = 4
+                };
+                switch (static_cast<table_name>(drop_name.size())) {
+                    case table: {
                         return logical_plan::make_node_drop_collection(
                             resource,
                             {database_name_t(), strVal(drop_name.front().data)});
                     }
-                    case 2: { // database.table
+                    case database_table: {
                         auto it = drop_name.begin();
                         return logical_plan::make_node_drop_collection(resource,
                                                                        {strVal((it++)->data), strVal(it->data)});
                     }
-                    case 3: { // database.schema.table
+                    case database_schema_table: {
                         auto it = drop_name.begin();
                         return logical_plan::make_node_drop_collection(
                             resource,
                             {strVal((it++)->data), strVal((it++)->data), strVal(it->data)});
                     }
-                    case 4: { // uuid.database.schema.table
+                    case uuid_database_schema_table: {
                         auto it = drop_name.begin();
                         return logical_plan::make_node_drop_collection(
                             resource,
