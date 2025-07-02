@@ -14,13 +14,33 @@ namespace components::sql::transform {
         switch (node.removeType) {
             case OBJECT_TABLE: {
                 auto drop_name = reinterpret_cast<List*>(node.objects->lst.front().data)->lst;
-                if (drop_name.size() == 1) {
-                    return logical_plan::make_node_drop_collection(resource,
-                                                                   {database_name_t(), strVal(drop_name.front().data)});
+                switch (drop_name.size()) {
+                    case 1: {
+                        return logical_plan::make_node_drop_collection(
+                            resource,
+                            {database_name_t(), strVal(drop_name.front().data)});
+                    }
+                    case 2: {
+                        auto it = drop_name.begin();
+                        return logical_plan::make_node_drop_collection(resource,
+                                                                       {strVal((it++)->data), strVal(it->data)});
+                    }
+                    case 3: {
+                        auto it = drop_name.begin();
+                        return logical_plan::make_node_drop_collection(
+                            resource,
+                            {strVal((it++)->data), strVal((it++)->data), strVal(it->data)});
+                    }
+                    case 4: {
+                        auto it = drop_name.begin();
+                        return logical_plan::make_node_drop_collection(
+                            resource,
+                            {strVal((it++)->data), strVal((it++)->data), strVal((it++)->data), strVal(it->data)});
+                    }
+                    default:
+                        throw parser_exception_t{"incorrect drop: arguments size", ""};
+                        return logical_plan::make_node_drop_collection(resource, {});
                 }
-
-                auto it = drop_name.begin();
-                return logical_plan::make_node_drop_collection(resource, {strVal((it++)->data), strVal(it->data)});
             }
             case OBJECT_INDEX: {
                 auto drop_name = reinterpret_cast<List*>(node.objects->lst.front().data)->lst;
