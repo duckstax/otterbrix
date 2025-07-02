@@ -35,7 +35,7 @@ namespace services::storage::sort {
                     return false;
                 }
             }
-            return true;
+            return false;
         }
 
     private:
