@@ -14,24 +14,25 @@ namespace components::sql::transform {
         switch (node.removeType) {
             case OBJECT_TABLE: {
                 auto drop_name = reinterpret_cast<List*>(node.objects->lst.front().data)->lst;
+                // It is guaranteed to be a table ref, but in form of a list of strings
                 switch (drop_name.size()) {
-                    case 1: {
+                    case 1: { // table
                         return logical_plan::make_node_drop_collection(
                             resource,
                             {database_name_t(), strVal(drop_name.front().data)});
                     }
-                    case 2: {
+                    case 2: { // database.table
                         auto it = drop_name.begin();
                         return logical_plan::make_node_drop_collection(resource,
                                                                        {strVal((it++)->data), strVal(it->data)});
                     }
-                    case 3: {
+                    case 3: { // database.schema.table
                         auto it = drop_name.begin();
                         return logical_plan::make_node_drop_collection(
                             resource,
                             {strVal((it++)->data), strVal((it++)->data), strVal(it->data)});
                     }
-                    case 4: {
+                    case 4: { // uuid.database.schema.table
                         auto it = drop_name.begin();
                         return logical_plan::make_node_drop_collection(
                             resource,
