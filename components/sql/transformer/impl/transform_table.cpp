@@ -14,13 +14,41 @@ namespace components::sql::transform {
         switch (node.removeType) {
             case OBJECT_TABLE: {
                 auto drop_name = reinterpret_cast<List*>(node.objects->lst.front().data)->lst;
-                if (drop_name.size() == 1) {
-                    return logical_plan::make_node_drop_collection(resource,
-                                                                   {database_name_t(), strVal(drop_name.front().data)});
+                // It is guaranteed to be a table ref, but in form of a list of strings
+                enum table_name
+                {
+                    table = 1,
+                    database_table = 2,
+                    database_schema_table = 3,
+                    uuid_database_schema_table = 4
+                };
+                switch (static_cast<table_name>(drop_name.size())) {
+                    case table: {
+                        return logical_plan::make_node_drop_collection(
+                            resource,
+                            {database_name_t(), strVal(drop_name.front().data)});
+                    }
+                    case database_table: {
+                        auto it = drop_name.begin();
+                        return logical_plan::make_node_drop_collection(resource,
+                                                                       {strVal((it++)->data), strVal(it->data)});
+                    }
+                    case database_schema_table: {
+                        auto it = drop_name.begin();
+                        return logical_plan::make_node_drop_collection(
+                            resource,
+                            {strVal((it++)->data), strVal((it++)->data), strVal(it->data)});
+                    }
+                    case uuid_database_schema_table: {
+                        auto it = drop_name.begin();
+                        return logical_plan::make_node_drop_collection(
+                            resource,
+                            {strVal((it++)->data), strVal((it++)->data), strVal((it++)->data), strVal(it->data)});
+                    }
+                    default:
+                        throw parser_exception_t{"incorrect drop: arguments size", ""};
+                        return logical_plan::make_node_drop_collection(resource, {});
                 }
-
-                auto it = drop_name.begin();
-                return logical_plan::make_node_drop_collection(resource, {strVal((it++)->data), strVal(it->data)});
             }
             case OBJECT_INDEX: {
                 auto drop_name = reinterpret_cast<List*>(node.objects->lst.front().data)->lst;

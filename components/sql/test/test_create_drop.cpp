@@ -67,6 +67,21 @@ TEST_CASE("sql::table") {
     transform::transformer transformer(&resource);
     components::logical_plan::parameter_node_t statement(&resource);
 
+    SECTION("create with uuid") {
+        auto create = raw_parser("CREATE TABLE uuid.db_name.schema.table_name()")->lst.front().data;
+        auto node = transformer.transform(transform::pg_cell_to_node_cast(create), &statement);
+        REQUIRE(node->to_string() == R"_($create_collection: db_name.table_name)_");
+        REQUIRE(node->collection_full_name().unique_identifier == "uuid");
+        REQUIRE(node->collection_full_name().schema == "schema");
+    }
+
+    SECTION("create with schema") {
+        auto create = raw_parser("CREATE TABLE db_name.schema.table_name()")->lst.front().data;
+        auto node = transformer.transform(transform::pg_cell_to_node_cast(create), &statement);
+        REQUIRE(node->to_string() == R"_($create_collection: db_name.table_name)_");
+        REQUIRE(node->collection_full_name().schema == "schema");
+    }
+
     SECTION("create") {
         auto create = raw_parser("CREATE TABLE db_name.table_name()")->lst.front().data;
         auto node = transformer.transform(transform::pg_cell_to_node_cast(create), &statement);
@@ -77,6 +92,21 @@ TEST_CASE("sql::table") {
         auto create = raw_parser("CREATE TABLE table_name()")->lst.front().data;
         auto node = transformer.transform(transform::pg_cell_to_node_cast(create), &statement);
         REQUIRE(node->to_string() == R"_($create_collection: .table_name)_");
+    }
+
+    SECTION("drop with uuid") {
+        auto drop = raw_parser("DROP TABLE uuid.db_name.schema.table_name")->lst.front().data;
+        auto node = transformer.transform(transform::pg_cell_to_node_cast(drop), &statement);
+        REQUIRE(node->to_string() == R"_($drop_collection: db_name.table_name)_");
+        REQUIRE(node->collection_full_name().unique_identifier == "uuid");
+        REQUIRE(node->collection_full_name().schema == "schema");
+    }
+
+    SECTION("drop with schema") {
+        auto drop = raw_parser("DROP TABLE db_name.schema.table_name")->lst.front().data;
+        auto node = transformer.transform(transform::pg_cell_to_node_cast(drop), &statement);
+        REQUIRE(node->to_string() == R"_($drop_collection: db_name.table_name)_");
+        REQUIRE(node->collection_full_name().schema == "schema");
     }
 
     SECTION("drop") {
