@@ -11,9 +11,8 @@ namespace components::sql::transform {
             throw parser_exception_t{"incorrect create index arguments", ""};
         }
 
-        auto create_index = logical_plan::make_node_create_index(resource,
-                                                                 {node.relation->catalogname, node.relation->relname},
-                                                                 node.idxname);
+        auto create_index =
+            logical_plan::make_node_create_index(resource, rangevar_to_collection(node.relation), node.idxname);
         for (auto key : node.indexParams->lst) {
             create_index->keys().emplace_back(pg_ptr_cast<IndexElem>(key.data)->name);
         }

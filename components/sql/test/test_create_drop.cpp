@@ -126,12 +126,15 @@ TEST_CASE("sql::index") {
         auto create = raw_parser("CREATE INDEX some_idx ON uuid.db.schema.table (field);")->lst.front().data;
         auto node = transformer.transform(transform::pg_cell_to_node_cast(create), &statement);
         REQUIRE(node->to_string() == R"_($create_index: db.table name:some_idx[ field ] type:single)_");
+        REQUIRE(node->collection_full_name().unique_identifier == "uuid");
+        REQUIRE(node->collection_full_name().schema == "schema");
     }
 
     SECTION("create with schema") {
         auto create = raw_parser("CREATE INDEX some_idx ON db.schema.table (field);")->lst.front().data;
         auto node = transformer.transform(transform::pg_cell_to_node_cast(create), &statement);
         REQUIRE(node->to_string() == R"_($create_index: db.table name:some_idx[ field ] type:single)_");
+        REQUIRE(node->collection_full_name().schema == "schema");
     }
 
     SECTION("create") {
@@ -144,11 +147,14 @@ TEST_CASE("sql::index") {
         auto drop = raw_parser("DROP INDEX uuid.db.schema.table.some_idx")->lst.front().data;
         auto node = transformer.transform(transform::pg_cell_to_node_cast(drop), &statement);
         REQUIRE(node->to_string() == R"_($drop_index: db.table name:some_idx)_");
+        REQUIRE(node->collection_full_name().unique_identifier == "uuid");
+        REQUIRE(node->collection_full_name().schema == "schema");
     }
     SECTION("drop with schema") {
         auto drop = raw_parser("DROP INDEX db.schema.table.some_idx")->lst.front().data;
         auto node = transformer.transform(transform::pg_cell_to_node_cast(drop), &statement);
         REQUIRE(node->to_string() == R"_($drop_index: db.table name:some_idx)_");
+        REQUIRE(node->collection_full_name().schema == "schema");
     }
     SECTION("drop") {
         auto drop = raw_parser("DROP INDEX db.table.some_idx")->lst.front().data;
