@@ -6,7 +6,7 @@
 
 using namespace components::sql;
 
-TEST_CASE("sql::create_database") {
+TEST_CASE("sql::database") {
     auto resource = std::pmr::synchronized_pool_resource();
     components::sql::transform::transformer transformer(&resource);
     components::logical_plan::parameter_node_t statement(&resource);
@@ -49,17 +49,12 @@ TEST_CASE("sql::create_database") {
         auto node = transformer.transform(transform::pg_cell_to_node_cast(create), &statement);
         REQUIRE(node->to_string() == R"_($create_database: db_name)_");
     }
-}
 
-TEST_CASE("sql::drop_database") {
-    auto resource = std::pmr::synchronized_pool_resource();
-    components::logical_plan::parameter_node_t statement(&resource);
-
-    auto drop = raw_parser("DROP DATABASE db_name;")->lst.front().data;
-    transform::transformer transformer(&resource);
-
-    auto node = transformer.transform(transform::pg_cell_to_node_cast(drop), &statement);
-    REQUIRE(node->to_string() == R"_($drop_database: db_name)_");
+    SECTION("drop") {
+        auto drop = raw_parser("DROP DATABASE db_name;")->lst.front().data;
+        auto node = transformer.transform(transform::pg_cell_to_node_cast(drop), &statement);
+        REQUIRE(node->to_string() == R"_($drop_database: db_name)_");
+    }
 }
 
 TEST_CASE("sql::table") {
@@ -119,5 +114,45 @@ TEST_CASE("sql::table") {
         auto drop = raw_parser("DROP TABLE table_name")->lst.front().data;
         auto node = transformer.transform(transform::pg_cell_to_node_cast(drop), &statement);
         REQUIRE(node->to_string() == R"_($drop_collection: .table_name)_");
+    }
+}
+
+TEST_CASE("sql::index") {
+    auto resource = std::pmr::synchronized_pool_resource();
+    transform::transformer transformer(&resource);
+    components::logical_plan::parameter_node_t statement(&resource);
+
+    SECTION("create with uuid") {
+        auto create = raw_parser("CREATE INDEX some_idx ON uuid.db.schema.table (field);")->lst.front().data;
+        auto node = transformer.transform(transform::pg_cell_to_node_cast(create), &statement);
+        REQUIRE(node->to_string() == R"_($create_index: db.table name:some_idx[ field ] type:single)_");
+    }
+
+    SECTION("create with schema") {
+        auto create = raw_parser("CREATE INDEX some_idx ON db.schema.table (field);")->lst.front().data;
+        auto node = transformer.transform(transform::pg_cell_to_node_cast(create), &statement);
+        REQUIRE(node->to_string() == R"_($create_index: db.table name:some_idx[ field ] type:single)_");
+    }
+
+    SECTION("create") {
+        auto create = raw_parser("CREATE INDEX some_idx ON db.table (field);")->lst.front().data;
+        auto node = transformer.transform(transform::pg_cell_to_node_cast(create), &statement);
+        REQUIRE(node->to_string() == R"_($create_index: db.table name:some_idx[ field ] type:single)_");
+    }
+
+    SECTION("drop with uuid") {
+        auto drop = raw_parser("DROP INDEX uuid.db.schema.table.some_idx")->lst.front().data;
+        auto node = transformer.transform(transform::pg_cell_to_node_cast(drop), &statement);
+        REQUIRE(node->to_string() == R"_($drop_index: db.table name:some_idx)_");
+    }
+    SECTION("drop with schema") {
+        auto drop = raw_parser("DROP INDEX db.schema.table.some_idx")->lst.front().data;
+        auto node = transformer.transform(transform::pg_cell_to_node_cast(drop), &statement);
+        REQUIRE(node->to_string() == R"_($drop_index: db.table name:some_idx)_");
+    }
+    SECTION("drop") {
+        auto drop = raw_parser("DROP INDEX db.table.some_idx")->lst.front().data;
+        auto node = transformer.transform(transform::pg_cell_to_node_cast(drop), &statement);
+        REQUIRE(node->to_string() == R"_($drop_index: db.table name:some_idx)_");
     }
 }
