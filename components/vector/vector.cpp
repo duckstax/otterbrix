@@ -7,7 +7,8 @@
 
 namespace components::vector {
 
-    unified_vector_format::unified_vector_format() : validity(nullptr) {}
+    unified_vector_format::unified_vector_format()
+        : validity(nullptr) {}
     unified_vector_format::unified_vector_format(std::pmr::memory_resource* resource, uint64_t capacity)
         : validity(resource, capacity) {}
 

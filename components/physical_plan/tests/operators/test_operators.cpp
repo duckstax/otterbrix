@@ -214,9 +214,8 @@ TEST_CASE("operator::update") {
         }
 
         operator_update update_(d(collection), {script_update_1, script_update_2}, false);
-        update_.set_children(boost::intrusive_ptr(new full_scan(d(collection),
-                                                                predicates::create_predicate(d(collection), cond),
-                                                                components::logical_plan::limit_t(1))));
+        update_.set_children(boost::intrusive_ptr(
+            new full_scan(d(collection), predicates::create_predicate(cond), components::logical_plan::limit_t(1))));
         update_.on_execute(&pipeline_context);
         {
             full_scan scan(d(collection),
@@ -251,9 +250,8 @@ TEST_CASE("operator::update") {
         }
 
         operator_update update_(d(collection), {script_update_1, script_update_2}, false);
-        update_.set_children(boost::intrusive_ptr(new full_scan(d(collection),
-                                                                predicates::create_predicate(d(collection), cond),
-                                                                components::logical_plan::limit_t(5))));
+        update_.set_children(boost::intrusive_ptr(
+            new full_scan(d(collection), predicates::create_predicate(cond), components::logical_plan::limit_t(5))));
         update_.on_execute(&pipeline_context);
         {
             full_scan scan(d(collection),

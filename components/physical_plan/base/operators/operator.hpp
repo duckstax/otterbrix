@@ -2,8 +2,8 @@
 
 #include <components/base/collection_full_name.hpp>
 #include <components/context/context.hpp>
-#include <components/physical_plan/collection/operators/operator_data.hpp>
-#include <components/physical_plan/collection/operators/operator_write_data.hpp>
+#include <components/physical_plan/base/operators/operator_data.hpp>
+#include <components/physical_plan/base/operators/operator_write_data.hpp>
 
 namespace components::expressions {
     class key_t;

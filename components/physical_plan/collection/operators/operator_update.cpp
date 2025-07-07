@@ -16,7 +16,7 @@ namespace services::collection::operators {
         // TODO: worth to create separate update_join operator or mutable_join with callback
         if (left_ && left_->output() && right_ && right_->output()) {
             auto tape = std::make_unique<components::document::impl::base_document>(context_->resource());
-            if (std::get<std::pmr::vector<document_ptr>>(left_->output()->data()).empty() && std::get<std::pmr::vector<document_ptr>>(right_->output()->data()).empty()) {
+            if (left_->output()->documents().empty() && right_->output()->documents().empty()) {
                 if (upsert_) {
                     output_ = base::operators::make_operator_data(context_->resource());
                     auto new_doc = components::document::make_document(context_->resource());
@@ -51,7 +51,7 @@ namespace services::collection::operators {
             }
         } else if (left_ && left_->output()) {
             auto tape = std::make_unique<components::document::impl::base_document>(context_->resource());
-            if (std::get<std::pmr::vector<document_ptr>>(left_->output()->data()).empty()) {
+            if (left_->output()->documents().empty()) {
                 if (upsert_) {
                     output_ = base::operators::make_operator_data(context_->resource());
                     auto new_doc = components::document::make_document(context_->resource());
@@ -65,7 +65,7 @@ namespace services::collection::operators {
             } else {
                 modified_ = base::operators::make_operator_write_data<document_id_t>(context_->resource());
                 no_modified_ = base::operators::make_operator_write_data<document_id_t>(context_->resource());
-                for (auto& document : std::get<std::pmr::vector<document_ptr>>(left_->output()->data())) {
+                for (auto& document : left_->output()->documents()) {
                     context_->index_engine()->delete_document(document, pipeline_context); //todo: can optimized
                     bool modified = false;
                     for (const auto& expr : updates_) {
