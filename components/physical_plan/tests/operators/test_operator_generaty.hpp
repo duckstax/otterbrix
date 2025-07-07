@@ -1,7 +1,7 @@
 #pragma once
 
+#include <components/physical_plan/base/operators/operator_raw_data.hpp>
 #include <components/physical_plan/collection/operators/operator_insert.hpp>
-#include <components/physical_plan/collection/operators/operator_raw_data.hpp>
 #include <components/tests/generaty.hpp>
 #include <core/non_thread_scheduler/scheduler_test.hpp>
 #include <services/collection/collection.hpp>
@@ -58,7 +58,7 @@ inline void fill_collection(context_ptr& collection) {
         documents.emplace_back(gen_doc(i, collection->resource_));
     }
     operators::operator_insert insert(collection->collection_.get());
-    insert.set_children({new operators::operator_raw_data_t(std::move(documents))});
+    insert.set_children({new base::operators::operator_raw_data_t(std::move(documents))});
     insert.on_execute(nullptr);
 }
 
