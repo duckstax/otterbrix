@@ -2,7 +2,7 @@
 
 #include <components/physical_plan/base/operators/operator.hpp>
 
-#include "predicates/predicate.hpp"
+#include <components/physical_plan/collection/operators/predicates/predicate.hpp>
 
 namespace services::collection::operators {
 

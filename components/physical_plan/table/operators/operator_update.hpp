@@ -1,20 +1,24 @@
 #pragma once
 
+#include <components/expressions/compare_expression.hpp>
+#include <components/expressions/update_expression.hpp>
+
 #include <components/physical_plan/base/operators/operator.hpp>
-#include <components/vector/data_chunk.hpp>
 
 namespace services::table::operators {
 
     class operator_update final : public read_write_operator_t {
     public:
         operator_update(collection::context_collection_t* context,
-                        components::vector::data_chunk_t&& update,
-                        bool upsert);
+                        std::pmr::vector<components::expressions::update_expr_ptr> updates,
+                        bool upsert,
+                        components::expressions::compare_expression_ptr comp_expr);
 
     private:
         void on_execute_impl(components::pipeline::context_t* pipeline_context) final;
 
-        components::vector::data_chunk_t data_;
+        std::pmr::vector<components::expressions::update_expr_ptr> updates_;
+        components::expressions::compare_expression_ptr comp_expr_;
         bool upsert_;
     };
 

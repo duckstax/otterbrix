@@ -1,93 +1,11 @@
 #include "value.hpp"
+
+#include "components/types/operations_helper.hpp"
 #include <boost/math/special_functions/factorials.hpp>
 #include <cmath>
+#include <components/types/logical_value.hpp>
 
 namespace components::document {
-
-    // This could be useful in other places, but for now it is here
-    // Default only accepts int as amount
-    constexpr int128_t operator<<(int128_t lhs, int128_t amount) { return lhs << static_cast<int>(amount); }
-    constexpr int128_t operator>>(int128_t lhs, int128_t amount) { return lhs >> static_cast<int>(amount); }
-
-    // there is no std::shift_left operator
-    template<typename T = void>
-    struct shift_left;
-    template<typename T = void>
-    struct shift_right;
-    template<typename T = void>
-    struct pow;
-    template<typename T = void>
-    struct sqrt;
-    template<typename T = void>
-    struct cbrt;
-    template<typename T = void>
-    struct fact;
-    template<typename T = void>
-    struct abs;
-
-    template<>
-    struct shift_left<void> {
-        template<typename T, typename U>
-        constexpr auto operator()(T&& t, U&& u) const {
-            return std::forward<T>(t) << std::forward<U>(u);
-        }
-    };
-
-    template<>
-    struct shift_right<void> {
-        template<typename T, typename U>
-        constexpr auto operator()(T&& t, U&& u) const {
-            return std::forward<T>(t) >> std::forward<U>(u);
-        }
-    };
-
-    template<>
-    struct pow<void> {
-        template<typename T, typename U>
-        constexpr auto operator()(T&& t, U&& u) const {
-            if constexpr (std::is_same<T, int128_t>::value) {
-                return t ^ u;
-            } else {
-                return std::pow(std::forward<T>(t), std::forward<U>(u));
-            }
-        }
-    };
-
-    template<>
-    struct sqrt<void> {
-        template<typename T>
-        constexpr auto operator()(T&& x) const {
-            return std::sqrt(std::forward<T>(x));
-        }
-    };
-
-    template<>
-    struct cbrt<void> {
-        template<typename T>
-        constexpr auto operator()(T&& x) const {
-            return std::cbrt(std::forward<T>(x));
-        }
-    };
-
-    template<>
-    struct fact<void> {
-        template<typename T>
-        constexpr auto operator()(T&& x) const {
-            return boost::math::factorial<double>(std::forward<T>(x));
-        }
-    };
-
-    template<>
-    struct abs<void> {
-        template<typename T>
-        constexpr auto operator()(T&& x) const {
-            if constexpr (std::is_same<T, int128_t>::value) {
-                return x < 0 ? -x : x;
-            } else {
-                return std::abs<T>(std::forward<T>(x));
-            }
-        }
-    };
 
     value_t::value_t(impl::element element)
         : element_(element) {}
@@ -116,9 +34,9 @@ namespace components::document {
             case types::physical_type::INT128:
                 return as_int128() == rhs.as_int128();
             case types::physical_type::FLOAT:
-                return is_equals(as_float(), rhs.as_float());
+                return types::is_equals(as_float(), rhs.as_float());
             case types::physical_type::DOUBLE:
-                return is_equals(as_double(), rhs.as_double());
+                return types::is_equals(as_double(), rhs.as_double());
             case types::physical_type::STRING:
                 return as_string() == rhs.as_string();
             default: // special values are always equal
@@ -171,6 +89,42 @@ namespace components::document {
             return element_.get_string().value();
         } else {
             return get_string_bytes();
+        }
+    }
+
+    types::logical_value_t value_t::as_logical_value() const {
+        switch (physical_type()) {
+            case types::physical_type::BOOL:
+                return types::logical_value_t{element_.get_bool().value()};
+            case types::physical_type::UINT8:
+                return types::logical_value_t{element_.get_uint8().value()};
+            case types::physical_type::INT8:
+                return types::logical_value_t{element_.get_int8().value()};
+            case types::physical_type::UINT16:
+                return types::logical_value_t{element_.get_uint16().value()};
+            case types::physical_type::INT16:
+                return types::logical_value_t{element_.get_int16().value()};
+            case types::physical_type::UINT32:
+                return types::logical_value_t{element_.get_uint32().value()};
+            case types::physical_type::INT32:
+                return types::logical_value_t{element_.get_int32().value()};
+            case types::physical_type::UINT64:
+                return types::logical_value_t{element_.get_uint64().value()};
+            case types::physical_type::INT64:
+                return types::logical_value_t{element_.get_int64().value()};
+            //case types::physical_type::UINT128:
+            // there is no get_uint128 yet
+            // return types::logical_value_t{element_.get_uint128().value()};
+            // case types::physical_type::INT128:
+            // return types::logical_value_t{element_.get_int128().value()};
+            case types::physical_type::FLOAT:
+                return types::logical_value_t{element_.get_float().value()};
+            case types::physical_type::DOUBLE:
+                return types::logical_value_t{element_.get_double().value()};
+            case types::physical_type::STRING:
+                return types::logical_value_t{element_.get_string().value()};
+            default:
+                return types::logical_value_t{};
         }
     }
 
@@ -402,24 +356,24 @@ namespace components::document {
         auto type = value1 ? value1.physical_type() : value2.physical_type();
         switch (type) {
             case types::physical_type::BOOL:
-                return op<pow<>>(value1, value2, tape, &value_t::as_bool);
+                return op<types::pow<>>(value1, value2, tape, &value_t::as_bool);
             case types::physical_type::UINT8:
             case types::physical_type::UINT16:
             case types::physical_type::UINT32:
             case types::physical_type::UINT64:
-                return op<pow<>>(value1, value2, tape, &value_t::as_unsigned);
+                return op<types::pow<>>(value1, value2, tape, &value_t::as_unsigned);
             case types::physical_type::INT8:
             case types::physical_type::INT16:
             case types::physical_type::INT32:
             case types::physical_type::INT64:
-                return op<pow<>>(value1, value2, tape, &value_t::as_int);
+                return op<types::pow<>>(value1, value2, tape, &value_t::as_int);
             case types::physical_type::UINT128:
             case types::physical_type::INT128:
-                return op<pow<>>(value1, value2, tape, &value_t::as_int128);
+                return op<types::pow<>>(value1, value2, tape, &value_t::as_int128);
             case types::physical_type::FLOAT:
-                return op<pow<>>(value1, value2, tape, &value_t::as_float);
+                return op<types::pow<>>(value1, value2, tape, &value_t::as_float);
             case types::physical_type::DOUBLE:
-                return op<pow<>>(value1, value2, tape, &value_t::as_double);
+                return op<types::pow<>>(value1, value2, tape, &value_t::as_double);
             default: // special values and strings can't be multiplied
                 return value1;
         }
@@ -432,21 +386,21 @@ namespace components::document {
 
         switch (value.physical_type()) {
             case types::physical_type::BOOL:
-                return op<sqrt<>>(value, tape, &value_t::as_bool);
+                return op<types::sqrt<>>(value, tape, &value_t::as_bool);
             case types::physical_type::UINT8:
             case types::physical_type::UINT16:
             case types::physical_type::UINT32:
             case types::physical_type::UINT64:
-                return op<sqrt<>>(value, tape, &value_t::as_unsigned);
+                return op<types::sqrt<>>(value, tape, &value_t::as_unsigned);
             case types::physical_type::INT8:
             case types::physical_type::INT16:
             case types::physical_type::INT32:
             case types::physical_type::INT64:
-                return op<sqrt<>>(value, tape, &value_t::as_int);
+                return op<types::sqrt<>>(value, tape, &value_t::as_int);
             case types::physical_type::FLOAT:
-                return op<sqrt<>>(value, tape, &value_t::as_float);
+                return op<types::sqrt<>>(value, tape, &value_t::as_float);
             case types::physical_type::DOUBLE:
-                return op<sqrt<>>(value, tape, &value_t::as_double);
+                return op<types::sqrt<>>(value, tape, &value_t::as_double);
             default: // special values and strings can't be multiplied; int128 is undefined
                 return value;
         }
@@ -459,21 +413,21 @@ namespace components::document {
 
         switch (value.physical_type()) {
             case types::physical_type::BOOL:
-                return op<cbrt<>>(value, tape, &value_t::as_bool);
+                return op<types::cbrt<>>(value, tape, &value_t::as_bool);
             case types::physical_type::UINT8:
             case types::physical_type::UINT16:
             case types::physical_type::UINT32:
             case types::physical_type::UINT64:
-                return op<cbrt<>>(value, tape, &value_t::as_unsigned);
+                return op<types::cbrt<>>(value, tape, &value_t::as_unsigned);
             case types::physical_type::INT8:
             case types::physical_type::INT16:
             case types::physical_type::INT32:
             case types::physical_type::INT64:
-                return op<cbrt<>>(value, tape, &value_t::as_int);
+                return op<types::cbrt<>>(value, tape, &value_t::as_int);
             case types::physical_type::FLOAT:
-                return op<cbrt<>>(value, tape, &value_t::as_float);
+                return op<types::cbrt<>>(value, tape, &value_t::as_float);
             case types::physical_type::DOUBLE:
-                return op<cbrt<>>(value, tape, &value_t::as_double);
+                return op<types::cbrt<>>(value, tape, &value_t::as_double);
             default: // special values and strings can't be multiplied; int128 is undefined
                 return value;
         }
@@ -486,21 +440,21 @@ namespace components::document {
 
         switch (value.physical_type()) {
             case types::physical_type::BOOL:
-                return op<fact<>>(value, tape, &value_t::as_bool);
+                return op<types::fact<>>(value, tape, &value_t::as_bool);
             case types::physical_type::UINT8:
             case types::physical_type::UINT16:
             case types::physical_type::UINT32:
             case types::physical_type::UINT64:
-                return op<fact<>>(value, tape, &value_t::as_unsigned);
+                return op<types::fact<>>(value, tape, &value_t::as_unsigned);
             case types::physical_type::INT8:
             case types::physical_type::INT16:
             case types::physical_type::INT32:
             case types::physical_type::INT64:
-                return op<fact<>>(value, tape, &value_t::as_int);
+                return op<types::fact<>>(value, tape, &value_t::as_int);
             case types::physical_type::FLOAT:
-                return op<fact<>>(value, tape, &value_t::as_float);
+                return op<types::fact<>>(value, tape, &value_t::as_float);
             case types::physical_type::DOUBLE:
-                return op<fact<>>(value, tape, &value_t::as_double);
+                return op<types::fact<>>(value, tape, &value_t::as_double);
             default: // special values and strings can't be multiplied; int128 is undefined
                 return value;
         }
@@ -513,7 +467,7 @@ namespace components::document {
 
         switch (value.physical_type()) {
             case types::physical_type::BOOL:
-                return op<abs<>>(value, tape, &value_t::as_bool);
+                return op<types::abs<>>(value, tape, &value_t::as_bool);
             case types::physical_type::UINT8:
             case types::physical_type::UINT16:
             case types::physical_type::UINT32:
@@ -524,14 +478,14 @@ namespace components::document {
             case types::physical_type::INT16:
             case types::physical_type::INT32:
             case types::physical_type::INT64:
-                return op<abs<>>(value, tape, &value_t::as_int);
+                return op<types::abs<>>(value, tape, &value_t::as_int);
             case types::physical_type::UINT128:
             case types::physical_type::INT128:
-                return op<abs<>>(value, tape, &value_t::as_int128);
+                return op<types::abs<>>(value, tape, &value_t::as_int128);
             case types::physical_type::FLOAT:
-                return op<abs<>>(value, tape, &value_t::as_float);
+                return op<types::abs<>>(value, tape, &value_t::as_float);
             case types::physical_type::DOUBLE:
-                return op<abs<>>(value, tape, &value_t::as_double);
+                return op<types::abs<>>(value, tape, &value_t::as_double);
             default: // special values and strings can't be multiplied
                 return value;
         }
@@ -652,20 +606,20 @@ namespace components::document {
         auto type = value1 ? value1.physical_type() : value2.physical_type();
         switch (type) {
             case types::physical_type::BOOL:
-                return op<shift_left<>>(value1, value2, tape, &value_t::as_bool);
+                return op<types::shift_left<>>(value1, value2, tape, &value_t::as_bool);
             case types::physical_type::UINT8:
             case types::physical_type::UINT16:
             case types::physical_type::UINT32:
             case types::physical_type::UINT64:
-                return op<shift_left<>>(value1, value2, tape, &value_t::as_unsigned);
+                return op<types::shift_left<>>(value1, value2, tape, &value_t::as_unsigned);
             case types::physical_type::INT8:
             case types::physical_type::INT16:
             case types::physical_type::INT32:
             case types::physical_type::INT64:
-                return op<shift_left<>>(value1, value2, tape, &value_t::as_int);
+                return op<types::shift_left<>>(value1, value2, tape, &value_t::as_int);
             case types::physical_type::UINT128:
             case types::physical_type::INT128:
-                return op<shift_left<>>(value1, value2, tape, &value_t::as_int128);
+                return op<types::shift_left<>>(value1, value2, tape, &value_t::as_int128);
             default: // special values and strings can't bitwised, float can't be shifted
                 return value1;
         }
@@ -679,20 +633,20 @@ namespace components::document {
         auto type = value1 ? value1.physical_type() : value2.physical_type();
         switch (type) {
             case types::physical_type::BOOL:
-                return op<shift_right<>>(value1, value2, tape, &value_t::as_bool);
+                return op<types::shift_right<>>(value1, value2, tape, &value_t::as_bool);
             case types::physical_type::UINT8:
             case types::physical_type::UINT16:
             case types::physical_type::UINT32:
             case types::physical_type::UINT64:
-                return op<shift_right<>>(value1, value2, tape, &value_t::as_unsigned);
+                return op<types::shift_right<>>(value1, value2, tape, &value_t::as_unsigned);
             case types::physical_type::INT8:
             case types::physical_type::INT16:
             case types::physical_type::INT32:
             case types::physical_type::INT64:
-                return op<shift_right<>>(value1, value2, tape, &value_t::as_int);
+                return op<types::shift_right<>>(value1, value2, tape, &value_t::as_int);
             case types::physical_type::UINT128:
             case types::physical_type::INT128:
-                return op<shift_right<>>(value1, value2, tape, &value_t::as_int128);
+                return op<types::shift_right<>>(value1, value2, tape, &value_t::as_int128);
             default: // special values and strings can't bitwised, float can't be shifted
                 return value1;
         }

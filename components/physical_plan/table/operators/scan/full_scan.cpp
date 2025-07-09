@@ -42,7 +42,7 @@ namespace services::table::operators {
                 assert(it != types.end());
                 return std::make_unique<components::table::constant_filter_t>(
                     exresssion->type(),
-                    impl::convert(parameters->parameters.at(exresssion->value())),
+                    parameters->parameters.at(exresssion->value()).as_logical_value(),
                     it - types.begin());
             }
         }

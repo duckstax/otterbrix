@@ -1,4 +1,5 @@
 #include "logical_value.hpp"
+#include "operations_helper.hpp"
 
 #include <stdexcept>
 
@@ -548,56 +549,607 @@ namespace components::types {
         return result;
     }
 
-    logical_value_t logical_value_t::sum(const logical_value_t& value1, const logical_value_t& value2) {
+    template<typename, typename = void>
+    constexpr bool has_operator = false;
+    template<typename T>
+    constexpr bool has_operator<T, std::void_t<decltype(std::declval<T>().operator())>> = true;
+
+    template<typename OP, typename GET>
+    logical_value_t op(const logical_value_t& value, GET getter_function) {
+        OP operation{};
+        return logical_value_t{operation((value.*getter_function)())};
+    }
+
+    template<typename OP, typename GET>
+    logical_value_t op(const logical_value_t& value1, const logical_value_t& value2, GET getter_function) {
+        using T = typename std::invoke_result<decltype(getter_function), logical_value_t>::type;
+        OP operation{};
         if (value1.is_null()) {
-            return value2;
+            return logical_value_t{operation(T(), (value2.*getter_function)())};
+        } else if (value2.is_null()) {
+            return logical_value_t{operation((value1.*getter_function)(), T())};
+        } else {
+            return logical_value_t{operation((value1.*getter_function)(), (value2.*getter_function)())};
         }
-        if (value2.is_null()) {
+    }
+
+    logical_value_t logical_value_t::sum(const logical_value_t& value1, const logical_value_t& value2) {
+        if (value1.is_null() && value2.is_null()) {
             return value1;
         }
 
-        switch (value1.type().type()) {
+        auto type = value1.is_null() ? value2.type().type() : value1.type().type();
+        switch (type) {
             case logical_type::BOOLEAN:
-                return logical_value_t{value1.value<bool>() + value2.value<bool>()};
+                return op<std::plus<>>(value1, value2, &logical_value_t::value<bool>);
             case logical_type::TINYINT:
-                return logical_value_t{value1.value<int8_t>() + value2.value<int8_t>()};
-            case logical_type::SMALLINT:
-                return logical_value_t{value1.value<int16_t>() + value2.value<int16_t>()};
-            case logical_type::INTEGER:
-                return logical_value_t{value1.value<int32_t>() + value2.value<int32_t>()};
-            case logical_type::BIGINT:
-                return logical_value_t{value1.value<int64_t>() + value2.value<int64_t>()};
-            // case logical_type::HUGEINT:
-            //     return logical_value_t{value1.value<int128_t>() + value2.value<int128_t>()};
-            case logical_type::TIMESTAMP_SEC:
-                return logical_value_t{value1.value<std::chrono::seconds>() + value2.value<std::chrono::seconds>()};
-            case logical_type::TIMESTAMP_MS:
-                return logical_value_t{value1.value<std::chrono::milliseconds>() +
-                                       value2.value<std::chrono::milliseconds>()};
-            case logical_type::TIMESTAMP_US:
-                return logical_value_t{value1.value<std::chrono::microseconds>() +
-                                       value2.value<std::chrono::microseconds>()};
-            case logical_type::TIMESTAMP_NS:
-                return logical_value_t{value1.value<std::chrono::nanoseconds>() +
-                                       value2.value<std::chrono::nanoseconds>()};
-            case logical_type::FLOAT:
-                return logical_value_t{value1.value<float>() + value2.value<float>()};
-            case logical_type::DOUBLE:
-                return logical_value_t{value1.value<double>() + value2.value<double>()};
+                return op<std::plus<>>(value1, value2, &logical_value_t::value<int8_t>);
             case logical_type::UTINYINT:
-                return logical_value_t{value1.value<uint8_t>() + value2.value<uint8_t>()};
+                return op<std::plus<>>(value1, value2, &logical_value_t::value<uint8_t>);
+            case logical_type::SMALLINT:
+                return op<std::plus<>>(value1, value2, &logical_value_t::value<int16_t>);
             case logical_type::USMALLINT:
-                return logical_value_t{value1.value<uint16_t>() + value2.value<uint16_t>()};
+                return op<std::plus<>>(value1, value2, &logical_value_t::value<uint16_t>);
+            case logical_type::INTEGER:
+                return op<std::plus<>>(value1, value2, &logical_value_t::value<int32_t>);
             case logical_type::UINTEGER:
-                return logical_value_t{value1.value<uint32_t>() + value2.value<uint32_t>()};
+                return op<std::plus<>>(value1, value2, &logical_value_t::value<uint32_t>);
+            case logical_type::BIGINT:
+                return op<std::plus<>>(value1, value2, &logical_value_t::value<int64_t>);
             case logical_type::UBIGINT:
-                return logical_value_t{value1.value<uint64_t>() + value2.value<uint64_t>()};
+                return op<std::plus<>>(value1, value2, &logical_value_t::value<uint64_t>);
+            // case logical_type::HUGEINT:
+            // return op<std::plus<>>(value1, value2, &logical_value_t::value<int128_t>);
             // case logical_type::UHUGEINT:
-            //     return logical_value_t{value1.value<uint128_t>() + value2.value<uint128_t>()};
+            // return op<std::plus<>>(value1, value2, &logical_value_t::value<uint128_t>);
+            case logical_type::TIMESTAMP_SEC:
+                return op<std::plus<>>(value1, value2, &logical_value_t::value<std::chrono::seconds>);
+            case logical_type::TIMESTAMP_MS:
+                return op<std::plus<>>(value1, value2, &logical_value_t::value<std::chrono::milliseconds>);
+            case logical_type::TIMESTAMP_US:
+                return op<std::plus<>>(value1, value2, &logical_value_t::value<std::chrono::microseconds>);
+            case logical_type::TIMESTAMP_NS:
+                return op<std::plus<>>(value1, value2, &logical_value_t::value<std::chrono::nanoseconds>);
+            case logical_type::FLOAT:
+                return op<std::plus<>>(value1, value2, &logical_value_t::value<float>);
+            case logical_type::DOUBLE:
+                return op<std::plus<>>(value1, value2, &logical_value_t::value<double>);
             case logical_type::STRING_LITERAL:
-                return logical_value_t{value1.value<const std::string&>() + value2.value<const std::string&>()};
+                return op<std::plus<>>(value1, value2, &logical_value_t::value<std::string>);
             default:
-                throw std::runtime_error("logical_value_t::sum unable to summate given types");
+                throw std::runtime_error("logical_value_t::sum unable to process given types");
+        }
+    }
+
+    logical_value_t logical_value_t::subtract(const logical_value_t& value1, const logical_value_t& value2) {
+        if (value1.is_null() && value2.is_null()) {
+            return value1;
+        }
+
+        auto type = value1.is_null() ? value2.type().type() : value1.type().type();
+        switch (type) {
+            case logical_type::BOOLEAN:
+                return op<std::minus<>>(value1, value2, &logical_value_t::value<bool>);
+            case logical_type::TINYINT:
+                return op<std::minus<>>(value1, value2, &logical_value_t::value<int8_t>);
+            case logical_type::UTINYINT:
+                return op<std::minus<>>(value1, value2, &logical_value_t::value<uint8_t>);
+            case logical_type::SMALLINT:
+                return op<std::minus<>>(value1, value2, &logical_value_t::value<int16_t>);
+            case logical_type::USMALLINT:
+                return op<std::minus<>>(value1, value2, &logical_value_t::value<uint16_t>);
+            case logical_type::INTEGER:
+                return op<std::minus<>>(value1, value2, &logical_value_t::value<int32_t>);
+            case logical_type::UINTEGER:
+                return op<std::minus<>>(value1, value2, &logical_value_t::value<uint32_t>);
+            case logical_type::BIGINT:
+                return op<std::minus<>>(value1, value2, &logical_value_t::value<int64_t>);
+            case logical_type::UBIGINT:
+                return op<std::minus<>>(value1, value2, &logical_value_t::value<uint64_t>);
+            // case logical_type::HUGEINT:
+            // return op<std::minus<>>(value1, value2, &logical_value_t::value<int128_t>);
+            // case logical_type::UHUGEINT:
+            // return op<std::minus<>>(value1, value2, &logical_value_t::value<uint128_t>);
+            case logical_type::TIMESTAMP_SEC:
+                return op<std::minus<>>(value1, value2, &logical_value_t::value<std::chrono::seconds>);
+            case logical_type::TIMESTAMP_MS:
+                return op<std::minus<>>(value1, value2, &logical_value_t::value<std::chrono::milliseconds>);
+            case logical_type::TIMESTAMP_US:
+                return op<std::minus<>>(value1, value2, &logical_value_t::value<std::chrono::microseconds>);
+            case logical_type::TIMESTAMP_NS:
+                return op<std::minus<>>(value1, value2, &logical_value_t::value<std::chrono::nanoseconds>);
+            case logical_type::FLOAT:
+                return op<std::minus<>>(value1, value2, &logical_value_t::value<float>);
+            case logical_type::DOUBLE:
+                return op<std::minus<>>(value1, value2, &logical_value_t::value<double>);
+            default:
+                throw std::runtime_error("logical_value_t::subtract unable to process given types");
+        }
+    }
+
+    logical_value_t logical_value_t::mult(const logical_value_t& value1, const logical_value_t& value2) {
+        if (value1.is_null() && value2.is_null()) {
+            return value1;
+        }
+
+        auto type = value1.is_null() ? value2.type().type() : value1.type().type();
+        switch (type) {
+            case logical_type::BOOLEAN:
+                return op<std::multiplies<>>(value1, value2, &logical_value_t::value<bool>);
+            case logical_type::TINYINT:
+                return op<std::multiplies<>>(value1, value2, &logical_value_t::value<int8_t>);
+            case logical_type::UTINYINT:
+                return op<std::multiplies<>>(value1, value2, &logical_value_t::value<uint8_t>);
+            case logical_type::SMALLINT:
+                return op<std::multiplies<>>(value1, value2, &logical_value_t::value<int16_t>);
+            case logical_type::USMALLINT:
+                return op<std::multiplies<>>(value1, value2, &logical_value_t::value<uint16_t>);
+            case logical_type::INTEGER:
+                return op<std::multiplies<>>(value1, value2, &logical_value_t::value<int32_t>);
+            case logical_type::UINTEGER:
+                return op<std::multiplies<>>(value1, value2, &logical_value_t::value<uint32_t>);
+            case logical_type::BIGINT:
+                return op<std::multiplies<>>(value1, value2, &logical_value_t::value<int64_t>);
+            case logical_type::UBIGINT:
+                return op<std::multiplies<>>(value1, value2, &logical_value_t::value<uint64_t>);
+            // case logical_type::HUGEINT:
+            // return op<std::multiplies<>>(value1, value2, &logical_value_t::value<int128_t>);
+            // case logical_type::UHUGEINT:
+            // return op<std::multiplies<>>(value1, value2, &logical_value_t::value<uint128_t>);
+            case logical_type::FLOAT:
+                return op<std::multiplies<>>(value1, value2, &logical_value_t::value<float>);
+            case logical_type::DOUBLE:
+                return op<std::multiplies<>>(value1, value2, &logical_value_t::value<double>);
+            default:
+                throw std::runtime_error("logical_value_t::mult unable to process given types");
+        }
+    }
+
+    logical_value_t logical_value_t::divide(const logical_value_t& value1, const logical_value_t& value2) {
+        if (value1.is_null() && value2.is_null()) {
+            return value1;
+        }
+
+        auto type = value1.is_null() ? value2.type().type() : value1.type().type();
+        switch (type) {
+            case logical_type::BOOLEAN:
+                return op<std::divides<>>(value1, value2, &logical_value_t::value<bool>);
+            case logical_type::TINYINT:
+                return op<std::divides<>>(value1, value2, &logical_value_t::value<int8_t>);
+            case logical_type::UTINYINT:
+                return op<std::divides<>>(value1, value2, &logical_value_t::value<uint8_t>);
+            case logical_type::SMALLINT:
+                return op<std::divides<>>(value1, value2, &logical_value_t::value<int16_t>);
+            case logical_type::USMALLINT:
+                return op<std::divides<>>(value1, value2, &logical_value_t::value<uint16_t>);
+            case logical_type::INTEGER:
+                return op<std::divides<>>(value1, value2, &logical_value_t::value<int32_t>);
+            case logical_type::UINTEGER:
+                return op<std::divides<>>(value1, value2, &logical_value_t::value<uint32_t>);
+            case logical_type::BIGINT:
+                return op<std::divides<>>(value1, value2, &logical_value_t::value<int64_t>);
+            case logical_type::UBIGINT:
+                return op<std::divides<>>(value1, value2, &logical_value_t::value<uint64_t>);
+            // case logical_type::HUGEINT:
+            // return op<std::divides<>>(value1, value2, &logical_value_t::value<int128_t>);
+            // case logical_type::UHUGEINT:
+            // return op<std::divides<>>(value1, value2, &logical_value_t::value<uint128_t>);
+            case logical_type::FLOAT:
+                return op<std::divides<>>(value1, value2, &logical_value_t::value<float>);
+            case logical_type::DOUBLE:
+                return op<std::divides<>>(value1, value2, &logical_value_t::value<double>);
+            default:
+                throw std::runtime_error("logical_value_t::divide unable to process given types");
+        }
+    }
+
+    logical_value_t logical_value_t::modulus(const logical_value_t& value1, const logical_value_t& value2) {
+        if (value1.is_null() && value2.is_null()) {
+            return value1;
+        }
+
+        auto type = value1.is_null() ? value2.type().type() : value1.type().type();
+        switch (type) {
+            case logical_type::BOOLEAN:
+                return op<std::modulus<>>(value1, value2, &logical_value_t::value<bool>);
+            case logical_type::TINYINT:
+                return op<std::modulus<>>(value1, value2, &logical_value_t::value<int8_t>);
+            case logical_type::UTINYINT:
+                return op<std::modulus<>>(value1, value2, &logical_value_t::value<uint8_t>);
+            case logical_type::SMALLINT:
+                return op<std::modulus<>>(value1, value2, &logical_value_t::value<int16_t>);
+            case logical_type::USMALLINT:
+                return op<std::modulus<>>(value1, value2, &logical_value_t::value<uint16_t>);
+            case logical_type::INTEGER:
+                return op<std::modulus<>>(value1, value2, &logical_value_t::value<int32_t>);
+            case logical_type::UINTEGER:
+                return op<std::modulus<>>(value1, value2, &logical_value_t::value<uint32_t>);
+            case logical_type::BIGINT:
+                return op<std::modulus<>>(value1, value2, &logical_value_t::value<int64_t>);
+            case logical_type::UBIGINT:
+                return op<std::modulus<>>(value1, value2, &logical_value_t::value<uint64_t>);
+            // case logical_type::HUGEINT:
+            // return op<std::modulus<>>(value1, value2, &logical_value_t::value<int128_t>);
+            // case logical_type::UHUGEINT:
+            // return op<std::modulus<>>(value1, value2, &logical_value_t::value<uint128_t>);
+            case logical_type::TIMESTAMP_SEC:
+                return op<std::modulus<>>(value1, value2, &logical_value_t::value<std::chrono::seconds>);
+            case logical_type::TIMESTAMP_MS:
+                return op<std::modulus<>>(value1, value2, &logical_value_t::value<std::chrono::milliseconds>);
+            case logical_type::TIMESTAMP_US:
+                return op<std::modulus<>>(value1, value2, &logical_value_t::value<std::chrono::microseconds>);
+            case logical_type::TIMESTAMP_NS:
+                return op<std::modulus<>>(value1, value2, &logical_value_t::value<std::chrono::nanoseconds>);
+            default:
+                throw std::runtime_error("logical_value_t::divide unable to process given types");
+        }
+    }
+
+    logical_value_t logical_value_t::exponent(const logical_value_t& value1, const logical_value_t& value2) {
+        if (value1.is_null() && value2.is_null()) {
+            return value1;
+        }
+
+        auto type = value1.is_null() ? value2.type().type() : value1.type().type();
+        switch (type) {
+            case logical_type::BOOLEAN:
+                return op<pow<>>(value1, value2, &logical_value_t::value<bool>);
+            case logical_type::TINYINT:
+                return op<pow<>>(value1, value2, &logical_value_t::value<int8_t>);
+            case logical_type::UTINYINT:
+                return op<pow<>>(value1, value2, &logical_value_t::value<uint8_t>);
+            case logical_type::SMALLINT:
+                return op<pow<>>(value1, value2, &logical_value_t::value<int16_t>);
+            case logical_type::USMALLINT:
+                return op<pow<>>(value1, value2, &logical_value_t::value<uint16_t>);
+            case logical_type::INTEGER:
+                return op<pow<>>(value1, value2, &logical_value_t::value<int32_t>);
+            case logical_type::UINTEGER:
+                return op<pow<>>(value1, value2, &logical_value_t::value<uint32_t>);
+            case logical_type::BIGINT:
+                return op<pow<>>(value1, value2, &logical_value_t::value<int64_t>);
+            case logical_type::UBIGINT:
+                return op<pow<>>(value1, value2, &logical_value_t::value<uint64_t>);
+            // case logical_type::HUGEINT:
+            // return op<pow<>>(value1, value2, &logical_value_t::value<int128_t>);
+            // case logical_type::UHUGEINT:
+            // return op<pow<>>(value1, value2, &logical_value_t::value<uint128_t>);
+            default:
+                throw std::runtime_error("logical_value_t::exponent unable to process given types");
+        }
+    }
+
+    logical_value_t logical_value_t::sqr_root(const logical_value_t& value) {
+        if (value.is_null()) {
+            return value;
+        }
+
+        switch (value.type().type()) {
+            case logical_type::BOOLEAN:
+                return op<sqrt<>>(value, &logical_value_t::value<bool>);
+            case logical_type::TINYINT:
+                return op<sqrt<>>(value, &logical_value_t::value<int8_t>);
+            case logical_type::UTINYINT:
+                return op<sqrt<>>(value, &logical_value_t::value<uint8_t>);
+            case logical_type::SMALLINT:
+                return op<sqrt<>>(value, &logical_value_t::value<int16_t>);
+            case logical_type::USMALLINT:
+                return op<sqrt<>>(value, &logical_value_t::value<uint16_t>);
+            case logical_type::INTEGER:
+                return op<sqrt<>>(value, &logical_value_t::value<int32_t>);
+            case logical_type::UINTEGER:
+                return op<sqrt<>>(value, &logical_value_t::value<uint32_t>);
+            case logical_type::BIGINT:
+                return op<sqrt<>>(value, &logical_value_t::value<int64_t>);
+            case logical_type::UBIGINT:
+                return op<sqrt<>>(value, &logical_value_t::value<uint64_t>);
+            // case logical_type::HUGEINT:
+            // return op<sqrt<>>(value, &logical_value_t::value<int128_t>);
+            // case logical_type::UHUGEINT:
+            // return op<sqrt<>>(value, &logical_value_t::value<uint128_t>);
+            default:
+                throw std::runtime_error("logical_value_t::sqr_root unable to process given types");
+        }
+    }
+
+    logical_value_t logical_value_t::cube_root(const logical_value_t& value) {
+        if (value.is_null()) {
+            return value;
+        }
+
+        switch (value.type().type()) {
+            case logical_type::BOOLEAN:
+                return op<cbrt<>>(value, &logical_value_t::value<bool>);
+            case logical_type::TINYINT:
+                return op<cbrt<>>(value, &logical_value_t::value<int8_t>);
+            case logical_type::UTINYINT:
+                return op<cbrt<>>(value, &logical_value_t::value<uint8_t>);
+            case logical_type::SMALLINT:
+                return op<cbrt<>>(value, &logical_value_t::value<int16_t>);
+            case logical_type::USMALLINT:
+                return op<cbrt<>>(value, &logical_value_t::value<uint16_t>);
+            case logical_type::INTEGER:
+                return op<cbrt<>>(value, &logical_value_t::value<int32_t>);
+            case logical_type::UINTEGER:
+                return op<cbrt<>>(value, &logical_value_t::value<uint32_t>);
+            case logical_type::BIGINT:
+                return op<cbrt<>>(value, &logical_value_t::value<int64_t>);
+            case logical_type::UBIGINT:
+                return op<cbrt<>>(value, &logical_value_t::value<uint64_t>);
+            // case logical_type::HUGEINT:
+            // return op<cbrt<>>(value, &logical_value_t::value<int128_t>);
+            // case logical_type::UHUGEINT:
+            // return op<cbrt<>>(value, &logical_value_t::value<uint128_t>);
+            default:
+                throw std::runtime_error("logical_value_t::cube_root unable to process given types");
+        }
+    }
+
+    logical_value_t logical_value_t::factorial(const logical_value_t& value) {
+        if (value.is_null()) {
+            return value;
+        }
+
+        switch (value.type().type()) {
+            case logical_type::BOOLEAN:
+                return op<fact<>>(value, &logical_value_t::value<bool>);
+            case logical_type::TINYINT:
+                return op<fact<>>(value, &logical_value_t::value<int8_t>);
+            case logical_type::UTINYINT:
+                return op<fact<>>(value, &logical_value_t::value<uint8_t>);
+            case logical_type::SMALLINT:
+                return op<fact<>>(value, &logical_value_t::value<int16_t>);
+            case logical_type::USMALLINT:
+                return op<fact<>>(value, &logical_value_t::value<uint16_t>);
+            case logical_type::INTEGER:
+                return op<fact<>>(value, &logical_value_t::value<int32_t>);
+            case logical_type::UINTEGER:
+                return op<fact<>>(value, &logical_value_t::value<uint32_t>);
+            case logical_type::BIGINT:
+                return op<fact<>>(value, &logical_value_t::value<int64_t>);
+            case logical_type::UBIGINT:
+                return op<fact<>>(value, &logical_value_t::value<uint64_t>);
+            // case logical_type::HUGEINT:
+            // return op<fact<>>(value, &logical_value_t::value<int128_t>);
+            // case logical_type::UHUGEINT:
+            // return op<fact<>>(value, &logical_value_t::value<uint128_t>);
+            default:
+                throw std::runtime_error("logical_value_t::factorial unable to process given types");
+        }
+    }
+
+    logical_value_t logical_value_t::absolute(const logical_value_t& value) {
+        if (value.is_null()) {
+            return value;
+        }
+
+        switch (value.type().type()) {
+            case logical_type::BOOLEAN:
+                return op<abs<>>(value, &logical_value_t::value<bool>);
+            case logical_type::UTINYINT:
+            case logical_type::USMALLINT:
+            case logical_type::UINTEGER:
+            case logical_type::UBIGINT:
+            case logical_type::UHUGEINT:
+                return value;
+            case logical_type::TINYINT:
+                return op<abs<>>(value, &logical_value_t::value<int8_t>);
+            case logical_type::SMALLINT:
+                return op<abs<>>(value, &logical_value_t::value<int16_t>);
+            case logical_type::INTEGER:
+                return op<abs<>>(value, &logical_value_t::value<int32_t>);
+            case logical_type::BIGINT:
+                return op<abs<>>(value, &logical_value_t::value<int64_t>);
+            // case logical_type::HUGEINT:
+            // return op<abs<>>(value, &logical_value_t::value<int128_t>);
+            case logical_type::FLOAT:
+                return op<abs<>>(value, &logical_value_t::value<float>);
+            case logical_type::DOUBLE:
+                return op<abs<>>(value, &logical_value_t::value<double>);
+            default:
+                throw std::runtime_error("logical_value_t::absolute unable to process given types");
+        }
+    }
+    logical_value_t logical_value_t::bit_and(const logical_value_t& value1, const logical_value_t& value2) {
+        if (value1.is_null() && value2.is_null()) {
+            return value1;
+        }
+
+        auto type = value1.is_null() ? value2.type().type() : value1.type().type();
+        switch (type) {
+            case logical_type::BOOLEAN:
+                return op<std::bit_and<>>(value1, value2, &logical_value_t::value<bool>);
+            case logical_type::TINYINT:
+                return op<std::bit_and<>>(value1, value2, &logical_value_t::value<int8_t>);
+            case logical_type::UTINYINT:
+                return op<std::bit_and<>>(value1, value2, &logical_value_t::value<uint8_t>);
+            case logical_type::SMALLINT:
+                return op<std::bit_and<>>(value1, value2, &logical_value_t::value<int16_t>);
+            case logical_type::USMALLINT:
+                return op<std::bit_and<>>(value1, value2, &logical_value_t::value<uint16_t>);
+            case logical_type::INTEGER:
+                return op<std::bit_and<>>(value1, value2, &logical_value_t::value<int32_t>);
+            case logical_type::UINTEGER:
+                return op<std::bit_and<>>(value1, value2, &logical_value_t::value<uint32_t>);
+            case logical_type::BIGINT:
+                return op<std::bit_and<>>(value1, value2, &logical_value_t::value<int64_t>);
+            case logical_type::UBIGINT:
+                return op<std::bit_and<>>(value1, value2, &logical_value_t::value<uint64_t>);
+            // case logical_type::HUGEINT:
+            // return op<std::bit_and<>>(value1, value2, &logical_value_t::value<int128_t>);
+            // case logical_type::UHUGEINT:
+            // return op<std::bit_and<>>(value1, value2, &logical_value_t::value<uint128_t>);
+            default:
+                throw std::runtime_error("logical_value_t::bit_and unable to process given types");
+        }
+    }
+
+    logical_value_t logical_value_t::bit_or(const logical_value_t& value1, const logical_value_t& value2) {
+        if (value1.is_null() && value2.is_null()) {
+            return value1;
+        }
+
+        auto type = value1.is_null() ? value2.type().type() : value1.type().type();
+        switch (type) {
+            case logical_type::BOOLEAN:
+                return op<std::bit_or<>>(value1, value2, &logical_value_t::value<bool>);
+            case logical_type::TINYINT:
+                return op<std::bit_or<>>(value1, value2, &logical_value_t::value<int8_t>);
+            case logical_type::UTINYINT:
+                return op<std::bit_or<>>(value1, value2, &logical_value_t::value<uint8_t>);
+            case logical_type::SMALLINT:
+                return op<std::bit_or<>>(value1, value2, &logical_value_t::value<int16_t>);
+            case logical_type::USMALLINT:
+                return op<std::bit_or<>>(value1, value2, &logical_value_t::value<uint16_t>);
+            case logical_type::INTEGER:
+                return op<std::bit_or<>>(value1, value2, &logical_value_t::value<int32_t>);
+            case logical_type::UINTEGER:
+                return op<std::bit_or<>>(value1, value2, &logical_value_t::value<uint32_t>);
+            case logical_type::BIGINT:
+                return op<std::bit_or<>>(value1, value2, &logical_value_t::value<int64_t>);
+            case logical_type::UBIGINT:
+                return op<std::bit_or<>>(value1, value2, &logical_value_t::value<uint64_t>);
+            // case logical_type::HUGEINT:
+            // return op<std::bit_or<>>(value1, value2, &logical_value_t::value<int128_t>);
+            // case logical_type::UHUGEINT:
+            // return op<std::bit_or<>>(value1, value2, &logical_value_t::value<uint128_t>);
+            default:
+                throw std::runtime_error("logical_value_t::bit_or unable to process given types");
+        }
+    }
+
+    logical_value_t logical_value_t::bit_xor(const logical_value_t& value1, const logical_value_t& value2) {
+        if (value1.is_null() && value2.is_null()) {
+            return value1;
+        }
+
+        auto type = value1.is_null() ? value2.type().type() : value1.type().type();
+        switch (type) {
+            case logical_type::BOOLEAN:
+                return op<std::bit_xor<>>(value1, value2, &logical_value_t::value<bool>);
+            case logical_type::TINYINT:
+                return op<std::bit_xor<>>(value1, value2, &logical_value_t::value<int8_t>);
+            case logical_type::UTINYINT:
+                return op<std::bit_xor<>>(value1, value2, &logical_value_t::value<uint8_t>);
+            case logical_type::SMALLINT:
+                return op<std::bit_xor<>>(value1, value2, &logical_value_t::value<int16_t>);
+            case logical_type::USMALLINT:
+                return op<std::bit_xor<>>(value1, value2, &logical_value_t::value<uint16_t>);
+            case logical_type::INTEGER:
+                return op<std::bit_xor<>>(value1, value2, &logical_value_t::value<int32_t>);
+            case logical_type::UINTEGER:
+                return op<std::bit_xor<>>(value1, value2, &logical_value_t::value<uint32_t>);
+            case logical_type::BIGINT:
+                return op<std::bit_xor<>>(value1, value2, &logical_value_t::value<int64_t>);
+            case logical_type::UBIGINT:
+                return op<std::bit_xor<>>(value1, value2, &logical_value_t::value<uint64_t>);
+            // case logical_type::HUGEINT:
+            // return op<std::bit_xor<>>(value1, value2, &logical_value_t::value<int128_t>);
+            // case logical_type::UHUGEINT:
+            // return op<std::bit_xor<>>(value1, value2, &logical_value_t::value<uint128_t>);
+            default:
+                throw std::runtime_error("logical_value_t::bit_xor unable to process given types");
+        }
+    }
+
+    logical_value_t logical_value_t::bit_not(const logical_value_t& value) {
+        if (value.is_null()) {
+            return value;
+        }
+
+        switch (value.type().type()) {
+            case logical_type::BOOLEAN:
+                return op<std::bit_not<>>(value, &logical_value_t::value<bool>);
+            case logical_type::TINYINT:
+                return op<std::bit_not<>>(value, &logical_value_t::value<int8_t>);
+            case logical_type::UTINYINT:
+                return op<std::bit_not<>>(value, &logical_value_t::value<uint8_t>);
+            case logical_type::SMALLINT:
+                return op<std::bit_not<>>(value, &logical_value_t::value<int16_t>);
+            case logical_type::USMALLINT:
+                return op<std::bit_not<>>(value, &logical_value_t::value<uint16_t>);
+            case logical_type::INTEGER:
+                return op<std::bit_not<>>(value, &logical_value_t::value<int32_t>);
+            case logical_type::UINTEGER:
+                return op<std::bit_not<>>(value, &logical_value_t::value<uint32_t>);
+            case logical_type::BIGINT:
+                return op<std::bit_not<>>(value, &logical_value_t::value<int64_t>);
+            case logical_type::UBIGINT:
+                return op<std::bit_not<>>(value, &logical_value_t::value<uint64_t>);
+            // case logical_type::HUGEINT:
+            // return op<std::bit_not<>>(value, &logical_value_t::value<int128_t>);
+            // case logical_type::UHUGEINT:
+            // return op<std::bit_not<>>(value, &logical_value_t::value<uint128_t>);
+            default:
+                throw std::runtime_error("logical_value_t::bit_not unable to process given types");
+        }
+    }
+
+    logical_value_t logical_value_t::bit_shift_l(const logical_value_t& value1, const logical_value_t& value2) {
+        if (value1.is_null() && value2.is_null()) {
+            return value1;
+        }
+
+        auto type = value1.is_null() ? value2.type().type() : value1.type().type();
+        switch (type) {
+            case logical_type::BOOLEAN:
+                return op<shift_left<>>(value1, value2, &logical_value_t::value<bool>);
+            case logical_type::TINYINT:
+                return op<shift_left<>>(value1, value2, &logical_value_t::value<int8_t>);
+            case logical_type::UTINYINT:
+                return op<shift_left<>>(value1, value2, &logical_value_t::value<uint8_t>);
+            case logical_type::SMALLINT:
+                return op<shift_left<>>(value1, value2, &logical_value_t::value<int16_t>);
+            case logical_type::USMALLINT:
+                return op<shift_left<>>(value1, value2, &logical_value_t::value<uint16_t>);
+            case logical_type::INTEGER:
+                return op<shift_left<>>(value1, value2, &logical_value_t::value<int32_t>);
+            case logical_type::UINTEGER:
+                return op<shift_left<>>(value1, value2, &logical_value_t::value<uint32_t>);
+            case logical_type::BIGINT:
+                return op<shift_left<>>(value1, value2, &logical_value_t::value<int64_t>);
+            case logical_type::UBIGINT:
+                return op<shift_left<>>(value1, value2, &logical_value_t::value<uint64_t>);
+            // case logical_type::HUGEINT:
+            // return op<shift_left<>>(value1, value2, &logical_value_t::value<int128_t>);
+            // case logical_type::UHUGEINT:
+            // return op<shift_left<>>(value1, value2, &logical_value_t::value<uint128_t>);
+            default:
+                throw std::runtime_error("logical_value_t::bit_shift_l unable to process given types");
+        }
+    }
+
+    logical_value_t logical_value_t::bit_shift_r(const logical_value_t& value1, const logical_value_t& value2) {
+        if (value1.is_null() && value2.is_null()) {
+            return value1;
+        }
+
+        auto type = value1.is_null() ? value2.type().type() : value1.type().type();
+        switch (type) {
+            case logical_type::BOOLEAN:
+                return op<shift_right<>>(value1, value2, &logical_value_t::value<bool>);
+            case logical_type::TINYINT:
+                return op<shift_right<>>(value1, value2, &logical_value_t::value<int8_t>);
+            case logical_type::UTINYINT:
+                return op<shift_right<>>(value1, value2, &logical_value_t::value<uint8_t>);
+            case logical_type::SMALLINT:
+                return op<shift_right<>>(value1, value2, &logical_value_t::value<int16_t>);
+            case logical_type::USMALLINT:
+                return op<shift_right<>>(value1, value2, &logical_value_t::value<uint16_t>);
+            case logical_type::INTEGER:
+                return op<shift_right<>>(value1, value2, &logical_value_t::value<int32_t>);
+            case logical_type::UINTEGER:
+                return op<shift_right<>>(value1, value2, &logical_value_t::value<uint32_t>);
+            case logical_type::BIGINT:
+                return op<shift_right<>>(value1, value2, &logical_value_t::value<int64_t>);
+            case logical_type::UBIGINT:
+                return op<shift_right<>>(value1, value2, &logical_value_t::value<uint64_t>);
+            // case logical_type::HUGEINT:
+            // return op<shift_right<>>(value1, value2, &logical_value_t::value<int128_t>);
+            // case logical_type::UHUGEINT:
+            // return op<shift_right<>>(value1, value2, &logical_value_t::value<uint128_t>);
+            default:
+                throw std::runtime_error("logical_value_t::bit_shift_r unable to process given types");
         }
     }
 
