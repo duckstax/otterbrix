@@ -7,6 +7,7 @@
 #include <components/physical_plan/collection/operators/aggregate/operator_min.hpp>
 #include <components/physical_plan/collection/operators/aggregate/operator_sum.hpp>
 #include <components/physical_plan/collection/operators/scan/full_scan.hpp>
+#include <components/types/operations_helper.hpp>
 
 using namespace components::expressions;
 using namespace services::collection::operators;
@@ -147,7 +148,7 @@ TEST_CASE("operator::aggregate::avg") {
                                                              predicates::create_predicate(cond),
                                                              components::logical_plan::limit_t::unlimit())));
         avg_.on_execute(nullptr);
-        REQUIRE(components::document::is_equals(avg_.value().as_double(), 50.5));
+        REQUIRE(components::types::is_equals(avg_.value().as_double(), 50.5));
     }
 
     SECTION("avg::match") {
@@ -160,6 +161,6 @@ TEST_CASE("operator::aggregate::avg") {
         add_parameter(parameters, core::parameter_id_t(1), new_value(10));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         avg_.on_execute(&pipeline_context);
-        REQUIRE(components::document::is_equals(avg_.value().as_double(), 5.0));
+        REQUIRE(components::types::is_equals(avg_.value().as_double(), 5.0));
     }
 }

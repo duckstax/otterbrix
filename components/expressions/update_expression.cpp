@@ -6,13 +6,33 @@
 
 namespace components::expressions {
 
+    update_expr_t::expr_output_t::expr_output_t(document::value_t value)
+        : output_(value) {}
+
+    update_expr_t::expr_output_t::expr_output_t(types::logical_value_t value)
+        : output_(std::move(value)) {}
+
+    document::value_t& update_expr_t::expr_output_t::document_value() { return std::get<document::value_t>(output_); }
+
+    const document::value_t& update_expr_t::expr_output_t::document_value() const {
+        return std::get<document::value_t>(output_);
+    }
+
+    types::logical_value_t& update_expr_t::expr_output_t::table_value() {
+        return std::get<types::logical_value_t>(output_);
+    }
+
+    const types::logical_value_t& update_expr_t::expr_output_t::table_value() const {
+        return std::get<types::logical_value_t>(output_);
+    }
+
     update_expr_t::update_expr_t(update_expr_type type)
         : type_(type) {}
 
     bool update_expr_t::execute(document::document_ptr& to,
                                 const document::document_ptr& from,
                                 document::impl::base_document* tape,
-                                const components::logical_plan::storage_parameters* parameters) {
+                                const logical_plan::storage_parameters* parameters) {
         if (left_) {
             left_->execute(to, from, tape, parameters);
         }
@@ -20,6 +40,20 @@ namespace components::expressions {
             right_->execute(to, from, tape, parameters);
         }
         return execute_impl(to, from, tape, parameters);
+    }
+
+    bool update_expr_t::execute(vector::data_chunk_t& to,
+                                const vector::data_chunk_t& from,
+                                size_t row_to,
+                                size_t row_from,
+                                const logical_plan::storage_parameters* parameters) {
+        if (left_) {
+            left_->execute(to, from, row_to, row_from, parameters);
+        }
+        if (right_) {
+            right_->execute(to, from, row_to, row_from, parameters);
+        }
+        return execute_impl(to, from, row_to, row_from, parameters);
     }
 
     update_expr_type update_expr_t::type() const noexcept { return type_; }
@@ -32,9 +66,9 @@ namespace components::expressions {
 
     const update_expr_ptr& update_expr_t::right() const { return right_; }
 
-    document::value_t& update_expr_t::output() { return output_; }
+    update_expr_t::expr_output_t& update_expr_t::output() { return output_; }
 
-    const document::value_t& update_expr_t::output() const { return output_; }
+    const update_expr_t::expr_output_t& update_expr_t::output() const { return output_; }
 
     update_expr_ptr update_expr_t::deserialize(serializer::base_deserializer_t* deserializer) {
         auto type = deserializer->deserialize_update_expr_type(1);
@@ -144,9 +178,23 @@ namespace components::expressions {
     bool update_expr_set_t::execute_impl(document::document_ptr& to,
                                          const document::document_ptr& from,
                                          document::impl::base_document*,
-                                         const components::logical_plan::storage_parameters*) {
+                                         const logical_plan::storage_parameters*) {
         if (left_) {
-            return to->update(key_.as_string(), left_->output());
+            return to->update(key_.as_string(), left_->output().document_value());
+        }
+        return false;
+    }
+
+    bool update_expr_set_t::execute_impl(vector::data_chunk_t& to,
+                                         const vector::data_chunk_t& from,
+                                         size_t row_to,
+                                         size_t row_from,
+                                         const logical_plan::storage_parameters* parameters) {
+        if (left_) {
+            auto prev_value = to.data[key_.as_uint()].value(row_to);
+            auto res = prev_value != left_->output().table_value();
+            to.data[key_.as_uint()].set_value(row_to, left_->output().table_value());
+            return res;
         }
         return false;
     }
@@ -181,7 +229,7 @@ namespace components::expressions {
     bool update_expr_get_value_t::execute_impl(document::document_ptr& to,
                                                const document::document_ptr& from,
                                                document::impl::base_document* tape,
-                                               const components::logical_plan::storage_parameters*) {
+                                               const logical_plan::storage_parameters*) {
         if (side_ == side_t::undefined) {
             if (to->is_exists(key_.as_string())) {
                 side_ = side_t::to;
@@ -195,6 +243,23 @@ namespace components::expressions {
             output_ = from->get_value(key_.as_string());
         } else if (side_ == side_t::to) {
             output_ = to->get_value(key_.as_string());
+        }
+        return false;
+    }
+
+    bool update_expr_get_value_t::execute_impl(vector::data_chunk_t& to,
+                                               const vector::data_chunk_t& from,
+                                               size_t row_to,
+                                               size_t row_from,
+                                               const logical_plan::storage_parameters* parameters) {
+        if (side_ == side_t::undefined) {
+            // TODO: deduce which side to use
+            assert(false);
+        }
+        if (side_ == side_t::from) {
+            output_ = from.data[key_.as_uint()].value(row_from);
+        } else if (side_ == side_t::to) {
+            output_ = to.data[key_.as_uint()].value(row_to);
         }
         return false;
     }
@@ -224,8 +289,17 @@ namespace components::expressions {
     bool update_expr_get_const_value_t::execute_impl(document::document_ptr& to,
                                                      const document::document_ptr& from,
                                                      document::impl::base_document*,
-                                                     const components::logical_plan::storage_parameters* parameters) {
+                                                     const logical_plan::storage_parameters* parameters) {
         output_ = parameters->parameters.at(id_);
+        return false;
+    }
+
+    bool update_expr_get_const_value_t::execute_impl(vector::data_chunk_t& to,
+                                                     const vector::data_chunk_t& from,
+                                                     size_t row_to,
+                                                     size_t row_from,
+                                                     const logical_plan::storage_parameters* parameters) {
+        output_ = parameters->parameters.at(id_).as_logical_value();
         return false;
     }
 
@@ -259,60 +333,66 @@ namespace components::expressions {
     bool update_expr_calculate_t::execute_impl(document::document_ptr&,
                                                const document::document_ptr&,
                                                document::impl::base_document* tape,
-                                               const components::logical_plan::storage_parameters*) {
+                                               const logical_plan::storage_parameters*) {
         switch (type_) {
             case update_expr_type::add:
-                output_ = sum(left_->output(), right_->output(), tape);
+                output_ = sum(left_->output().document_value(), right_->output().document_value(), tape);
                 break;
             case update_expr_type::sub:
-                output_ = subtract(left_->output(), right_->output(), tape);
+                output_ = subtract(left_->output().document_value(), right_->output().document_value(), tape);
                 break;
             case update_expr_type::mult:
-                output_ = mult(left_->output(), right_->output(), tape);
+                output_ = mult(left_->output().document_value(), right_->output().document_value(), tape);
                 break;
             case update_expr_type::div:
-                output_ = divide(left_->output(), right_->output(), tape);
+                output_ = divide(left_->output().document_value(), right_->output().document_value(), tape);
                 break;
             case update_expr_type::mod:
-                output_ = modulus(left_->output(), right_->output(), tape);
+                output_ = modulus(left_->output().document_value(), right_->output().document_value(), tape);
                 break;
             case update_expr_type::exp:
-                output_ = exponent(left_->output(), right_->output(), tape);
+                output_ = exponent(left_->output().document_value(), right_->output().document_value(), tape);
                 break;
             case update_expr_type::sqr_root:
-                output_ = sqr_root(left_->output(), tape);
+                output_ = sqr_root(left_->output().document_value(), tape);
                 break;
             case update_expr_type::cube_root:
-                output_ = cube_root(left_->output(), tape);
+                output_ = cube_root(left_->output().document_value(), tape);
                 break;
             case update_expr_type::factorial:
-                output_ = factorial(left_->output(), tape);
+                output_ = factorial(left_->output().document_value(), tape);
                 break;
             case update_expr_type::abs:
-                output_ = absolute(left_->output(), tape);
+                output_ = absolute(left_->output().document_value(), tape);
                 break;
             case update_expr_type::AND:
-                output_ = bit_and(left_->output(), right_->output(), tape);
+                output_ = bit_and(left_->output().document_value(), right_->output().document_value(), tape);
                 break;
             case update_expr_type::OR:
-                output_ = bit_or(left_->output(), right_->output(), tape);
+                output_ = bit_or(left_->output().document_value(), right_->output().document_value(), tape);
                 break;
             case update_expr_type::XOR:
-                output_ = bit_xor(left_->output(), right_->output(), tape);
+                output_ = bit_xor(left_->output().document_value(), right_->output().document_value(), tape);
                 break;
             case update_expr_type::NOT:
-                output_ = bit_not(left_->output(), tape);
+                output_ = bit_not(left_->output().document_value(), tape);
                 break;
             case update_expr_type::shift_left:
-                output_ = bit_shift_l(left_->output(), right_->output(), tape);
+                output_ = bit_shift_l(left_->output().document_value(), right_->output().document_value(), tape);
                 break;
             case update_expr_type::shift_right:
-                output_ = bit_shift_r(left_->output(), right_->output(), tape);
+                output_ = bit_shift_r(left_->output().document_value(), right_->output().document_value(), tape);
                 break;
             default:
                 break;
         }
         return false;
     }
+
+    bool update_expr_calculate_t::execute_impl(vector::data_chunk_t& to,
+                                               const vector::data_chunk_t& from,
+                                               size_t row_to,
+                                               size_t row_from,
+                                               const logical_plan::storage_parameters* parameters) {}
 
 } // namespace components::expressions

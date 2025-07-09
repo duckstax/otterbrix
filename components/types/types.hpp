@@ -1,4 +1,5 @@
 #pragma once
+#include <absl/numeric/int128.h>
 #include <chrono>
 #include <cstdint>
 #include <memory>
@@ -6,6 +7,9 @@
 #include <vector>
 
 namespace components::types {
+
+    using int128_t = absl::int128;
+
     class logical_value_t;
     class logical_type_extention;
 

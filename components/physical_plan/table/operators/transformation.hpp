@@ -15,6 +15,4 @@ namespace services::table::operators::impl {
               const value_matrix_t& matrix,
               const std::vector<components::types::complex_logical_type>& types);
 
-    components::types::logical_value_t convert(const components::document::value_t& value);
-
 } // namespace services::table::operators::impl

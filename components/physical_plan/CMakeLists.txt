@@ -77,6 +77,7 @@ set(${PROJECT_NAME}_SOURCES
         table/operators/operator_join.cpp
 
         table/operators/transformation.cpp
+        table/operators/check_expr.cpp
 )
 
 add_library(otterbrix_${PROJECT_NAME}
