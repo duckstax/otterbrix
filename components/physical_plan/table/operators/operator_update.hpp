@@ -12,7 +12,7 @@ namespace services::table::operators {
         operator_update(collection::context_collection_t* context,
                         std::pmr::vector<components::expressions::update_expr_ptr> updates,
                         bool upsert,
-                        components::expressions::compare_expression_ptr comp_expr);
+                        components::expressions::compare_expression_ptr comp_expr = nullptr);
 
     private:
         void on_execute_impl(components::pipeline::context_t* pipeline_context) final;

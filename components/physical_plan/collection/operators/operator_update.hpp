@@ -13,7 +13,11 @@ namespace services::collection::operators {
         operator_update(context_collection_t* context,
                         std::pmr::vector<components::expressions::update_expr_ptr> updates,
                         bool upsert,
-                        components::expressions::compare_expression_ptr comp_expr = nullptr);
+                        const components::expressions::compare_expression_ptr& comp_expr);
+
+        operator_update(context_collection_t* context,
+                        std::pmr::vector<components::expressions::update_expr_ptr> updates,
+                        bool upsert);
 
     private:
         void on_execute_impl(components::pipeline::context_t* pipeline_context) final;

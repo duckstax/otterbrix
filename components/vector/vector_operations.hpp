@@ -49,7 +49,7 @@ namespace components::vector::vector_ops {
             int64_t base_idx = 0;
             auto entry_count = validity_data_t::entry_count(count);
             for (int64_t entry_idx = 0; entry_idx < entry_count; entry_idx++) {
-                auto validity_entry = validity_mask[entry_idx];
+                auto validity_entry = validity_mask.get_validity_entry(entry_idx);
                 int64_t next = std::min<int64_t>(base_idx + validity_mask_t::BITS_PER_VALUE, count);
                 if (validity_entry == validity_data_t::MAX_ENTRY) {
                     for (; base_idx < next; base_idx++) {
@@ -144,15 +144,7 @@ namespace components::vector::vector_ops {
             auto ldata = left.data<T>();
             auto rdata = right.data<T>();
 
-            if (LEFT_CONSTANT && left.is_null()) {
-                if (false_sel) {
-                    for (int64_t i = 0; i < count; i++) {
-                        false_sel->set_index(i, incremental_indexing_vector()->get_index(i));
-                    }
-                }
-                return 0;
-            }
-            if (RIGHT_CONSTANT && right.is_null()) {
+            if (LEFT_CONSTANT && left.is_null() || RIGHT_CONSTANT && right.is_null()) {
                 if (false_sel) {
                     for (int64_t i = 0; i < count; i++) {
                         false_sel->set_index(i, incremental_indexing_vector()->get_index(i));

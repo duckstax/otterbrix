@@ -4,6 +4,7 @@
 #include <queue>
 
 #include "row_group.hpp"
+#include "row_version_manager.hpp"
 
 namespace components::table {
 
@@ -144,6 +145,17 @@ namespace components::table {
     bool collection_t::is_empty() const {
         auto l = row_groups_->lock();
         return is_empty(l);
+    }
+
+    uint64_t collection_t::calculate_size() {
+        uint64_t res = 0;
+        auto row_group = row_groups_->root_segment();
+        assert(row_group);
+        while (row_group) {
+            res += row_group->calculate_size();
+            row_group = row_groups_->next_segment(row_group);
+        }
+        return res;
     }
 
     bool collection_t::is_empty(std::unique_lock<std::mutex>& l) const { return row_groups_->is_empty(l); }

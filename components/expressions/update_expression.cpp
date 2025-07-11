@@ -190,10 +190,24 @@ namespace components::expressions {
                                          size_t row_to,
                                          size_t row_from,
                                          const logical_plan::storage_parameters* parameters) {
+        // TODO: find fix for complex keys e.g. "countArray/0"
         if (left_) {
-            auto prev_value = to.data[key_.as_uint()].value(row_to);
+            size_t index = -1;
+            switch (key_.which()) {
+                case key_t::type::string:
+                    index = to.column_index(key_.as_string());
+                    break;
+                case key_t::type::int32:
+                    index = key_.as_int();
+                    break;
+                case key_t::type::uint32:
+                    index = key_.as_uint();
+                    break;
+            }
+            assert(index < to.column_count());
+            auto prev_value = to.data[index].value(row_to);
             auto res = prev_value != left_->output().table_value();
-            to.data[key_.as_uint()].set_value(row_to, left_->output().table_value());
+            to.data[index].set_value(row_to, left_->output().table_value());
             return res;
         }
         return false;
@@ -252,13 +266,40 @@ namespace components::expressions {
                                                size_t row_to,
                                                size_t row_from,
                                                const logical_plan::storage_parameters* parameters) {
+        // TODO: find fix for complex keys e.g. "countArray/0"
         if (side_ == side_t::undefined) {
             // TODO: deduce which side to use
             assert(false);
         }
         if (side_ == side_t::from) {
+            size_t index = -1;
+            switch (key_.which()) {
+                case key_t::type::string:
+                    index = from.column_index(key_.as_string());
+                    break;
+                case key_t::type::int32:
+                    index = key_.as_int();
+                    break;
+                case key_t::type::uint32:
+                    index = key_.as_uint();
+                    break;
+            }
+            assert(index < from.column_count());
             output_ = from.data[key_.as_uint()].value(row_from);
         } else if (side_ == side_t::to) {
+            size_t index = -1;
+            switch (key_.which()) {
+                case key_t::type::string:
+                    index = to.column_index(key_.as_string());
+                    break;
+                case key_t::type::int32:
+                    index = key_.as_int();
+                    break;
+                case key_t::type::uint32:
+                    index = key_.as_uint();
+                    break;
+            }
+            assert(index < to.column_count());
             output_ = to.data[key_.as_uint()].value(row_to);
         }
         return false;
@@ -393,6 +434,67 @@ namespace components::expressions {
                                                const vector::data_chunk_t& from,
                                                size_t row_to,
                                                size_t row_from,
-                                               const logical_plan::storage_parameters* parameters) {}
+                                               const logical_plan::storage_parameters* parameters) {
+        switch (type_) {
+            case update_expr_type::add:
+                output_ = types::logical_value_t::sum(left_->output().table_value(), right_->output().table_value());
+                break;
+            case update_expr_type::sub:
+                output_ =
+                    types::logical_value_t::subtract(left_->output().table_value(), right_->output().table_value());
+                break;
+            case update_expr_type::mult:
+                output_ = types::logical_value_t::mult(left_->output().table_value(), right_->output().table_value());
+                break;
+            case update_expr_type::div:
+                output_ = types::logical_value_t::divide(left_->output().table_value(), right_->output().table_value());
+                break;
+            case update_expr_type::mod:
+                output_ =
+                    types::logical_value_t::modulus(left_->output().table_value(), right_->output().table_value());
+                break;
+            case update_expr_type::exp:
+                output_ =
+                    types::logical_value_t::exponent(left_->output().table_value(), right_->output().table_value());
+                break;
+            case update_expr_type::sqr_root:
+                output_ = types::logical_value_t::sqr_root(left_->output().table_value());
+                break;
+            case update_expr_type::cube_root:
+                output_ = types::logical_value_t::cube_root(left_->output().table_value());
+                break;
+            case update_expr_type::factorial:
+                output_ = types::logical_value_t::factorial(left_->output().table_value());
+                break;
+            case update_expr_type::abs:
+                output_ = types::logical_value_t::absolute(left_->output().table_value());
+                break;
+            case update_expr_type::AND:
+                output_ =
+                    types::logical_value_t::bit_and(left_->output().table_value(), right_->output().table_value());
+                break;
+            case update_expr_type::OR:
+                output_ = types::logical_value_t::bit_or(left_->output().table_value(), right_->output().table_value());
+                break;
+            case update_expr_type::XOR:
+                output_ =
+                    types::logical_value_t::bit_xor(left_->output().table_value(), right_->output().table_value());
+                break;
+            case update_expr_type::NOT:
+                output_ = types::logical_value_t::bit_not(left_->output().table_value());
+                break;
+            case update_expr_type::shift_left:
+                output_ =
+                    types::logical_value_t::bit_shift_l(left_->output().table_value(), right_->output().table_value());
+                break;
+            case update_expr_type::shift_right:
+                output_ =
+                    types::logical_value_t::bit_shift_r(left_->output().table_value(), right_->output().table_value());
+                break;
+            default:
+                break;
+        }
+        return false;
+    }
 
 } // namespace components::expressions

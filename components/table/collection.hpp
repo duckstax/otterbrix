@@ -93,6 +93,8 @@ namespace components::table {
 
         std::pmr::memory_resource* resource() const noexcept { return resource_; }
 
+        uint64_t calculate_size();
+
     private:
         bool is_empty(std::unique_lock<std::mutex>&) const;
 

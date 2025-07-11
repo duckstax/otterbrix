@@ -791,7 +791,7 @@ namespace components::vector::vector_ops {
                     target_entry.length = source_entry.length;
                     target_entry.offset = 0;
                 } else {
-                    std::vector<uint32_t> child_rows;
+                    std::vector<uint64_t> child_rows;
                     for (uint64_t i = 0; i < copy_count; ++i) {
                         if (tmask.row_is_valid(target_offset + i)) {
                             auto source_idx = indexing_ptr->get_index(source_offset + i);

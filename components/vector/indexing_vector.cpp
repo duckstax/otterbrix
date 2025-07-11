@@ -3,10 +3,10 @@
 namespace components::vector {
 
     indexing_data::indexing_data(std::pmr::memory_resource* resource, size_t count)
-        : data(new (resource->allocate(count * sizeof(uint32_t), alignof(uint32_t))) uint32_t[count],
-               core::pmr::array_deleter_t(resource, count, alignof(uint32_t))) {}
+        : data(new (resource->allocate(count * sizeof(uint64_t), alignof(uint64_t))) uint64_t[count],
+               core::pmr::array_deleter_t(resource, count, alignof(uint64_t))) {}
 
-    indexing_vector_t::indexing_vector_t(uint32_t* indexing) noexcept
+    indexing_vector_t::indexing_vector_t(uint64_t* indexing) noexcept
         : data_(nullptr)
         , indexing_(indexing) {}
 
@@ -55,7 +55,7 @@ namespace components::vector {
         indexing_ = data_->data.get();
     }
 
-    void indexing_vector_t::reset(uint32_t* indexing) {
+    void indexing_vector_t::reset(uint64_t* indexing) {
         data_.reset();
         indexing_ = indexing;
     }
@@ -64,11 +64,11 @@ namespace components::vector {
 
     void indexing_vector_t::swap(uint64_t i, uint64_t j) noexcept { std::swap(indexing_[i], indexing_[j]); }
 
-    uint32_t indexing_vector_t::get_index(uint64_t index) const { return indexing_ ? indexing_[index] : index; }
+    uint64_t indexing_vector_t::get_index(uint64_t index) const { return indexing_ ? indexing_[index] : index; }
 
-    uint32_t* indexing_vector_t::data() noexcept { return indexing_; }
+    uint64_t* indexing_vector_t::data() noexcept { return indexing_; }
 
-    const uint32_t* indexing_vector_t::data() const noexcept { return indexing_; }
+    const uint64_t* indexing_vector_t::data() const noexcept { return indexing_; }
 
     std::shared_ptr<indexing_data> indexing_vector_t::slice(std::pmr::memory_resource* resource,
                                                             const indexing_vector_t& indexing,
@@ -81,7 +81,7 @@ namespace components::vector {
         return data;
     }
 
-    uint32_t& indexing_vector_t::operator[](uint64_t index) const { return indexing_[index]; }
+    uint64_t& indexing_vector_t::operator[](uint64_t index) const { return indexing_[index]; }
 
     bool indexing_vector_t::is_valid() const noexcept { return indexing_; }
 

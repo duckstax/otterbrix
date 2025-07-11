@@ -280,9 +280,6 @@ namespace components::table {
                 if (filter) {
                     assert(ALLOW_UPDATES);
                     filter_indexing(collection_->resource(), indexing, filter, approved_tuple_count);
-                    for (auto& column : result.data) {
-                        column.slice(indexing, approved_tuple_count);
-                    }
                 }
                 if (approved_tuple_count == 0) {
                     result.reset();
@@ -512,6 +509,11 @@ namespace components::table {
             return owned_version_info_;
         }
         return get_or_create_version_info_internal();
+    }
+
+    uint64_t row_group_t::calculate_size() {
+        vector::indexing_vector_t temp_indexing(collection().resource(), count);
+        return indexing_vector(0, temp_indexing, count);
     }
 
     uint64_t

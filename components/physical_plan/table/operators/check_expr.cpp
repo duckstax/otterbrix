@@ -102,6 +102,9 @@ namespace services::table::operators {
                             const std::unordered_map<std::string, size_t>& str_index_map_right,
                             size_t row_left,
                             size_t row_right) {
+        if (!expr) {
+            return true;
+        }
         switch (expr->type()) {
             case components::expressions::compare_type::union_and: {
                 for (const auto& child_expr : expr->children()) {
@@ -216,6 +219,9 @@ namespace services::table::operators {
                             const components::vector::data_chunk_t& chunk,
                             const std::unordered_map<std::string, size_t>& str_index_map,
                             size_t row) {
+        if (!expr) {
+            return true;
+        }
         switch (expr->type()) {
             case components::expressions::compare_type::union_and: {
                 for (const auto& child_expr : expr->children()) {

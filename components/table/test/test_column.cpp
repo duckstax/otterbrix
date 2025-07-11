@@ -29,6 +29,7 @@ TEST_CASE("column") {
     constexpr size_t array_size = 128;
     constexpr size_t max_list_size = 128;
     constexpr size_t update_size = 32;
+    constexpr size_t str_index_length = 10;
     auto list_length = [&](size_t i) { return i - (i / max_list_size) * max_list_size; };
     auto generate_update = [&](std::unique_ptr<column_data_t>& column) {
         vector_t v(std::pmr::get_default_resource(), column->type(), update_size);
@@ -37,6 +38,14 @@ TEST_CASE("column") {
             column->fetch_row(state, i, v, update_size - i - 1);
         }
         return v;
+    };
+
+    auto generate_string = [str_index_length](size_t i) {
+        auto number = std::to_string(i);
+        while (number.size() < str_index_length) {
+            number.insert(number.begin(), '0');
+        }
+        return std::string{"long_string_with_index_" + number};
     };
 
     std::vector<complex_logical_type> fields;
@@ -141,7 +150,7 @@ TEST_CASE("column") {
         {
             vector_t v(std::pmr::get_default_resource(), logical_type::STRING_LITERAL, test_size);
             for (size_t i = 0; i < test_size; i++) {
-                logical_value_t value{std::string{"long_string_with_index_" + std::to_string(i)}};
+                logical_value_t value{generate_string(i)};
                 v.set_value(i, value);
             }
 
@@ -160,7 +169,7 @@ TEST_CASE("column") {
                 logical_value_t value = v.value(i);
                 REQUIRE(value.type().type() == logical_type::STRING_LITERAL);
                 std::string result = *(value.value<std::string*>());
-                REQUIRE(result == std::string{"long_string_with_index_" + std::to_string(i)});
+                REQUIRE(result == generate_string(i));
             }
         }
         // Scan
@@ -174,7 +183,7 @@ TEST_CASE("column") {
                 logical_value_t value = v.value(i);
                 REQUIRE(value.type().type() == logical_type::STRING_LITERAL);
                 std::string result = *(value.value<std::string*>());
-                REQUIRE(result == std::string{"long_string_with_index_" + std::to_string(i)});
+                REQUIRE(result == generate_string(i));
             }
         }
         // Update
@@ -199,13 +208,13 @@ TEST_CASE("column") {
                 logical_value_t value = v.value(i);
                 REQUIRE(value.type().type() == logical_type::STRING_LITERAL);
                 std::string result = *(value.value<std::string*>());
-                REQUIRE(result == std::string{"long_string_with_index_" + std::to_string(inverse)});
+                REQUIRE(result == generate_string(inverse));
             }
             for (size_t i = update_size; i < test_size; i++) {
                 logical_value_t value = v.value(i);
                 REQUIRE(value.type().type() == logical_type::STRING_LITERAL);
                 std::string result = *(value.value<std::string*>());
-                REQUIRE(result == std::string{"long_string_with_index_" + std::to_string(i)});
+                REQUIRE(result == generate_string(i));
             }
         }
     }
@@ -336,7 +345,7 @@ TEST_CASE("column") {
                 std::vector<logical_value_t> arr;
                 arr.reserve(array_size);
                 for (size_t j = 0; j < array_size; j++) {
-                    arr.emplace_back(std::string{"long_string_with_index_" + std::to_string(i * array_size + j)});
+                    arr.emplace_back(generate_string(i * array_size + j));
                 }
                 v.set_value(i, logical_value_t::create_array(logical_type::STRING_LITERAL, arr));
             }
@@ -360,7 +369,7 @@ TEST_CASE("column") {
                 for (size_t j = 0; j < array_size; j++) {
                     REQUIRE(value.children()[j].type().type() == logical_type::STRING_LITERAL);
                     std::string result = *(value.children()[j].value<std::string*>());
-                    REQUIRE(result == std::string{"long_string_with_index_" + std::to_string(i * array_size + j)});
+                    REQUIRE(result == generate_string(i * array_size + j));
                 }
             }
         }
@@ -380,7 +389,7 @@ TEST_CASE("column") {
                 for (size_t j = 0; j < array_size; j++) {
                     REQUIRE(value.children()[j].type().type() == logical_type::STRING_LITERAL);
                     std::string result = *(value.children()[j].value<std::string*>());
-                    REQUIRE(result == std::string{"long_string_with_index_" + std::to_string(i * array_size + j)});
+                    REQUIRE(result == generate_string(i * array_size + j));
                 }
             }
         }
@@ -410,7 +419,7 @@ TEST_CASE("column") {
                 for(size_t j = 0; j < array_size; j++) {
                     REQUIRE(value.children()[j].type().type() == logical_type::STRING_LITERAL);
                     std::string result = *(value.children()[j].value<std::string*>());
-                    REQUIRE(result == std::string{"long_string_with_index_" + std::to_string(inverse * array_size + j)});
+                    REQUIRE(result == generate_string(inverse * array_size + j));
                 }
             }
             for(size_t i = update_size; i < test_size; i++) {
@@ -419,7 +428,7 @@ TEST_CASE("column") {
                 for(size_t j = 0; j < array_size; j++) {
                     REQUIRE(value.children()[j].type().type() == logical_type::STRING_LITERAL);
                     std::string result = *(value.children()[j].value<std::string*>());
-                    REQUIRE(result == std::string{"long_string_with_index_" + std::to_string(i * array_size + j)});
+                    REQUIRE(result == generate_string(i * array_size + j));
                 }
             }
         }
@@ -552,7 +561,7 @@ TEST_CASE("column") {
                 // test that each list entry can be a different length
                 list.reserve(list_length(i));
                 for (size_t j = 0; j < list_length(i); j++) {
-                    list.emplace_back(std::string{"long_string_with_index_" + std::to_string(i * list_length(i) + j)});
+                    list.emplace_back(generate_string(i * list_length(i) + j));
                 }
                 v.set_value(i, logical_value_t::create_list(logical_type::STRING_LITERAL, list));
             }
@@ -576,7 +585,7 @@ TEST_CASE("column") {
                 for (size_t j = 0; j < list_length(i); j++) {
                     REQUIRE(value.children()[j].type().type() == logical_type::STRING_LITERAL);
                     std::string result = *(value.children()[j].value<std::string*>());
-                    REQUIRE(result == std::string{"long_string_with_index_" + std::to_string(i * list_length(i) + j)});
+                    REQUIRE(result == generate_string(i * list_length(i) + j));
                 }
             }
         }
@@ -596,7 +605,7 @@ TEST_CASE("column") {
                 for (size_t j = 0; j < list_length(i); j++) {
                     REQUIRE(value.children()[j].type().type() == logical_type::STRING_LITERAL);
                     std::string result = *(value.children()[j].value<std::string*>());
-                    REQUIRE(result == std::string{"long_string_with_index_" + std::to_string(i * list_length(i) + j)});
+                    REQUIRE(result == generate_string(i * list_length(i) + j));
                 }
             }
         }
@@ -626,7 +635,7 @@ TEST_CASE("column") {
                 for(size_t j = 0; j < list_length(inverse); j++) {
                     REQUIRE(value.children()[j].type().type() == logical_type::STRING_LITERAL);
                     std::string result = *(value.children()[j].value<std::string*>());
-                    REQUIRE(result == std::string{"long_string_with_index_" + std::to_string(inverse * list_length(inverse) + j)});
+                    REQUIRE(result == generate_string(inverse * list_length(inverse) + j));
                 }
             }
             for(size_t i = update_size; i < test_size; i++) {
@@ -635,7 +644,7 @@ TEST_CASE("column") {
                 for(size_t j = 0; j < list_length(i); j++) {
                     REQUIRE(value.children()[j].type().type() == logical_type::STRING_LITERAL);
                     std::string result = *(value.children()[j].value<std::string*>());
-                    REQUIRE(result == std::string{"long_string_with_index_" + std::to_string(i * list_length(i) + j)});
+                    REQUIRE(result == generate_string(i * list_length(i) + j));
                 }
             }
         }
@@ -645,7 +654,7 @@ TEST_CASE("column") {
         std::vector<test_struct> test_data;
         test_data.reserve(test_size);
         for (size_t i = 0; i < test_size; i++) {
-            auto s{std::string{"long_string_with_index_" + std::to_string(i)}};
+            auto s{generate_string(i)};
             std::vector<uint16_t> arr;
             arr.reserve(i);
             for (size_t j = 0; j < i; j++) {
@@ -674,7 +683,7 @@ TEST_CASE("column") {
                 std::vector<logical_value_t> value_fiels;
                 value_fiels.emplace_back(logical_value_t{(bool) (i % 2)});
                 value_fiels.emplace_back(logical_value_t{int32_t(i)});
-                value_fiels.emplace_back(logical_value_t{std::string{"long_string_with_index_" + std::to_string(i)}});
+                value_fiels.emplace_back(logical_value_t{generate_string(i)});
                 value_fiels.emplace_back(logical_value_t::create_list(logical_type::USMALLINT, arr));
                 logical_value_t value = logical_value_t::create_struct(struct_type, value_fiels);
                 v.set_value(i, value);
