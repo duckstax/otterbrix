@@ -105,6 +105,10 @@ namespace components::table {
 
     uint64_t data_table_t::row_group_size() const { return row_groups_->row_group_size(); }
 
+    std::shared_ptr<collection_t> data_table_t::row_group() const { return row_groups_; }
+
+    uint64_t data_table_t::calculate_size() { return row_groups_->calculate_size(); }
+
     void data_table_t::scan(vector::data_chunk_t& result, table_scan_state& state) { state.table_state.scan(result); }
 
     bool data_table_t::create_index_scan(table_scan_state& state, vector::data_chunk_t& result, table_scan_type type) {
@@ -310,8 +314,6 @@ namespace components::table {
     }
 
     uint64_t data_table_t::column_count() const { return column_definitions_.size(); }
-
-    uint64_t data_table_t::total_rows() const { return row_groups_->total_rows(); }
 
     std::vector<column_segment_info> data_table_t::get_column_segment_info() {
         return row_groups_->get_column_segment_info();

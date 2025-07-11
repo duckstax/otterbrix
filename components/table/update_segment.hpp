@@ -899,7 +899,7 @@ namespace components::table {
 
     template<typename T>
     bool update_segment_t::templated_check_row(update_info_t& info, uint64_t row_index, const table_filter_t* filter) {
-        bool result = true;
+        bool result = false;
         update_info_t::update_for_transaction(info, [&](update_info_t* current) {
             auto info_data = current->data<T>();
             auto tuples = current->tuples();

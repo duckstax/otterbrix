@@ -26,8 +26,11 @@ namespace services::table::operators {
                 name_index_map_right.emplace(types_right[i].alias(), i);
             }
 
-            components::vector::vector_t ids(left_->output()->resource(), logical_type::BIGINT);
+            components::vector::vector_t ids(left_->output()->resource(),
+                                             logical_type::BIGINT,
+                                             chunk_left.size() * chunk_right.size());
 
+            size_t index = 0;
             for (size_t i = 0; i < chunk_left.size(); i++) {
                 for (size_t j = 0; j < chunk_right.size(); j++) {
                     if (check_expr_general(compare_expression_,
@@ -38,11 +41,11 @@ namespace services::table::operators {
                                            name_index_map_right,
                                            i,
                                            j)) {
-                        ids.push_back(components::types::logical_value_t{static_cast<int64_t>(i)});
-                        break;
+                        ids.set_value(index++, components::types::logical_value_t{static_cast<int64_t>(i)});
                     }
                 }
             }
+            ids.resize(chunk_left.size() * chunk_right.size(), index);
             auto state = context_->table_storage().table().initialize_delete({});
             context_->table_storage().table().delete_rows(*state, ids, ids.size());
             for (size_t i = 0; i < ids.size(); i++) {
@@ -60,18 +63,21 @@ namespace services::table::operators {
                 name_index_map.emplace(types[i].alias(), i);
             }
 
-            components::vector::vector_t ids(left_->output()->resource(), logical_type::BIGINT);
+            components::vector::vector_t ids(left_->output()->resource(), logical_type::BIGINT, chunk.size());
 
+            size_t index = 0;
             for (size_t i = 0; i < chunk.size(); i++) {
                 if (check_expr_general(compare_expression_, &pipeline_context->parameters, chunk, name_index_map, i)) {
-                    ids.push_back(components::types::logical_value_t{static_cast<int64_t>(i)});
-                    break;
+                    ids.set_value(index++,
+                                  components::types::logical_value_t{
+                                      static_cast<int64_t>(chunk.data.front().indexing().get_index(i))});
                 }
             }
+            ids.resize(chunk.size(), index);
             auto state = context_->table_storage().table().initialize_delete({});
-            context_->table_storage().table().delete_rows(*state, ids, chunk.size());
-            for (size_t i = 0; i < ids.size(); i++) {
-                size_t id = *ids.data<int64_t>();
+            context_->table_storage().table().delete_rows(*state, ids, index);
+            for (size_t i = 0; i < index; i++) {
+                size_t id = ids.data<int64_t>()[i];
                 modified_->append(id);
                 // TODO: delete from index
             }

@@ -64,7 +64,6 @@ namespace components::table {
         bool is_root() { return is_root_; }
 
         uint64_t column_count() const;
-        uint64_t total_rows() const;
 
         std::vector<column_segment_info> get_column_segment_info();
         bool create_index_scan(table_scan_state& state, vector::data_chunk_t& result, table_scan_type type);
@@ -75,6 +74,10 @@ namespace components::table {
         void set_table_name(std::string new_name);
 
         uint64_t row_group_size() const;
+
+        std::shared_ptr<collection_t> row_group() const;
+
+        uint64_t calculate_size();
 
     private:
         void initialize_scan_with_offset(table_scan_state& state,

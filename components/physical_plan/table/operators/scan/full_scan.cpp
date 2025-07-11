@@ -75,6 +75,9 @@ namespace services::table::operators {
         context_->table_storage().table().initialize_scan(state, column_indices, filter.get());
         // TODO: check limit inside scan
         context_->table_storage().table().scan(output_->data_chunk(), state);
+        if (limit_.limit() >= 0) {
+            output_->data_chunk().set_cardinality(std::min<size_t>(output_->data_chunk().size(), limit_.limit()));
+        }
     }
 
 } // namespace services::table::operators

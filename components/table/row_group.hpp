@@ -95,6 +95,8 @@ namespace components::table {
         row_version_manager_t& get_or_create_version_info();
         std::shared_ptr<row_version_manager_t> get_or_create_version_info_ptr();
 
+        uint64_t calculate_size();
+
     private:
         uint64_t indexing_vector(uint64_t vector_idx, vector::indexing_vector_t& indexing_vector, uint64_t max_count);
         uint64_t

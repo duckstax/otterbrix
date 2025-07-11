@@ -102,10 +102,13 @@ namespace services::table::operators {
                 modified_ = base::operators::make_operator_write_data<size_t>(context_->resource());
                 no_modified_ = base::operators::make_operator_write_data<size_t>(context_->resource());
                 auto state = context_->table_storage().table().initialize_update({});
-                components::vector::vector_t row_ids(context_->resource(), logical_type::BIGINT);
+                components::vector::vector_t row_ids(context_->resource(), logical_type::BIGINT, chunk.size());
+                size_t index = 0;
                 for (size_t i = 0; i < chunk.size(); i++) {
                     if (check_expr_general(comp_expr_, &pipeline_context->parameters, chunk, name_index_map, i)) {
-                        row_ids.push_back(components::types::logical_value_t{static_cast<int64_t>(i)});
+                        row_ids.set_value(index,
+                                          components::types::logical_value_t{
+                                              static_cast<int64_t>(chunk.data.front().indexing().get_index(i))});
                         bool modified = false;
                         for (const auto& expr : updates_) {
                             modified |= expr->execute(chunk, chunk, i, i, &pipeline_context->parameters);
@@ -116,10 +119,12 @@ namespace services::table::operators {
                             no_modified_->append(i);
                         }
                         for (size_t j = 0; j < chunk.column_count(); j++) {
-                            out_chunk.data[j].push_back(chunk.data[j].value(i));
+                            out_chunk.data[j].set_value(index, chunk.data[j].value(i));
                         }
+                        index++;
                     }
                 }
+                row_ids.resize(chunk.size(), index);
                 context_->table_storage().table().update(*state, row_ids, left_->output()->data_chunk());
             }
         }

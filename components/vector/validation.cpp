@@ -23,7 +23,7 @@ namespace components::vector {
     validity_mask_t::validity_mask_t(std::pmr::memory_resource* resource, uint64_t size)
         : resource_(resource)
         , validity_data_(std::make_shared<validity_data_t>(resource, size))
-        , validity_mask_(nullptr)
+        , validity_mask_(validity_data_->data())
         , count_(size) {}
 
     validity_mask_t::validity_mask_t(const validity_mask_t& other)

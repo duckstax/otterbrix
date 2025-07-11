@@ -46,6 +46,13 @@ namespace services::collection {
                   block_manager_,
                   std::vector<components::table::column_definition_t>{})) {}
 
+        explicit table_storage_t(std::pmr::memory_resource* resource,
+                                 std::vector<components::table::column_definition_t> columns)
+            : buffer_pool_(resource, uint64_t(1) << 32, false, uint64_t(1) << 24)
+            , buffer_manager_(resource, fs_, buffer_pool_)
+            , block_manager_(buffer_manager_, components::table::storage::DEFAULT_BLOCK_ALLOC_SIZE)
+            , table_(std::make_unique<components::table::data_table_t>(resource, block_manager_, std::move(columns))) {}
+
         components::table::data_table_t& table() { return *table_; }
 
     private:
@@ -69,6 +76,21 @@ namespace services::collection {
             : resource_(resource)
             , document_storage_(resource_)
             , table_storage_(resource_)
+            , index_engine_(core::pmr::make_unique<components::index::index_engine_t>(resource_))
+            , name_(name)
+            , mdisk_(mdisk)
+            , log_(log) {
+            assert(resource != nullptr);
+        }
+
+        explicit context_collection_t(std::pmr::memory_resource* resource,
+                                      const collection_full_name_t& name,
+                                      std::vector<components::table::column_definition_t> columns,
+                                      const actor_zeta::address_t& mdisk,
+                                      const log_t& log)
+            : resource_(resource)
+            , document_storage_(resource_)
+            , table_storage_(resource_, std::move(columns))
             , index_engine_(core::pmr::make_unique<components::index::index_engine_t>(resource_))
             , name_(name)
             , mdisk_(mdisk)

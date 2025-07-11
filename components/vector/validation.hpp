@@ -81,7 +81,7 @@ namespace components::vector {
         void
         slice_in_place(const validity_mask_t& other, uint64_t target_offset, uint64_t source_offset, uint64_t count);
         void combine(const validity_mask_t& other, size_t count);
-        void reset(uint64_t target_count) {
+        void reset(uint64_t target_count = DEFAULT_VECTOR_CAPACITY) {
             validity_mask_ = nullptr;
             validity_data_.reset();
             count_ = target_count;
@@ -89,6 +89,7 @@ namespace components::vector {
 
         uint64_t* data() noexcept { return validity_mask_; }
         uint64_t* data() const noexcept { return validity_mask_; }
+        uint64_t get_validity_entry(uint64_t entry_idx) const;
         uint64_t& operator[](uint64_t index) const { return validity_mask_[index]; }
         std::pmr::memory_resource* resource() const noexcept { return resource_; }
         uint64_t count() const noexcept { return count_; }
@@ -99,8 +100,6 @@ namespace components::vector {
             entry_idx = row_idx / BITS_PER_VALUE;
             idx_in_entry = row_idx % BITS_PER_VALUE;
         }
-
-        uint64_t get_validity_entry(uint64_t entry_idx) const;
 
         std::pmr::memory_resource* resource_;
         std::shared_ptr<validity_data_t> validity_data_;

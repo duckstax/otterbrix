@@ -6,12 +6,17 @@ namespace services::collection::operators {
     operator_update::operator_update(context_collection_t* context,
                                      std::pmr::vector<components::expressions::update_expr_ptr> updates,
                                      bool upsert,
-                                     components::expressions::compare_expression_ptr comp_expr)
+                                     const components::expressions::compare_expression_ptr& comp_expr)
         : read_write_operator_t(context, operator_type::update)
         , match_predicate_(comp_expr ? predicates::create_predicate(comp_expr)
                                      : predicates::create_all_true_predicate(context->resource()))
         , updates_(std::move(updates))
         , upsert_(upsert) {}
+
+    operator_update::operator_update(context_collection_t* context,
+                                     std::pmr::vector<components::expressions::update_expr_ptr> updates,
+                                     bool upsert)
+        : operator_update(context, std::move(updates), upsert, {}) {}
 
     void operator_update::on_execute_impl(components::pipeline::context_t* pipeline_context) {
         // TODO: worth to create separate update_join operator or mutable_join with callback
