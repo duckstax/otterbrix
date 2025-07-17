@@ -453,7 +453,7 @@ TypeName *SystemTypeName(char *name);
 %type <list>	ExclusionConstraintList ExclusionConstraintElem
 %type <list>	func_arg_list
 %type <node>	func_arg_expr
-%type <list>	row type_list array_expr_list
+%type <list>	row type_list nested_type_list array_expr_list
 %type <node>	case_expr case_arg when_clause when_operand case_default
 %type <list>	when_clause_list
 %type <node>	decode_expr search_result decode_default
@@ -485,7 +485,7 @@ TypeName *SystemTypeName(char *name);
 %type <list>	copy_generic_opt_list copy_generic_opt_arg_list
 %type <list>	copy_options
 
-%type <typnam>	Typename SimpleTypename ConstTypename
+%type <typnam>	Typename SimpleTypename ConstTypename NestedTypename
 				GenericType Numeric opt_float
 				Character ConstCharacter
 				CharacterWithLength CharacterWithoutLength
@@ -4319,7 +4319,7 @@ column_reference_storage_directive:
 				}
 		;
 
-columnDef:	ColId Typename create_generic_options ColQualList opt_storage_encoding
+columnDef:	ColId NestedTypename create_generic_options ColQualList opt_storage_encoding
 				{
 					ColumnDef *n = makeNode(ColumnDef);
 					n->colname = $1;
@@ -13072,6 +13072,16 @@ Typename:	SimpleTypename opt_array_bounds
 				}
 		;
 
+NestedTypename:
+            Typename                                { $$ = $1; }
+			| Typename '<' nested_type_list '>'
+				{
+                    $$ = makeNode(TypeName);
+                    $$->names = NIL; /* indicate nesting */
+                    $$->typmods = lappend(list_make1($1), $3); /* given types are considered typemods */
+                    $$->typemod = -1;
+				}
+
 opt_array_bounds:
 			opt_array_bounds '[' ']'
 					{  $$ = lappend($1, makeInteger(-1)); }
@@ -13240,7 +13250,7 @@ opt_float:	'(' Iconst ')'
 				}
 			| /*EMPTY*/
 				{
-					$$ = SystemTypeName("float8");
+					$$ = SystemTypeName("float4");
 				}
 		;
 
@@ -15046,6 +15056,11 @@ func_arg_expr:  a_expr
 
 type_list:	Typename								{ $$ = list_make1($1); }
 			| type_list ',' Typename				{ $$ = lappend($1, $3); }
+		;
+
+nested_type_list:
+            NestedTypename					        { $$ = list_make1($1); }
+			| nested_type_list ',' NestedTypename	{ $$ = lappend($1, $3); }
 		;
 
 array_expr: '[' expr_list ']'
