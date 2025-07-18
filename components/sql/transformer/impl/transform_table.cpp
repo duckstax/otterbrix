@@ -10,70 +10,14 @@ using namespace components::types;
 namespace {
     using namespace components::sql::transform;
 
-    complex_logical_type get_type(TypeName* type);
-
-    complex_logical_type get_nested_type(List* nested_types) {
-        assert(list_length(nested_types) > 1); // root type + at least 1 nested type
-
-        auto root = pg_ptr_assert_cast<TypeName>(linitial(nested_types), T_TypeName);
-        auto nested = pg_ptr_assert_cast<List>(lsecond(nested_types), T_List);
-        switch (get_nested_logical_type(strVal(linitial(root->names)))) {
-            case logical_type::STRUCT: {
-                std::vector<complex_logical_type> columns;
-                columns.reserve(list_length(nested));
-
-                size_t cnt = 0;
-                for (auto data : nested->lst) {
-                    auto type = pg_ptr_assert_cast<TypeName>(data.data, T_TypeName);
-                    columns.push_back(get_type(type));
-                    columns.back().set_alias(std::to_string(++cnt));
-                }
-
-                return complex_logical_type::create_struct(columns);
-            }
-            case logical_type::LIST: {
-                if (list_length(nested) != 1) {
-                    throw parser_exception_t{"Incorrect nested types for list type, {node} required", ""};
-                }
-                auto type = pg_ptr_assert_cast<TypeName>(linitial(nested), T_TypeName);
-                auto log_type = get_type(type);
-
-                log_type.set_alias("node");
-                return complex_logical_type::create_list(log_type);
-            }
-            case logical_type::MAP: {
-                if (list_length(nested) != 2) {
-                    throw parser_exception_t{"Incorrect nested types for map type, {key, value} required", ""};
-                }
-
-                auto key = pg_ptr_assert_cast<TypeName>(linitial(nested), T_TypeName);
-                auto value = pg_ptr_assert_cast<TypeName>(lsecond(nested), T_TypeName);
-                auto log_key = get_type(key);
-                auto log_value = get_type(value);
-
-                log_key.set_alias("key");
-                log_value.set_alias("value");
-                return complex_logical_type::create_map(log_key, log_value);
-            }
-        }
-    }
-
     complex_logical_type get_type(TypeName* type) {
-        if (!list_length(type->names)) {
-            // nested case
-            assert(!type->arrayBounds);
-            return get_nested_type(type->typmods);
-        }
-
-        bool is_system = false;
         complex_logical_type column;
         if (auto linint_name = strVal(linitial(type->names)); !std::strcmp(linint_name, "pg_catalog")) {
-            is_system = true;
             if (auto col = get_logical_type(strVal(lsecond(type->names))); col != logical_type::DECIMAL) {
                 column = col;
             } else {
                 if (list_length(type->typmods) != 2) {
-                    throw parser_exception_t{"Incorrect modifiers DECIMAL, width and scale required", ""};
+                    throw parser_exception_t{"Incorrect modifiers for DECIMAL, width and scale required", ""};
                 }
 
                 auto width = pg_ptr_assert_cast<A_Const>(linitial(type->typmods), T_A_Const);
@@ -90,23 +34,10 @@ namespace {
         }
 
         if (list_length(type->arrayBounds)) {
-            if (column.type() == logical_type::NA) {
-                throw parser_exception_t(
-                    "Array of nested type cannot be created: " +
-                        std::string((is_system) ? strVal(lsecond(type->names)) : strVal(linitial(type->names))),
-                    "");
-            }
-
             auto size = pg_ptr_assert_cast<Value>(linitial(type->arrayBounds), T_Value);
-            if (size->type != T_Integer) {
-                throw parser_exception_t{
-                    "Incorrect array size of type " +
-                        std::string((is_system) ? strVal(lsecond(type->names)) : strVal(linitial(type->names))),
-                    ""};
-            }
+            assert(size->type == T_Integer);
             column = complex_logical_type::create_array(column, intVal(size));
         }
-
         return column;
     }
 } // namespace

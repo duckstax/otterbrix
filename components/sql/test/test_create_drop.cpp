@@ -139,72 +139,51 @@ TEST_CASE("sql::table") {
     SECTION("typed columns") {
         auto create = linitial(raw_parser("CREATE TABLE table_name(test integer, test1 string)"));
         auto node = transformer.transform(transform::pg_cell_to_node_cast(create), &statement);
-
         auto data = reinterpret_cast<node_create_collection_ptr&>(node);
-        REQUIRE(data->schema().child_types()[0].type() == logical_type::INTEGER);
-        REQUIRE(data->schema().child_types()[0].alias() == "test");
-        REQUIRE(data->schema().child_types()[1].type() == logical_type::STRING_LITERAL);
-        REQUIRE(data->schema().child_types()[1].alias() == "test1");
+        const auto& sch = data->schema();
+
+        REQUIRE(complex_logical_type::contains(sch, [](const complex_logical_type& type) {
+            return type.alias() == "test" && type.type() == logical_type::INTEGER;
+        }));
+        REQUIRE(complex_logical_type::contains(sch, [](const complex_logical_type& type) {
+            return type.alias() == "test1" && type.type() == logical_type::STRING_LITERAL;
+        }));
     }
 
-    SECTION("typed nested") {
-        auto create = linitial(raw_parser("CREATE TABLE table_name(test map{int, float}, test1 list{bit})"));
-        auto node = transformer.transform(transform::pg_cell_to_node_cast(create), &statement);
-        auto data = reinterpret_cast<node_create_collection_ptr&>(node);
-        auto map = data->schema().child_types()[0];
-        auto list = data->schema().child_types()[1];
-
-        REQUIRE(map.type() == logical_type::MAP);
-        REQUIRE(map.alias() == "test");
-        REQUIRE(complex_logical_type::contains(map, [](const complex_logical_type& type) -> bool {
-            return type.alias() == "key" && type.type() == logical_type::INTEGER;
-        }));
-        REQUIRE(complex_logical_type::contains(map, [](const complex_logical_type& type) -> bool {
-            return type.alias() == "value" && type.type() == logical_type::FLOAT;
-        }));
-
-        REQUIRE(list.type() == logical_type::LIST);
-        REQUIRE(list.alias() == "test1");
-        REQUIRE(list.child_type() == logical_type::BIT);
-        REQUIRE(list.child_type().alias() == "node");
-    }
-
-    SECTION("typed struct") {
+    SECTION("more typed columns") {
         auto create = linitial(
-            raw_parser("CREATE TABLE table_name(test1 struct{blob, uint, uhugeint, timestamp_sec, decimal(5, 4)})"));
+            raw_parser("CREATE TABLE table_name(t1 blob, t2 uint, t3 uhugeint, t4 timestamp_sec, t5 decimal(5, 4))"));
         auto node = transformer.transform(transform::pg_cell_to_node_cast(create), &statement);
         auto data = reinterpret_cast<node_create_collection_ptr&>(node);
-        auto sch = data->schema().child_types()[0];
+        const auto& sch = data->schema();
 
-        REQUIRE(sch.type() == logical_type::STRUCT);
-        REQUIRE(sch.alias() == "test1");
         REQUIRE(complex_logical_type::contains(sch, [](const complex_logical_type& type) {
-            return type.alias() == "1" && type.type() == logical_type::BLOB;
+            return type.alias() == "t1" && type.type() == logical_type::BLOB;
         }));
         REQUIRE(complex_logical_type::contains(sch, [](const complex_logical_type& type) {
-            return type.alias() == "2" && type.type() == logical_type::UINTEGER;
+            return type.alias() == "t2" && type.type() == logical_type::UINTEGER;
         }));
         REQUIRE(complex_logical_type::contains(sch, [](const complex_logical_type& type) {
-            return type.alias() == "3" && type.type() == logical_type::UHUGEINT;
+            return type.alias() == "t3" && type.type() == logical_type::UHUGEINT;
         }));
         REQUIRE(complex_logical_type::contains(sch, [](const complex_logical_type& type) {
-            return type.alias() == "4" && type.type() == logical_type::TIMESTAMP_SEC;
+            return type.alias() == "t4" && type.type() == logical_type::TIMESTAMP_SEC;
         }));
         REQUIRE(complex_logical_type::contains(sch, [](const complex_logical_type& type) {
             if (type.type() != logical_type::DECIMAL) {
                 return false;
             }
             auto decimal = static_cast<decimal_logical_type_extention*>(type.extention());
-            return type.alias() == "5" && decimal->width() == 5 && decimal->scale() == 4;
+            return type.alias() == "t5" && decimal->width() == 5 && decimal->scale() == 4;
         }));
     }
 
-    SECTION("typed array") {
+    SECTION("arrays & decimal") {
         auto create =
-            linitial(raw_parser("CREATE TABLE table_name(test1 struct{decimal(51, 3)[10], int[100], boolean[8]})"));
+            linitial(raw_parser("CREATE TABLE table_name(t1 decimal(51, 3)[10], t2 int[100], t3 boolean[8])"));
         auto node = transformer.transform(transform::pg_cell_to_node_cast(create), &statement);
         auto data = reinterpret_cast<node_create_collection_ptr&>(node);
-        auto sch = data->schema().child_types()[0];
+        const auto& sch = data->schema();
 
         REQUIRE(complex_logical_type::contains(sch, [](const complex_logical_type& type) {
             if (type.type() != logical_type::ARRAY) {
@@ -217,7 +196,7 @@ TEST_CASE("sql::table") {
             }
 
             auto decimal = static_cast<decimal_logical_type_extention*>(array->internal_type().extention());
-            return type.alias() == "1" && decimal->width() == 51, decimal->scale() == 3 && array->size() == 10;
+            return type.alias() == "t1" && decimal->width() == 51, decimal->scale() == 3 && array->size() == 10;
         }));
 
         REQUIRE(complex_logical_type::contains(sch, [](const complex_logical_type& type) {
@@ -225,7 +204,7 @@ TEST_CASE("sql::table") {
                 return false;
             }
             auto array = static_cast<array_logical_type_extention*>(type.extention());
-            return type.alias() == "2" && array->internal_type() == logical_type::INTEGER && array->size() == 100;
+            return type.alias() == "t2" && array->internal_type() == logical_type::INTEGER && array->size() == 100;
         }));
 
         REQUIRE(complex_logical_type::contains(sch, [](const complex_logical_type& type) {
@@ -233,49 +212,7 @@ TEST_CASE("sql::table") {
                 return false;
             }
             auto array = static_cast<array_logical_type_extention*>(type.extention());
-            return type.alias() == "3" && array->internal_type() == logical_type::BOOLEAN && array->size() == 8;
-        }));
-    }
-
-    SECTION("nested nested types") {
-        auto create = linitial(raw_parser("CREATE TABLE table_name(test struct{struct{decimal(23, 10), int[76], "
-                                          "map{int, boolean}, list{string}}})"));
-
-        auto node = transformer.transform(transform::pg_cell_to_node_cast(create), &statement);
-        auto data = reinterpret_cast<node_create_collection_ptr&>(node);
-        auto nested_sch = data->schema().child_types()[0].child_types()[0];
-
-        REQUIRE(complex_logical_type::contains(nested_sch, [](const complex_logical_type& type) {
-            if (type != logical_type::DECIMAL) {
-                return false;
-            }
-
-            auto decimal = static_cast<decimal_logical_type_extention*>(type.extention());
-            return type.alias() == "1" && decimal->width() == 23, decimal->scale() == 10;
-        }));
-
-        REQUIRE(complex_logical_type::contains(nested_sch, [](const complex_logical_type& type) {
-            if (type.type() != logical_type::ARRAY) {
-                return false;
-            }
-            auto array = static_cast<array_logical_type_extention*>(type.extention());
-            return type.alias() == "2" && array->internal_type() == logical_type::INTEGER && array->size() == 76;
-        }));
-
-        REQUIRE(complex_logical_type::contains(nested_sch, [](const complex_logical_type& type) {
-            if (type.type() != logical_type::MAP) {
-                return false;
-            }
-            auto map = static_cast<map_logical_type_extention*>(type.extention());
-            return type.alias() == "3" && map->key() == logical_type::INTEGER && map->value() == logical_type::BOOLEAN;
-        }));
-
-        REQUIRE(complex_logical_type::contains(nested_sch, [](const complex_logical_type& type) {
-            if (type.type() != logical_type::LIST) {
-                return false;
-            }
-            auto list = static_cast<list_logical_type_extention*>(type.extention());
-            return type.alias() == "4" && list->node() == logical_type::STRING_LITERAL;
+            return type.alias() == "t3" && array->internal_type() == logical_type::BOOLEAN && array->size() == 8;
         }));
     }
 
@@ -284,20 +221,17 @@ TEST_CASE("sql::table") {
 
         TEST_TRANSFORMER_ERROR("CREATE TABLE table_name (just_name list)", R"_(Unknown type for column: just_name)_");
 
-        TEST_TRANSFORMER_ERROR("CREATE TABLE table_name (just_name list{int, boolean})",
-                               R"_(Incorrect nested types for list type, {node} required)_");
+        TEST_TRANSFORMER_ERROR("CREATE TABLE table_name (just_name decimal)",
+                               R"_(Incorrect modifiers for DECIMAL, width and scale required)_");
 
-        TEST_TRANSFORMER_ERROR("CREATE TABLE table_name (just_name map{int})",
-                               R"_(Incorrect nested types for map type, {key, value} required)_");
+        TEST_TRANSFORMER_ERROR("CREATE TABLE table_name (just_name decimal(10))",
+                               R"_(Incorrect modifiers for DECIMAL, width and scale required)_");
 
-        TEST_TRANSFORMER_ERROR("CREATE TABLE table_name (just_name struct[10])",
-                               R"_(Array of nested type cannot be created: struct)_");
+        TEST_TRANSFORMER_ERROR("CREATE TABLE table_name (just_name decimal(correct, expressions))",
+                               R"_(Incorrect width or scale for DECIMAL, must be integer)_");
 
-        TEST_TRANSFORMER_ERROR("CREATE TABLE table_name (just_name list[10])",
-                               R"_(Array of nested type cannot be created: list)_");
-
-        TEST_TRANSFORMER_ERROR("CREATE TABLE table_name (just_name string{int, string})",
-                               R"_(Unknown nested type: string)_");
+        TEST_TRANSFORMER_ERROR("CREATE TABLE table_name (just_name decimal(10, 5, something))",
+                               R"_(Incorrect modifiers for DECIMAL, width and scale required)_");
     }
 }
 

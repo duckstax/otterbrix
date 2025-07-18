@@ -126,21 +126,6 @@ namespace components::sql::transform {
         return types::logical_type::NA;
     }
 
-    static types::logical_type get_nested_logical_type(std::string_view str) {
-        static const std::unordered_map<std::string_view, types::logical_type> lookup = {
-            {"struct", types::logical_type::STRUCT},
-            {"list", types::logical_type::LIST},
-            {"map", types::logical_type::MAP},
-            // array is intentionally skipped, grammar sets arrayBounds in respective typeName
-        };
-
-        if (auto it = lookup.find(str); it != lookup.end()) {
-            return it->second;
-        }
-
-        throw parser_exception_t{"Unknown nested type: " + std::string(str), ""};
-    }
-
     std::string node_tag_to_string(NodeTag type);
     std::string expr_kind_to_string(A_Expr_Kind type);
 } // namespace components::sql::transform
