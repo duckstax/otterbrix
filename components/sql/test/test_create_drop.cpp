@@ -2,12 +2,29 @@
 #include <components/logical_plan/node_create_collection.hpp>
 #include <components/logical_plan/param_storage.hpp>
 #include <components/sql/parser/parser.h>
+#include <components/sql/parser/pg_functions.h>
 #include <components/sql/transformer/transformer.hpp>
 #include <components/sql/transformer/utils.hpp>
 
 using namespace components::sql;
 using namespace components::logical_plan;
 using namespace components::types;
+
+#define TEST_TRANSFORMER_ERROR(QUERY, RESULT)                                                                          \
+    SECTION(QUERY) {                                                                                                   \
+        auto resource = std::pmr::synchronized_pool_resource();                                                        \
+        auto create = linitial(raw_parser(QUERY));                                                                     \
+        transform::transformer transformer(&resource);                                                                 \
+        components::logical_plan::parameter_node_t agg(&resource);                                                     \
+        bool exception_thrown = false;                                                                                 \
+        try {                                                                                                          \
+            auto node = transformer.transform(transform::pg_cell_to_node_cast(create), &agg);                          \
+        } catch (const parser_exception_t& e) {                                                                        \
+            exception_thrown = true;                                                                                   \
+            REQUIRE(std::string_view{e.what()} == RESULT);                                                             \
+        }                                                                                                              \
+        REQUIRE(exception_thrown);                                                                                     \
+    }
 
 TEST_CASE("sql::database") {
     auto resource = std::pmr::synchronized_pool_resource();
@@ -226,10 +243,9 @@ TEST_CASE("sql::table") {
 
         auto node = transformer.transform(transform::pg_cell_to_node_cast(create), &statement);
         auto data = reinterpret_cast<node_create_collection_ptr&>(node);
-        auto sch = data->schema().child_types()[0];
-        auto nested_sch = sch.child_types()[0];
+        auto nested_sch = data->schema().child_types()[0].child_types()[0];
 
-        REQUIRE(complex_logical_type::contains(sch, [](const complex_logical_type& type) {
+        REQUIRE(complex_logical_type::contains(nested_sch, [](const complex_logical_type& type) {
             if (type != logical_type::DECIMAL) {
                 return false;
             }
@@ -238,7 +254,7 @@ TEST_CASE("sql::table") {
             return type.alias() == "1" && decimal->width() == 23, decimal->scale() == 10;
         }));
 
-        REQUIRE(complex_logical_type::contains(sch, [](const complex_logical_type& type) {
+        REQUIRE(complex_logical_type::contains(nested_sch, [](const complex_logical_type& type) {
             if (type.type() != logical_type::ARRAY) {
                 return false;
             }
@@ -246,7 +262,7 @@ TEST_CASE("sql::table") {
             return type.alias() == "2" && array->internal_type() == logical_type::INTEGER && array->size() == 76;
         }));
 
-        REQUIRE(complex_logical_type::contains(sch, [](const complex_logical_type& type) {
+        REQUIRE(complex_logical_type::contains(nested_sch, [](const complex_logical_type& type) {
             if (type.type() != logical_type::MAP) {
                 return false;
             }
@@ -254,13 +270,34 @@ TEST_CASE("sql::table") {
             return type.alias() == "3" && map->key() == logical_type::INTEGER && map->value() == logical_type::BOOLEAN;
         }));
 
-        REQUIRE(complex_logical_type::contains(sch, [](const complex_logical_type& type) {
+        REQUIRE(complex_logical_type::contains(nested_sch, [](const complex_logical_type& type) {
             if (type.type() != logical_type::LIST) {
                 return false;
             }
             auto list = static_cast<list_logical_type_extention*>(type.extention());
             return type.alias() == "4" && list->node() == logical_type::STRING_LITERAL;
         }));
+    }
+
+    SECTION("incorrect types") {
+        TEST_TRANSFORMER_ERROR("CREATE TABLE table_name (just_name struct)", R"_(Unknown type for column: just_name)_");
+
+        TEST_TRANSFORMER_ERROR("CREATE TABLE table_name (just_name list)", R"_(Unknown type for column: just_name)_");
+
+        TEST_TRANSFORMER_ERROR("CREATE TABLE table_name (just_name list{int, boolean})",
+                               R"_(Incorrect nested types for list type, {node} required)_");
+
+        TEST_TRANSFORMER_ERROR("CREATE TABLE table_name (just_name map{int})",
+                               R"_(Incorrect nested types for map type, {key, value} required)_");
+
+        TEST_TRANSFORMER_ERROR("CREATE TABLE table_name (just_name struct[10])",
+                               R"_(Array of nested type cannot be created: struct)_");
+
+        TEST_TRANSFORMER_ERROR("CREATE TABLE table_name (just_name list[10])",
+                               R"_(Array of nested type cannot be created: list)_");
+
+        TEST_TRANSFORMER_ERROR("CREATE TABLE table_name (just_name string{int, string})",
+                               R"_(Unknown nested type: string)_");
     }
 }
 

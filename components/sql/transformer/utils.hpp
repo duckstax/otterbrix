@@ -4,6 +4,7 @@
 #include <components/expressions/forward.hpp>
 #include <components/logical_plan/node_join.hpp>
 #include <components/sql/parser/nodes/parsenodes.h>
+#include <components/sql/parser/pg_functions.h>
 #include <components/types/types.hpp>
 #include <string>
 
@@ -48,7 +49,7 @@ namespace components::sql::transform {
             case JOIN_RIGHT:
                 return logical_plan::join_type::right;
             default:
-                throw std::runtime_error("unsupported join type");
+                throw parser_exception_t{"unsupported join type", ""};
         }
     }
 
@@ -69,7 +70,7 @@ namespace components::sql::transform {
             return it->second;
         }
 
-        throw std::runtime_error("Unknown comparison operator: " + std::string(str));
+        throw parser_exception_t{"Unknown comparison operator: " + std::string(str), ""};
     }
 
     static expressions::aggregate_type get_aggregate_type(std::string_view str) {
@@ -137,7 +138,7 @@ namespace components::sql::transform {
             return it->second;
         }
 
-        throw std::runtime_error("Unknown nested type: " + std::string(str));
+        throw parser_exception_t{"Unknown nested type: " + std::string(str), ""};
     }
 
     std::string node_tag_to_string(NodeTag type);

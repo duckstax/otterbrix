@@ -32,7 +32,9 @@ namespace {
                 return complex_logical_type::create_struct(columns);
             }
             case logical_type::LIST: {
-                assert(list_length(nested) == 1);
+                if (list_length(nested) != 1) {
+                    throw parser_exception_t{"Incorrect nested types for list type, {node} required", ""};
+                }
                 auto type = pg_ptr_assert_cast<TypeName>(linitial(nested), T_TypeName);
                 auto log_type = get_type(type);
 
@@ -40,7 +42,10 @@ namespace {
                 return complex_logical_type::create_list(log_type);
             }
             case logical_type::MAP: {
-                assert(list_length(nested) == 2);
+                if (list_length(nested) != 2) {
+                    throw parser_exception_t{"Incorrect nested types for map type, {key, value} required", ""};
+                }
+
                 auto key = pg_ptr_assert_cast<TypeName>(linitial(nested), T_TypeName);
                 auto value = pg_ptr_assert_cast<TypeName>(lsecond(nested), T_TypeName);
                 auto log_key = get_type(key);
@@ -67,12 +72,16 @@ namespace {
             if (auto col = get_logical_type(strVal(lsecond(type->names))); col != logical_type::DECIMAL) {
                 column = col;
             } else {
-                assert(list_length(type->typmods) == 2);
+                if (list_length(type->typmods) != 2) {
+                    throw parser_exception_t{"Incorrect modifiers DECIMAL, width and scale required", ""};
+                }
+
                 auto width = pg_ptr_assert_cast<A_Const>(linitial(type->typmods), T_A_Const);
                 auto scale = pg_ptr_assert_cast<A_Const>(lsecond(type->typmods), T_A_Const);
 
-                assert(width->val.type == T_Integer);
-                assert(scale->val.type == T_Integer);
+                if (width->val.type != scale->val.type || width->val.type != T_Integer) {
+                    throw parser_exception_t{"Incorrect width or scale for DECIMAL, must be integer", ""};
+                }
                 column = complex_logical_type::create_decimal(static_cast<uint8_t>(intVal(&width->val)),
                                                               static_cast<uint8_t>(intVal(&scale->val)));
             }
@@ -82,13 +91,19 @@ namespace {
 
         if (list_length(type->arrayBounds)) {
             if (column.type() == logical_type::NA) {
-                throw std::runtime_error("Unable to create array of unknown type: " + (is_system)
-                                             ? strVal(lsecond(type->names))
-                                             : strVal(linitial(type->names)));
+                throw parser_exception_t(
+                    "Array of nested type cannot be created: " +
+                        std::string((is_system) ? strVal(lsecond(type->names)) : strVal(linitial(type->names))),
+                    "");
             }
 
             auto size = pg_ptr_assert_cast<Value>(linitial(type->arrayBounds), T_Value);
-            assert(size->type == T_Integer);
+            if (size->type != T_Integer) {
+                throw parser_exception_t{
+                    "Incorrect array size of type " +
+                        std::string((is_system) ? strVal(lsecond(type->names)) : strVal(linitial(type->names))),
+                    ""};
+            }
             column = complex_logical_type::create_array(column, intVal(size));
         }
 
@@ -116,7 +131,7 @@ namespace components::sql::transform {
             complex_logical_type col = get_type(coldef->typeName);
 
             if (col.type() == logical_type::NA) {
-                throw std::runtime_error("Unknown type for column: " + std::string(coldef->colname));
+                throw parser_exception_t{"Unknown type for column: " + std::string(coldef->colname), ""};
             }
 
             col.set_alias(coldef->colname);
