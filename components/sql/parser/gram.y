@@ -1112,6 +1112,7 @@ TypeName *SystemTypeName(char *name);
 %left		COLLATE
 %right		UMINUS
 %left		'[' ']'
+%left		'{' '}'
 %left		'(' ')'
 %left		TYPECAST
 %left		'.'
@@ -13074,7 +13075,7 @@ Typename:	SimpleTypename opt_array_bounds
 
 NestedTypename:
             Typename                                { $$ = $1; }
-			| Typename '<' nested_type_list '>'
+			| Typename '{' nested_type_list '}'
 				{
                     $$ = makeNode(TypeName);
                     $$->names = NIL; /* indicate nesting */
