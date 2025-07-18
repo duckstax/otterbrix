@@ -61,8 +61,7 @@ set(${PROJECT_NAME}_SOURCES
         #table/operators/merge/operator_not.cpp
 
         table/operators/scan/full_scan.cpp
-        #TODO: indexes are not supported in tables
-        #table/operators/scan/index_scan.cpp
+        table/operators/scan/index_scan.cpp
         table/operators/scan/primary_key_scan.cpp
         table/operators/scan/transfer_scan.cpp
 

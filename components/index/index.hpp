@@ -8,6 +8,7 @@ namespace components::index {
     struct index_value_t {
         document::document_id_t id;
         document::document_ptr doc{nullptr};
+        int64_t row_index;
     };
 
     class index_t {
@@ -61,6 +62,7 @@ namespace components::index {
         void insert(value_t, index_value_t);
         void insert(value_t, const document::document_id_t&);
         void insert(value_t, document::document_ptr);
+        void insert(value_t, int64_t row_index);
         void insert(document::document_ptr);
         void remove(value_t);
         range find(const value_t& value) const;

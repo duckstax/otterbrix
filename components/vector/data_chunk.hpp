@@ -16,6 +16,7 @@ namespace components::vector {
         ~data_chunk_t() = default;
 
         std::vector<vector_t> data;
+        vector_t row_ids;
 
         uint64_t size() const { return count_; }
         uint64_t column_count() const { return data.size(); }

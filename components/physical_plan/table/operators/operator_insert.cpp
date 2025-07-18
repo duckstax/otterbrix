@@ -17,7 +17,9 @@ namespace services::table::operators {
             context_->table_storage().table().initialize_append(state);
             for (size_t id = 0; id < left_->output()->data_chunk().size(); id++) {
                 modified_->append(id + state.row_start);
-                // TODO: insert into index
+                context_->index_engine()->insert_row(left_->output()->data_chunk(),
+                                                     id + state.row_start,
+                                                     pipeline_context);
             }
             context_->table_storage().table().append(left_->output()->data_chunk(), state);
             context_->table_storage().table().finalize_append(state);
