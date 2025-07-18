@@ -26,6 +26,13 @@ using namespace components::types;
         REQUIRE(exception_thrown);                                                                                     \
     }
 
+namespace {
+    template<typename T>
+    bool contains(const std::pmr::vector<complex_logical_type>& schema, T&& pred) {
+        return std::find_if(schema.begin(), schema.end(), std::move(pred)) != schema.end();
+    }
+} // namespace
+
 TEST_CASE("sql::database") {
     auto resource = std::pmr::synchronized_pool_resource();
     components::sql::transform::transformer transformer(&resource);
@@ -142,10 +149,10 @@ TEST_CASE("sql::table") {
         auto data = reinterpret_cast<node_create_collection_ptr&>(node);
         const auto& sch = data->schema();
 
-        REQUIRE(complex_logical_type::contains(sch, [](const complex_logical_type& type) {
+        REQUIRE(contains(sch, [](const complex_logical_type& type) {
             return type.alias() == "test" && type.type() == logical_type::INTEGER;
         }));
-        REQUIRE(complex_logical_type::contains(sch, [](const complex_logical_type& type) {
+        REQUIRE(contains(sch, [](const complex_logical_type& type) {
             return type.alias() == "test1" && type.type() == logical_type::STRING_LITERAL;
         }));
     }
@@ -157,19 +164,19 @@ TEST_CASE("sql::table") {
         auto data = reinterpret_cast<node_create_collection_ptr&>(node);
         const auto& sch = data->schema();
 
-        REQUIRE(complex_logical_type::contains(sch, [](const complex_logical_type& type) {
+        REQUIRE(contains(sch, [](const complex_logical_type& type) {
             return type.alias() == "t1" && type.type() == logical_type::BLOB;
         }));
-        REQUIRE(complex_logical_type::contains(sch, [](const complex_logical_type& type) {
+        REQUIRE(contains(sch, [](const complex_logical_type& type) {
             return type.alias() == "t2" && type.type() == logical_type::UINTEGER;
         }));
-        REQUIRE(complex_logical_type::contains(sch, [](const complex_logical_type& type) {
+        REQUIRE(contains(sch, [](const complex_logical_type& type) {
             return type.alias() == "t3" && type.type() == logical_type::UHUGEINT;
         }));
-        REQUIRE(complex_logical_type::contains(sch, [](const complex_logical_type& type) {
+        REQUIRE(contains(sch, [](const complex_logical_type& type) {
             return type.alias() == "t4" && type.type() == logical_type::TIMESTAMP_SEC;
         }));
-        REQUIRE(complex_logical_type::contains(sch, [](const complex_logical_type& type) {
+        REQUIRE(contains(sch, [](const complex_logical_type& type) {
             if (type.type() != logical_type::DECIMAL) {
                 return false;
             }
@@ -185,7 +192,7 @@ TEST_CASE("sql::table") {
         auto data = reinterpret_cast<node_create_collection_ptr&>(node);
         const auto& sch = data->schema();
 
-        REQUIRE(complex_logical_type::contains(sch, [](const complex_logical_type& type) {
+        REQUIRE(contains(sch, [](const complex_logical_type& type) {
             if (type.type() != logical_type::ARRAY) {
                 return false;
             }
@@ -199,7 +206,7 @@ TEST_CASE("sql::table") {
             return type.alias() == "t1" && decimal->width() == 51, decimal->scale() == 3 && array->size() == 10;
         }));
 
-        REQUIRE(complex_logical_type::contains(sch, [](const complex_logical_type& type) {
+        REQUIRE(contains(sch, [](const complex_logical_type& type) {
             if (type.type() != logical_type::ARRAY) {
                 return false;
             }
@@ -207,7 +214,7 @@ TEST_CASE("sql::table") {
             return type.alias() == "t2" && array->internal_type() == logical_type::INTEGER && array->size() == 100;
         }));
 
-        REQUIRE(complex_logical_type::contains(sch, [](const complex_logical_type& type) {
+        REQUIRE(contains(sch, [](const complex_logical_type& type) {
             if (type.type() != logical_type::ARRAY) {
                 return false;
             }

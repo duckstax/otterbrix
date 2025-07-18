@@ -10,15 +10,15 @@ namespace components::logical_plan {
 
     node_create_collection_t::node_create_collection_t(std::pmr::memory_resource* resource,
                                                        const collection_full_name_t& collection,
-                                                       const types::complex_logical_type& schema)
+                                                       std::pmr::vector<types::complex_logical_type> schema)
         : node_t(resource, node_type::create_collection_t, collection)
-        , schema_(schema) {}
+        , schema_(std::move(schema)) {}
 
     node_ptr node_create_collection_t::deserialize(serializer::base_deserializer_t* deserializer) {
         return make_node_create_collection(deserializer->resource(), deserializer->deserialize_collection(1));
     }
 
-    types::complex_logical_type node_create_collection_t::schema() const { return schema_; }
+    const std::pmr::vector<types::complex_logical_type>& node_create_collection_t::schema() const { return schema_; }
 
     hash_t node_create_collection_t::hash_impl() const { return 0; }
 
@@ -37,8 +37,8 @@ namespace components::logical_plan {
 
     node_create_collection_ptr make_node_create_collection(std::pmr::memory_resource* resource,
                                                            const collection_full_name_t& collection,
-                                                           const types::complex_logical_type& schema) {
-        return {new node_create_collection_t{resource, collection, schema}};
+                                                           std::pmr::vector<types::complex_logical_type> schema) {
+        return {new node_create_collection_t{resource, collection, std::move(schema)}};
     }
 
 } // namespace components::logical_plan
