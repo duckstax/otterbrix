@@ -9,6 +9,7 @@
 namespace components::types {
 
     using int128_t = absl::int128;
+    using uint128_t = absl::uint128;
 
     class logical_value_t;
     class logical_type_extention;
@@ -70,6 +71,7 @@ namespace components::types {
         INVALID = 255
     };
 
+    // order change may break logical_value comparators
     enum class logical_type : uint8_t
     {
         NA = 0,   // NULL type, used for constant NULL
@@ -160,61 +162,72 @@ namespace components::types {
         }
     }
 
-    class complex_logical_type {
-    public:
-        complex_logical_type(logical_type type = logical_type::NA);
-        complex_logical_type(logical_type type, std::unique_ptr<logical_type_extention> extention);
-        complex_logical_type(const complex_logical_type& other);
-        complex_logical_type(complex_logical_type&& other) noexcept = default;
-        complex_logical_type& operator=(const complex_logical_type& other);
-        complex_logical_type& operator=(complex_logical_type&& other) = default;
-        ~complex_logical_type() = default;
-
-        bool operator==(const complex_logical_type& rhs) const;
-        bool operator!=(const complex_logical_type& rhs) const;
-
-        logical_type type() const noexcept { return type_; }
-        size_t size() const noexcept;
-        size_t align() const noexcept;
-        physical_type to_physical_type() const;
-        void set_alias(const std::string& alias);
-        bool has_alias() const;
-        const std::string& alias() const;
-        const std::string& child_name(uint64_t index) const;
-        bool is_unnamed() const;
-        bool is_nested() const;
-        template<typename T>
-        static constexpr logical_type to_logical_type();
-
-        const complex_logical_type& child_type() const;
-        const std::vector<complex_logical_type>& child_types() const;
-        logical_type_extention* extention() const noexcept;
-
-        template<typename T>
-        static bool contains(const complex_logical_type& type, T&& predicate);
-
-        static bool contains(const complex_logical_type& type, logical_type type_id) {
-            return contains(type, [&](const complex_logical_type& t) { return t.type() == type_id; });
+    constexpr bool is_numeric(logical_type type) {
+        switch (type) {
+            case logical_type::BOOLEAN:
+            case logical_type::UTINYINT:
+            case logical_type::TINYINT:
+            case logical_type::USMALLINT:
+            case logical_type::SMALLINT:
+            case logical_type::UINTEGER:
+            case logical_type::INTEGER:
+            case logical_type::UBIGINT:
+            case logical_type::BIGINT:
+            case logical_type::UHUGEINT:
+            case logical_type::HUGEINT:
+            case logical_type::FLOAT:
+            case logical_type::DOUBLE:
+                return true;
+            default:
+                return false;
         }
+    }
 
-        static bool type_is_constant_size(logical_type type);
+    constexpr bool is_signed(logical_type type) {
+        switch (type) {
+            case logical_type::TINYINT:
+            case logical_type::SMALLINT:
+            case logical_type::INTEGER:
+            case logical_type::BIGINT:
+            case logical_type::HUGEINT:
+            case logical_type::FLOAT:
+            case logical_type::DOUBLE:
+                return true;
+            default:
+                return false;
+        }
+    }
 
-        static complex_logical_type create_decimal(uint8_t width, uint8_t scale);
-        static complex_logical_type create_list(const complex_logical_type& internal_type);
-        static complex_logical_type create_array(const complex_logical_type& internal_type, size_t array_size);
-        static complex_logical_type create_map(const complex_logical_type& key_type,
-                                               const complex_logical_type& value_type);
-        static complex_logical_type create_struct(const std::vector<complex_logical_type>& fields);
+    constexpr bool is_unsigned(logical_type type) {
+        switch (type) {
+            case logical_type::BOOLEAN:
+            case logical_type::UTINYINT:
+            case logical_type::USMALLINT:
+            case logical_type::UINTEGER:
+            case logical_type::UBIGINT:
+            case logical_type::UHUGEINT:
+                return true;
+            default:
+                return false;
+        }
+    }
 
-    private:
-        logical_type type_ = logical_type::NA;
-        std::unique_ptr<logical_type_extention> extention_ = nullptr; // for complex types
-    };
+    constexpr bool is_duration(logical_type type) {
+        switch (type) {
+            case logical_type::TIMESTAMP_SEC:
+            case logical_type::TIMESTAMP_MS:
+            case logical_type::TIMESTAMP_US:
+            case logical_type::TIMESTAMP_NS:
+                return true;
+            default:
+                return false;
+        }
+    }
 
     // for now only supports std::string for string types
     // TODO: convert multiple string formats to logical_type::STRING_LITERAL
     template<typename T>
-    constexpr logical_type complex_logical_type::to_logical_type() {
+    constexpr logical_type to_logical_type() {
         if constexpr (std::is_same<T, std::nullptr_t>::value) {
             return logical_type::NA;
         } else if constexpr (std::is_pointer<T>::value) {
@@ -255,6 +268,128 @@ namespace components::types {
             return logical_type::INVALID;
         }
     }
+
+    constexpr logical_type promote_type(logical_type type1, logical_type type2) {
+        using namespace std::chrono;
+        if (type1 == type2) {
+            return type1;
+        }
+        assert(is_numeric(type1) && is_numeric(type2) || is_duration(type1) && is_duration(type2));
+
+        constexpr uint8_t signage_difference =
+            static_cast<uint8_t>(logical_type::UTINYINT) - static_cast<uint8_t>(logical_type::TINYINT);
+
+        if (is_duration(type1) && is_duration(type2)) {
+            switch (type1) {
+                case logical_type::TIMESTAMP_SEC:
+                    switch (type2) {
+                        case logical_type::TIMESTAMP_MS:
+                            return to_logical_type<std::common_type<seconds, milliseconds>::type>();
+                        case logical_type::TIMESTAMP_US:
+                            return to_logical_type<std::common_type<seconds, microseconds>::type>();
+                        case logical_type::TIMESTAMP_NS:
+                            return to_logical_type<std::common_type<seconds, nanoseconds>::type>();
+                        default:
+                            break;
+                    }
+                case logical_type::TIMESTAMP_MS:
+                    switch (type2) {
+                        case logical_type::TIMESTAMP_SEC:
+                            return to_logical_type<std::common_type<milliseconds, seconds>::type>();
+                        case logical_type::TIMESTAMP_US:
+                            return to_logical_type<std::common_type<milliseconds, microseconds>::type>();
+                        case logical_type::TIMESTAMP_NS:
+                            return to_logical_type<std::common_type<milliseconds, nanoseconds>::type>();
+                        default:
+                            break;
+                    }
+                case logical_type::TIMESTAMP_US:
+                    switch (type2) {
+                        case logical_type::TIMESTAMP_SEC:
+                            return to_logical_type<std::common_type<microseconds, seconds>::type>();
+                        case logical_type::TIMESTAMP_MS:
+                            return to_logical_type<std::common_type<microseconds, milliseconds>::type>();
+                        case logical_type::TIMESTAMP_NS:
+                            return to_logical_type<std::common_type<microseconds, nanoseconds>::type>();
+                        default:
+                            break;
+                    }
+                case logical_type::TIMESTAMP_NS:
+                    switch (type2) {
+                        case logical_type::TIMESTAMP_SEC:
+                            return to_logical_type<std::common_type<nanoseconds, seconds>::type>();
+                        case logical_type::TIMESTAMP_MS:
+                            return to_logical_type<std::common_type<nanoseconds, milliseconds>::type>();
+                        case logical_type::TIMESTAMP_US:
+                            return to_logical_type<std::common_type<nanoseconds, microseconds>::type>();
+                        default:
+                            break;
+                    }
+                default:
+                    break;
+            }
+        }
+
+        // This is dependent on enum encoding values
+        if (is_signed(type1) == is_signed(type2) || is_unsigned(type1) == is_unsigned(type2)) {
+            return static_cast<logical_type>(std::max(static_cast<uint8_t>(type1), static_cast<uint8_t>(type2)));
+        } else if (is_signed(type1)) {
+            return static_cast<logical_type>(
+                std::max<uint8_t>(static_cast<uint8_t>(type1), static_cast<uint8_t>(type2) - signage_difference));
+        } else {
+            return static_cast<logical_type>(
+                std::max<uint8_t>(static_cast<uint8_t>(type1) - signage_difference, static_cast<uint8_t>(type2)));
+        }
+    }
+
+    class complex_logical_type {
+    public:
+        complex_logical_type(logical_type type = logical_type::NA);
+        complex_logical_type(logical_type type, std::unique_ptr<logical_type_extention> extention);
+        complex_logical_type(const complex_logical_type& other);
+        complex_logical_type(complex_logical_type&& other) noexcept = default;
+        complex_logical_type& operator=(const complex_logical_type& other);
+        complex_logical_type& operator=(complex_logical_type&& other) = default;
+        ~complex_logical_type() = default;
+
+        bool operator==(const complex_logical_type& rhs) const;
+        bool operator!=(const complex_logical_type& rhs) const;
+
+        logical_type type() const noexcept { return type_; }
+        size_t size() const noexcept;
+        size_t align() const noexcept;
+        physical_type to_physical_type() const;
+        void set_alias(const std::string& alias);
+        bool has_alias() const;
+        const std::string& alias() const;
+        const std::string& child_name(uint64_t index) const;
+        bool is_unnamed() const;
+        bool is_nested() const;
+
+        const complex_logical_type& child_type() const;
+        const std::vector<complex_logical_type>& child_types() const;
+        logical_type_extention* extention() const noexcept;
+
+        template<typename T>
+        static bool contains(const complex_logical_type& type, T&& predicate);
+
+        static bool contains(const complex_logical_type& type, logical_type type_id) {
+            return contains(type, [&](const complex_logical_type& t) { return t.type() == type_id; });
+        }
+
+        static bool type_is_constant_size(logical_type type);
+
+        static complex_logical_type create_decimal(uint8_t width, uint8_t scale);
+        static complex_logical_type create_list(const complex_logical_type& internal_type);
+        static complex_logical_type create_array(const complex_logical_type& internal_type, size_t array_size);
+        static complex_logical_type create_map(const complex_logical_type& key_type,
+                                               const complex_logical_type& value_type);
+        static complex_logical_type create_struct(const std::vector<complex_logical_type>& fields);
+
+    private:
+        logical_type type_ = logical_type::NA;
+        std::unique_ptr<logical_type_extention> extention_ = nullptr; // for complex types
+    };
 
     struct list_entry_t {
         list_entry_t() = default;

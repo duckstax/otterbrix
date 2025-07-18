@@ -26,8 +26,6 @@ namespace components::types {
             case logical_type::BIGINT:
                 value_ = int64_t{0};
                 break;
-            case logical_type::HUGEINT:
-                break;
             case logical_type::TIMESTAMP_SEC:
             case logical_type::TIMESTAMP_MS:
             case logical_type::TIMESTAMP_US:
@@ -51,6 +49,15 @@ namespace components::types {
                 break;
             case logical_type::UBIGINT:
                 value_ = uint64_t{0};
+                break;
+            case logical_type::HUGEINT:
+                value_ = std::make_unique<int128_t>();
+                break;
+            case logical_type::UHUGEINT:
+                value_ = std::make_unique<uint128_t>();
+                break;
+            case logical_type::STRING_LITERAL:
+                value_ = std::make_unique<std::string>();
                 break;
             case logical_type::INVALID:
                 assert(false && "cannot create value of invalid type");
@@ -92,6 +99,12 @@ namespace components::types {
                 break;
             case logical_type::UBIGINT:
                 value_ = std::get<uint64_t>(other.value_);
+                break;
+            case logical_type::HUGEINT:
+                value_ = std::make_unique<int128_t>(*std::get<std::unique_ptr<int128_t>>(other.value_));
+                break;
+            case logical_type::UHUGEINT:
+                value_ = std::make_unique<uint128_t>(*std::get<std::unique_ptr<uint128_t>>(other.value_));
                 break;
             case logical_type::TIMESTAMP_NS:
             case logical_type::TIMESTAMP_US:
@@ -153,6 +166,12 @@ namespace components::types {
             case logical_type::UBIGINT:
                 value_ = std::get<uint64_t>(other.value_);
                 break;
+            case logical_type::HUGEINT:
+                value_ = std::move(std::get<std::unique_ptr<int128_t>>(other.value_));
+                break;
+            case logical_type::UHUGEINT:
+                value_ = std::move(std::get<std::unique_ptr<uint128_t>>(other.value_));
+                break;
             case logical_type::TIMESTAMP_NS:
             case logical_type::TIMESTAMP_US:
             case logical_type::TIMESTAMP_MS:
@@ -211,6 +230,12 @@ namespace components::types {
                 break;
             case logical_type::UBIGINT:
                 value_ = std::get<uint64_t>(other.value_);
+                break;
+            case logical_type::HUGEINT:
+                value_ = std::make_unique<int128_t>(*std::get<std::unique_ptr<int128_t>>(other.value_));
+                break;
+            case logical_type::UHUGEINT:
+                value_ = std::make_unique<uint128_t>(*std::get<std::unique_ptr<uint128_t>>(other.value_));
                 break;
             case logical_type::TIMESTAMP_NS:
             case logical_type::TIMESTAMP_US:
@@ -273,6 +298,12 @@ namespace components::types {
             case logical_type::UBIGINT:
                 value_ = std::get<uint64_t>(other.value_);
                 break;
+            case logical_type::HUGEINT:
+                value_ = std::move(std::get<std::unique_ptr<int128_t>>(other.value_));
+                break;
+            case logical_type::UHUGEINT:
+                value_ = std::move(std::get<std::unique_ptr<uint128_t>>(other.value_));
+                break;
             case logical_type::TIMESTAMP_NS:
             case logical_type::TIMESTAMP_US:
             case logical_type::TIMESTAMP_MS:
@@ -302,20 +333,119 @@ namespace components::types {
     bool logical_value_t::is_null() const noexcept { return type_.type() == logical_type::NA; }
 
     logical_value_t logical_value_t::cast_as(const complex_logical_type& type) const {
+        using namespace std::chrono;
+
         if (type_ == type) {
             return logical_value_t(*this);
         }
+        if (is_numeric(type.type())) {
+            // same problem as in physical_value
+            // ideally use something like this
+            // return logicaL_value<type.type()>{value<type_.type()>()};
+            // but type is not a constexpr, so here is a huge switch:
 
-        // TODO: cast to new value
+#define OTHER_SWITCH(cast)                                                                                             \
+    switch (type_.type()) {                                                                                            \
+        case logical_type::BOOLEAN:                                                                                    \
+            return logical_value_t{static_cast<cast>(value<bool>())};                                                  \
+        case logical_type::TINYINT:                                                                                    \
+            return logical_value_t{static_cast<cast>(value<int8_t>())};                                                \
+        case logical_type::UTINYINT:                                                                                   \
+            return logical_value_t{static_cast<cast>(value<uint8_t>())};                                               \
+        case logical_type::SMALLINT:                                                                                   \
+            return logical_value_t{static_cast<cast>(value<int16_t>())};                                               \
+        case logical_type::USMALLINT:                                                                                  \
+            return logical_value_t{static_cast<cast>(value<uint16_t>())};                                              \
+        case logical_type::INTEGER:                                                                                    \
+            return logical_value_t{static_cast<cast>(value<int32_t>())};                                               \
+        case logical_type::UINTEGER:                                                                                   \
+            return logical_value_t{static_cast<cast>(value<uint32_t>())};                                              \
+        case logical_type::BIGINT:                                                                                     \
+            return logical_value_t{static_cast<cast>(value<int64_t>())};                                               \
+        case logical_type::UBIGINT:                                                                                    \
+            return logical_value_t{static_cast<cast>(value<uint64_t>())};                                              \
+        case logical_type::HUGEINT:                                                                                    \
+            return logical_value_t{static_cast<cast>(value<int128_t>())};                                              \
+        case logical_type::UHUGEINT:                                                                                   \
+            return logical_value_t{static_cast<cast>(value<uint128_t>())};                                             \
+        case logical_type::FLOAT:                                                                                      \
+            return logical_value_t{static_cast<cast>(value<float>())};                                                 \
+        case logical_type::DOUBLE:                                                                                     \
+            return logical_value_t{static_cast<cast>(value<double>())};                                                \
+        default:                                                                                                       \
+            assert(false && "incorrect type");                                                                         \
+            break;                                                                                                     \
+    }
+
+            switch (type.type()) {
+                case logical_type::BOOLEAN:
+                    OTHER_SWITCH(bool)
+                case logical_type::TINYINT:
+                    OTHER_SWITCH(int8_t)
+                case logical_type::UTINYINT:
+                    OTHER_SWITCH(uint8_t)
+                case logical_type::SMALLINT:
+                    OTHER_SWITCH(int16_t)
+                case logical_type::USMALLINT:
+                    OTHER_SWITCH(uint16_t)
+                case logical_type::INTEGER:
+                    OTHER_SWITCH(int32_t)
+                case logical_type::UINTEGER:
+                    OTHER_SWITCH(uint32_t)
+                case logical_type::BIGINT:
+                    OTHER_SWITCH(int64_t)
+                case logical_type::UBIGINT:
+                    OTHER_SWITCH(uint64_t)
+                case logical_type::HUGEINT:
+                    OTHER_SWITCH(int128_t)
+                case logical_type::UHUGEINT:
+                    OTHER_SWITCH(uint128_t)
+                case logical_type::FLOAT:
+                    OTHER_SWITCH(float)
+                case logical_type::DOUBLE:
+                    OTHER_SWITCH(double)
+                    break;
+                default:
+                    assert(false && "incorrect type");
+                    break;
+            }
+        } else if (is_duration(type_.type()) && is_duration(type.type())) {
+            switch (type.type()) {
+                case logical_type::TIMESTAMP_SEC:
+                    return logical_value_t{value<seconds>()};
+                case logical_type::TIMESTAMP_MS:
+                    return logical_value_t{value<milliseconds>()};
+                case logical_type::TIMESTAMP_US:
+                    return logical_value_t{value<microseconds>()};
+                case logical_type::TIMESTAMP_NS:
+                    return logical_value_t{value<nanoseconds>()};
+                default:
+                    break;
+            }
+        }
         assert(false && "cast to value is not implemented");
+        return logical_value_t{};
     }
 
     void logical_value_t::set_alias(const std::string& alias) { type_.set_alias(alias); }
 
     bool logical_value_t::operator==(const logical_value_t& rhs) const {
         if (type_ != rhs.type_) {
+            if (is_numeric(type_.type()) && is_numeric(rhs.type_.type()) ||
+                is_duration(type_.type()) && is_duration(rhs.type_.type())) {
+                auto promoted_type = promote_type(type_.type(), rhs.type_.type());
+
+                if (promoted_type == logical_type::FLOAT) {
+                    return is_equals(std::get<float>(cast_as(promoted_type).value_),
+                                     std::get<float>(rhs.cast_as(promoted_type).value_));
+                } else if (promoted_type == logical_type::DOUBLE) {
+                    return is_equals(std::get<double>(cast_as(promoted_type).value_),
+                                     std::get<double>(rhs.cast_as(promoted_type).value_));
+                } else {
+                    return cast_as(promoted_type) == rhs.cast_as(promoted_type);
+                }
+            }
             assert(false && "can not compare types");
-            // TODO: add numeric types comparasing
             return false;
         } else {
             switch (type_.type()) {
@@ -331,9 +461,9 @@ namespace components::types {
                     return std::get<int64_t>(value_) == std::get<int64_t>(rhs.value_);
                 // TODO: use proper floating comparasing
                 case logical_type::FLOAT:
-                    return std::get<float>(value_) == std::get<float>(rhs.value_);
+                    return is_equals(std::get<float>(value_), std::get<float>(rhs.value_));
                 case logical_type::DOUBLE:
-                    return std::get<double>(value_) == std::get<double>(rhs.value_);
+                    return is_equals(std::get<double>(value_), std::get<double>(rhs.value_));
                 case logical_type::UTINYINT:
                     return std::get<uint8_t>(value_) == std::get<uint8_t>(rhs.value_);
                 case logical_type::USMALLINT:
@@ -342,12 +472,6 @@ namespace components::types {
                     return std::get<uint32_t>(value_) == std::get<uint32_t>(rhs.value_);
                 case logical_type::UBIGINT:
                     return std::get<uint64_t>(value_) == std::get<uint64_t>(rhs.value_);
-                // TODO: cross types comparasing
-                case logical_type::TIMESTAMP_NS:
-                case logical_type::TIMESTAMP_US:
-                case logical_type::TIMESTAMP_MS:
-                case logical_type::TIMESTAMP_SEC:
-                    return std::get<int64_t>(value_) == std::get<int64_t>(rhs.value_);
                 case logical_type::STRING_LITERAL:
                     return *std::get<std::unique_ptr<std::string>>(value_) ==
                            *std::get<std::unique_ptr<std::string>>(rhs.value_);
@@ -370,8 +494,12 @@ namespace components::types {
 
     bool logical_value_t::operator<(const logical_value_t& rhs) const {
         if (type_ != rhs.type_) {
+            if (is_numeric(type_.type()) && is_numeric(rhs.type_.type()) ||
+                is_duration(type_.type()) && is_duration(rhs.type_.type())) {
+                auto promoted_type = promote_type(type_.type(), rhs.type_.type());
+                return cast_as(promoted_type) < rhs.cast_as(promoted_type);
+            }
             assert(false && "can not compare types");
-            // TODO: add numeric types comparasing
             return false;
         } else {
             switch (type_.type()) {
@@ -397,12 +525,6 @@ namespace components::types {
                     return std::get<uint32_t>(value_) < std::get<uint32_t>(rhs.value_);
                 case logical_type::UBIGINT:
                     return std::get<uint64_t>(value_) < std::get<uint64_t>(rhs.value_);
-                // TODO: cross types comparasing
-                case logical_type::TIMESTAMP_NS:
-                case logical_type::TIMESTAMP_US:
-                case logical_type::TIMESTAMP_MS:
-                case logical_type::TIMESTAMP_SEC:
-                    return std::get<int64_t>(value_) < std::get<int64_t>(rhs.value_);
                 case logical_type::STRING_LITERAL:
                     return *std::get<std::unique_ptr<std::string>>(value_) <
                            *std::get<std::unique_ptr<std::string>>(rhs.value_);

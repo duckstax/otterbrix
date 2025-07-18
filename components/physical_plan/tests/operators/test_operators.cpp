@@ -1,6 +1,7 @@
 #include "table/operators/operator_delete.hpp"
 #include "table/operators/operator_update.hpp"
 #include "table/operators/scan/full_scan.hpp"
+#include "table/operators/scan/index_scan.hpp"
 #include "table/operators/scan/transfer_scan.hpp"
 #include "test_operator_generaty.hpp"
 
@@ -467,19 +468,23 @@ TEST_CASE("operator::update") {
     }
 }
 
-// TODO: add table section
 TEST_CASE("operator::index_scan") {
     auto resource = std::pmr::synchronized_pool_resource();
     auto tape = std::make_unique<impl::base_document>(&resource);
     auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
     auto collection = create_collection(&resource);
+    auto table = create_table(&resource);
 
     components::index::keys_base_storage_t keys(collection->resource_);
     keys.emplace_back("count");
     components::index::make_index<components::index::single_field_index_t>(d(collection)->index_engine(),
                                                                            "single_count",
                                                                            keys);
+    components::index::make_index<components::index::single_field_index_t>(d(table)->index_engine(),
+                                                                           "single_count",
+                                                                           keys);
     fill_collection(collection);
+    fill_table(table);
 
     SECTION("find::eq") {
         auto cond = make_compare_expression(&resource, compare_type::eq, key("count"), core::parameter_id_t(1));
@@ -489,6 +494,11 @@ TEST_CASE("operator::index_scan") {
 
         SECTION("documents") {
             collection::operators::index_scan scan(d(collection), cond, components::logical_plan::limit_t::unlimit());
+            scan.on_execute(&pipeline_context);
+            REQUIRE(scan.output()->size() == 1);
+        }
+        SECTION("table") {
+            table::operators::index_scan scan(d(table), cond, components::logical_plan::limit_t::unlimit());
             scan.on_execute(&pipeline_context);
             REQUIRE(scan.output()->size() == 1);
         }
@@ -505,6 +515,11 @@ TEST_CASE("operator::index_scan") {
             scan.on_execute(&pipeline_context);
             REQUIRE(scan.output()->size() == 99);
         }
+        SECTION("table") {
+            table::operators::index_scan scan(d(table), cond, components::logical_plan::limit_t::unlimit());
+            scan.on_execute(&pipeline_context);
+            REQUIRE(scan.output()->size() == 99);
+        }
     }
 
     SECTION("find::gt") {
@@ -515,6 +530,11 @@ TEST_CASE("operator::index_scan") {
 
         SECTION("documents") {
             collection::operators::index_scan scan(d(collection), cond, components::logical_plan::limit_t::unlimit());
+            scan.on_execute(&pipeline_context);
+            REQUIRE(scan.output()->size() == 10);
+        }
+        SECTION("table") {
+            table::operators::index_scan scan(d(table), cond, components::logical_plan::limit_t::unlimit());
             scan.on_execute(&pipeline_context);
             REQUIRE(scan.output()->size() == 10);
         }
@@ -531,6 +551,11 @@ TEST_CASE("operator::index_scan") {
             scan.on_execute(&pipeline_context);
             REQUIRE(scan.output()->size() == 11);
         }
+        SECTION("table") {
+            table::operators::index_scan scan(d(table), cond, components::logical_plan::limit_t::unlimit());
+            scan.on_execute(&pipeline_context);
+            REQUIRE(scan.output()->size() == 11);
+        }
     }
 
     SECTION("find::lt") {
@@ -541,6 +566,11 @@ TEST_CASE("operator::index_scan") {
 
         SECTION("documents") {
             collection::operators::index_scan scan(d(collection), cond, components::logical_plan::limit_t::unlimit());
+            scan.on_execute(&pipeline_context);
+            REQUIRE(scan.output()->size() == 89);
+        }
+        SECTION("table") {
+            table::operators::index_scan scan(d(table), cond, components::logical_plan::limit_t::unlimit());
             scan.on_execute(&pipeline_context);
             REQUIRE(scan.output()->size() == 89);
         }
@@ -557,6 +587,11 @@ TEST_CASE("operator::index_scan") {
             scan.on_execute(&pipeline_context);
             REQUIRE(scan.output()->size() == 90);
         }
+        SECTION("table") {
+            table::operators::index_scan scan(d(table), cond, components::logical_plan::limit_t::unlimit());
+            scan.on_execute(&pipeline_context);
+            REQUIRE(scan.output()->size() == 90);
+        }
     }
 
     SECTION("find_one") {
@@ -570,6 +605,11 @@ TEST_CASE("operator::index_scan") {
             scan.on_execute(&pipeline_context);
             REQUIRE(scan.output()->size() == 1);
         }
+        SECTION("table") {
+            table::operators::index_scan scan(d(table), cond, components::logical_plan::limit_t::limit_one());
+            scan.on_execute(&pipeline_context);
+            REQUIRE(scan.output()->size() == 1);
+        }
     }
 
     SECTION("find_limit") {
@@ -580,6 +620,11 @@ TEST_CASE("operator::index_scan") {
 
         SECTION("documents") {
             collection::operators::index_scan scan(d(collection), cond, components::logical_plan::limit_t(3));
+            scan.on_execute(&pipeline_context);
+            REQUIRE(scan.output()->size() == 3);
+        }
+        SECTION("table") {
+            table::operators::index_scan scan(d(table), cond, components::logical_plan::limit_t(3));
             scan.on_execute(&pipeline_context);
             REQUIRE(scan.output()->size() == 3);
         }
@@ -631,25 +676,30 @@ TEST_CASE("operator::transfer_scan") {
     }
 }
 
-// TODO: add table section
 TEST_CASE("operator::index::delete_and_update") {
     auto resource = std::pmr::synchronized_pool_resource();
     auto tape = std::make_unique<impl::base_document>(&resource);
     auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
     auto collection = create_collection(&resource);
+    auto table = create_table(&resource);
 
     components::index::keys_base_storage_t keys(collection->resource_);
     keys.emplace_back("count");
     components::index::make_index<components::index::single_field_index_t>(d(collection)->index_engine(),
                                                                            "single_count",
                                                                            keys);
+    components::index::make_index<components::index::single_field_index_t>(d(table)->index_engine(),
+                                                                           "single_count",
+                                                                           keys);
     fill_collection(collection);
+    fill_table(table);
 
     SECTION("index_scan after delete") {
         auto cond_check = make_compare_expression(&resource, compare_type::gt, key("count"), core::parameter_id_t(1));
         components::logical_plan::storage_parameters parameters_check(&resource);
         add_parameter(parameters_check, core::parameter_id_t(1), new_value(static_cast<int64_t>(50)));
         components::pipeline::context_t pipeline_context_check(std::move(parameters_check));
+
         SECTION("documents") {
             {
                 collection::operators::index_scan scan(d(collection),
@@ -678,6 +728,28 @@ TEST_CASE("operator::index::delete_and_update") {
                 REQUIRE(scan.output()->size() == 10);
             }
         }
+        SECTION("table") {
+            {
+                table::operators::index_scan scan(d(table), cond_check, components::logical_plan::limit_t::unlimit());
+                scan.on_execute(&pipeline_context_check);
+                REQUIRE(scan.output()->size() == 50);
+            }
+            {
+                auto cond = make_compare_expression(&resource, compare_type::gt, key("count"), core::parameter_id_t(1));
+                components::logical_plan::storage_parameters parameters(&resource);
+                add_parameter(parameters, core::parameter_id_t(1), new_value(static_cast<int64_t>(60)));
+                components::pipeline::context_t pipeline_context(std::move(parameters));
+                table::operators::operator_delete delete_(d(table));
+                delete_.set_children(boost::intrusive_ptr(
+                    new table::operators::index_scan(d(table), cond, components::logical_plan::limit_t::unlimit())));
+                delete_.on_execute(&pipeline_context);
+                REQUIRE(delete_.modified()->size() == 40);
+
+                table::operators::index_scan scan(d(table), cond_check, components::logical_plan::limit_t::unlimit());
+                scan.on_execute(&pipeline_context_check);
+                REQUIRE(scan.output()->size() == 10);
+            }
+        }
     }
 
     SECTION("index_scan after update") {
@@ -686,6 +758,7 @@ TEST_CASE("operator::index::delete_and_update") {
         add_parameter(parameters_check, core::parameter_id_t(1), new_value(static_cast<int64_t>(50)));
         add_parameter(parameters_check, core::parameter_id_t(2), new_value(static_cast<int64_t>(0)));
         components::pipeline::context_t pipeline_context_check(std::move(parameters_check));
+
         SECTION("documents") {
             {
                 collection::operators::index_scan scan(d(collection),
@@ -707,6 +780,27 @@ TEST_CASE("operator::index::delete_and_update") {
                 collection::operators::index_scan scan(d(collection),
                                                        cond_check,
                                                        components::logical_plan::limit_t::unlimit());
+                scan.on_execute(&pipeline_context_check);
+                REQUIRE(scan.output()->size() == 0);
+            }
+        }
+        SECTION("table") {
+            {
+                table::operators::index_scan scan(d(table), cond_check, components::logical_plan::limit_t::unlimit());
+                scan.on_execute(&pipeline_context_check);
+                REQUIRE(scan.output()->size() == 1);
+            }
+            {
+                update_expr_ptr script_update = new update_expr_set_t(components::expressions::key_t{"count"});
+                script_update->left() = new update_expr_get_const_value_t(core::parameter_id_t(2));
+                table::operators::operator_update update(d(table), {script_update}, false);
+                update.set_children(boost::intrusive_ptr(
+                    new table::operators::index_scan(d(table),
+                                                     cond_check,
+                                                     components::logical_plan::limit_t::unlimit())));
+                update.on_execute(&pipeline_context_check);
+
+                table::operators::index_scan scan(d(table), cond_check, components::logical_plan::limit_t::unlimit());
                 scan.on_execute(&pipeline_context_check);
                 REQUIRE(scan.output()->size() == 0);
             }

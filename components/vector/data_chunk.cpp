@@ -8,7 +8,8 @@ namespace components::vector {
                                const std::vector<types::complex_logical_type>& types,
                                uint64_t capacity)
         : resource_(resource)
-        , capacity_(capacity) {
+        , capacity_(capacity)
+        , row_ids(resource, types::logical_type::BIGINT, capacity) {
         for (uint64_t i = 0; i < types.size(); i++) {
             data.emplace_back(resource_, types[i], capacity_);
         }

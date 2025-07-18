@@ -16,7 +16,6 @@ namespace services::table::operators {
 
     void operator_update::on_execute_impl(components::pipeline::context_t* pipeline_context) {
         // TODO: worth to create separate update_join operator or mutable_join with callback
-        // TODO: update indexes
         if (left_ && left_->output() && right_ && right_->output()) {
             auto& chunk_left = left_->output()->data_chunk();
             auto& chunk_right = right_->output()->data_chunk();
@@ -42,6 +41,7 @@ namespace services::table::operators {
                     context_->table_storage().table().initialize_append(state);
                     for (size_t id = 0; id < output_->data_chunk().size(); id++) {
                         modified_->append(id + state.row_start);
+                        context_->index_engine()->insert_row(output_->data_chunk(), id, pipeline_context);
                     }
                     context_->table_storage().table().append(output_->data_chunk(), state);
                 }
@@ -52,6 +52,7 @@ namespace services::table::operators {
                 auto state = context_->table_storage().table().initialize_update({});
                 components::vector::vector_t row_ids(context_->resource(), logical_type::BIGINT);
                 auto& out_chunk = output_->data_chunk();
+                size_t index = 0;
                 for (size_t i = 0; i < chunk_left.size(); i++) {
                     for (size_t j = 0; j < chunk_right.size(); j++) {
                         if (check_expr_general(comp_expr_,
@@ -62,7 +63,8 @@ namespace services::table::operators {
                                                name_index_map_right,
                                                i,
                                                j)) {
-                            row_ids.push_back(components::types::logical_value_t{static_cast<int64_t>(i)});
+                            row_ids.set_value(index, chunk_left.row_ids.value(i));
+                            context_->index_engine()->delete_row(chunk_left, i, pipeline_context);
                             bool modified = false;
                             for (const auto& expr : updates_) {
                                 modified |= expr->execute(chunk_left, chunk_right, i, j, &pipeline_context->parameters);
@@ -73,8 +75,9 @@ namespace services::table::operators {
                                 no_modified_->append(i);
                             }
                             for (size_t k = 0; k < chunk_left.column_count(); k++) {
-                                out_chunk.data[k].push_back(chunk_left.data[k].value(i));
+                                out_chunk.data[k].set_value(index, chunk_left.data[k].value(i));
                             }
+                            context_->index_engine()->insert_row(chunk_left, i, pipeline_context);
                         }
                     }
                 }
@@ -106,9 +109,14 @@ namespace services::table::operators {
                 size_t index = 0;
                 for (size_t i = 0; i < chunk.size(); i++) {
                     if (check_expr_general(comp_expr_, &pipeline_context->parameters, chunk, name_index_map, i)) {
-                        row_ids.set_value(index,
-                                          components::types::logical_value_t{
-                                              static_cast<int64_t>(chunk.data.front().indexing().get_index(i))});
+                        if (chunk.data.front().get_vector_type() == components::vector::vector_type::DICTIONARY) {
+                            row_ids.set_value(index,
+                                              components::types::logical_value_t{
+                                                  static_cast<int64_t>(chunk.data.front().indexing().get_index(i))});
+                        } else {
+                            row_ids.set_value(index, chunk.row_ids.value(i));
+                        }
+                        context_->index_engine()->delete_row(chunk, i, pipeline_context);
                         bool modified = false;
                         for (const auto& expr : updates_) {
                             modified |= expr->execute(chunk, chunk, i, i, &pipeline_context->parameters);
@@ -121,6 +129,7 @@ namespace services::table::operators {
                         for (size_t j = 0; j < chunk.column_count(); j++) {
                             out_chunk.data[j].set_value(index, chunk.data[j].value(i));
                         }
+                        context_->index_engine()->insert_row(chunk, i, pipeline_context);
                         index++;
                     }
                 }

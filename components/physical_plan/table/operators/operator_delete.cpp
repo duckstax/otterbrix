@@ -51,8 +51,7 @@ namespace services::table::operators {
             for (size_t i = 0; i < ids.size(); i++) {
                 size_t id = *ids.data<int64_t>();
                 modified_->append(id);
-                // TODO: delete from index
-                //context_->index_engine()->delete_document(document, pipeline_context);
+                context_->index_engine()->delete_row(chunk_left, id, pipeline_context);
             }
         } else if (left_ && left_->output()) {
             modified_ = base::operators::make_operator_write_data<size_t>(context_->resource());
@@ -68,9 +67,13 @@ namespace services::table::operators {
             size_t index = 0;
             for (size_t i = 0; i < chunk.size(); i++) {
                 if (check_expr_general(compare_expression_, &pipeline_context->parameters, chunk, name_index_map, i)) {
-                    ids.set_value(index++,
-                                  components::types::logical_value_t{
-                                      static_cast<int64_t>(chunk.data.front().indexing().get_index(i))});
+                    if (chunk.data.front().get_vector_type() == components::vector::vector_type::DICTIONARY) {
+                        ids.set_value(index++,
+                                      components::types::logical_value_t{
+                                          static_cast<int64_t>(chunk.data.front().indexing().get_index(i))});
+                    } else {
+                        ids.set_value(index++, chunk.row_ids.value(i));
+                    }
                 }
             }
             ids.resize(chunk.size(), index);
@@ -79,7 +82,7 @@ namespace services::table::operators {
             for (size_t i = 0; i < index; i++) {
                 size_t id = ids.data<int64_t>()[i];
                 modified_->append(id);
-                // TODO: delete from index
+                context_->index_engine()->delete_row(chunk, i, pipeline_context);
             }
         }
     }

@@ -36,6 +36,8 @@ namespace components::index {
         return insert_impl(key, {id, std::move(doc)});
     }
 
+    auto index_t::insert(value_t key, int64_t row_index) -> void { return insert_impl(key, {{}, nullptr, row_index}); }
+
     auto index_t::insert(document::document_ptr doc) -> void { insert_impl(std::move(doc)); }
 
     auto index_t::remove(value_t key) -> void { remove_impl(key); }

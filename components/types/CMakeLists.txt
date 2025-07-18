@@ -23,6 +23,7 @@ target_link_libraries(
         otterbrix_${PROJECT_NAME}
         absl::int128
         Boost::boost
+        msgpackc-cxx
 )
 
 if (DEV_MODE)
