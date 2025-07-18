@@ -15,9 +15,8 @@ TEST_CASE("sql::insert_into") {
 
     SECTION("insert into with TestDatabase") {
         components::logical_plan::parameter_node_t agg(&resource);
-        auto select = raw_parser("INSERT INTO TestDatabase.TestCollection (id, name, count) VALUES (1, 'Name', 1);")
-                          ->lst.front()
-                          .data;
+        auto select =
+            linitial(raw_parser("INSERT INTO TestDatabase.TestCollection (id, name, count) VALUES (1, 'Name', 1);"));
         auto node = transformer.transform(transform::pg_cell_to_node_cast(select), &agg);
         REQUIRE(node->type() == components::logical_plan::node_type::insert_t);
         REQUIRE(node->database_name() == "testdatabase");
@@ -34,8 +33,7 @@ TEST_CASE("sql::insert_into") {
 
     SECTION("insert into without TestDatabase") {
         components::logical_plan::parameter_node_t agg(&resource);
-        auto select =
-            raw_parser("INSERT INTO TestCollection (id, name, count) VALUES (1, 'Name', 1);")->lst.front().data;
+        auto select = linitial(raw_parser("INSERT INTO TestCollection (id, name, count) VALUES (1, 'Name', 1);"));
         auto node = transformer.transform(transform::pg_cell_to_node_cast(select), &agg);
         REQUIRE(node->type() == components::logical_plan::node_type::insert_t);
         REQUIRE(node->database_name() == "");
@@ -53,7 +51,7 @@ TEST_CASE("sql::insert_into") {
     SECTION("insert into with quoted") {
         components::logical_plan::parameter_node_t agg(&resource);
         auto select =
-            raw_parser(R"(INSERT INTO TestCollection (id, "name", "count") VALUES (1, 'Name', 1);)")->lst.front().data;
+            linitial(raw_parser(R"(INSERT INTO TestCollection (id, "name", "count") VALUES (1, 'Name', 1);)"));
         auto node = transformer.transform(transform::pg_cell_to_node_cast(select), &agg);
         REQUIRE(node->type() == components::logical_plan::node_type::insert_t);
         REQUIRE(node->database_name() == "");
@@ -70,14 +68,12 @@ TEST_CASE("sql::insert_into") {
 
     SECTION("insert into multi-documents") {
         components::logical_plan::parameter_node_t agg(&resource);
-        auto select = raw_parser("INSERT INTO TestCollection (id, name, count) VALUES "
-                                 "(1, 'Name1', 1), "
-                                 "(2, 'Name2', 2), "
-                                 "(3, 'Name3', 3), "
-                                 "(4, 'Name4', 4), "
-                                 "(5, 'Name5', 5);")
-                          ->lst.front()
-                          .data;
+        auto select = linitial(raw_parser("INSERT INTO TestCollection (id, name, count) VALUES "
+                                          "(1, 'Name1', 1), "
+                                          "(2, 'Name2', 2), "
+                                          "(3, 'Name3', 3), "
+                                          "(4, 'Name4', 4), "
+                                          "(5, 'Name5', 5);"));
         auto node = transformer.transform(transform::pg_cell_to_node_cast(select), &agg);
         REQUIRE(node->type() == components::logical_plan::node_type::insert_t);
         REQUIRE(node->database_name() == "");
@@ -99,12 +95,10 @@ TEST_CASE("sql::insert_into") {
 
     SECTION("insert from select") {
         components::logical_plan::parameter_node_t agg(&resource);
-        auto select = raw_parser(R"_(INSERT INTO table2 (column1, column2, column3)
+        auto select = linitial(raw_parser(R"_(INSERT INTO table2 (column1, column2, column3)
 SELECT column1, column2, column3
 FROM table1
-WHERE condition = true;)_")
-                          ->lst.front()
-                          .data;
+WHERE condition = true;)_"));
         auto node = transformer.transform(transform::pg_cell_to_node_cast(select), &agg);
         REQUIRE(node->type() == components::logical_plan::node_type::insert_t);
         REQUIRE(node->database_name() == "");

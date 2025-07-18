@@ -12,7 +12,7 @@ using namespace components::sql;
     SECTION(QUERY) {                                                                                                   \
         bool exception_thrown = false;                                                                                 \
         try {                                                                                                          \
-            auto select = raw_parser(QUERY)->lst.front().data;                                                         \
+            auto select = linitial(raw_parser(QUERY));                                                                 \
         } catch (const parser_exception_t& e) {                                                                        \
             exception_thrown = true;                                                                                   \
             REQUIRE(std::string_view{e.what()} == RESULT);                                                             \
@@ -23,7 +23,7 @@ using namespace components::sql;
 #define TEST_TRANSFORMER_ERROR(QUERY, RESULT)                                                                          \
     SECTION(QUERY) {                                                                                                   \
         auto resource = std::pmr::synchronized_pool_resource();                                                        \
-        auto select = raw_parser(QUERY)->lst.front().data;                                                             \
+        auto select = linitial(raw_parser(QUERY));                                                                     \
         transform::transformer transformer(&resource);                                                                 \
         components::logical_plan::parameter_node_t agg(&resource);                                                     \
         bool exception_thrown = false;                                                                                 \

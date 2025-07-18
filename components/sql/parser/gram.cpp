@@ -35312,7 +35312,7 @@ yyreduce:
         case 1865: /* opt_float: %empty  */
 #line 13242 "gram.y"
         {
-            (yyval.typnam) = SystemTypeName("float8");
+            (yyval.typnam) = SystemTypeName("float4");
         }
 #line 43343 "gram.cpp"
         break;
