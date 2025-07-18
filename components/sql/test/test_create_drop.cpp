@@ -223,6 +223,28 @@ TEST_CASE("sql::table") {
         }));
     }
 
+    SECTION("float") {
+        auto create = linitial(raw_parser("CREATE TABLE table_name(t1 float, t2 double, t3 float[100])"));
+        auto node = transformer.transform(transform::pg_cell_to_node_cast(create), &statement);
+        auto data = reinterpret_cast<node_create_collection_ptr&>(node);
+        const auto& sch = data->schema();
+
+        REQUIRE(contains(sch, [](const complex_logical_type& type) {
+            return type.alias() == "t1" && type.type() == logical_type::FLOAT;
+        }));
+        REQUIRE(contains(sch, [](const complex_logical_type& type) {
+            return type.alias() == "t2" && type.type() == logical_type::DOUBLE;
+        }));
+        REQUIRE(contains(sch, [](const complex_logical_type& type) {
+            if (type.type() != logical_type::ARRAY) {
+                return false;
+            }
+
+            auto array = static_cast<array_logical_type_extention*>(type.extention());
+            return type.alias() == "t3" && array->internal_type() == logical_type::FLOAT && array->size() == 100;
+        }));
+    }
+
     SECTION("incorrect types") {
         TEST_TRANSFORMER_ERROR("CREATE TABLE table_name (just_name struct)", R"_(Unknown type for column: just_name)_");
 

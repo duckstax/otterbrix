@@ -101,6 +101,7 @@ namespace components::sql::transform {
             {"bit", types::logical_type::BIT},
             {"numeric", types::logical_type::DECIMAL},
 
+            {"double", types::logical_type::DOUBLE},
             {"tinyint", types::logical_type::TINYINT},
             {"hugeint", types::logical_type::HUGEINT},
             {"timestamp_sec", types::logical_type::TIMESTAMP_SEC},
