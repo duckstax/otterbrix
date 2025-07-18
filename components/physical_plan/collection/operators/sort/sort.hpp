@@ -5,9 +5,9 @@
 
 using ::components::document::document_ptr;
 
-namespace services::storage::sort {
+namespace services::collection::sort {
 
-    using components::document::compare_t;
+    using components::types::compare_t;
 
     enum class order
     {
@@ -42,4 +42,4 @@ namespace services::storage::sort {
         std::vector<function_t> functions_;
     };
 
-} // namespace services::storage::sort
+} // namespace services::collection::sort

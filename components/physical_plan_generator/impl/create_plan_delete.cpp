@@ -36,7 +36,7 @@ namespace services::collection::planner::impl {
         } else {
             auto expr =
                 reinterpret_cast<const components::expressions::compare_expression_ptr*>(&node_match->expressions()[0]);
-            auto predicate = operators::predicates::create_predicate(nullptr, *expr);
+            auto predicate = operators::predicates::create_predicate(*expr);
 
             auto plan = boost::intrusive_ptr(
                 new operators::operator_delete(context.at(node->collection_full_name()), std::move(predicate)));

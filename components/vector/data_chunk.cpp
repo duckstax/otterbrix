@@ -6,10 +6,12 @@ namespace components::vector {
 
     data_chunk_t::data_chunk_t(std::pmr::memory_resource* resource,
                                const std::vector<types::complex_logical_type>& types,
-                               uint64_t capacity) {
-        capacity_ = capacity;
+                               uint64_t capacity)
+        : resource_(resource)
+        , capacity_(capacity)
+        , row_ids(resource, types::logical_type::BIGINT, capacity) {
         for (uint64_t i = 0; i < types.size(); i++) {
-            data.emplace_back(resource, types[i], capacity_);
+            data.emplace_back(resource_, types[i], capacity_);
         }
     }
 
@@ -169,6 +171,18 @@ namespace components::vector {
         }
         return types;
     }
+
+    size_t data_chunk_t::column_index(std::string_view key) const {
+        for (uint64_t i = 0; i < column_count(); i++) {
+            if (data[i].type().alias() == key) {
+                return i;
+            }
+        }
+        assert(false && "data_chunk_t::column_index: no such column");
+        return -1;
+    }
+
+    std::pmr::memory_resource* data_chunk_t::resource() const { return resource_; }
 
     void data_chunk_t::slice(const indexing_vector_t& indexing_vector, uint64_t count) {
         count_ = count;

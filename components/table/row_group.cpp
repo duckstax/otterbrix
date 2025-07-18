@@ -170,40 +170,51 @@ namespace components::table {
         }
     }
 
-    bool row_group_t::check_zonemap_segments(collection_scan_state& state) {
-        auto& filters = state.filter_info();
-        for (auto& entry : filters.filter_list()) {
-            if (entry.always_true) {
-                continue;
+    bool row_group_t::check_predicate(uint64_t row_id, const table_filter_t* filter) {
+        switch (filter->filter_type) {
+            case expressions::compare_type::union_or: {
+                auto& conjunction_or = filter->cast<conjunction_or_filter_t>();
+                for (auto& child_filter : conjunction_or.child_filters) {
+                    if (check_predicate(row_id, child_filter.get())) {
+                        return true;
+                    }
+                }
+                return false;
             }
-            auto column_idx = entry.scan_column_index;
-            auto base_column_idx = entry.table_column_index;
-            auto& filter = entry.filter;
-
-            auto prune_result = get_column(base_column_idx).check_zonemap(state.column_scans[column_idx], filter);
-            if (prune_result != filter_propagate_result_t::ALWAYS_FALSE) {
-                continue;
-            }
-
-            uint64_t target_row =
-                state.column_scans[column_idx].current->start + state.column_scans[column_idx].current->count;
-            if (target_row >= state.max_row) {
-                target_row = state.max_row;
-            }
-
-            assert(target_row >= start);
-            assert(target_row <= start + count);
-            uint64_t target_vector_index = (target_row - start) / vector::DEFAULT_VECTOR_CAPACITY;
-            if (state.vector_index == target_vector_index) {
+            case expressions::compare_type::union_and: {
+                auto& conjunction_and = filter->cast<conjunction_and_filter_t>();
+                for (auto& child_filter : conjunction_and.child_filters) {
+                    if (!check_predicate(row_id, child_filter.get())) {
+                        return false;
+                    }
+                }
                 return true;
             }
-            while (state.vector_index < target_vector_index) {
-                next_vector(state);
+            case expressions::compare_type::invalid: {
+                throw std::logic_error("invalid type for filter selection");
             }
-            return false;
+            default: {
+                auto& constant_filter = filter->cast<constant_filter_t>();
+                return get_column(constant_filter.table_index).check_predicate(row_id, filter);
+            }
         }
+    }
 
-        return true;
+    bool row_group_t::check_zonemap_segments(collection_scan_state& state) { return true; }
+
+    void row_group_t::filter_indexing(std::pmr::memory_resource* resource,
+                                      vector::indexing_vector_t& indexing,
+                                      const table_filter_t* filter,
+                                      uint64_t& approved_tuple_count) {
+        vector::indexing_vector_t new_indexing(resource, approved_tuple_count);
+        uint64_t result_count = 0;
+        for (uint64_t i = 0; i < approved_tuple_count; i++) {
+            auto idx = indexing.get_index(i);
+            new_indexing.set_index(result_count, idx);
+            result_count += check_predicate(idx, filter);
+        }
+        indexing = new_indexing;
+        approved_tuple_count = result_count;
     }
 
     template<table_scan_type TYPE>
@@ -211,7 +222,7 @@ namespace components::table {
         const bool ALLOW_UPDATES = TYPE != table_scan_type::COMMITTED_ROWS_DISALLOW_UPDATES &&
                                    TYPE != table_scan_type::COMMITTED_ROWS_OMIT_PERMANENTLY_DELETED;
         const auto& column_ids = state.column_ids();
-        auto& filter_info = state.filter_info();
+        auto* filter = state.filter();
         while (true) {
             if (state.vector_index * vector::DEFAULT_VECTOR_CAPACITY >= state.max_row_group_row) {
                 return;
@@ -240,8 +251,7 @@ namespace components::table {
                 count = max_count;
             }
 
-            bool has_filters = filter_info.has_filters();
-            if (count == max_count && !has_filters) {
+            if (count == max_count && !filter) {
                 for (uint64_t i = 0; i < column_ids.size(); i++) {
                     const auto& column = column_ids[i];
                     if (column.is_row_id_column()) {
@@ -249,13 +259,13 @@ namespace components::table {
                         result.data[i].sequence(static_cast<int64_t>(start + current_row), 1, count);
                     } else {
                         auto& col_data = get_column(column);
-                        if (TYPE != table_scan_type::REGULAR) {
+                        if (TYPE == table_scan_type::REGULAR) {
+                            col_data.scan(state.vector_index, state.column_scans[i], result.data[i]);
+                        } else {
                             col_data.scan_committed(state.vector_index,
                                                     state.column_scans[i],
                                                     result.data[i],
                                                     ALLOW_UPDATES);
-                        } else {
-                            col_data.scan(state.vector_index, state.column_scans[i], result.data[i]);
                         }
                     }
                 }
@@ -267,64 +277,15 @@ namespace components::table {
                 } else {
                     indexing.reset(nullptr);
                 }
-                auto adaptive_filter = filter_info.adaptive_filter();
-                auto filter_state = filter_info.begin_filter();
-                if (has_filters) {
+                if (filter) {
                     assert(ALLOW_UPDATES);
-                    auto& filter_list = filter_info.filter_list();
-                    for (uint64_t i = 0; i < filter_list.size(); i++) {
-                        auto filter_idx = adaptive_filter->permutation[i];
-                        auto& filter = filter_list[filter_idx];
-                        if (filter.always_true) {
-                            continue;
-                        }
-
-                        const auto scan_idx = filter.scan_column_index;
-                        const auto column_idx = filter.table_column_index;
-
-                        if (column_idx == COLUMN_IDENTIFIER_ROW_ID) {
-                            assert(result.data[i].type().type() == types::logical_type::BIGINT);
-                            result.data[i].set_vector_type(vector::vector_type::FLAT);
-                            auto result_data = result.data[i].data<int64_t>();
-                            for (size_t indexing_idx = 0; indexing_idx < approved_tuple_count; indexing_idx++) {
-                                result_data[indexing.get_index(indexing_idx)] =
-                                    static_cast<int64_t>(start + current_row + indexing.get_index(indexing_idx));
-                            }
-
-                            vector::unified_vector_format vdata(collection_->resource(), result.size());
-                            result.data[i].to_unified_format(approved_tuple_count, vdata);
-                            column_segment_t::filter_indexing(indexing,
-                                                              result.data[i],
-                                                              vdata,
-                                                              filter.filter,
-                                                              approved_tuple_count,
-                                                              approved_tuple_count);
-                        } else {
-                            auto& col_data = get_column(filter.table_column_index);
-                            col_data.filter(state.vector_index,
-                                            state.column_scans[scan_idx],
-                                            result.data[scan_idx],
-                                            indexing,
-                                            approved_tuple_count,
-                                            filter.filter);
-                        }
-                    }
-                    for (auto& table_filter : filter_list) {
-                        if (table_filter.always_true) {
-                            continue;
-                        }
-                        result.data[table_filter.scan_column_index].slice(indexing, approved_tuple_count);
-                    }
+                    filter_indexing(collection_->resource(), indexing, filter, approved_tuple_count);
                 }
                 if (approved_tuple_count == 0) {
-                    assert(has_filters);
                     result.reset();
                     for (uint64_t i = 0; i < column_ids.size(); i++) {
                         auto& col_idx = column_ids[i];
                         if (col_idx.is_row_id_column()) {
-                            continue;
-                        }
-                        if (has_filters && filter_info.column_has_filters(i)) {
                             continue;
                         }
                         auto& col_data = get_column(col_idx);
@@ -334,9 +295,6 @@ namespace components::table {
                     continue;
                 }
                 for (uint64_t i = 0; i < column_ids.size(); i++) {
-                    if (has_filters && filter_info.column_has_filters(i)) {
-                        continue;
-                    }
                     auto& column = column_ids[i];
                     if (column.is_row_id_column()) {
                         assert(result.data[i].type().type() == types::logical_type::BIGINT);
@@ -364,7 +322,6 @@ namespace components::table {
                         }
                     }
                 }
-                filter_info.end_filter(filter_state);
 
                 assert(approved_tuple_count > 0);
                 count = approved_tuple_count;
@@ -552,6 +509,11 @@ namespace components::table {
             return owned_version_info_;
         }
         return get_or_create_version_info_internal();
+    }
+
+    uint64_t row_group_t::calculate_size() {
+        vector::indexing_vector_t temp_indexing(collection().resource(), count);
+        return indexing_vector(0, temp_indexing, count);
     }
 
     uint64_t

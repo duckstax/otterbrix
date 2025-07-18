@@ -12,7 +12,7 @@ namespace components::expressions {
             : type_(type::non)
             , storage_({}) {}
 
-        key_t(key_t&& key)
+        key_t(key_t&& key) noexcept
             : type_{key.type_}
             , storage_{std::move(key.storage_)} {}
 
@@ -40,6 +40,14 @@ namespace components::expressions {
             : type_(type::string)
             , storage_(std::string(data, size)) {}
 
+        explicit key_t(int32_t index)
+            : type_(type::int32)
+            , storage_(index) {}
+
+        explicit key_t(uint32_t index)
+            : type_(type::uint32)
+            , storage_(index) {}
+
         enum class type
         {
             non,
@@ -48,11 +56,19 @@ namespace components::expressions {
             uint32
         };
 
+        auto as_int() const -> int32_t { return std::get<int32_t>(storage_); }
+
+        auto as_uint() const -> uint32_t { return std::get<uint32_t>(storage_); }
+
         auto as_string() const -> const std::string& { return std::get<std::string>(storage_); }
 
         explicit operator std::string() const { return as_string(); }
 
         type which() const { return type_; }
+
+        auto is_int() const -> bool { return type_ == type::int32; }
+
+        auto is_uint() const -> bool { return type_ == type::uint32; }
 
         auto is_string() const -> bool { return type_ == type::string; }
 
@@ -90,6 +106,10 @@ namespace components::expressions {
     OStream& operator<<(OStream& stream, const key_t& key) {
         if (key.is_string()) {
             stream << key.as_string();
+        } else if (key.is_int()) {
+            stream << key.as_int();
+        } else if (key.is_uint()) {
+            stream << key.as_uint();
         }
         return stream;
     }

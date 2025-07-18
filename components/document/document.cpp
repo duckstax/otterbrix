@@ -2,11 +2,13 @@
 #include <boost/json/src.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
 #include <charconv>
-#include <components/document/base.hpp>
 #include <components/document/string_splitter.hpp>
+#include <components/types/operations_helper.hpp>
 #include <utility>
 
 namespace components::document {
+
+    using types::compare_t;
 
     document_t::document_t()
         : mut_src_(nullptr)
@@ -555,9 +557,9 @@ namespace components::document {
             case logical_type::UBIGINT:
                 return value1->get_uint64().value() == value2->get_uint64().value();
             case logical_type::FLOAT:
-                return is_equals(value1->get_float().value(), value2->get_float().value());
+                return types::is_equals(value1->get_float().value(), value2->get_float().value());
             case logical_type::DOUBLE:
-                return is_equals(value1->get_double().value(), value2->get_double().value());
+                return types::is_equals(value1->get_double().value(), value2->get_double().value());
             case logical_type::STRING_LITERAL:
                 return value1->get_string().value() == value2->get_string().value();
             case logical_type::BOOLEAN:

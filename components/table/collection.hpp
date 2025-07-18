@@ -40,9 +40,7 @@ namespace components::table {
         void append_row_group(std::unique_lock<std::mutex>& l, uint64_t start_row);
         row_group_t* row_group(int64_t index);
 
-        void initialize_scan(collection_scan_state& state,
-                             const std::vector<storage_index_t>& column_ids,
-                             table_filter_set_t* table_filters);
+        void initialize_scan(collection_scan_state& state, const std::vector<storage_index_t>& column_ids);
         void initialize_create_index_scan(create_index_scan_state& state);
         void initialize_scan_with_offset(collection_scan_state& state,
                                          const std::vector<storage_index_t>& column_ids,
@@ -94,6 +92,8 @@ namespace components::table {
         uint64_t row_group_size() const { return row_group_size_; }
 
         std::pmr::memory_resource* resource() const noexcept { return resource_; }
+
+        uint64_t calculate_size();
 
     private:
         bool is_empty(std::unique_lock<std::mutex>&) const;

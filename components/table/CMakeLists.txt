@@ -36,9 +36,12 @@ set_property(TARGET otterbrix_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 
 target_link_libraries(
         otterbrix_${PROJECT_NAME} PRIVATE
+        otterbrix::expressions
         otterbrix::file
         otterbrix::types
         otterbrix::vector
+        magic_enum::magic_enum
+        msgpackc-cxx
 )
 
 target_include_directories(

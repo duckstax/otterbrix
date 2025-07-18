@@ -11,7 +11,7 @@ namespace services::collection::operators {
                                              const components::logical_plan::storage_parameters* parameters) {
         using components::expressions::compare_type;
         using components::logical_plan::get_parameter;
-        auto value = get_parameter(parameters, expr->value());
+        auto value = get_parameter(parameters, expr->value()).as_logical_value();
         switch (expr->type()) {
             case compare_type::eq:
                 return {index->find(value)};
@@ -35,7 +35,7 @@ namespace services::collection::operators {
                          const components::expressions::compare_expression_ptr& expr,
                          const components::logical_plan::limit_t& limit,
                          const components::logical_plan::storage_parameters* parameters,
-                         operator_data_ptr& result) {
+                         base::operators::operator_data_ptr& result) {
         auto ranges = search_range_by_index(index, expr, parameters);
         int count = 0;
         for (const auto& range : ranges) {
@@ -61,7 +61,8 @@ namespace services::collection::operators {
         auto* index = components::index::search_index(context_->index_engine(), {expr_->key_left()});
         if (index && index->is_disk()) {
             trace(context_->log(), "index_scan: send query into disk");
-            auto value = components::logical_plan::get_parameter(&pipeline_context->parameters, expr_->value());
+            auto value = components::logical_plan::get_parameter(&pipeline_context->parameters, expr_->value())
+                             .as_logical_value();
             pipeline_context->send(index->disk_agent(), index::handler_id(index::route::find), value, expr_->type());
             async_wait();
         } else {
@@ -69,7 +70,7 @@ namespace services::collection::operators {
             if (!limit_.check(0)) {
                 return; //limit = 0
             }
-            output_ = make_operator_data(context_->resource());
+            output_ = base::operators::make_operator_data(context_->resource());
             if (index) {
                 search_by_index(index, expr_, limit_, &pipeline_context->parameters, output_);
             }
@@ -83,7 +84,7 @@ namespace services::collection::operators {
         if (!limit_.check(0)) {
             return; //limit = 0
         }
-        output_ = make_operator_data(context_->resource());
+        output_ = base::operators::make_operator_data(context_->resource());
         if (index) {
             search_by_index(index, expr_, limit_, &pipeline_context->parameters, output_);
         }

@@ -2,7 +2,7 @@
 
 #include <components/document/document.hpp>
 #include <components/expressions/update_expression.hpp>
-#include <components/physical_plan/collection/operators/operator.hpp>
+#include <components/physical_plan/base/operators/operator.hpp>
 
 #include "predicates/predicate.hpp"
 
@@ -13,7 +13,11 @@ namespace services::collection::operators {
         operator_update(context_collection_t* context,
                         std::pmr::vector<components::expressions::update_expr_ptr> updates,
                         bool upsert,
-                        predicates::predicate_ptr&& match_predicate = nullptr);
+                        const components::expressions::compare_expression_ptr& comp_expr);
+
+        operator_update(context_collection_t* context,
+                        std::pmr::vector<components::expressions::update_expr_ptr> updates,
+                        bool upsert);
 
     private:
         void on_execute_impl(components::pipeline::context_t* pipeline_context) final;

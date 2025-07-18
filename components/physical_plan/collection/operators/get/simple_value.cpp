@@ -11,7 +11,7 @@ namespace services::collection::operators::get {
         , key_(key) {}
 
     components::document::value_t simple_value_t::get_value_impl(const document_ptr& document) {
-        return get_value_from_document(document, key_);
+        return document->get_value(key_.as_string());
     }
 
 } // namespace services::collection::operators::get
