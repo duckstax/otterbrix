@@ -76,6 +76,8 @@ components::vector::data_chunk_t gen_data_chunk(size_t size, std::pmr::memory_re
     types.emplace_back(logical_type::BIGINT);
     types.back().set_alias("count");
     types.emplace_back(logical_type::STRING_LITERAL);
+    types.back().set_alias("_id");
+    types.emplace_back(logical_type::STRING_LITERAL);
     types.back().set_alias("countStr");
     types.emplace_back(logical_type::DOUBLE);
     types.back().set_alias("countDouble");
@@ -90,9 +92,10 @@ components::vector::data_chunk_t gen_data_chunk(size_t size, std::pmr::memory_re
 
     for (size_t i = 1; i <= size; i++) {
         chunk.set_value(0, i - 1, logical_value_t{static_cast<int64_t>(i)});
-        chunk.set_value(1, i - 1, logical_value_t{std::to_string(i)});
-        chunk.set_value(2, i - 1, logical_value_t{double(i) + 0.1});
-        chunk.set_value(3, i - 1, logical_value_t{i % 2 != 0});
+        chunk.set_value(1, i - 1, logical_value_t{gen_id(i)});
+        chunk.set_value(2, i - 1, logical_value_t{std::to_string(i)});
+        chunk.set_value(3, i - 1, logical_value_t{double(i) + 0.1});
+        chunk.set_value(4, i - 1, logical_value_t{i % 2 != 0});
         /*
         {
             std::vector<logical_value_t> arr;
@@ -100,7 +103,7 @@ components::vector::data_chunk_t gen_data_chunk(size_t size, std::pmr::memory_re
             for (size_t j = 0; j < array_size; j++) {
                 arr.emplace_back(uint64_t{j + 1});
             }
-            chunk.set_value(4, i - 1, logical_value_t::create_array(logical_type::UBIGINT, arr));
+            chunk.set_value(5, i - 1, logical_value_t::create_array(logical_type::UBIGINT, arr));
         }
         */
     }

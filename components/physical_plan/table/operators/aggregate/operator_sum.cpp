@@ -18,11 +18,11 @@ namespace services::table::operators::aggregate {
             if (it != chunk.data.end()) {
                 // TODO: sum physical values from vector insted of creating values
                 components::types::logical_value_t sum_(it->type());
-                sum_.set_alias(key_result_);
-                for (size_t i = 0; i < it->size(); i++) {
+                for (size_t i = 0; i < chunk.size(); i++) {
                     // TODO: handle non summable types
                     sum_ = components::types::logical_value_t::sum(sum_, it->value(i));
                 }
+                sum_.set_alias(key_result_);
                 return sum_;
             }
         }

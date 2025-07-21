@@ -9,6 +9,9 @@ namespace services::table::operators {
     transform_predicate(const components::expressions::compare_expression_ptr& exresssion,
                         const std::vector<components::types::complex_logical_type> types,
                         const components::logical_plan::storage_parameters* parameters) {
+        if (!exresssion || exresssion->type() == components::expressions::compare_type::all_true) {
+            return nullptr;
+        }
         switch (exresssion->type()) {
             case components::expressions::compare_type::union_and: {
                 auto filter = std::make_unique<components::table::conjunction_and_filter_t>();

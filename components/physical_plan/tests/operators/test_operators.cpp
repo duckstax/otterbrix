@@ -1,11 +1,6 @@
-#include "table/operators/operator_delete.hpp"
-#include "table/operators/operator_update.hpp"
-#include "table/operators/scan/full_scan.hpp"
-#include "table/operators/scan/index_scan.hpp"
-#include "table/operators/scan/transfer_scan.hpp"
 #include "test_operator_generaty.hpp"
-
 #include <catch2/catch.hpp>
+
 #include <components/expressions/compare_expression.hpp>
 #include <components/index/single_field_index.hpp>
 #include <components/physical_plan/collection/operators/operator_delete.hpp>
@@ -15,6 +10,11 @@
 #include <components/physical_plan/collection/operators/scan/full_scan.hpp>
 #include <components/physical_plan/collection/operators/scan/index_scan.hpp>
 #include <components/physical_plan/collection/operators/scan/transfer_scan.hpp>
+#include <components/physical_plan/table/operators/operator_delete.hpp>
+#include <components/physical_plan/table/operators/operator_update.hpp>
+#include <components/physical_plan/table/operators/scan/full_scan.hpp>
+#include <components/physical_plan/table/operators/scan/index_scan.hpp>
+#include <components/physical_plan/table/operators/scan/transfer_scan.hpp>
 
 using namespace components::expressions;
 using namespace services;

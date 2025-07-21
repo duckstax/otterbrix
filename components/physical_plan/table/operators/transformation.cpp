@@ -7,13 +7,13 @@ namespace services::table::operators::impl {
     value_matrix_t transpose(std::pmr::memory_resource* resource, const components::vector::data_chunk_t& chunk) {
         std::pmr::vector<std::pmr::vector<components::types::logical_value_t>> matrix(resource);
         matrix.reserve(chunk.size());
-        for (size_t i = 0; i < matrix.size(); i++) {
-            matrix[i].emplace_back(resource);
-            matrix[i].reserve(chunk.column_count());
+        for (size_t i = 0; i < chunk.size(); i++) {
+            matrix.emplace_back(std::pmr::vector<components::types::logical_value_t>{resource});
+            matrix.back().reserve(chunk.column_count());
         }
         for (size_t i = 0; i < chunk.size(); i++) {
             for (size_t j = 0; j < chunk.column_count(); j++) {
-                matrix[i][j] = chunk.value(j, i);
+                matrix[i].emplace_back(chunk.value(j, i));
             }
         }
 
@@ -29,6 +29,7 @@ namespace services::table::operators::impl {
                 chunk.set_value(j, i, matrix[i][j]);
             }
         }
+        chunk.set_cardinality(matrix.size());
         return chunk;
     }
 

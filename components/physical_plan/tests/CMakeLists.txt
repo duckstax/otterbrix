@@ -20,6 +20,7 @@ target_link_libraries(
         otterbrix::memory_storage
         otterbrix::cursor
         otterbrix::session
+        otterbrix::physical_plan
         otterbrix::test_generaty
         spdlog::spdlog
         absl::int128

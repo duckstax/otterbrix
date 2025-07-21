@@ -16,14 +16,20 @@ namespace services::table::operators::aggregate {
                 return v.type().alias() == key_.as_string();
             });
             if (it != chunk.data.end()) {
-                components::types::logical_value_t max_(it->type());
-                max_.set_alias(key_result_);
-                for (size_t i = 0; i < it->size(); i++) {
+                components::types::logical_value_t max_{};
+                if (chunk.size() == 0) {
+                    max_.set_alias(key_result_);
+                    return max_;
+                } else {
+                    max_ = it->value(0);
+                }
+                for (size_t i = 1; i < chunk.size(); i++) {
                     auto val = it->value(i);
                     if (max_ < val) {
                         std::swap(max_, val);
                     }
                 }
+                max_.set_alias(key_result_);
                 return max_;
             }
         }
