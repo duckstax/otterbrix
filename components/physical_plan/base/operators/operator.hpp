@@ -13,7 +13,7 @@ namespace services::collection {
     class context_collection_t;
 } // namespace services::collection
 
-namespace services::base::operators {
+namespace components::base::operators {
 
     enum class operator_type
     {
@@ -49,12 +49,12 @@ namespace services::base::operators {
         operator_t(operator_t&&) = default;
         operator_t& operator=(const operator_t&) = delete;
         operator_t& operator=(operator_t&&) = default;
-        operator_t(collection::context_collection_t* collection, operator_type type);
+        operator_t(services::collection::context_collection_t* collection, operator_type type);
         virtual ~operator_t() = default;
 
         // TODO fwd
-        void on_execute(components::pipeline::context_t* pipeline_context);
-        void on_resume(components::pipeline::context_t* pipeline_context);
+        void on_execute(pipeline::context_t* pipeline_context);
+        void on_resume(pipeline::context_t* pipeline_context);
         void async_wait();
 
         bool is_executed() const;
@@ -63,7 +63,7 @@ namespace services::base::operators {
         void set_as_root() noexcept;
 
         const collection_full_name_t& collection_name() const noexcept;
-        collection::context_collection_t* context() noexcept;
+        services::collection::context_collection_t* context() noexcept;
 
         [[nodiscard]] ptr left() const noexcept;
         [[nodiscard]] ptr right() const noexcept;
@@ -77,7 +77,7 @@ namespace services::base::operators {
         void clear(); //todo: replace by copy
 
     protected:
-        collection::context_collection_t* context_;
+        services::collection::context_collection_t* context_;
         ptr left_{nullptr};
         ptr right_{nullptr};
         operator_data_ptr output_{nullptr};
@@ -85,8 +85,8 @@ namespace services::base::operators {
         operator_write_data_ptr no_modified_{nullptr};
 
     private:
-        virtual void on_execute_impl(components::pipeline::context_t* pipeline_context) = 0;
-        virtual void on_resume_impl(components::pipeline::context_t* pipeline_context);
+        virtual void on_execute_impl(pipeline::context_t* pipeline_context) = 0;
+        virtual void on_resume_impl(pipeline::context_t* pipeline_context);
         virtual void on_prepare_impl();
 
         const operator_type type_;
@@ -96,7 +96,7 @@ namespace services::base::operators {
 
     class read_only_operator_t : public operator_t {
     public:
-        read_only_operator_t(collection::context_collection_t* collection, operator_type type);
+        read_only_operator_t(services::collection::context_collection_t* collection, operator_type type);
     };
 
     enum class read_write_operator_state
@@ -110,7 +110,7 @@ namespace services::base::operators {
 
     class read_write_operator_t : public operator_t {
     public:
-        read_write_operator_t(collection::context_collection_t* collection, operator_type type);
+        read_write_operator_t(services::collection::context_collection_t* collection, operator_type type);
         //todo:
         //void commit();
         //void rollback();
@@ -121,20 +121,20 @@ namespace services::base::operators {
 
     using operator_ptr = operator_t::ptr;
 
-} // namespace services::base::operators
+} // namespace components::base::operators
 
-namespace services::collection::operators {
+namespace components::collection::operators {
     using operator_type = base::operators::operator_type;
     using operator_state = base::operators::operator_state;
     using operator_ptr = base::operators::operator_ptr;
     using read_only_operator_t = base::operators::read_only_operator_t;
     using read_write_operator_t = base::operators::read_write_operator_t;
-} // namespace services::collection::operators
+} // namespace components::collection::operators
 
-namespace services::table::operators {
+namespace components::table::operators {
     using operator_type = base::operators::operator_type;
     using operator_state = base::operators::operator_state;
     using operator_ptr = base::operators::operator_ptr;
     using read_only_operator_t = base::operators::read_only_operator_t;
     using read_write_operator_t = base::operators::read_write_operator_t;
-} // namespace services::table::operators
+} // namespace components::table::operators

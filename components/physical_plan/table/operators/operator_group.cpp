@@ -5,9 +5,9 @@
 #include <components/physical_plan/base/operators/operator_empty.hpp>
 #include <services/collection/collection.hpp>
 
-namespace services::table::operators {
+namespace components::table::operators {
 
-    operator_group_t::operator_group_t(collection::context_collection_t* context)
+    operator_group_t::operator_group_t(services::collection::context_collection_t* context)
         : read_write_operator_t(context, operator_type::aggregate)
         , keys_(context_->resource())
         , values_(context_->resource())
@@ -29,7 +29,7 @@ namespace services::table::operators {
         values_.push_back({name, std::move(aggregator)});
     }
 
-    void operator_group_t::on_execute_impl(components::pipeline::context_t* pipeline_context) {
+    void operator_group_t::on_execute_impl(pipeline::context_t* pipeline_context) {
         if (left_ && left_->output()) {
             output_ =
                 base::operators::make_operator_data(left_->output()->resource(), left_->output()->data_chunk().types());
@@ -48,7 +48,7 @@ namespace services::table::operators {
         auto matrix = impl::transpose(left_->output()->resource(), chunk);
 
         for (const auto& row : matrix) {
-            std::pmr::vector<components::types::logical_value_t> new_row(row.get_allocator().resource());
+            std::pmr::vector<types::logical_value_t> new_row(row.get_allocator().resource());
             bool is_valid = true;
 
             for (const auto& key : keys_) {
@@ -80,13 +80,13 @@ namespace services::table::operators {
         }
     }
 
-    void operator_group_t::calc_aggregate_values(components::pipeline::context_t* pipeline_context) {
+    void operator_group_t::calc_aggregate_values(pipeline::context_t* pipeline_context) {
         auto types = left_->output()->data_chunk().types();
         for (const auto& value : values_) {
             auto& aggregator = value.aggregator;
             for (size_t i = 0; i < transposed_output_.size(); i++) {
                 aggregator->clear(); //todo: need copy aggregator
-                aggregator->set_children(boost::intrusive_ptr(new base::operators::operator_empty_t(
+                aggregator->set_children(boost::intrusive_ptr(new components::base::operators::operator_empty_t(
                     context_,
                     base::operators::make_operator_data(context_->resource(),
                                                         impl::transpose(context_->resource(), inputs_.at(i), types)))));
@@ -96,4 +96,4 @@ namespace services::table::operators {
         }
     }
 
-} // namespace services::table::operators
+} // namespace components::table::operators

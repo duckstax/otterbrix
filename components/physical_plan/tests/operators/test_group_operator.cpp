@@ -17,8 +17,8 @@
 #include <components/physical_plan/table/operators/operator_sort.hpp>
 #include <components/physical_plan/table/operators/scan/transfer_scan.hpp>
 
+using namespace components;
 using namespace components::expressions;
-using namespace services;
 using key = components::expressions::key_t;
 using components::logical_plan::add_parameter;
 
@@ -31,15 +31,15 @@ TEST_CASE("operator::group::base") {
         SECTION("documents") {
             collection::operators::operator_group_t group(d(collection));
             group.set_children(boost::intrusive_ptr(
-                new collection::operators::transfer_scan(d(collection), components::logical_plan::limit_t::unlimit())));
+                new collection::operators::transfer_scan(d(collection), logical_plan::limit_t::unlimit())));
             group.add_key("id_", collection::operators::get::simple_value_t::create(key("id_")));
             group.on_execute(nullptr);
             REQUIRE(group.output()->size() == 0);
         }
         SECTION("table") {
-            services::table::operators::operator_group_t group(d(table));
-            group.set_children(boost::intrusive_ptr(
-                new table::operators::transfer_scan(d(table), components::logical_plan::limit_t::unlimit())));
+            table::operators::operator_group_t group(d(table));
+            group.set_children(
+                boost::intrusive_ptr(new table::operators::transfer_scan(d(table), logical_plan::limit_t::unlimit())));
             group.add_key("id_", table::operators::get::simple_value_t::create(key("id_")));
             group.on_execute(nullptr);
             REQUIRE(group.output()->size() == 0);
@@ -50,15 +50,15 @@ TEST_CASE("operator::group::base") {
         SECTION("documents") {
             collection::operators::operator_group_t group(d(collection));
             group.set_children(boost::intrusive_ptr(
-                new collection::operators::transfer_scan(d(collection), components::logical_plan::limit_t::unlimit())));
+                new collection::operators::transfer_scan(d(collection), logical_plan::limit_t::unlimit())));
             group.add_key("_id", collection::operators::get::simple_value_t::create(key("_id")));
             group.on_execute(nullptr);
             REQUIRE(group.output()->size() == 100);
         }
         SECTION("table") {
-            services::table::operators::operator_group_t group(d(table));
-            group.set_children(boost::intrusive_ptr(
-                new table::operators::transfer_scan(d(table), components::logical_plan::limit_t::unlimit())));
+            table::operators::operator_group_t group(d(table));
+            group.set_children(
+                boost::intrusive_ptr(new table::operators::transfer_scan(d(table), logical_plan::limit_t::unlimit())));
             group.add_key("_id", table::operators::get::simple_value_t::create(key("_id")));
             group.on_execute(nullptr);
             REQUIRE(group.output()->size() == 100);
@@ -69,15 +69,15 @@ TEST_CASE("operator::group::base") {
         SECTION("documents") {
             collection::operators::operator_group_t group(d(collection));
             group.set_children(boost::intrusive_ptr(
-                new collection::operators::transfer_scan(d(collection), components::logical_plan::limit_t::unlimit())));
+                new collection::operators::transfer_scan(d(collection), logical_plan::limit_t::unlimit())));
             group.add_key("countBool", collection::operators::get::simple_value_t::create(key("countBool")));
             group.on_execute(nullptr);
             REQUIRE(group.output()->size() == 2);
         }
         SECTION("table") {
-            services::table::operators::operator_group_t group(d(table));
-            group.set_children(boost::intrusive_ptr(
-                new table::operators::transfer_scan(d(table), components::logical_plan::limit_t::unlimit())));
+            table::operators::operator_group_t group(d(table));
+            group.set_children(
+                boost::intrusive_ptr(new table::operators::transfer_scan(d(table), logical_plan::limit_t::unlimit())));
             group.add_key("countBool", table::operators::get::simple_value_t::create(key("countBool")));
             group.on_execute(nullptr);
             REQUIRE(group.output()->size() == 2);
@@ -88,7 +88,7 @@ TEST_CASE("operator::group::base") {
         SECTION("documents") {
             collection::operators::operator_group_t group(d(collection));
             group.set_children(boost::intrusive_ptr(
-                new collection::operators::transfer_scan(d(collection), components::logical_plan::limit_t::unlimit())));
+                new collection::operators::transfer_scan(d(collection), logical_plan::limit_t::unlimit())));
             group.add_key("even", collection::operators::get::simple_value_t::create(key("countDict/even")));
             group.add_key("three", collection::operators::get::simple_value_t::create(key("countDict/three")));
             group.add_key("five", collection::operators::get::simple_value_t::create(key("countDict/five")));
@@ -97,9 +97,9 @@ TEST_CASE("operator::group::base") {
         }
         /*
         SECTION("table") {
-            services::table::operators::operator_group_t group(d(table));
+            table::operators::operator_group_t group(d(table));
             group.set_children(
-            boost::intrusive_ptr(new table::operators::transfer_scan(d(table), components::logical_plan::limit_t::unlimit())));
+            boost::intrusive_ptr(new table::operators::transfer_scan(d(table), logical_plan::limit_t::unlimit())));
             group.add_key("even", table::operators::get::simple_value_t::create(key("countDict/even")));
             group.add_key("three", table::operators::get::simple_value_t::create(key("countDict/three")));
             group.add_key("five", table::operators::get::simple_value_t::create(key("countDict/five")));
@@ -119,7 +119,7 @@ TEST_CASE("operator::group::sort") {
         SECTION("documents") {
             auto group = boost::intrusive_ptr(new collection::operators::operator_group_t(d(collection)));
             group->set_children(boost::intrusive_ptr(
-                new collection::operators::transfer_scan(d(collection), components::logical_plan::limit_t::unlimit())));
+                new collection::operators::transfer_scan(d(collection), logical_plan::limit_t::unlimit())));
             group->add_key("even", collection::operators::get::simple_value_t::create(key("countDict/even")));
             group->add_key("three", collection::operators::get::simple_value_t::create(key("countDict/three")));
             group->add_key("five", collection::operators::get::simple_value_t::create(key("countDict/five")));
@@ -147,7 +147,7 @@ TEST_CASE("operator::group::sort") {
         SECTION("table") {
             auto group = boost::intrusive_ptr(new table::operators::operator_group_t(d(table)));
             group->set_children(
-                boost::intrusive_ptr(new table::operators::transfer_scan(d(table), components::logical_plan::limit_t::unlimit())));
+                boost::intrusive_ptr(new table::operators::transfer_scan(d(table), logical_plan::limit_t::unlimit())));
             group->add_key("even", table::operators::get::simple_value_t::create(key("countDict/even")));
             group->add_key("three", table::operators::get::simple_value_t::create(key("countDict/three")));
             group->add_key("five", table::operators::get::simple_value_t::create(key("countDict/five")));
@@ -184,7 +184,7 @@ TEST_CASE("operator::group::all") {
         SECTION("documents") {
             auto group = boost::intrusive_ptr(new collection::operators::operator_group_t(d(collection)));
             group->set_children(boost::intrusive_ptr(
-                new collection::operators::transfer_scan(d(collection), components::logical_plan::limit_t::unlimit())));
+                new collection::operators::transfer_scan(d(collection), logical_plan::limit_t::unlimit())));
             group->add_key("even", collection::operators::get::simple_value_t::create(key("countDict/even")));
             group->add_key("three", collection::operators::get::simple_value_t::create(key("countDict/three")));
             group->add_key("five", collection::operators::get::simple_value_t::create(key("countDict/five")));
@@ -219,7 +219,7 @@ TEST_CASE("operator::group::all") {
         SECTION("table") {
             auto group = boost::intrusive_ptr(new table::operators::operator_group_t(d(table)));
             group->set_children(
-                boost::intrusive_ptr(new table::operators::transfer_scan(d(table), components::logical_plan::limit_t::unlimit())));
+                boost::intrusive_ptr(new table::operators::transfer_scan(d(table), logical_plan::limit_t::unlimit())));
             group->add_key("even", table::operators::get::simple_value_t::create(key("countDict/even")));
             group->add_key("three", table::operators::get::simple_value_t::create(key("countDict/three")));
             group->add_key("five", table::operators::get::simple_value_t::create(key("countDict/five")));

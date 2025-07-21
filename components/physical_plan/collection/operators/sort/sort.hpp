@@ -3,11 +3,11 @@
 #include <functional>
 #include <memory>
 
-using ::components::document::document_ptr;
+using components::document::document_ptr;
 
-namespace services::collection::sort {
+namespace components::collection::sort {
 
-    using components::types::compare_t;
+    using types::compare_t;
 
     enum class order
     {
@@ -42,4 +42,4 @@ namespace services::collection::sort {
         std::vector<function_t> functions_;
     };
 
-} // namespace services::collection::sort
+} // namespace components::collection::sort

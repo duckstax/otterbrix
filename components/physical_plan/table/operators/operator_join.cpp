@@ -5,18 +5,16 @@
 #include <services/collection/collection.hpp>
 #include <vector>
 
-namespace services::table::operators {
+namespace components::table::operators {
 
-    operator_join_t::operator_join_t(collection::context_collection_t* context,
+    operator_join_t::operator_join_t(services::collection::context_collection_t* context,
                                      type join_type,
-                                     const components::expressions::compare_expression_ptr& expression)
+                                     const expressions::compare_expression_ptr& expression)
         : read_only_operator_t(context, operator_type::join)
         , join_type_(join_type)
         , expression_(std::move(expression)) {}
 
-    bool operator_join_t::check_predicate_(components::pipeline::context_t* context,
-                                           size_t row_left,
-                                           size_t row_right) const {
+    bool operator_join_t::check_predicate_(pipeline::context_t* context, size_t row_left, size_t row_right) const {
         const auto& chunk_left = left_->output()->data_chunk();
         const auto& chunk_right = right_->output()->data_chunk();
         return check_expr_general(expression_,
@@ -29,7 +27,7 @@ namespace services::table::operators {
                                   row_right);
     }
 
-    void operator_join_t::on_execute_impl(components::pipeline::context_t* context) {
+    void operator_join_t::on_execute_impl(pipeline::context_t* context) {
         if (!left_ || !right_) {
             return;
         }
@@ -93,7 +91,7 @@ namespace services::table::operators {
         }
     }
 
-    void operator_join_t::inner_join_(components::pipeline::context_t* context) {
+    void operator_join_t::inner_join_(pipeline::context_t* context) {
         const auto& chunk_left = left_->output()->data_chunk();
         const auto& chunk_right = right_->output()->data_chunk();
         auto& chunk_res = output_->data_chunk();
@@ -113,7 +111,7 @@ namespace services::table::operators {
         }
     }
 
-    void operator_join_t::outer_full_join_(components::pipeline::context_t* context) {
+    void operator_join_t::outer_full_join_(pipeline::context_t* context) {
         const auto& chunk_left = left_->output()->data_chunk();
         const auto& chunk_right = right_->output()->data_chunk();
         auto& chunk_res = output_->data_chunk();
@@ -143,7 +141,7 @@ namespace services::table::operators {
                     }
                     for (const auto& column : chunk_right.data) {
                         chunk_res.data[name_index_map_res_.at(column.type().alias())].push_back(
-                            components::types::logical_value_t{nullptr});
+                            types::logical_value_t{nullptr});
                     }
                 }
             }
@@ -154,7 +152,7 @@ namespace services::table::operators {
             }
             for (const auto& column : chunk_left.data) {
                 chunk_res.data[name_index_map_res_.at(column.type().alias())].push_back(
-                    components::types::logical_value_t{nullptr});
+                    types::logical_value_t{nullptr});
             }
             for (const auto& column : chunk_right.data) {
                 chunk_res.data[name_index_map_res_.at(column.type().alias())].push_back(column.value(i));
@@ -162,7 +160,7 @@ namespace services::table::operators {
         }
     }
 
-    void operator_join_t::outer_left_join_(components::pipeline::context_t* context) {
+    void operator_join_t::outer_left_join_(pipeline::context_t* context) {
         const auto& chunk_left = left_->output()->data_chunk();
         const auto& chunk_right = right_->output()->data_chunk();
         auto& chunk_res = output_->data_chunk();
@@ -186,14 +184,14 @@ namespace services::table::operators {
                     }
                     for (const auto& column : chunk_right.data) {
                         chunk_res.data[name_index_map_res_.at(column.type().alias())].push_back(
-                            components::types::logical_value_t{nullptr});
+                            types::logical_value_t{nullptr});
                     }
                 }
             }
         }
     }
 
-    void operator_join_t::outer_right_join_(components::pipeline::context_t* context) {
+    void operator_join_t::outer_right_join_(pipeline::context_t* context) {
         const auto& chunk_left = left_->output()->data_chunk();
         const auto& chunk_right = right_->output()->data_chunk();
         auto& chunk_res = output_->data_chunk();
@@ -214,7 +212,7 @@ namespace services::table::operators {
                 if (!visited_right) {
                     for (const auto& column : chunk_left.data) {
                         chunk_res.data[name_index_map_res_.at(column.type().alias())].push_back(
-                            components::types::logical_value_t{nullptr});
+                            types::logical_value_t{nullptr});
                     }
                     for (const auto& column : chunk_right.data) {
                         chunk_res.data[name_index_map_res_.at(column.type().alias())].push_back(column.value(i));
@@ -224,7 +222,7 @@ namespace services::table::operators {
         }
     }
 
-    void operator_join_t::cross_join_(components::pipeline::context_t* context) {
+    void operator_join_t::cross_join_(pipeline::context_t* context) {
         const auto& chunk_left = left_->output()->data_chunk();
         const auto& chunk_right = right_->output()->data_chunk();
         auto& chunk_res = output_->data_chunk();
@@ -242,4 +240,4 @@ namespace services::table::operators {
         }
     }
 
-} // namespace services::table::operators
+} // namespace components::table::operators

@@ -2,15 +2,15 @@
 #include <components/index/disk/route.hpp>
 #include <services/collection/collection.hpp>
 
-namespace services::collection::operators {
+namespace components::collection::operators {
 
-    using range = components::index::index_t::range;
+    using range = index::index_t::range;
 
-    std::vector<range> search_range_by_index(components::index::index_t* index,
-                                             const components::expressions::compare_expression_ptr& expr,
-                                             const components::logical_plan::storage_parameters* parameters) {
-        using components::expressions::compare_type;
-        using components::logical_plan::get_parameter;
+    std::vector<range> search_range_by_index(index::index_t* index,
+                                             const expressions::compare_expression_ptr& expr,
+                                             const logical_plan::storage_parameters* parameters) {
+        using expressions::compare_type;
+        using logical_plan::get_parameter;
         auto value = get_parameter(parameters, expr->value()).as_logical_value();
         switch (expr->type()) {
             case compare_type::eq:
@@ -31,10 +31,10 @@ namespace services::collection::operators {
         }
     }
 
-    void search_by_index(components::index::index_t* index,
-                         const components::expressions::compare_expression_ptr& expr,
-                         const components::logical_plan::limit_t& limit,
-                         const components::logical_plan::storage_parameters* parameters,
+    void search_by_index(index::index_t* index,
+                         const expressions::compare_expression_ptr& expr,
+                         const logical_plan::limit_t& limit,
+                         const logical_plan::storage_parameters* parameters,
                          base::operators::operator_data_ptr& result) {
         auto ranges = search_range_by_index(index, expr, parameters);
         int count = 0;
@@ -49,21 +49,23 @@ namespace services::collection::operators {
         }
     }
 
-    index_scan::index_scan(context_collection_t* context,
-                           components::expressions::compare_expression_ptr expr,
-                           components::logical_plan::limit_t limit)
+    index_scan::index_scan(services::collection::context_collection_t* context,
+                           expressions::compare_expression_ptr expr,
+                           logical_plan::limit_t limit)
         : read_only_operator_t(context, operator_type::match)
         , expr_(std::move(expr))
         , limit_(limit) {}
 
-    void index_scan::on_execute_impl(components::pipeline::context_t* pipeline_context) {
+    void index_scan::on_execute_impl(pipeline::context_t* pipeline_context) {
         trace(context_->log(), "index_scan by field \"{}\"", expr_->key_left().as_string());
-        auto* index = components::index::search_index(context_->index_engine(), {expr_->key_left()});
+        auto* index = index::search_index(context_->index_engine(), {expr_->key_left()});
         if (index && index->is_disk()) {
             trace(context_->log(), "index_scan: send query into disk");
-            auto value = components::logical_plan::get_parameter(&pipeline_context->parameters, expr_->value())
-                             .as_logical_value();
-            pipeline_context->send(index->disk_agent(), index::handler_id(index::route::find), value, expr_->type());
+            auto value = logical_plan::get_parameter(&pipeline_context->parameters, expr_->value()).as_logical_value();
+            pipeline_context->send(index->disk_agent(),
+                                   services::index::handler_id(services::index::route::find),
+                                   value,
+                                   expr_->type());
             async_wait();
         } else {
             trace(context_->log(), "index_scan: prepare result");
@@ -77,9 +79,9 @@ namespace services::collection::operators {
         }
     }
 
-    void index_scan::on_resume_impl(components::pipeline::context_t* pipeline_context) {
+    void index_scan::on_resume_impl(pipeline::context_t* pipeline_context) {
         trace(context_->log(), "resume index_scan by field \"{}\"", expr_->key_left().as_string());
-        auto* index = components::index::search_index(context_->index_engine(), {expr_->key_left()});
+        auto* index = index::search_index(context_->index_engine(), {expr_->key_left()});
         trace(context_->log(), "index_scan: prepare result");
         if (!limit_.check(0)) {
             return; //limit = 0
@@ -90,4 +92,4 @@ namespace services::collection::operators {
         }
     }
 
-} // namespace services::collection::operators
+} // namespace components::collection::operators

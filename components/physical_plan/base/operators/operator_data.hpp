@@ -6,9 +6,9 @@
 #include <memory_resource>
 #include <vector/data_chunk.hpp>
 
-namespace services::base::operators {
+namespace components::base::operators {
 
-    using data_t = std::variant<std::pmr::vector<components::document::document_ptr>, components::vector::data_chunk_t>;
+    using data_t = std::variant<std::pmr::vector<document::document_ptr>, vector::data_chunk_t>;
 
     class operator_data_t : public boost::intrusive_ref_counter<operator_data_t> {
     public:
@@ -16,20 +16,20 @@ namespace services::base::operators {
 
         explicit operator_data_t(std::pmr::memory_resource* resource);
         operator_data_t(std::pmr::memory_resource* resource,
-                        const std::vector<components::types::complex_logical_type>& types,
+                        const std::vector<types::complex_logical_type>& types,
                         uint64_t capacity);
-        operator_data_t(std::pmr::memory_resource* resource, components::vector::data_chunk_t&& chunk);
+        operator_data_t(std::pmr::memory_resource* resource, vector::data_chunk_t&& chunk);
 
         ptr copy() const;
 
         std::size_t size() const;
-        std::pmr::vector<components::document::document_ptr>& documents();
-        const std::pmr::vector<components::document::document_ptr>& documents() const;
-        components::vector::data_chunk_t& data_chunk();
-        const components::vector::data_chunk_t& data_chunk() const;
+        std::pmr::vector<document::document_ptr>& documents();
+        const std::pmr::vector<document::document_ptr>& documents() const;
+        vector::data_chunk_t& data_chunk();
+        const vector::data_chunk_t& data_chunk() const;
         std::pmr::memory_resource* resource();
-        void append(components::document::document_ptr document);
-        void append(components::vector::vector_t row);
+        void append(document::document_ptr document);
+        void append(vector::vector_t row);
 
     private:
         std::pmr::memory_resource* resource_;
@@ -43,14 +43,13 @@ namespace services::base::operators {
     }
 
     inline operator_data_ptr make_operator_data(std::pmr::memory_resource* resource,
-                                                const std::vector<components::types::complex_logical_type>& types,
-                                                uint64_t capacity = components::vector::DEFAULT_VECTOR_CAPACITY) {
+                                                const std::vector<types::complex_logical_type>& types,
+                                                uint64_t capacity = vector::DEFAULT_VECTOR_CAPACITY) {
         return {new operator_data_t(resource, types, capacity)};
     }
 
-    inline operator_data_ptr make_operator_data(std::pmr::memory_resource* resource,
-                                                components::vector::data_chunk_t&& chunk) {
+    inline operator_data_ptr make_operator_data(std::pmr::memory_resource* resource, vector::data_chunk_t&& chunk) {
         return {new operator_data_t(resource, std::move(chunk))};
     }
 
-} // namespace services::base::operators
+} // namespace components::base::operators

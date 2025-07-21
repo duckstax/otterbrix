@@ -1,17 +1,17 @@
 #include "operator_insert.hpp"
 #include <services/collection/collection.hpp>
 
-namespace services::collection::operators {
+namespace components::collection::operators {
 
     operator_insert::operator_insert(
-        context_collection_t* context,
-        std::pmr::vector<std::pair<components::expressions::key_t, components::expressions::key_t>> key_translation)
+        services::collection::context_collection_t* context,
+        std::pmr::vector<std::pair<expressions::key_t, expressions::key_t>> key_translation)
         : read_write_operator_t(context, operator_type::insert)
         , key_translation_(std::move(key_translation)) {}
 
-    void operator_insert::on_execute_impl(components::pipeline::context_t* pipeline_context) {
+    void operator_insert::on_execute_impl(pipeline::context_t* pipeline_context) {
         if (left_ && left_->output()) {
-            modified_ = base::operators::make_operator_write_data<document_id_t>(context_->resource());
+            modified_ = base::operators::make_operator_write_data<document::document_id_t>(context_->resource());
             output_ = base::operators::make_operator_data(context_->resource());
             bool simple_insert = true;
             for (const auto& k_pair : key_translation_) {
@@ -27,7 +27,7 @@ namespace services::collection::operators {
                     context_->index_engine()->insert_document(document, pipeline_context);
                     output_->append(document);
                 } else {
-                    auto res_doc = components::document::make_document(context_->resource());
+                    auto res_doc = document::make_document(context_->resource());
                     res_doc->set("/_id", id.to_string());
                     for (const auto& k_pair : key_translation_) {
                         res_doc->set(k_pair.first.as_string(), document, k_pair.second.as_string());
@@ -41,4 +41,4 @@ namespace services::collection::operators {
         }
     }
 
-} // namespace services::collection::operators
+} // namespace components::collection::operators

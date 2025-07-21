@@ -16,8 +16,8 @@
 #include <components/physical_plan/table/operators/scan/full_scan.hpp>
 #include <components/types/operations_helper.hpp>
 
+using namespace components;
 using namespace components::expressions;
-using namespace services;
 using key = components::expressions::key_t;
 using components::logical_plan::add_parameter;
 
@@ -36,14 +36,14 @@ TEST_CASE("operator::aggregate::count") {
             count.set_children(boost::intrusive_ptr(
                 new collection::operators::full_scan(d(collection),
                                                      collection::operators::predicates::create_predicate(cond),
-                                                     components::logical_plan::limit_t::unlimit())));
+                                                     logical_plan::limit_t::unlimit())));
             count.on_execute(nullptr);
             REQUIRE(count.value().as_unsigned() == 100);
         }
         SECTION("table") {
             table::operators::aggregate::operator_count_t count(d(table));
             count.set_children(boost::intrusive_ptr(
-                new table::operators::full_scan(d(table), cond, components::logical_plan::limit_t::unlimit())));
+                new table::operators::full_scan(d(table), cond, logical_plan::limit_t::unlimit())));
             count.on_execute(nullptr);
             REQUIRE(count.value().value<uint64_t>() == 100);
         }
@@ -51,23 +51,23 @@ TEST_CASE("operator::aggregate::count") {
 
     SECTION("count::match") {
         auto cond = make_compare_expression(&resource, compare_type::lte, key("count"), core::parameter_id_t(1));
-        components::logical_plan::storage_parameters parameters(&resource);
+        logical_plan::storage_parameters parameters(&resource);
         add_parameter(parameters, core::parameter_id_t(1), new_value(10));
-        components::pipeline::context_t pipeline_context(std::move(parameters));
+        pipeline::context_t pipeline_context(std::move(parameters));
 
         SECTION("documents") {
             collection::operators::aggregate::operator_count_t count(d(collection));
             count.set_children(boost::intrusive_ptr(
                 new collection::operators::full_scan(d(collection),
                                                      collection::operators::predicates::create_predicate(cond),
-                                                     components::logical_plan::limit_t::unlimit())));
+                                                     logical_plan::limit_t::unlimit())));
             count.on_execute(&pipeline_context);
             REQUIRE(count.value().as_unsigned() == 10);
         }
         SECTION("table") {
             table::operators::aggregate::operator_count_t count(d(table));
             count.set_children(boost::intrusive_ptr(
-                new table::operators::full_scan(d(table), cond, components::logical_plan::limit_t::unlimit())));
+                new table::operators::full_scan(d(table), cond, logical_plan::limit_t::unlimit())));
             count.on_execute(&pipeline_context);
             REQUIRE(count.value().value<uint64_t>() == 10);
         }
@@ -89,14 +89,14 @@ TEST_CASE("operator::aggregate::min") {
             min_.set_children(boost::intrusive_ptr(
                 new collection::operators::full_scan(d(collection),
                                                      collection::operators::predicates::create_predicate(cond),
-                                                     components::logical_plan::limit_t::unlimit())));
+                                                     logical_plan::limit_t::unlimit())));
             min_.on_execute(nullptr);
             REQUIRE(min_.value().as_unsigned() == 1);
         }
         SECTION("table") {
             table::operators::aggregate::operator_min_t min_(d(table), key("count"));
             min_.set_children(boost::intrusive_ptr(
-                new table::operators::full_scan(d(table), cond, components::logical_plan::limit_t::unlimit())));
+                new table::operators::full_scan(d(table), cond, logical_plan::limit_t::unlimit())));
             min_.on_execute(nullptr);
             REQUIRE(min_.value().value<int64_t>() == 1);
         }
@@ -104,23 +104,23 @@ TEST_CASE("operator::aggregate::min") {
 
     SECTION("min::match") {
         auto cond = make_compare_expression(&resource, compare_type::gt, key("count"), core::parameter_id_t(1));
-        components::logical_plan::storage_parameters parameters(&resource);
+        logical_plan::storage_parameters parameters(&resource);
         add_parameter(parameters, core::parameter_id_t(1), new_value(80));
-        components::pipeline::context_t pipeline_context(std::move(parameters));
+        pipeline::context_t pipeline_context(std::move(parameters));
 
         SECTION("documents") {
             collection::operators::aggregate::operator_min_t min_(d(collection), key("count"));
             min_.set_children(boost::intrusive_ptr(
                 new collection::operators::full_scan(d(collection),
                                                      collection::operators::predicates::create_predicate(cond),
-                                                     components::logical_plan::limit_t::unlimit())));
+                                                     logical_plan::limit_t::unlimit())));
             min_.on_execute(&pipeline_context);
             REQUIRE(min_.value().as_unsigned() == 81);
         }
         SECTION("table") {
             table::operators::aggregate::operator_min_t min_(d(table), key("count"));
             min_.set_children(boost::intrusive_ptr(
-                new table::operators::full_scan(d(table), cond, components::logical_plan::limit_t::unlimit())));
+                new table::operators::full_scan(d(table), cond, logical_plan::limit_t::unlimit())));
             min_.on_execute(&pipeline_context);
             REQUIRE(min_.value().value<int64_t>() == 81);
         }
@@ -142,14 +142,14 @@ TEST_CASE("operator::aggregate::max") {
             max_.set_children(boost::intrusive_ptr(
                 new collection::operators::full_scan(d(collection),
                                                      collection::operators::predicates::create_predicate(cond),
-                                                     components::logical_plan::limit_t::unlimit())));
+                                                     logical_plan::limit_t::unlimit())));
             max_.on_execute(nullptr);
             REQUIRE(max_.value().as_unsigned() == 100);
         }
         SECTION("table") {
             table::operators::aggregate::operator_max_t max_(d(table), key("count"));
             max_.set_children(boost::intrusive_ptr(
-                new table::operators::full_scan(d(table), cond, components::logical_plan::limit_t::unlimit())));
+                new table::operators::full_scan(d(table), cond, logical_plan::limit_t::unlimit())));
             max_.on_execute(nullptr);
             REQUIRE(max_.value().value<int64_t>() == 100);
         }
@@ -157,23 +157,23 @@ TEST_CASE("operator::aggregate::max") {
 
     SECTION("max::match") {
         auto cond = make_compare_expression(&resource, compare_type::lt, key("count"), core::parameter_id_t(1));
-        components::logical_plan::storage_parameters parameters(&resource);
+        logical_plan::storage_parameters parameters(&resource);
         add_parameter(parameters, core::parameter_id_t(1), new_value(20));
-        components::pipeline::context_t pipeline_context(std::move(parameters));
+        pipeline::context_t pipeline_context(std::move(parameters));
 
         SECTION("documents") {
             collection::operators::aggregate::operator_max_t max_(d(collection), key("count"));
             max_.set_children(boost::intrusive_ptr(
                 new collection::operators::full_scan(d(collection),
                                                      collection::operators::predicates::create_predicate(cond),
-                                                     components::logical_plan::limit_t::unlimit())));
+                                                     logical_plan::limit_t::unlimit())));
             max_.on_execute(&pipeline_context);
             REQUIRE(max_.value().as_unsigned() == 19);
         }
         SECTION("table") {
             table::operators::aggregate::operator_max_t max_(d(table), key("count"));
             max_.set_children(boost::intrusive_ptr(
-                new table::operators::full_scan(d(table), cond, components::logical_plan::limit_t::unlimit())));
+                new table::operators::full_scan(d(table), cond, logical_plan::limit_t::unlimit())));
             max_.on_execute(&pipeline_context);
             REQUIRE(max_.value().value<int64_t>() == 19);
         }
@@ -195,14 +195,14 @@ TEST_CASE("operator::aggregate::sum") {
             sum_.set_children(boost::intrusive_ptr(
                 new collection::operators::full_scan(d(collection),
                                                      collection::operators::predicates::create_predicate(cond),
-                                                     components::logical_plan::limit_t::unlimit())));
+                                                     logical_plan::limit_t::unlimit())));
             sum_.on_execute(nullptr);
             REQUIRE(sum_.value().as_unsigned() == 5050);
         }
         SECTION("table") {
             table::operators::aggregate::operator_sum_t sum_(d(table), key("count"));
             sum_.set_children(boost::intrusive_ptr(
-                new table::operators::full_scan(d(table), cond, components::logical_plan::limit_t::unlimit())));
+                new table::operators::full_scan(d(table), cond, logical_plan::limit_t::unlimit())));
             sum_.on_execute(nullptr);
             REQUIRE(sum_.value().value<int64_t>() == 5050);
         }
@@ -210,23 +210,23 @@ TEST_CASE("operator::aggregate::sum") {
 
     SECTION("sum::match") {
         auto cond = make_compare_expression(&resource, compare_type::lt, key("count"), core::parameter_id_t(1));
-        components::logical_plan::storage_parameters parameters(&resource);
+        logical_plan::storage_parameters parameters(&resource);
         add_parameter(parameters, core::parameter_id_t(1), new_value(10));
-        components::pipeline::context_t pipeline_context(std::move(parameters));
+        pipeline::context_t pipeline_context(std::move(parameters));
 
         SECTION("documents") {
             collection::operators::aggregate::operator_sum_t sum_(d(collection), key("count"));
             sum_.set_children(boost::intrusive_ptr(
                 new collection::operators::full_scan(d(collection),
                                                      collection::operators::predicates::create_predicate(cond),
-                                                     components::logical_plan::limit_t::unlimit())));
+                                                     logical_plan::limit_t::unlimit())));
             sum_.on_execute(&pipeline_context);
             REQUIRE(sum_.value().as_unsigned() == 45);
         }
         SECTION("table") {
             table::operators::aggregate::operator_sum_t sum_(d(table), key("count"));
             sum_.set_children(boost::intrusive_ptr(
-                new table::operators::full_scan(d(table), cond, components::logical_plan::limit_t::unlimit())));
+                new table::operators::full_scan(d(table), cond, logical_plan::limit_t::unlimit())));
             sum_.on_execute(&pipeline_context);
             REQUIRE(sum_.value().value<int64_t>() == 45);
         }
@@ -248,14 +248,14 @@ TEST_CASE("operator::aggregate::avg") {
             avg_.set_children(boost::intrusive_ptr(
                 new collection::operators::full_scan(d(collection),
                                                      collection::operators::predicates::create_predicate(cond),
-                                                     components::logical_plan::limit_t::unlimit())));
+                                                     logical_plan::limit_t::unlimit())));
             avg_.on_execute(nullptr);
             REQUIRE(avg_.value().as_double() == 50.5);
         }
         SECTION("table") {
             table::operators::aggregate::operator_avg_t avg_(d(table), key("count"));
             avg_.set_children(boost::intrusive_ptr(
-                new table::operators::full_scan(d(table), cond, components::logical_plan::limit_t::unlimit())));
+                new table::operators::full_scan(d(table), cond, logical_plan::limit_t::unlimit())));
             avg_.on_execute(nullptr);
             REQUIRE(avg_.value().value<double>() == 50.5);
         }
@@ -263,22 +263,22 @@ TEST_CASE("operator::aggregate::avg") {
 
     SECTION("avg::match") {
         auto cond = make_compare_expression(&resource, compare_type::lt, key("count"), core::parameter_id_t(1));
-        components::logical_plan::storage_parameters parameters(&resource);
+        logical_plan::storage_parameters parameters(&resource);
         add_parameter(parameters, core::parameter_id_t(1), new_value(10));
-        components::pipeline::context_t pipeline_context(std::move(parameters));
+        pipeline::context_t pipeline_context(std::move(parameters));
         SECTION("documents") {
             collection::operators::aggregate::operator_avg_t avg_(d(collection), key("count"));
             avg_.set_children(boost::intrusive_ptr(
                 new collection::operators::full_scan(d(collection),
                                                      collection::operators::predicates::create_predicate(cond),
-                                                     components::logical_plan::limit_t::unlimit())));
+                                                     logical_plan::limit_t::unlimit())));
             avg_.on_execute(&pipeline_context);
             REQUIRE(avg_.value().as_double() == 5.0);
         }
         SECTION("table") {
             table::operators::aggregate::operator_avg_t avg_(d(table), key("count"));
             avg_.set_children(boost::intrusive_ptr(
-                new table::operators::full_scan(d(table), cond, components::logical_plan::limit_t::unlimit())));
+                new table::operators::full_scan(d(table), cond, logical_plan::limit_t::unlimit())));
             avg_.on_execute(&pipeline_context);
             REQUIRE(avg_.value().value<double>() == 5.0);
         }

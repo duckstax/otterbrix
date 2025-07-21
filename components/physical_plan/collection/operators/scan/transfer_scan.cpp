@@ -2,13 +2,13 @@
 
 #include <services/collection/collection.hpp>
 
-namespace services::collection::operators {
+namespace components::collection::operators {
 
-    transfer_scan::transfer_scan(context_collection_t* context, components::logical_plan::limit_t limit)
+    transfer_scan::transfer_scan(services::collection::context_collection_t* context, logical_plan::limit_t limit)
         : read_only_operator_t(context, operator_type::match)
         , limit_(limit) {}
 
-    void transfer_scan::on_execute_impl(components::pipeline::context_t*) {
+    void transfer_scan::on_execute_impl(pipeline::context_t*) {
         int count = 0;
         if (!limit_.check(count)) {
             return; //limit = 0
@@ -23,4 +23,4 @@ namespace services::collection::operators {
         }
     }
 
-} // namespace services::collection::operators
+} // namespace components::collection::operators

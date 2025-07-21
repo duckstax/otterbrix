@@ -14,7 +14,7 @@ using namespace components::cursor;
 
 namespace services::collection::executor {
 
-    plan_t::plan_t(std::stack<collection::operators::operator_ptr>&& sub_plans,
+    plan_t::plan_t(std::stack<components::collection::operators::operator_ptr>&& sub_plans,
                    components::logical_plan::storage_parameters parameters,
                    services::context_storage_t&& context_storage)
         : sub_plans(std::move(sub_plans))
@@ -119,11 +119,11 @@ namespace services::collection::executor {
     }
 
     void executor_t::traverse_plan_(const components::session::session_id_t& session,
-                                    collection::operators::operator_ptr&& plan,
+                                    components::collection::operators::operator_ptr&& plan,
                                     components::logical_plan::storage_parameters&& parameters,
                                     services::context_storage_t&& context_storage) {
-        std::stack<collection::operators::operator_ptr> look_up;
-        std::stack<collection::operators::operator_ptr> sub_plans;
+        std::stack<components::collection::operators::operator_ptr> look_up;
+        std::stack<components::collection::operators::operator_ptr> sub_plans;
         look_up.push(plan);
         while (!look_up.empty()) {
             auto check_op = look_up.top();
@@ -150,7 +150,7 @@ namespace services::collection::executor {
     }
 
     void executor_t::execute_sub_plan_(const components::session::session_id_t& session,
-                                       collection::operators::operator_ptr plan,
+                                       components::collection::operators::operator_ptr plan,
                                        components::logical_plan::storage_parameters parameters) {
         trace(log_, "executor::execute_sub_plan, session: {}", session.data());
         if (!plan) {
@@ -176,26 +176,26 @@ namespace services::collection::executor {
         }
 
         switch (plan->type()) {
-            case operators::operator_type::insert: {
+            case components::collection::operators::operator_type::insert: {
                 insert_document_impl(session, collection, std::move(plan));
                 return;
             }
-            case operators::operator_type::remove: {
+            case components::collection::operators::operator_type::remove: {
                 delete_document_impl(session, collection, std::move(plan));
                 return;
             }
-            case operators::operator_type::update: {
+            case components::collection::operators::operator_type::update: {
                 update_document_impl(session, collection, std::move(plan));
                 return;
             }
-            case operators::operator_type::raw_data:
-            case operators::operator_type::join:
-            case operators::operator_type::aggregate: {
+            case components::collection::operators::operator_type::raw_data:
+            case components::collection::operators::operator_type::join:
+            case components::collection::operators::operator_type::aggregate: {
                 aggregate_document_impl(session, collection, std::move(plan));
                 return;
             }
-            case operators::operator_type::add_index:
-            case operators::operator_type::drop_index: {
+            case components::collection::operators::operator_type::add_index:
+            case components::collection::operators::operator_type::drop_index: {
                 // nothing to do
                 return;
             }
@@ -232,10 +232,10 @@ namespace services::collection::executor {
 
     void executor_t::aggregate_document_impl(const components::session::session_id_t& session,
                                              context_collection_t* collection,
-                                             operators::operator_ptr plan) {
-        if (plan->type() == operators::operator_type::aggregate) {
+                                             components::collection::operators::operator_ptr plan) {
+        if (plan->type() == components::collection::operators::operator_type::aggregate) {
             trace(log_, "executor::execute_plan : operators::operator_type::agreggate");
-        } else if (plan->type() == operators::operator_type::join) {
+        } else if (plan->type() == components::collection::operators::operator_type::join) {
             trace(log_, "executor::execute_plan : operators::operator_type::join");
         } else {
             trace(log_, "executor::execute_plan : operators::operator_type::raw_data");
@@ -263,7 +263,7 @@ namespace services::collection::executor {
 
     void executor_t::update_document_impl(const components::session::session_id_t& session,
                                           context_collection_t* collection,
-                                          operators::operator_ptr plan) {
+                                          components::collection::operators::operator_ptr plan) {
         trace(log_, "executor::execute_plan : operators::operator_type::update");
 
         if (plan->output()) {
@@ -318,7 +318,7 @@ namespace services::collection::executor {
 
     void executor_t::insert_document_impl(const components::session::session_id_t& session,
                                           context_collection_t* collection,
-                                          operators::operator_ptr plan) {
+                                          components::collection::operators::operator_ptr plan) {
         trace(log_,
               "executor::execute_plan : operators::operator_type::insert {}",
               plan->output() ? plan->output()->documents().size() : 0);
@@ -349,7 +349,7 @@ namespace services::collection::executor {
 
     void executor_t::delete_document_impl(const components::session::session_id_t& session,
                                           context_collection_t* collection,
-                                          operators::operator_ptr plan) {
+                                          components::collection::operators::operator_ptr plan) {
         trace(log_, "executor::execute_plan : operators::operator_type::remove");
 
         auto modified = plan->modified() ? plan->modified()->ids() : std::pmr::vector<document_id_t>{resource()};

@@ -3,9 +3,9 @@
 #include <functional>
 #include <memory_resource>
 
-namespace services::table::sort {
+namespace components::table::sort {
 
-    using components::types::compare_t;
+    using types::compare_t;
 
     enum class order
     {
@@ -14,16 +14,16 @@ namespace services::table::sort {
     };
 
     class sorter_t {
-        using function_t = std::function<compare_t(const std::pmr::vector<components::types::logical_value_t>&,
-                                                   const std::pmr::vector<components::types::logical_value_t>&)>;
+        using function_t = std::function<compare_t(const std::pmr::vector<types::logical_value_t>&,
+                                                   const std::pmr::vector<types::logical_value_t>&)>;
 
     public:
         explicit sorter_t() = default;
         explicit sorter_t(size_t index, order order_ = order::ascending);
 
         void add(size_t index, order order_ = order::ascending);
-        bool operator()(const std::pmr::vector<components::types::logical_value_t>& vec1,
-                        const std::pmr::vector<components::types::logical_value_t>& vec2) const {
+        bool operator()(const std::pmr::vector<types::logical_value_t>& vec1,
+                        const std::pmr::vector<types::logical_value_t>& vec2) const {
             for (const auto& f : functions_) {
                 auto res = f(vec1, vec2);
                 if (res < compare_t::equals) {
@@ -39,4 +39,4 @@ namespace services::table::sort {
         std::vector<function_t> functions_;
     };
 
-} // namespace services::table::sort
+} // namespace components::table::sort

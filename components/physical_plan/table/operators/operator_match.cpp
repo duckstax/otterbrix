@@ -1,16 +1,16 @@
 #include "operator_match.hpp"
 #include "check_expr.hpp"
 
-namespace services::table::operators {
+namespace components::table::operators {
 
-    operator_match_t::operator_match_t(collection::context_collection_t* context,
-                                       const components::expressions::compare_expression_ptr& expression,
-                                       components::logical_plan::limit_t limit)
+    operator_match_t::operator_match_t(services::collection::context_collection_t* context,
+                                       const expressions::compare_expression_ptr& expression,
+                                       logical_plan::limit_t limit)
         : read_only_operator_t(context, operator_type::match)
         , expression_(std::move(expression))
         , limit_(limit) {}
 
-    void operator_match_t::on_execute_impl(components::pipeline::context_t* pipeline_context) {
+    void operator_match_t::on_execute_impl(pipeline::context_t* pipeline_context) {
         int count = 0;
         if (!limit_.check(count)) {
             return; //limit = 0
@@ -41,4 +41,4 @@ namespace services::table::operators {
         }
     }
 
-} // namespace services::table::operators
+} // namespace components::table::operators

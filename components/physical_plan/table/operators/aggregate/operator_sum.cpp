@@ -1,36 +1,36 @@
 #include "operator_sum.hpp"
 #include <services/collection/collection.hpp>
 
-namespace services::table::operators::aggregate {
+namespace components::table::operators::aggregate {
 
     constexpr auto key_result_ = "sum";
 
-    operator_sum_t::operator_sum_t(collection::context_collection_t* context, components::index::key_t key)
+    operator_sum_t::operator_sum_t(services::collection::context_collection_t* context, index::key_t key)
         : operator_aggregate_t(context)
         , key_(std::move(key)) {}
 
-    components::types::logical_value_t operator_sum_t::aggregate_impl() {
+    types::logical_value_t operator_sum_t::aggregate_impl() {
         if (left_ && left_->output()) {
             const auto& chunk = left_->output()->data_chunk();
-            auto it = std::find_if(chunk.data.begin(), chunk.data.end(), [&](const components::vector::vector_t& v) {
+            auto it = std::find_if(chunk.data.begin(), chunk.data.end(), [&](const vector::vector_t& v) {
                 return v.type().alias() == key_.as_string();
             });
             if (it != chunk.data.end()) {
                 // TODO: sum physical values from vector insted of creating values
-                components::types::logical_value_t sum_(it->type());
+                types::logical_value_t sum_(it->type());
                 for (size_t i = 0; i < chunk.size(); i++) {
                     // TODO: handle non summable types
-                    sum_ = components::types::logical_value_t::sum(sum_, it->value(i));
+                    sum_ = types::logical_value_t::sum(sum_, it->value(i));
                 }
                 sum_.set_alias(key_result_);
                 return sum_;
             }
         }
-        auto result = components::types::logical_value_t(nullptr);
+        auto result = types::logical_value_t(nullptr);
         result.set_alias(key_result_);
         return result;
     }
 
     std::string operator_sum_t::key_impl() const { return key_result_; }
 
-} // namespace services::table::operators::aggregate
+} // namespace components::table::operators::aggregate

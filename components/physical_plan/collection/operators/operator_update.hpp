@@ -6,25 +6,25 @@
 
 #include "predicates/predicate.hpp"
 
-namespace services::collection::operators {
+namespace components::collection::operators {
 
     class operator_update final : public read_write_operator_t {
     public:
-        operator_update(context_collection_t* context,
-                        std::pmr::vector<components::expressions::update_expr_ptr> updates,
+        operator_update(services::collection::context_collection_t* context,
+                        std::pmr::vector<expressions::update_expr_ptr> updates,
                         bool upsert,
-                        const components::expressions::compare_expression_ptr& comp_expr);
+                        const expressions::compare_expression_ptr& comp_expr);
 
-        operator_update(context_collection_t* context,
-                        std::pmr::vector<components::expressions::update_expr_ptr> updates,
+        operator_update(services::collection::context_collection_t* context,
+                        std::pmr::vector<expressions::update_expr_ptr> updates,
                         bool upsert);
 
     private:
-        void on_execute_impl(components::pipeline::context_t* pipeline_context) final;
+        void on_execute_impl(pipeline::context_t* pipeline_context) final;
 
         predicates::predicate_ptr match_predicate_;
-        std::pmr::vector<components::expressions::update_expr_ptr> updates_;
+        std::pmr::vector<expressions::update_expr_ptr> updates_;
         bool upsert_;
     };
 
-} // namespace services::collection::operators
+} // namespace components::collection::operators

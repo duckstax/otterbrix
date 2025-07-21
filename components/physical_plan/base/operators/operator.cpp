@@ -1,15 +1,15 @@
 #include "operator.hpp"
 #include <services/collection/collection.hpp>
 
-namespace services::base::operators {
+namespace components::base::operators {
 
     bool is_success(const operator_t::ptr& op) { return !op || op->is_executed(); }
 
-    operator_t::operator_t(collection::context_collection_t* context, operator_type type)
+    operator_t::operator_t(services::collection::context_collection_t* context, operator_type type)
         : context_(context)
         , type_(type) {}
 
-    void operator_t::on_execute(components::pipeline::context_t* pipeline_context) {
+    void operator_t::on_execute(pipeline::context_t* pipeline_context) {
         if (state_ == operator_state::created || state_ == operator_state::running) {
             on_prepare_impl();
             state_ = operator_state::running;
@@ -31,7 +31,7 @@ namespace services::base::operators {
         }
     }
 
-    void operator_t::on_resume(components::pipeline::context_t* pipeline_context) { on_execute(pipeline_context); }
+    void operator_t::on_resume(pipeline::context_t* pipeline_context) { on_execute(pipeline_context); }
 
     void operator_t::async_wait() { state_ = operator_state::waiting; }
 
@@ -45,7 +45,7 @@ namespace services::base::operators {
 
     const collection_full_name_t& operator_t::collection_name() const noexcept { return context_->name(); }
 
-    collection::context_collection_t* operator_t::context() noexcept { return context_; }
+    services::collection::context_collection_t* operator_t::context() noexcept { return context_; }
 
     operator_ptr operator_t::left() const noexcept { return left_; }
 
@@ -75,15 +75,17 @@ namespace services::base::operators {
         output_ = nullptr;
     }
 
-    void operator_t::on_resume_impl(components::pipeline::context_t*) {}
+    void operator_t::on_resume_impl(pipeline::context_t*) {}
 
     void operator_t::on_prepare_impl() {}
 
-    read_only_operator_t::read_only_operator_t(collection::context_collection_t* collection, operator_type type)
+    read_only_operator_t::read_only_operator_t(services::collection::context_collection_t* collection,
+                                               operator_type type)
         : operator_t(collection, type) {}
 
-    read_write_operator_t::read_write_operator_t(collection::context_collection_t* collection, operator_type type)
+    read_write_operator_t::read_write_operator_t(services::collection::context_collection_t* collection,
+                                                 operator_type type)
         : operator_t(collection, type)
         , state_(read_write_operator_state::pending) {}
 
-} // namespace services::base::operators
+} // namespace components::base::operators

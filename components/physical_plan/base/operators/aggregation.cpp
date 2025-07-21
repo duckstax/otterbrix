@@ -2,9 +2,9 @@
 
 #include <components/physical_plan/collection/operators/scan/transfer_scan.hpp>
 
-namespace services::base::operators {
+namespace components::base::operators {
 
-    aggregation::aggregation(collection::context_collection_t* context)
+    aggregation::aggregation(services::collection::context_collection_t* context)
         : read_only_operator_t(context, operator_type::aggregate) {}
 
     void aggregation::set_match(operator_ptr&& match) { match_ = std::move(match); }
@@ -13,7 +13,7 @@ namespace services::base::operators {
 
     void aggregation::set_sort(operator_ptr&& sort) { sort_ = std::move(sort); }
 
-    void aggregation::on_execute_impl(components::pipeline::context_t*) { take_output(left_); }
+    void aggregation::on_execute_impl(pipeline::context_t*) { take_output(left_); }
 
     void aggregation::on_prepare_impl() {
         operator_ptr executor = nullptr;
@@ -24,10 +24,10 @@ namespace services::base::operators {
                 executor = std::move(match_);
             }
         } else {
-            executor = match_ ? std::move(match_)
-                              : static_cast<operator_ptr>(boost::intrusive_ptr(new collection::operators::transfer_scan(
-                                    context_,
-                                    components::logical_plan::limit_t::unlimit())));
+            executor = match_
+                           ? std::move(match_)
+                           : static_cast<operator_ptr>(boost::intrusive_ptr(
+                                 new collection::operators::transfer_scan(context_, logical_plan::limit_t::unlimit())));
         }
         if (group_) {
             group_->set_children(std::move(executor));
@@ -40,4 +40,4 @@ namespace services::base::operators {
         set_children(std::move(executor));
     }
 
-} // namespace services::base::operators
+} // namespace components::base::operators

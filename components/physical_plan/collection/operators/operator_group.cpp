@@ -2,9 +2,9 @@
 #include <components/physical_plan/base/operators/operator_empty.hpp>
 #include <services/collection/collection.hpp>
 
-namespace services::collection::operators {
+namespace components::collection::operators {
 
-    operator_group_t::operator_group_t(context_collection_t* context)
+    operator_group_t::operator_group_t(services::collection::context_collection_t* context)
         : read_write_operator_t(context, operator_type::aggregate)
         , keys_(context_->resource())
         , values_(context_->resource())
@@ -24,7 +24,7 @@ namespace services::collection::operators {
         values_.push_back({name, std::move(aggregator)});
     }
 
-    void operator_group_t::on_execute_impl(components::pipeline::context_t* pipeline_context) {
+    void operator_group_t::on_execute_impl(pipeline::context_t* pipeline_context) {
         if (left_ && left_->output()) {
             output_ = base::operators::make_operator_data(left_->output()->resource());
             create_list_documents();
@@ -34,8 +34,8 @@ namespace services::collection::operators {
 
     void operator_group_t::create_list_documents() {
         for (const auto& doc : left_->output()->documents()) {
-            auto new_doc = components::document::make_document(doc->get_allocator());
-            auto tape = std::make_unique<components::document::impl::base_document>(doc->get_allocator());
+            auto new_doc = document::make_document(doc->get_allocator());
+            auto tape = std::make_unique<document::impl::base_document>(doc->get_allocator());
             bool is_valid = true;
             for (const auto& key : keys_) {
                 auto value = key.getter->value(doc);
@@ -65,18 +65,18 @@ namespace services::collection::operators {
         }
     }
 
-    void operator_group_t::calc_aggregate_values(components::pipeline::context_t* pipeline_context) {
+    void operator_group_t::calc_aggregate_values(pipeline::context_t* pipeline_context) {
         for (const auto& value : values_) {
             auto& aggregator = value.aggregator;
             for (std::size_t i = 0; i < output_->documents().size(); ++i) {
                 auto& document = output_->documents().at(i);
                 aggregator->clear(); //todo: need copy aggregator
                 aggregator->set_children(boost::intrusive_ptr(
-                    new base::operators::operator_empty_t(context_, input_documents_.at(i)->copy())));
+                    new components::base::operators::operator_empty_t(context_, input_documents_.at(i)->copy())));
                 aggregator->on_execute(pipeline_context);
                 aggregator->set_value(document, value.name);
             }
         }
     }
 
-} // namespace services::collection::operators
+} // namespace components::collection::operators

@@ -6,6 +6,6 @@
 
 namespace services::collection::planner::impl {
 
-    operators::operator_ptr create_plan_data(const components::logical_plan::node_ptr& node);
+    components::collection::operators::operator_ptr create_plan_data(const components::logical_plan::node_ptr& node);
 
 }

@@ -4,9 +4,9 @@
 
 namespace services::collection::planner::impl {
 
-    operators::operator_ptr create_plan_data(const components::logical_plan::node_ptr& node) {
+    components::collection::operators::operator_ptr create_plan_data(const components::logical_plan::node_ptr& node) {
         const auto* data = static_cast<const components::logical_plan::node_data_t*>(node.get());
-        return boost::intrusive_ptr(new base::operators::operator_raw_data_t(data->documents()));
+        return boost::intrusive_ptr(new components::base::operators::operator_raw_data_t(data->documents()));
     }
 
 } // namespace services::collection::planner::impl

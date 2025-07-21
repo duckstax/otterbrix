@@ -3,18 +3,18 @@
 
 #include <services/collection/collection.hpp>
 
-namespace services::table::operators {
+namespace components::table::operators {
 
-    operator_update::operator_update(collection::context_collection_t* context,
-                                     std::pmr::vector<components::expressions::update_expr_ptr> updates,
+    operator_update::operator_update(services::collection::context_collection_t* context,
+                                     std::pmr::vector<expressions::update_expr_ptr> updates,
                                      bool upsert,
-                                     components::expressions::compare_expression_ptr comp_expr)
+                                     expressions::compare_expression_ptr comp_expr)
         : read_write_operator_t(context, operator_type::update)
         , updates_(std::move(updates))
         , comp_expr_(std::move(comp_expr))
         , upsert_(upsert) {}
 
-    void operator_update::on_execute_impl(components::pipeline::context_t* pipeline_context) {
+    void operator_update::on_execute_impl(pipeline::context_t* pipeline_context) {
         // TODO: worth to create separate update_join operator or mutable_join with callback
         if (left_ && left_->output() && right_ && right_->output()) {
             auto& chunk_left = left_->output()->data_chunk();
@@ -37,7 +37,7 @@ namespace services::table::operators {
                         expr->execute(chunk_left, chunk_right, 0, 0, &pipeline_context->parameters);
                     }
                     modified_ = base::operators::make_operator_write_data<size_t>(context_->resource());
-                    components::table::table_append_state state(context_->resource());
+                    table::table_append_state state(context_->resource());
                     context_->table_storage().table().initialize_append(state);
                     for (size_t id = 0; id < output_->data_chunk().size(); id++) {
                         modified_->append(id + state.row_start);
@@ -50,7 +50,7 @@ namespace services::table::operators {
                 no_modified_ = base::operators::make_operator_write_data<size_t>(context_->resource());
                 output_ = base::operators::make_operator_data(left_->output()->resource(), types_left);
                 auto state = context_->table_storage().table().initialize_update({});
-                components::vector::vector_t row_ids(context_->resource(), logical_type::BIGINT);
+                vector::vector_t row_ids(context_->resource(), logical_type::BIGINT);
                 auto& out_chunk = output_->data_chunk();
                 size_t index = 0;
                 for (size_t i = 0; i < chunk_left.size(); i++) {
@@ -89,7 +89,7 @@ namespace services::table::operators {
                     output_ = base::operators::make_operator_data(context_->resource(),
                                                                   left_->output()->data_chunk().types());
 
-                    components::table::table_append_state state(context_->resource());
+                    table::table_append_state state(context_->resource());
                     context_->table_storage().table().initialize_append(state);
                     context_->table_storage().table().append(output_->data_chunk(), state);
                 }
@@ -105,13 +105,13 @@ namespace services::table::operators {
                 modified_ = base::operators::make_operator_write_data<size_t>(context_->resource());
                 no_modified_ = base::operators::make_operator_write_data<size_t>(context_->resource());
                 auto state = context_->table_storage().table().initialize_update({});
-                components::vector::vector_t row_ids(context_->resource(), logical_type::BIGINT, chunk.size());
+                vector::vector_t row_ids(context_->resource(), logical_type::BIGINT, chunk.size());
                 size_t index = 0;
                 for (size_t i = 0; i < chunk.size(); i++) {
                     if (check_expr_general(comp_expr_, &pipeline_context->parameters, chunk, name_index_map, i)) {
-                        if (chunk.data.front().get_vector_type() == components::vector::vector_type::DICTIONARY) {
+                        if (chunk.data.front().get_vector_type() == vector::vector_type::DICTIONARY) {
                             row_ids.set_value(index,
-                                              components::types::logical_value_t{
+                                              types::logical_value_t{
                                                   static_cast<int64_t>(chunk.data.front().indexing().get_index(i))});
                         } else {
                             row_ids.set_value(index, chunk.row_ids.value(i));
@@ -139,4 +139,4 @@ namespace services::table::operators {
         }
     }
 
-} // namespace services::table::operators
+} // namespace components::table::operators

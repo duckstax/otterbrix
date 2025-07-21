@@ -5,22 +5,21 @@
 #include <components/table/column_state.hpp>
 #include <expressions/compare_expression.hpp>
 
-namespace services::table::operators {
+namespace components::table::operators {
 
-    std::unique_ptr<components::table::table_filter_t>
-    transform_predicate(const components::expressions::compare_expression_ptr& exresssion);
+    std::unique_ptr<table::table_filter_t> transform_predicate(const expressions::compare_expression_ptr& exresssion);
 
     class full_scan final : public read_only_operator_t {
     public:
-        full_scan(collection::context_collection_t* collection,
-                  const components::expressions::compare_expression_ptr& exresssion,
-                  components::logical_plan::limit_t limit);
+        full_scan(services::collection::context_collection_t* collection,
+                  const expressions::compare_expression_ptr& exresssion,
+                  logical_plan::limit_t limit);
 
     private:
-        void on_execute_impl(components::pipeline::context_t* pipeline_context) final;
+        void on_execute_impl(pipeline::context_t* pipeline_context) final;
 
-        components::expressions::compare_expression_ptr exresssion_;
-        const components::logical_plan::limit_t limit_;
+        expressions::compare_expression_ptr exresssion_;
+        const logical_plan::limit_t limit_;
     };
 
-} // namespace services::table::operators
+} // namespace components::table::operators

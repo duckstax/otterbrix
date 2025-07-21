@@ -7,14 +7,16 @@
 
 namespace services::collection::planner::impl {
 
-    operators::operator_ptr create_plan_insert(const context_storage_t& context,
-                                               const components::logical_plan::node_ptr& node,
-                                               components::logical_plan::limit_t limit) {
+    components::collection::operators::operator_ptr create_plan_insert(const context_storage_t& context,
+                                                                       const components::logical_plan::node_ptr& node,
+                                                                       components::logical_plan::limit_t limit) {
         const auto* insert = static_cast<const components::logical_plan::node_insert_t*>(node.get());
         auto plan = boost::intrusive_ptr(
-            new operators::operator_insert(context.at(node->collection_full_name()), insert->key_translation()));
+            new components::collection::operators::operator_insert(context.at(node->collection_full_name()),
+                                                                   insert->key_translation()));
 
-        auto checker = boost::intrusive_ptr(new operators::primary_key_scan(context.at(node->collection_full_name())));
+        auto checker = boost::intrusive_ptr(
+            new components::collection::operators::primary_key_scan(context.at(node->collection_full_name())));
         checker->set_children(create_plan(context, node->children().front(), std::move(limit)));
         plan->set_children(std::move(checker));
 

@@ -2,9 +2,9 @@
 #include "transformation.hpp"
 #include <services/collection/collection.hpp>
 
-namespace services::table::operators {
+namespace components::table::operators {
 
-    operator_sort_t::operator_sort_t(collection::context_collection_t* context)
+    operator_sort_t::operator_sort_t(services::collection::context_collection_t* context)
         : read_only_operator_t(context, operator_type::sort) {}
 
     void operator_sort_t::add(size_t index, operator_sort_t::order order_) { sorter_.add(index, order_); }
@@ -15,7 +15,7 @@ namespace services::table::operators {
         }
     }
 
-    void operator_sort_t::on_execute_impl(components::pipeline::context_t*) {
+    void operator_sort_t::on_execute_impl(pipeline::context_t*) {
         if (left_ && left_->output()) {
             auto& chunk = left_->output()->data_chunk();
             // TODO: sort inplace
@@ -27,4 +27,4 @@ namespace services::table::operators {
         }
     }
 
-} // namespace services::table::operators
+} // namespace components::table::operators

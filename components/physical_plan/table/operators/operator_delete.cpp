@@ -2,14 +2,14 @@
 #include "check_expr.hpp"
 #include <services/collection/collection.hpp>
 
-namespace services::table::operators {
+namespace components::table::operators {
 
-    operator_delete::operator_delete(collection::context_collection_t* context,
-                                     components::expressions::compare_expression_ptr expr)
+    operator_delete::operator_delete(services::collection::context_collection_t* context,
+                                     expressions::compare_expression_ptr expr)
         : read_write_operator_t(context, operator_type::remove)
         , compare_expression_(std::move(expr)) {}
 
-    void operator_delete::on_execute_impl(components::pipeline::context_t* pipeline_context) {
+    void operator_delete::on_execute_impl(pipeline::context_t* pipeline_context) {
         // TODO: worth to create separate update_join operator or mutable_join with callback
         if (left_ && left_->output() && right_ && right_->output()) {
             modified_ = base::operators::make_operator_write_data<size_t>(context_->resource());
@@ -26,9 +26,9 @@ namespace services::table::operators {
                 name_index_map_right.emplace(types_right[i].alias(), i);
             }
 
-            components::vector::vector_t ids(left_->output()->resource(),
-                                             logical_type::BIGINT,
-                                             chunk_left.size() * chunk_right.size());
+            vector::vector_t ids(left_->output()->resource(),
+                                 logical_type::BIGINT,
+                                 chunk_left.size() * chunk_right.size());
 
             size_t index = 0;
             for (size_t i = 0; i < chunk_left.size(); i++) {
@@ -41,7 +41,7 @@ namespace services::table::operators {
                                            name_index_map_right,
                                            i,
                                            j)) {
-                        ids.set_value(index++, components::types::logical_value_t{static_cast<int64_t>(i)});
+                        ids.set_value(index++, types::logical_value_t{static_cast<int64_t>(i)});
                     }
                 }
             }
@@ -62,15 +62,15 @@ namespace services::table::operators {
                 name_index_map.emplace(types[i].alias(), i);
             }
 
-            components::vector::vector_t ids(left_->output()->resource(), logical_type::BIGINT, chunk.size());
+            vector::vector_t ids(left_->output()->resource(), logical_type::BIGINT, chunk.size());
 
             size_t index = 0;
             for (size_t i = 0; i < chunk.size(); i++) {
                 if (check_expr_general(compare_expression_, &pipeline_context->parameters, chunk, name_index_map, i)) {
-                    if (chunk.data.front().get_vector_type() == components::vector::vector_type::DICTIONARY) {
-                        ids.set_value(index++,
-                                      components::types::logical_value_t{
-                                          static_cast<int64_t>(chunk.data.front().indexing().get_index(i))});
+                    if (chunk.data.front().get_vector_type() == vector::vector_type::DICTIONARY) {
+                        ids.set_value(
+                            index++,
+                            types::logical_value_t{static_cast<int64_t>(chunk.data.front().indexing().get_index(i))});
                     } else {
                         ids.set_value(index++, chunk.row_ids.value(i));
                     }
@@ -87,4 +87,4 @@ namespace services::table::operators {
         }
     }
 
-} // namespace services::table::operators
+} // namespace components::table::operators
