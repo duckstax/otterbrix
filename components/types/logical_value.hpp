@@ -194,7 +194,6 @@ namespace components::types {
     }
     template<>
     inline int64_t logical_value_t::value<int64_t>() const {
-        assert(type_.type() == logical_type::BIGINT);
         return std::get<int64_t>(value_);
     }
     template<>
@@ -203,7 +202,6 @@ namespace components::types {
     }
     template<>
     inline int128_t logical_value_t::value<int128_t>() const {
-        assert(type_.type() == logical_type::BIGINT);
         return *std::get<std::unique_ptr<int128_t>>(value_);
     }
     template<>

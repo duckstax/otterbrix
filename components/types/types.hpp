@@ -242,26 +242,36 @@ namespace components::types {
             return logical_type::TIMESTAMP_SEC;
         } else if constexpr (std::is_same<T, bool>::value) {
             return logical_type::BOOLEAN;
-        } else if constexpr (std::is_same<T, int8_t>::value) {
-            return logical_type::TINYINT;
-        } else if constexpr (std::is_same<T, int16_t>::value) {
-            return logical_type::SMALLINT;
-        } else if constexpr (std::is_same<T, int32_t>::value) {
-            return logical_type::INTEGER;
-        } else if constexpr (std::is_same<T, int64_t>::value) {
-            return logical_type::BIGINT;
+        } else if constexpr (std::is_same<T, int128_t>::value) {
+            return logical_type::HUGEINT;
+        } else if constexpr (std::is_same<T, uint128_t>::value) {
+            return logical_type::UHUGEINT;
+        } else if constexpr (std::is_integral<T>::value) {
+            if constexpr (std::is_signed<T>::value) {
+                if constexpr (sizeof(T) == 1) {
+                    return logical_type::TINYINT;
+                } else if constexpr (sizeof(T) == 2) {
+                    return logical_type::SMALLINT;
+                } else if constexpr (sizeof(T) == 4) {
+                    return logical_type::INTEGER;
+                } else if constexpr (sizeof(T) == 8) {
+                    return logical_type::BIGINT;
+                }
+            } else {
+                if constexpr (sizeof(T) == 1) {
+                    return logical_type::UTINYINT;
+                } else if constexpr (sizeof(T) == 2) {
+                    return logical_type::USMALLINT;
+                } else if constexpr (sizeof(T) == 4) {
+                    return logical_type::UINTEGER;
+                } else if constexpr (sizeof(T) == 8) {
+                    return logical_type::UBIGINT;
+                }
+            }
         } else if constexpr (std::is_same<T, float>::value) {
             return logical_type::FLOAT;
         } else if constexpr (std::is_same<T, double>::value) {
             return logical_type::DOUBLE;
-        } else if constexpr (std::is_same<T, uint8_t>::value) {
-            return logical_type::UTINYINT;
-        } else if constexpr (std::is_same<T, uint16_t>::value) {
-            return logical_type::USMALLINT;
-        } else if constexpr (std::is_same<T, uint32_t>::value) {
-            return logical_type::UINTEGER;
-        } else if constexpr (std::is_same<T, uint64_t>::value) {
-            return logical_type::UBIGINT;
         } else if constexpr (std::is_same<T, std::string>::value) {
             return logical_type::STRING_LITERAL;
         } else {
