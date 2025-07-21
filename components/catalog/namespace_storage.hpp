@@ -5,7 +5,8 @@
 #include "table_id.hpp"
 #include "table_metadata.hpp"
 
-#include <boost/parser/detail/text/trie_map.hpp>
+#include "trie/trie_boost.hpp"
+//#include <boost/parser/detail/text/trie_map.hpp>
 
 namespace components::catalog {
     class namespace_storage {
@@ -41,7 +42,7 @@ namespace components::catalog {
         };
 
         // TODO: REPLACE with our trie, boost::detail is HORRIBLE
-        using trie_type = boost::parser::detail::text::trie_map<table_namespace_t, namespace_info>;
+        using trie_type = trie_map<table_namespace_t, namespace_info>;
         table_namespace_t get_parent_namespace(const table_namespace_t& namespace_name) const;
 
         trie_type namespaces;

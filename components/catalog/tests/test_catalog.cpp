@@ -3,6 +3,7 @@
 #include "utils.hpp"
 
 #include <memory_resource>
+#include <string>
 
 using namespace test;
 using namespace components::types;
@@ -76,38 +77,69 @@ TEST_CASE("catalog::schema_test") {
 }
 
 TEST_CASE("catalog::trie_test") {
-    auto mr = std::pmr::synchronized_pool_resource();
-    catalog cat(&mr);
+    SECTION("correctness") {
+        auto mr = std::pmr::synchronized_pool_resource();
+        catalog cat(&mr);
 
-    cat.create_namespace({"1"});
-    cat.create_namespace({"2"});
-    cat.create_namespace({"3"});
-    cat.create_namespace({"2", "3"});
-    cat.create_namespace({"2", "3", "4"});
-    cat.create_namespace({"2", "4"});
-    cat.create_namespace({"1", "2"});
+        cat.create_namespace({"1"});
+        cat.create_namespace({"2"});
+        cat.create_namespace({"3"});
+        cat.create_namespace({"2", "3"});
+        cat.create_namespace({"2", "3", "4"});
+        cat.create_namespace({"2", "4"});
+        cat.create_namespace({"1", "2"});
 
-    auto children = cat.list_namespaces({"2"});
-    REQUIRE(children.size() == 2);
-    REQUIRE(children[0] == table_namespace_t{"2", "3"});
-    REQUIRE(children[1] == table_namespace_t{"2", "4"});
+        auto children = cat.list_namespaces({"2"});
+        REQUIRE(children.size() == 2);
+        REQUIRE(children[0] == table_namespace_t{"2", "3"});
+        REQUIRE(children[1] == table_namespace_t{"2", "4"});
 
-    REQUIRE(cat.list_namespaces() == std::pmr::vector<table_namespace_t>{{"1"}, {"2"}, {"3"}});
+        REQUIRE(cat.list_namespaces() == std::pmr::vector<table_namespace_t>{{"1"}, {"2"}, {"3"}});
 
-    cat.drop_namespace({"2", "3", "4"});
-    cat.drop_namespace({"1", "2"});
+        cat.drop_namespace({"2", "3", "4"});
+        cat.drop_namespace({"1", "2"});
 
-    size_t cnt = 0;
-    std::pmr::vector<table_namespace_t> dfs(cat.list_namespaces());
-    while (!dfs.empty()) {
-        auto cur = dfs.back();
-        dfs.pop_back();
+        size_t cnt = 0;
+        std::pmr::vector<table_namespace_t> dfs(cat.list_namespaces());
+        while (!dfs.empty()) {
+            auto cur = dfs.back();
+            dfs.pop_back();
 
-        ++cnt;
-        REQUIRE(cat.namespace_exists(cur));
-        auto next = cat.list_namespaces(cur);
-        dfs.insert(dfs.end(), next.begin(), next.end());
+            ++cnt;
+            REQUIRE(cat.namespace_exists(cur));
+            auto next = cat.list_namespaces(cur);
+            dfs.insert(dfs.end(), next.begin(), next.end());
+        }
+
+        REQUIRE(cnt == 5); // 7 total - 2 dropped
     }
 
-    REQUIRE(cnt == 5); // 7 total - 2 dropped
+    SECTION("MVCC") {
+        using namespace std::string_literals;
+
+        trie_map<std::string, int> trie;
+        auto v1 = "v1"s;
+        {
+            trie.insert(v1, 10);
+            auto it = trie.find(v1);
+
+            trie.insert(v1, 20);
+            trie.insert(v1, 30);
+            trie.insert(v1, 40);
+            REQUIRE(trie.find(v1)->value == 40);
+
+            trie.erase(v1);
+            REQUIRE(trie.find(v1)->value == 30);
+            REQUIRE(it->value == 10);
+
+            trie.erase(v1);
+            REQUIRE(trie.find(v1)->value == 20);
+            REQUIRE(it->value == 10);
+        }
+
+        // 10 lost all its references, 20 is being deleted -> trie is empty
+        trie.erase(v1);
+        REQUIRE(trie.find(v1) == trie.end());
+        REQUIRE(trie.empty());
+    }
 }

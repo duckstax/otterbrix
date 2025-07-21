@@ -22,17 +22,15 @@ enum class column_type_t
 
 struct version_entry {
     uint64_t version;
-    std::set<column_type_t> types;
+    std::set<column_type_t> types; // todo: polymorph
     mutable uint32_t ref_count = 0;
 
     version_entry(uint64_t v, const std::set<column_type_t>& t)
         : version(v)
         , types(t) {}
 
-    // Добавить ссылку на версию
     void add_ref() const { ++ref_count; }
 
-    // Убрать ссылку на версию
     void release_ref() const {
         if (ref_count > 0) {
             --ref_count;

@@ -185,6 +185,7 @@ void test_iterator_functionality() {
         trie.insert(key, {column_type_t::string_type});
     }
 
+    trie.erase("/aaa");
     // Проверяем, что итератор обходит все элементы
     std::set<std::string> found_keys;
     int count = 0;

@@ -36,7 +36,6 @@ namespace components::catalog {
     private:
         mutable namespace_storage namespaces;
         std::shared_ptr<transaction_list> transactions; // the ONLY strong ref to list
-        /*std::pmr::map<table_id, table_metadata> meta;*/
         std::pmr::memory_resource* resource;
 
         friend class transaction_scope;
