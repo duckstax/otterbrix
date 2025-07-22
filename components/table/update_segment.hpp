@@ -566,53 +566,38 @@ namespace components::table {
     bool update_segment_t::check_row(Args&&... args) const {
         switch (type_) {
             case types::physical_type::BIT:
-                check_row_validity(std::forward<Args>(args)...);
-                break;
+                return check_row_validity(std::forward<Args>(args)...);
             case types::physical_type::BOOL:
             case types::physical_type::INT8:
-                templated_check_row<int8_t>(std::forward<Args>(args)...);
-                break;
+                return templated_check_row<int8_t>(std::forward<Args>(args)...);
             case types::physical_type::INT16:
-                templated_check_row<int16_t>(std::forward<Args>(args)...);
-                break;
+                return templated_check_row<int16_t>(std::forward<Args>(args)...);
             case types::physical_type::INT32:
-                templated_check_row<int32_t>(std::forward<Args>(args)...);
-                break;
+                return templated_check_row<int32_t>(std::forward<Args>(args)...);
             case types::physical_type::INT64:
-                templated_check_row<int64_t>(std::forward<Args>(args)...);
-                break;
+                return templated_check_row<int64_t>(std::forward<Args>(args)...);
             case types::physical_type::UINT8:
-                templated_check_row<uint8_t>(std::forward<Args>(args)...);
-                break;
+                return templated_check_row<uint8_t>(std::forward<Args>(args)...);
             case types::physical_type::UINT16:
-                templated_check_row<uint16_t>(std::forward<Args>(args)...);
-                break;
+                return templated_check_row<uint16_t>(std::forward<Args>(args)...);
             case types::physical_type::UINT32:
-                templated_check_row<uint32_t>(std::forward<Args>(args)...);
-                break;
+                return templated_check_row<uint32_t>(std::forward<Args>(args)...);
             case types::physical_type::UINT64:
-                templated_check_row<uint64_t>(std::forward<Args>(args)...);
-                break;
+                return templated_check_row<uint64_t>(std::forward<Args>(args)...);
                 // case types::physical_type::INT128:
-                // 	templated_check_row<int128_t>(std::forward<Args>(args)...);
-                break;
+                // return templated_check_row<int128_t>(std::forward<Args>(args)...);
                 // case types::physical_type::UINT128:
-                // 	templated_check_row<uint128_t>(std::forward<Args>(args)...);
-                break;
+                // return templated_check_row<uint128_t>(std::forward<Args>(args)...);
             case types::physical_type::FLOAT:
-                templated_check_row<float>(std::forward<Args>(args)...);
-                break;
+                return templated_check_row<float>(std::forward<Args>(args)...);
             case types::physical_type::DOUBLE:
-                templated_check_row<double>(std::forward<Args>(args)...);
-                break;
                 // case types::physical_type::INTERVAL:
-                // 	templated_check_row<interval_t>(std::forward<Args>(args)...);
-                break;
+                // return templated_check_row<interval_t>(std::forward<Args>(args)...);
             case types::physical_type::STRING:
-                templated_check_row<std::string_view>(std::forward<Args>(args)...);
-                break;
+                return templated_check_row<std::string_view>(std::forward<Args>(args)...);
             default:
                 throw std::runtime_error("unhandled physical types");
+                return true;
         }
     }
 
