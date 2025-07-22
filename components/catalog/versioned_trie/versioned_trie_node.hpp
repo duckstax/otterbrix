@@ -6,70 +6,73 @@
 #include <type_traits>
 #include <vector>
 
+#include "trie_containers.hpp"
 #include "trie_utils.hpp"
 
 namespace components::catalog {
     template<typename Key, typename Value>
-    struct trie_node_t {
+    struct versioned_trie_node {
         using key_element = typename Key::value_type;
         using keys_t = std::vector<key_element>;
         using key_iterator = typename keys_t::const_iterator;
 
-        using children_t = std::vector<std::unique_ptr<trie_node_t>>;
+        using children_t = std::vector<std::unique_ptr<versioned_trie_node>>;
         using iterator = typename children_t::iterator;
         using const_iterator = typename children_t::const_iterator;
 
-        trie_node_t()
-            : parent_(nullptr) {}
+        versioned_trie_node(std::pmr::memory_resource* resource)
+            : parent_(nullptr)
+            , value_(resource) {}
 
-        trie_node_t(trie_node_t* parent)
-            : parent_(parent) {}
+        versioned_trie_node(std::pmr::memory_resource* resource, versioned_trie_node* parent)
+            : parent_(parent)
+            , value_(resource) {}
 
-        trie_node_t(trie_node_t const& other)
+        versioned_trie_node(versioned_trie_node const& other)
             : keys_(other.keys_)
             , value_(other.value_)
             , parent_(other.parent_)
             , parent_index_(other.parent_index_) {
             children_.reserve(other.children_.size());
             for (auto const& node : other.children_) {
-                std::unique_ptr<trie_node_t> new_node(new trie_node_t(*node));
+                std::unique_ptr<versioned_trie_node> new_node(new versioned_trie_node(*node));
                 children_.push_back(std::move(new_node));
             }
         }
 
-        trie_node_t(trie_node_t&& other)
+        versioned_trie_node(versioned_trie_node&& other)
             : parent_(nullptr) {
             swap(other);
         }
 
-        trie_node_t& operator=(trie_node_t const& rhs) {
+        versioned_trie_node& operator=(versioned_trie_node const& rhs) {
             assert(parent_ == nullptr && "Assignment of trie_node_ts are defined only for the "
                                          "header node.");
-            trie_node_t temp(rhs);
+            versioned_trie_node temp(rhs);
             temp.swap(*this);
             return *this;
         }
-        trie_node_t& operator=(trie_node_t&& rhs) {
+        versioned_trie_node& operator=(versioned_trie_node&& rhs) {
             assert(parent_ == nullptr && "Move assignments of trie_node_ts are defined only for the "
                                          "header node.");
-            trie_node_t temp(std::move(rhs));
+            versioned_trie_node temp(std::move(rhs));
             temp.swap(*this);
             return *this;
         }
 
         versioned_value<Value>& child_value(std::size_t i) const { return children_[i]->value_; }
 
-        trie_node_t* parent() const { return parent_; }
-        trie_node_t* min_child() const { return children_.front().get(); }
-        trie_node_t* max_child() const { return children_.back().get(); }
+        versioned_trie_node* parent() const { return parent_; }
+        versioned_trie_node* min_child() const { return children_.front().get(); }
+        versioned_trie_node* max_child() const { return children_.back().get(); }
 
-        bool has_versions() const { return !!value_.get_latest_version(); }
-        bool has_live_versions() const { return value_.has_live_versions(); }
+        bool has_versions() const { return !!value_.latest_version_id(); }
+        bool has_live_versions() const { return value_.has_alive_versions(); }
         bool empty() const { return children_.size() == 0; }
         std::size_t size() const { return children_.size(); }
 
-        bool min_value() const { return !!children_.front()->value_.get_latest_version(); }
-        bool max_value() const { return !!children_.back()->value_.get_latest_version(); }
+        bool min_value() const { return !!children_.front()->value_.latest_version_id(); }
+        bool max_value() const { return !!children_.back()->value_.latest_version_id(); }
 
         const_iterator begin() const { return children_.begin(); }
         const_iterator end() const { return children_.end(); }
@@ -95,21 +98,21 @@ namespace components::catalog {
         }
 
         template<typename Compare>
-        trie_node_t const* child(key_element const& e, Compare const& comp) const {
+        versioned_trie_node const* child(key_element const& e, Compare const& comp) const {
             auto const it = find(e, comp);
             if (it == children_.end())
                 return nullptr;
             return it->get();
         }
 
-        trie_node_t const* child(std::size_t i) const { return children_[i].get(); }
+        versioned_trie_node const* child(std::size_t i) const { return children_[i].get(); }
 
         template<typename Compare>
-        trie_node_t* child(key_element const& e, Compare const& comp) {
-            return const_cast<trie_node_t*>(const_this()->child(e, comp));
+        versioned_trie_node* child(key_element const& e, Compare const& comp) {
+            return const_cast<versioned_trie_node*>(const_this()->child(e, comp));
         }
 
-        trie_node_t* child(std::size_t i) { return const_cast<trie_node_t*>(const_this()->child(i)); }
+        versioned_trie_node* child(std::size_t i) { return const_cast<versioned_trie_node*>(const_this()->child(i)); }
 
         key_element const& key(std::size_t i) const { return keys_[i]; }
 
@@ -118,7 +121,7 @@ namespace components::catalog {
             return std::copy(key_begin(), key_end(), out);
         }
 
-        void swap(trie_node_t& other) {
+        void swap(versioned_trie_node& other) {
             assert(parent_ == nullptr && "Swaps of trie_node_ts are defined only for the header "
                                          "node.");
             keys_.swap(other.keys_);
@@ -135,13 +138,12 @@ namespace components::catalog {
 
         versioned_value<Value>& value() { return value_; }
         void add_version(uint64_t version, Value v) const { return value_.add_version(version, v); }
-        const versioned_entry<Value>* latest_version() const { return value_.get_latest_version(); };
 
         iterator begin() { return children_.begin(); }
         iterator end() { return children_.end(); }
 
         template<typename Compare>
-        iterator insert(key_element const& e, Compare const& comp, std::unique_ptr<trie_node_t>&& child) {
+        iterator insert(key_element const& e, Compare const& comp, std::unique_ptr<versioned_trie_node>&& child) {
             assert(child->empty());
             auto it = std::lower_bound(keys_.begin(), keys_.end(), e, comp);
             it = keys_.insert(it, e);
@@ -151,14 +153,14 @@ namespace components::catalog {
             return children_.insert(child_it, std::move(child));
         }
 
-        iterator insert(std::unique_ptr<trie_node_t>&& child) {
+        iterator insert(std::unique_ptr<versioned_trie_node>&& child) {
             assert(empty());
             parent_index_.insert_ptr(child);
             return children_.insert(children_.begin(), std::move(child));
         }
 
         void erase(std::size_t i) {
-            // This empty-keys situation happens only in the header node.
+            // this empty-keys situation happens only in the header node.
             if (!keys_.empty()) {
                 keys_.erase(keys_.begin() + i);
             }
@@ -166,11 +168,11 @@ namespace components::catalog {
             parent_index_.erase(it, children_.end());
         }
 
-        void erase(trie_node_t const* child) {
+        void erase(versioned_trie_node const* child) {
             auto const it =
-                std::find_if(children_.begin(), children_.end(), [child](std::unique_ptr<trie_node_t> const& ptr) {
-                    return child == ptr.get();
-                });
+                std::find_if(children_.begin(),
+                             children_.end(),
+                             [child](std::unique_ptr<versioned_trie_node> const& ptr) { return child == ptr.get(); });
             assert(it != children_.end());
             erase(it - children_.begin());
         }
@@ -180,6 +182,7 @@ namespace components::catalog {
             auto const it = const_this()->lower_bound(e, comp);
             return children_.begin() + (it - const_iterator(children_.begin()));
         }
+
         template<typename Compare>
         iterator find(key_element const& e, Compare const& comp) {
             auto const it = const_this()->find(e, comp);
@@ -187,14 +190,14 @@ namespace components::catalog {
         }
 
     private:
-        trie_node_t const* const_this() { return const_cast<trie_node_t const*>(this); }
+        versioned_trie_node const* const_this() { return const_cast<versioned_trie_node const*>(this); }
         key_element const& key(const_iterator it) const { return keys_[it - children_.begin()]; }
 
         keys_t keys_;
         children_t children_;
-        versioned_value<Value> value_;
-        trie_node_t* parent_;
+        versioned_trie_node* parent_;
         parent_index parent_index_;
+        versioned_value<Value> value_;
 
         friend struct parent_index;
     };

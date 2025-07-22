@@ -10,8 +10,6 @@ set(${PROJECT_NAME}_SOURCES
 
 add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
 
-add_executable(${PROJECT_NAME}_trie trie_tests.cpp ../trie/trie_iterator.cpp ../trie/versioned_trie.cpp)
-
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         otterbrix::catalog

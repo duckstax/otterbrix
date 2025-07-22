@@ -4,9 +4,7 @@
 #include "catalog_types.hpp"
 #include "table_id.hpp"
 #include "table_metadata.hpp"
-
-#include "trie/trie_boost.hpp"
-//#include <boost/parser/detail/text/trie_map.hpp>
+#include "versioned_trie/versioned_trie.hpp"
 
 namespace components::catalog {
     class namespace_storage {
@@ -33,7 +31,8 @@ namespace components::catalog {
         size_t size() const;
 
     private:
-        // TODO: use same approach in our trie for versioning
+        using trie_type = versioned_trie<table_namespace_t, namespace_info>;
+
         struct namespace_info {
             namespace_info(std::pmr::memory_resource* resource)
                 : tables(resource) {}
@@ -41,8 +40,6 @@ namespace components::catalog {
             std::pmr::map<std::pmr::string, table_metadata> tables;
         };
 
-        // TODO: REPLACE with our trie, boost::detail is HORRIBLE
-        using trie_type = trie_map<table_namespace_t, namespace_info>;
         table_namespace_t get_parent_namespace(const table_namespace_t& namespace_name) const;
 
         trie_type namespaces;

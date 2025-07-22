@@ -2,7 +2,8 @@
 
 namespace components::catalog {
     namespace_storage::namespace_storage(std::pmr::memory_resource* resource)
-        : resource(resource) {}
+        : namespaces(resource)
+        , resource(resource) {}
 
     void namespace_storage::create_namespace(const table_namespace_t& namespace_name) {
         if (namespace_name.empty()) {
@@ -55,14 +56,14 @@ namespace components::catalog {
     std::pmr::vector<table_namespace_t> namespace_storage::list_root_namespaces() const {
         std::pmr::vector<table_namespace_t> result(resource);
 
-        for (const auto& [path, info] : namespaces) {
-            if (path.size() == 1) {
-                table_namespace_t ns(path.begin(), path.end(), resource);
+        for (auto it = namespaces.begin(); it != namespaces.end(); ++it) {
+            if (it->key.size() == 1) {
+                auto a = it->key;
+                table_namespace_t ns(a.begin(), a.end(), resource);
                 result.push_back(std::move(ns));
             }
         }
 
-        // for human-readable IO
         return result;
     }
 

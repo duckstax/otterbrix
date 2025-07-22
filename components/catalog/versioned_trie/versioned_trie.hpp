@@ -1,43 +1,42 @@
 #pragma once
 
-#include "trie_boost_iterator.hpp"
-#include "trie_boost_node.hpp"
+#include "versioned_trie_iterator.hpp"
+#include "versioned_trie_node.hpp"
 
 namespace components::catalog {
-    struct less {
-        template<typename T>
-        bool operator()(T const& lhs, T const& rhs) const {
-            return std::less<T>{}(lhs, rhs);
-        }
-    };
-
-    template<typename Key, typename Value, typename Compare = less>
-    struct trie_map {
+    template<typename Key, typename Value, typename Compare = std::less<typename Key::value_type>>
+    struct versioned_trie {
     private:
-        using node_t = trie_node_t<Key, Value>;
+        using node_t = versioned_trie_node<Key, Value>;
         using iter_state_t = trie_iterator_state_t<Key, Value>;
 
     public:
         using value_type = trie_element<Key, Value>;
         using reference = value_type&;
         using const_reference = value_type const&;
-        using iterator = trie_map_iterator<Key, Value>;
-        using const_iterator = const_trie_map_iterator<Key, Value>;
+        using iterator = versioned_trie_iterator<Key, Value>;
+        using const_iterator = const_versioned_trie_iterator<Key, Value>;
         using size_type = std::ptrdiff_t;
         using difference_type = std::ptrdiff_t;
 
         using match_result = trie_match_result;
 
-        trie_map()
-            : size_(0) {}
+        versioned_trie(std::pmr::memory_resource* resource)
+            : header_(resource)
+            , size_(0)
+            , resource_(resource) {}
 
-        trie_map(Compare const& comp)
-            : size_(0)
+        versioned_trie(std::pmr::memory_resource* resource, Compare const& comp)
+            : header_(resource)
+            , size_(0)
+            , resource_(resource)
             , comp_(comp) {}
 
         template<typename Iter, typename Sentinel>
-        trie_map(Iter first, Sentinel last, Compare const& comp = Compare())
-            : size_(0)
+        versioned_trie(std::pmr::memory_resource* resource, Iter first, Sentinel last, Compare const& comp = Compare())
+            : header_(resource)
+            , size_(0)
+            , resource_(resource)
             , comp_(comp) {
             insert(first, last);
         }
@@ -98,9 +97,8 @@ namespace components::catalog {
             return back_up_to_match(retval);
         }
 
-        /** Writes the sequence of elements that would advance `prev` by one
-            element to `out`, and returns the final value of `out` after the
-            writes. */
+        /** writes the sequence of elements that would advance `prev` by one element to `out`, and returns the final
+            value of `out` after the writes. */
         template<typename OutIter>
         OutIter copy_next_key_elements(match_result prev, OutIter out) const {
             auto node = to_node_ptr(prev.node);
@@ -108,7 +106,7 @@ namespace components::catalog {
         }
 
         void clear() {
-            header_ = node_t();
+            header_ = node_t(resource_);
             size_ = 0;
         }
 
@@ -134,7 +132,7 @@ namespace components::catalog {
         template<typename KeyIter, typename Sentinel>
         iterator insert(KeyIter first, Sentinel last, Value value) {
             if (empty()) {
-                std::unique_ptr<node_t> new_node(new node_t(&header_));
+                std::unique_ptr<node_t> new_node = std::make_unique<node_t>(resource_, &header_);
                 header_.insert(std::move(new_node));
             }
 
@@ -160,7 +158,7 @@ namespace components::catalog {
             return true;
         }
 
-        iterator erase(iterator it) {
+        void erase(iterator it) {
             auto state = it.it_.state_;
             --size_;
 
@@ -168,31 +166,25 @@ namespace components::catalog {
             node->value().remove_latest_version();
 
             if (!node->empty()) {
-                // node has a value, but also children.  Remove the value and
-                // return the next-iterator.
-                ++it;
-                return it;
+                // node has children and cannot be deleted
+                return;
             }
 
-            // node has a value, *and* no children. Keep alive, if it has versions, erase all entries otherwise.
-            if (!node->value().has_live_versions()) {
-                const_cast<node_t*>(state.parent_)->erase(state.index_);
-                size_ -= node->value().versions().size();
+            if (node->value().has_alive_versions()) {
+                // node has live versions and will not be deleted, do a cleanup
+                size_ -= node->value().cleanup_dead_versions();
+                return;
             }
 
-            // Remove all its singular predecessors.
+            // node has no children and versions, kill it
+            size_ -= node->value().size();
+            const_cast<node_t*>(state.parent_)->erase(state.index_);
+
+            // remove all its singular predecessors
             while (state.parent_->parent() && state.parent_->empty() && !state.parent_->has_versions()) {
                 state = parent_state(state);
                 const_cast<node_t*>(state.parent_)->erase(state.index_);
             }
-
-            if (state.parent_->parent())
-                state = parent_state(state);
-            auto retval = iterator(state);
-            if (!empty())
-                ++retval;
-
-            return retval;
         }
 
         iterator erase(iterator first, iterator last) {
@@ -207,13 +199,13 @@ namespace components::catalog {
             return retval;
         }
 
-        friend bool operator==(trie_map const& lhs, trie_map const& rhs) {
+        friend bool operator==(versioned_trie const& lhs, versioned_trie const& rhs) {
             return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
         }
-        friend bool operator!=(trie_map const& lhs, trie_map const& rhs) { return !(lhs == rhs); }
+        friend bool operator!=(versioned_trie const& lhs, versioned_trie const& rhs) { return !(lhs == rhs); }
 
     private:
-        trie_map const* const_this() { return const_cast<trie_map const*>(this); }
+        versioned_trie const* const_this() { return const_cast<versioned_trie const*>(this); }
         static node_t const* to_node_ptr(void const* ptr) { return static_cast<node_t const*>(ptr); }
 
         template<typename KeyIter, typename Sentinel>
@@ -264,7 +256,7 @@ namespace components::catalog {
         node_t* create_children(node_t* node, KeyIter first, Sentinel last) {
             auto retval = node;
             for (; first != last; ++first) {
-                std::unique_ptr<node_t> new_node(new node_t(retval));
+                std::unique_ptr<node_t> new_node = std::make_unique<node_t>(resource_, retval);
                 retval = retval->insert(*first, comp_, std::move(new_node))->get();
             }
             return retval;
@@ -273,6 +265,7 @@ namespace components::catalog {
         node_t header_;
         size_type size_;
         uint64_t current_version_ = 0;
+        std::pmr::memory_resource* resource_;
         Compare comp_;
     };
 } // namespace components::catalog

@@ -6,6 +6,11 @@ namespace components::catalog {
     struct transaction_list {
         transaction_list(std::pmr::memory_resource* resource);
 
+        transaction_list(const transaction_list&) = delete;
+        transaction_list(transaction_list&& other) = delete;
+        transaction_list& operator=(const transaction_list&) = delete;
+        transaction_list& operator=(transaction_list&& other) = delete;
+
         void add_transaction(const table_id& id);
         void remove_transaction(const table_id& id);
 

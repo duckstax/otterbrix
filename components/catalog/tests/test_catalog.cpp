@@ -77,8 +77,8 @@ TEST_CASE("catalog::schema_test") {
 }
 
 TEST_CASE("catalog::trie_test") {
+    auto mr = std::pmr::synchronized_pool_resource();
     SECTION("correctness") {
-        auto mr = std::pmr::synchronized_pool_resource();
         catalog cat(&mr);
 
         cat.create_namespace({"1"});
@@ -117,29 +117,57 @@ TEST_CASE("catalog::trie_test") {
     SECTION("MVCC") {
         using namespace std::string_literals;
 
-        trie_map<std::string, int> trie;
+        versioned_trie<std::string, int> trie(&mr);
         auto v1 = "v1"s;
         {
             trie.insert(v1, 10);
             auto it = trie.find(v1);
+            REQUIRE(it->value == 10);
 
             trie.insert(v1, 20);
             trie.insert(v1, 30);
             trie.insert(v1, 40);
             REQUIRE(trie.find(v1)->value == 40);
-
-            trie.erase(v1);
-            REQUIRE(trie.find(v1)->value == 30);
             REQUIRE(it->value == 10);
 
             trie.erase(v1);
-            REQUIRE(trie.find(v1)->value == 20);
+            REQUIRE(trie.find(v1)->value == 10);
             REQUIRE(it->value == 10);
+
+            trie.insert(v1, 20);
         }
 
+        REQUIRE(trie.find(v1)->value == 20);
         // 10 lost all its references, 20 is being deleted -> trie is empty
         trie.erase(v1);
         REQUIRE(trie.find(v1) == trie.end());
+        REQUIRE(trie.empty());
+
+        {
+            trie.insert(v1, 200);
+            trie.insert(v1, 210);
+
+            auto it = trie.find(v1);
+            REQUIRE(it->value == 210);
+
+            {
+                trie.insert(v1, 30);
+                auto it1 = trie.find(v1);
+                trie.insert(v1, 40);
+
+                REQUIRE(trie.find(v1)->value == 40);
+                REQUIRE(it->value == 210);
+                REQUIRE(it1->value == 30);
+            }
+
+            REQUIRE(trie.find(v1)->value == 40);
+            trie.erase(v1);
+            REQUIRE(trie.find(v1)->value == 210);
+            REQUIRE(it->value == 210);
+        }
+
+        REQUIRE(trie.find(v1)->value == 210);
+        trie.erase(v1);
         REQUIRE(trie.empty());
     }
 }
