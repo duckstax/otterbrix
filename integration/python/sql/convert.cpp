@@ -190,17 +190,17 @@ auto to_pylist(const std::pmr::vector<components::document::document_id_t>& src)
     return res;
 }
 
-auto to_sorter(const py::handle& sort_dict) -> services::storage::sort::sorter_t {
-    services::storage::sort::sorter_t sorter;
+auto to_sorter(const py::handle& sort_dict) -> components::collection::sort::sorter_t {
+    components::collection::sort::sorter_t sorter;
     for (const py::handle key : sort_dict) {
         sorter.add(py::str(key).cast<std::string>(), to_order(sort_dict[key]));
     }
     return sorter;
 }
 
-auto to_order(const py::object& order) -> services::storage::sort::order {
-    return py::int_(order).cast<int>() < 0 ? services::storage::sort::order::descending
-                                           : services::storage::sort::order::ascending;
+auto to_order(const py::object& order) -> components::collection::sort::order {
+    return py::int_(order).cast<int>() < 0 ? components::collection::sort::order::descending
+                                           : components::collection::sort::order::ascending;
 }
 
 using components::logical_plan::node_aggregate_t;

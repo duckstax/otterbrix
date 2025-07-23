@@ -4,18 +4,18 @@
 
 #include <components/expressions/key.hpp>
 
-namespace services::collection::operators::get {
+namespace components::collection::operators::get {
 
     class simple_value_t : public operator_get_t {
     public:
-        static operator_get_ptr create(const components::expressions::key_t& key);
+        static operator_get_ptr create(const expressions::key_t& key);
 
     private:
-        const components::expressions::key_t key_;
+        const expressions::key_t key_;
 
-        explicit simple_value_t(const components::expressions::key_t& key);
+        explicit simple_value_t(const expressions::key_t& key);
 
-        components::document::value_t get_value_impl(const components::document::document_ptr& document);
+        document::value_t get_value_impl(const document::document_ptr& document);
     };
 
-} // namespace services::collection::operators::get
+} // namespace components::collection::operators::get

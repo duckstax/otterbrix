@@ -4,6 +4,7 @@
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
 #include <components/document/document.hpp>
+#include <components/vector/data_chunk.hpp>
 
 #include "key.hpp"
 
@@ -47,6 +48,22 @@ namespace components::expressions {
     using update_expr_ptr = boost::intrusive_ptr<update_expr_t>;
 
     class update_expr_t : public boost::intrusive_ref_counter<update_expr_t> {
+        class expr_output_t {
+        public:
+            expr_output_t() = default;
+            // not explicit for easier use, since it is not visible outside anyway
+            expr_output_t(document::value_t value);
+            expr_output_t(types::logical_value_t value);
+
+            document::value_t& document_value();
+            const document::value_t& document_value() const;
+            types::logical_value_t& table_value();
+            const types::logical_value_t& table_value() const;
+
+        private:
+            std::variant<document::value_t, types::logical_value_t, std::monostate> output_;
+        };
+
     public:
         explicit update_expr_t(update_expr_type type);
         virtual ~update_expr_t() = default;
@@ -54,14 +71,20 @@ namespace components::expressions {
         bool execute(document::document_ptr& to,
                      const document::document_ptr& from,
                      document::impl::base_document* tape,
-                     const components::logical_plan::storage_parameters* parameters);
+                     const logical_plan::storage_parameters* parameters);
+        bool execute(vector::data_chunk_t& to,
+                     const vector::data_chunk_t& from,
+                     size_t row_to,
+                     size_t row_from,
+                     const logical_plan::storage_parameters* parameters);
+
         update_expr_type type() const noexcept;
         update_expr_ptr& left();
         const update_expr_ptr& left() const;
         update_expr_ptr& right();
         const update_expr_ptr& right() const;
-        document::value_t& output();
-        const document::value_t& output() const;
+        expr_output_t& output();
+        const expr_output_t& output() const;
 
         virtual void serialize(serializer::base_serializer_t* serializer) = 0;
         static update_expr_ptr deserialize(serializer::base_deserializer_t* deserializer);
@@ -70,12 +93,17 @@ namespace components::expressions {
         virtual bool execute_impl(document::document_ptr& to,
                                   const document::document_ptr& from,
                                   document::impl::base_document* tape,
-                                  const components::logical_plan::storage_parameters* parameters) = 0;
+                                  const logical_plan::storage_parameters* parameters) = 0;
+        virtual bool execute_impl(vector::data_chunk_t& to,
+                                  const vector::data_chunk_t& from,
+                                  size_t row_to,
+                                  size_t row_from,
+                                  const logical_plan::storage_parameters* parameters) = 0;
 
         update_expr_type type_;
         update_expr_ptr left_;
         update_expr_ptr right_;
-        document::value_t output_;
+        expr_output_t output_;
     };
 
     bool operator==(const update_expr_ptr& lhs, const update_expr_ptr& rhs);
@@ -95,7 +123,12 @@ namespace components::expressions {
         bool execute_impl(document::document_ptr& to,
                           const document::document_ptr& from,
                           document::impl::base_document* tape,
-                          const components::logical_plan::storage_parameters* parameters) override;
+                          const logical_plan::storage_parameters* parameters) override;
+        bool execute_impl(vector::data_chunk_t& to,
+                          const vector::data_chunk_t& from,
+                          size_t row_to,
+                          size_t row_from,
+                          const logical_plan::storage_parameters* parameters) override;
 
     private:
         key_t key_;
@@ -125,7 +158,12 @@ namespace components::expressions {
         bool execute_impl(document::document_ptr& to,
                           const document::document_ptr& from,
                           document::impl::base_document* tape,
-                          const components::logical_plan::storage_parameters* parameters) override;
+                          const logical_plan::storage_parameters* parameters) override;
+        bool execute_impl(vector::data_chunk_t& to,
+                          const vector::data_chunk_t& from,
+                          size_t row_to,
+                          size_t row_from,
+                          const logical_plan::storage_parameters* parameters) override;
 
     private:
         key_t key_;
@@ -149,7 +187,12 @@ namespace components::expressions {
         bool execute_impl(document::document_ptr& to,
                           const document::document_ptr& from,
                           document::impl::base_document* tape,
-                          const components::logical_plan::storage_parameters* parameters) override;
+                          const logical_plan::storage_parameters* parameters) override;
+        bool execute_impl(vector::data_chunk_t& to,
+                          const vector::data_chunk_t& from,
+                          size_t row_to,
+                          size_t row_from,
+                          const logical_plan::storage_parameters* parameters) override;
 
     private:
         core::parameter_id_t id_;
@@ -170,7 +213,12 @@ namespace components::expressions {
         bool execute_impl(document::document_ptr& to,
                           const document::document_ptr& from,
                           document::impl::base_document* tape,
-                          const components::logical_plan::storage_parameters* parameters) override;
+                          const logical_plan::storage_parameters* parameters) override;
+        bool execute_impl(vector::data_chunk_t& to,
+                          const vector::data_chunk_t& from,
+                          size_t row_to,
+                          size_t row_from,
+                          const logical_plan::storage_parameters* parameters) override;
     };
 
     using update_expr_calculate_ptr = boost::intrusive_ptr<update_expr_calculate_t>;

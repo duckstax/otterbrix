@@ -23,7 +23,7 @@ namespace components::vector {
     validity_mask_t::validity_mask_t(std::pmr::memory_resource* resource, uint64_t size)
         : resource_(resource)
         , validity_data_(std::make_shared<validity_data_t>(resource, size))
-        , validity_mask_(nullptr)
+        , validity_mask_(validity_data_->data())
         , count_(size) {}
 
     validity_mask_t::validity_mask_t(const validity_mask_t& other)
@@ -247,6 +247,30 @@ namespace components::vector {
 
         for (uint64_t i = 0; i < count; i++) {
             set(target_offset + i, other.row_is_valid(source_offset + i));
+        }
+    }
+    void validity_mask_t::combine(const validity_mask_t& other, size_t count) {
+        if (other.all_valid()) {
+            // X & 1 = X
+            return;
+        }
+        if (all_valid()) {
+            // 1 & Y = Y
+            validity_data_ = std::make_shared<validity_data_t>(resource_, other.validity_mask_, count_);
+            validity_mask_ = validity_data_->data();
+            return;
+        }
+        if (validity_mask_ == other.validity_mask_) {
+            // X & X == X
+            return;
+        }
+
+        validity_data_ = std::make_shared<validity_data_t>(resource_, validity_mask_, count_);
+        validity_mask_ = validity_data_->data();
+
+        auto entry_count = validity_data_t::entry_count(count);
+        for (size_t i = 0; i < entry_count; i++) {
+            data()[i] = data()[i] & other.data()[i];
         }
     }
 

@@ -1,23 +1,23 @@
 #include "operator_sum.hpp"
 #include <services/collection/collection.hpp>
 
-namespace services::collection::operators::aggregate {
+namespace components::collection::operators::aggregate {
 
     constexpr auto key_result_ = "sum";
 
-    operator_sum_t::operator_sum_t(context_collection_t* context, components::index::key_t key)
+    operator_sum_t::operator_sum_t(services::collection::context_collection_t* context, index::key_t key)
         : operator_aggregate_t(context)
         , key_(std::move(key)) {}
 
     document_ptr operator_sum_t::aggregate_impl() {
         auto resource = left_ && left_->output() ? left_->output()->resource() : context_->resource();
-        auto result = components::document::make_document(resource);
+        auto result = document::make_document(resource);
         if (left_ && left_->output()) {
             const auto& documents = left_->output()->documents();
-            auto tape = std::make_unique<components::document::impl::base_document>(resource);
-            components::document::value_t sum_{};
+            auto tape = std::make_unique<document::impl::base_document>(resource);
+            document::value_t sum_{};
             std::for_each(documents.cbegin(), documents.cend(), [&](const document_ptr& doc) {
-                sum_ = sum(sum_, get_value_from_document(doc, key_), tape.get());
+                sum_ = sum(sum_, doc->get_value(key_.as_string()), tape.get());
             });
             result->set(key_result_, sum_);
         } else {
@@ -28,4 +28,4 @@ namespace services::collection::operators::aggregate {
 
     std::string operator_sum_t::key_impl() const { return key_result_; }
 
-} // namespace services::collection::operators::aggregate
+} // namespace components::collection::operators::aggregate

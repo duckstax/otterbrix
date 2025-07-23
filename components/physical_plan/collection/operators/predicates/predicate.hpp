@@ -3,39 +3,31 @@
 #include <components/document/document.hpp>
 #include <components/expressions/compare_expression.hpp>
 #include <components/logical_plan/param_storage.hpp>
-#include <services/collection/collection.hpp>
 
-namespace services::collection::operators::predicates {
-
-    using services::collection::context_collection_t;
+namespace components::collection::operators::predicates {
 
     class predicate : public boost::intrusive_ref_counter<predicate> {
     public:
-        explicit predicate(context_collection_t* context);
+        predicate() = default;
         predicate(const predicate&) = delete;
         predicate& operator=(const predicate&) = delete;
         virtual ~predicate() = default;
 
-        bool check(const components::document::document_ptr& document,
-                   const components::logical_plan::storage_parameters* parameters);
-        bool check(const components::document::document_ptr& document_left,
-                   const components::document::document_ptr& document_right,
-                   const components::logical_plan::storage_parameters* parameters);
-
-    protected:
-        context_collection_t* context_;
+        bool check(const document::document_ptr& document, const logical_plan::storage_parameters* parameters);
+        bool check(const document::document_ptr& document_left,
+                   const document::document_ptr& document_right,
+                   const logical_plan::storage_parameters* parameters);
 
     private:
-        virtual bool check_impl(const components::document::document_ptr& document_left,
-                                const components::document::document_ptr& document_right,
-                                const components::logical_plan::storage_parameters* parameters) = 0;
+        virtual bool check_impl(const document::document_ptr& document_left,
+                                const document::document_ptr& document_right,
+                                const logical_plan::storage_parameters* parameters) = 0;
     };
 
     using predicate_ptr = boost::intrusive_ptr<predicate>;
 
-    predicate_ptr create_predicate(context_collection_t* context,
-                                   const components::expressions::compare_expression_ptr& expr);
+    predicate_ptr create_predicate(const expressions::compare_expression_ptr& expr);
 
     predicate_ptr create_all_true_predicate(std::pmr::memory_resource* resource);
 
-} // namespace services::collection::operators::predicates
+} // namespace components::collection::operators::predicates

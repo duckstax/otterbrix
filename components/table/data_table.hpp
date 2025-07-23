@@ -22,7 +22,7 @@ namespace components::table {
 
         void initialize_scan(table_scan_state& state,
                              const std::vector<storage_index_t>& column_ids,
-                             table_filter_set_t* table_filters = nullptr);
+                             const table_filter_t* filter = nullptr);
 
         uint64_t max_threads() const;
 
@@ -42,7 +42,7 @@ namespace components::table {
         initialize_update(const std::vector<std::unique_ptr<bound_constraint_t>>& bound_constraints);
         void update(table_update_state& state,
                     vector::vector_t& row_ids,
-                    const std::vector<uint64_t>& column_ids,
+                    // const std::vector<uint64_t>& column_ids,
                     vector::data_chunk_t& data);
         void update_column(vector::vector_t& row_ids,
                            const std::vector<uint64_t>& column_path,
@@ -64,7 +64,6 @@ namespace components::table {
         bool is_root() { return is_root_; }
 
         uint64_t column_count() const;
-        uint64_t total_rows() const;
 
         std::vector<column_segment_info> get_column_segment_info();
         bool create_index_scan(table_scan_state& state, vector::data_chunk_t& result, table_scan_type type);
@@ -75,6 +74,10 @@ namespace components::table {
         void set_table_name(std::string new_name);
 
         uint64_t row_group_size() const;
+
+        std::shared_ptr<collection_t> row_group() const;
+
+        uint64_t calculate_size();
 
     private:
         void initialize_scan_with_offset(table_scan_state& state,

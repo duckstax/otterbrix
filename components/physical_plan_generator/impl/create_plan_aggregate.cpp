@@ -1,16 +1,18 @@
 #include "create_plan_aggregate.hpp"
 
-#include <components/physical_plan/collection/operators/aggregation.hpp>
+#include <components/physical_plan/base/operators/aggregation.hpp>
 #include <components/physical_plan_generator/create_plan.hpp>
 
 namespace services::collection::planner::impl {
 
     using components::logical_plan::node_type;
 
-    operators::operator_ptr create_plan_aggregate(const context_storage_t& context,
-                                                  const components::logical_plan::node_ptr& node,
-                                                  components::logical_plan::limit_t limit) {
-        auto op = boost::intrusive_ptr(new operators::aggregation(context.at(node->collection_full_name())));
+    components::collection::operators::operator_ptr
+    create_plan_aggregate(const context_storage_t& context,
+                          const components::logical_plan::node_ptr& node,
+                          components::logical_plan::limit_t limit) {
+        auto op = boost::intrusive_ptr(
+            new components::base::operators::aggregation(context.at(node->collection_full_name())));
         for (const components::logical_plan::node_ptr& child : node->children()) {
             switch (child->type()) {
                 case node_type::match_t:

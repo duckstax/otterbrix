@@ -250,6 +250,15 @@ namespace components::table {
         transient.revert_append(static_cast<uint64_t>(start_row));
     }
 
+    bool column_data_t::check_predicate(uint64_t row_id, const table_filter_t* filter) {
+        auto segment = data_.get_segment(row_id);
+        if (updates_ && updates_->has_updates(row_id)) {
+            return updates_->check_row(row_id, filter);
+        } else {
+            return segment->check_predicate(row_id, filter);
+        }
+    }
+
     uint64_t column_data_t::fetch(column_scan_state& state, int64_t row_id, vector::vector_t& result) {
         assert(row_id >= 0);
         assert(static_cast<uint64_t>(row_id) >= start_);

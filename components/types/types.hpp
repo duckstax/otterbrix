@@ -1,4 +1,5 @@
 #pragma once
+#include <absl/numeric/int128.h>
 #include <chrono>
 #include <cstdint>
 #include <memory>
@@ -6,8 +7,19 @@
 #include <vector>
 
 namespace components::types {
+
+    using int128_t = absl::int128;
+    using uint128_t = absl::uint128;
+
     class logical_value_t;
     class logical_type_extention;
+
+    enum class compare_t
+    {
+        less = -1,
+        equals = 0,
+        more = 1
+    };
 
     // order change may break physical_value comparators
     enum class physical_type : uint8_t
@@ -59,6 +71,7 @@ namespace components::types {
         INVALID = 255
     };
 
+    // order change may break logical_value comparators
     enum class logical_type : uint8_t
     {
         NA = 0,   // NULL type, used for constant NULL
@@ -149,6 +162,196 @@ namespace components::types {
         }
     }
 
+    constexpr bool is_numeric(logical_type type) {
+        switch (type) {
+            case logical_type::BOOLEAN:
+            case logical_type::UTINYINT:
+            case logical_type::TINYINT:
+            case logical_type::USMALLINT:
+            case logical_type::SMALLINT:
+            case logical_type::UINTEGER:
+            case logical_type::INTEGER:
+            case logical_type::UBIGINT:
+            case logical_type::BIGINT:
+            case logical_type::UHUGEINT:
+            case logical_type::HUGEINT:
+            case logical_type::FLOAT:
+            case logical_type::DOUBLE:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    constexpr bool is_signed(logical_type type) {
+        switch (type) {
+            case logical_type::TINYINT:
+            case logical_type::SMALLINT:
+            case logical_type::INTEGER:
+            case logical_type::BIGINT:
+            case logical_type::HUGEINT:
+            case logical_type::FLOAT:
+            case logical_type::DOUBLE:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    constexpr bool is_unsigned(logical_type type) {
+        switch (type) {
+            case logical_type::BOOLEAN:
+            case logical_type::UTINYINT:
+            case logical_type::USMALLINT:
+            case logical_type::UINTEGER:
+            case logical_type::UBIGINT:
+            case logical_type::UHUGEINT:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    constexpr bool is_duration(logical_type type) {
+        switch (type) {
+            case logical_type::TIMESTAMP_SEC:
+            case logical_type::TIMESTAMP_MS:
+            case logical_type::TIMESTAMP_US:
+            case logical_type::TIMESTAMP_NS:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    // for now only supports std::string for string types
+    // TODO: convert multiple string formats to logical_type::STRING_LITERAL
+    template<typename T>
+    constexpr logical_type to_logical_type() {
+        if constexpr (std::is_same<T, std::nullptr_t>::value) {
+            return logical_type::NA;
+        } else if constexpr (std::is_pointer<T>::value) {
+            return logical_type::POINTER;
+        } else if constexpr (std::is_same<T, std::chrono::nanoseconds>::value) {
+            return logical_type::TIMESTAMP_NS;
+        } else if constexpr (std::is_same<T, std::chrono::microseconds>::value) {
+            return logical_type::TIMESTAMP_US;
+        } else if constexpr (std::is_same<T, std::chrono::milliseconds>::value) {
+            return logical_type::TIMESTAMP_MS;
+        } else if constexpr (std::is_same<T, std::chrono::seconds>::value) {
+            return logical_type::TIMESTAMP_SEC;
+        } else if constexpr (std::is_same<T, bool>::value) {
+            return logical_type::BOOLEAN;
+        } else if constexpr (std::is_same<T, int128_t>::value) {
+            return logical_type::HUGEINT;
+        } else if constexpr (std::is_same<T, uint128_t>::value) {
+            return logical_type::UHUGEINT;
+        } else if constexpr (std::is_integral<T>::value) {
+            if constexpr (std::is_signed<T>::value) {
+                if constexpr (sizeof(T) == 1) {
+                    return logical_type::TINYINT;
+                } else if constexpr (sizeof(T) == 2) {
+                    return logical_type::SMALLINT;
+                } else if constexpr (sizeof(T) == 4) {
+                    return logical_type::INTEGER;
+                } else if constexpr (sizeof(T) == 8) {
+                    return logical_type::BIGINT;
+                }
+            } else {
+                if constexpr (sizeof(T) == 1) {
+                    return logical_type::UTINYINT;
+                } else if constexpr (sizeof(T) == 2) {
+                    return logical_type::USMALLINT;
+                } else if constexpr (sizeof(T) == 4) {
+                    return logical_type::UINTEGER;
+                } else if constexpr (sizeof(T) == 8) {
+                    return logical_type::UBIGINT;
+                }
+            }
+        } else if constexpr (std::is_same<T, float>::value) {
+            return logical_type::FLOAT;
+        } else if constexpr (std::is_same<T, double>::value) {
+            return logical_type::DOUBLE;
+        } else if constexpr (std::is_same<T, std::string>::value) {
+            return logical_type::STRING_LITERAL;
+        } else {
+            return logical_type::INVALID;
+        }
+    }
+
+    constexpr logical_type promote_type(logical_type type1, logical_type type2) {
+        using namespace std::chrono;
+        if (type1 == type2) {
+            return type1;
+        }
+        assert(is_numeric(type1) && is_numeric(type2) || is_duration(type1) && is_duration(type2));
+
+        constexpr uint8_t signage_difference =
+            static_cast<uint8_t>(logical_type::UTINYINT) - static_cast<uint8_t>(logical_type::TINYINT);
+
+        if (is_duration(type1) && is_duration(type2)) {
+            switch (type1) {
+                case logical_type::TIMESTAMP_SEC:
+                    switch (type2) {
+                        case logical_type::TIMESTAMP_MS:
+                            return to_logical_type<std::common_type<seconds, milliseconds>::type>();
+                        case logical_type::TIMESTAMP_US:
+                            return to_logical_type<std::common_type<seconds, microseconds>::type>();
+                        case logical_type::TIMESTAMP_NS:
+                            return to_logical_type<std::common_type<seconds, nanoseconds>::type>();
+                        default:
+                            break;
+                    }
+                case logical_type::TIMESTAMP_MS:
+                    switch (type2) {
+                        case logical_type::TIMESTAMP_SEC:
+                            return to_logical_type<std::common_type<milliseconds, seconds>::type>();
+                        case logical_type::TIMESTAMP_US:
+                            return to_logical_type<std::common_type<milliseconds, microseconds>::type>();
+                        case logical_type::TIMESTAMP_NS:
+                            return to_logical_type<std::common_type<milliseconds, nanoseconds>::type>();
+                        default:
+                            break;
+                    }
+                case logical_type::TIMESTAMP_US:
+                    switch (type2) {
+                        case logical_type::TIMESTAMP_SEC:
+                            return to_logical_type<std::common_type<microseconds, seconds>::type>();
+                        case logical_type::TIMESTAMP_MS:
+                            return to_logical_type<std::common_type<microseconds, milliseconds>::type>();
+                        case logical_type::TIMESTAMP_NS:
+                            return to_logical_type<std::common_type<microseconds, nanoseconds>::type>();
+                        default:
+                            break;
+                    }
+                case logical_type::TIMESTAMP_NS:
+                    switch (type2) {
+                        case logical_type::TIMESTAMP_SEC:
+                            return to_logical_type<std::common_type<nanoseconds, seconds>::type>();
+                        case logical_type::TIMESTAMP_MS:
+                            return to_logical_type<std::common_type<nanoseconds, milliseconds>::type>();
+                        case logical_type::TIMESTAMP_US:
+                            return to_logical_type<std::common_type<nanoseconds, microseconds>::type>();
+                        default:
+                            break;
+                    }
+                default:
+                    break;
+            }
+        }
+
+        // This is dependent on enum encoding values
+        if (is_signed(type1) == is_signed(type2) || is_unsigned(type1) == is_unsigned(type2)) {
+            return static_cast<logical_type>(std::max(static_cast<uint8_t>(type1), static_cast<uint8_t>(type2)));
+        } else if (is_signed(type1)) {
+            return static_cast<logical_type>(
+                std::max<uint8_t>(static_cast<uint8_t>(type1), static_cast<uint8_t>(type2) - signage_difference));
+        } else {
+            return static_cast<logical_type>(
+                std::max<uint8_t>(static_cast<uint8_t>(type1) - signage_difference, static_cast<uint8_t>(type2)));
+        }
+    }
+
     class complex_logical_type {
     public:
         complex_logical_type(logical_type type = logical_type::NA);
@@ -172,8 +375,6 @@ namespace components::types {
         const std::string& child_name(uint64_t index) const;
         bool is_unnamed() const;
         bool is_nested() const;
-        template<typename T>
-        static constexpr logical_type to_logical_type();
 
         const complex_logical_type& child_type() const;
         const std::vector<complex_logical_type>& child_types() const;
@@ -199,51 +400,6 @@ namespace components::types {
         logical_type type_ = logical_type::NA;
         std::unique_ptr<logical_type_extention> extention_ = nullptr; // for complex types
     };
-
-    // for now only supports std::string for string types
-    // TODO: convert multiple string formats to logical_type::STRING_LITERAL
-    template<typename T>
-    constexpr logical_type complex_logical_type::to_logical_type() {
-        if constexpr (std::is_same<T, std::nullptr_t>::value) {
-            return logical_type::NA;
-        } else if constexpr (std::is_pointer<T>::value) {
-            return logical_type::POINTER;
-        } else if constexpr (std::is_same<T, std::chrono::nanoseconds>::value) {
-            return logical_type::TIMESTAMP_NS;
-        } else if constexpr (std::is_same<T, std::chrono::microseconds>::value) {
-            return logical_type::TIMESTAMP_US;
-        } else if constexpr (std::is_same<T, std::chrono::milliseconds>::value) {
-            return logical_type::TIMESTAMP_MS;
-        } else if constexpr (std::is_same<T, std::chrono::seconds>::value) {
-            return logical_type::TIMESTAMP_SEC;
-        } else if constexpr (std::is_same<T, bool>::value) {
-            return logical_type::BOOLEAN;
-        } else if constexpr (std::is_same<T, int8_t>::value) {
-            return logical_type::TINYINT;
-        } else if constexpr (std::is_same<T, int16_t>::value) {
-            return logical_type::SMALLINT;
-        } else if constexpr (std::is_same<T, int32_t>::value) {
-            return logical_type::INTEGER;
-        } else if constexpr (std::is_same<T, int64_t>::value) {
-            return logical_type::BIGINT;
-        } else if constexpr (std::is_same<T, float>::value) {
-            return logical_type::FLOAT;
-        } else if constexpr (std::is_same<T, double>::value) {
-            return logical_type::DOUBLE;
-        } else if constexpr (std::is_same<T, uint8_t>::value) {
-            return logical_type::UTINYINT;
-        } else if constexpr (std::is_same<T, uint16_t>::value) {
-            return logical_type::USMALLINT;
-        } else if constexpr (std::is_same<T, uint32_t>::value) {
-            return logical_type::UINTEGER;
-        } else if constexpr (std::is_same<T, uint64_t>::value) {
-            return logical_type::UBIGINT;
-        } else if constexpr (std::is_same<T, std::string>::value) {
-            return logical_type::STRING_LITERAL;
-        } else {
-            return logical_type::INVALID;
-        }
-    }
 
     struct list_entry_t {
         list_entry_t() = default;

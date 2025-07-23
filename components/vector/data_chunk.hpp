@@ -16,6 +16,7 @@ namespace components::vector {
         ~data_chunk_t() = default;
 
         std::vector<vector_t> data;
+        vector_t row_ids;
 
         uint64_t size() const { return count_; }
         uint64_t column_count() const { return data.size(); }
@@ -70,8 +71,12 @@ namespace components::vector {
         void hash(std::vector<uint64_t>& column_ids, vector_t& result);
 
         std::vector<types::complex_logical_type> types() const;
+        size_t column_index(std::string_view key) const;
+
+        std::pmr::memory_resource* resource() const;
 
     private:
+        std::pmr::memory_resource* resource_;
         uint64_t count_ = 0;
         uint64_t capacity_ = DEFAULT_VECTOR_CAPACITY;
     };

@@ -14,6 +14,9 @@
 #include <components/context/context.hpp>
 #include <core/btree/btree.hpp>
 
+namespace components::vector {
+    class data_chunk_t;
+}
 namespace components::index {
 
     constexpr uint32_t INDEX_ID_UNDEFINED = std::numeric_limits<uint32_t>::max();
@@ -35,6 +38,8 @@ namespace components::index {
 
         void insert_document(const document_ptr& document, pipeline::context_t* pipeline_context);
         void delete_document(const document_ptr& document, pipeline::context_t* pipeline_context);
+        void insert_row(const vector::data_chunk_t& chunk, size_t row, pipeline::context_t* pipeline_context);
+        void delete_row(const vector::data_chunk_t& chunk, size_t row, pipeline::context_t* pipeline_context);
 
         auto indexes() -> std::vector<std::string>;
 

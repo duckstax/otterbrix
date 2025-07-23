@@ -5,6 +5,8 @@
 #include "storage/buffer_handle.hpp"
 #include "storage/buffer_manager.hpp"
 
+#include <expressions/compare_expression.hpp>
+
 namespace components::table {
 
     namespace impl {
@@ -104,9 +106,7 @@ namespace components::table {
             return std::string_view(reinterpret_cast<char*>(ptr + sizeof(uint32_t)), str_length);
         }
 
-        std::string_view fetch_string(column_segment_t& segment,
-                                      string_dictionary_container_t dict,
-                                      vector::vector_t& result,
+        std::string_view fetch_string(string_dictionary_container_t dict,
                                       std::byte* base_ptr,
                                       string_location_t location,
                                       uint32_t string_length) {
@@ -117,14 +117,13 @@ namespace components::table {
         }
         std::string_view fetch_string_from_dict(column_segment_t& segment,
                                                 string_dictionary_container_t dict,
-                                                vector::vector_t& result,
                                                 std::byte* base_ptr,
                                                 int32_t dict_offset,
                                                 uint32_t string_length) {
             auto block_size = segment.block_manager().block_size();
             assert(dict_offset <= static_cast<int32_t>(block_size));
             string_location_t location = fetch_string_location(dict, base_ptr, dict_offset, block_size);
-            return fetch_string(segment, dict, result, base_ptr, location, string_length);
+            return fetch_string(dict, base_ptr, location, string_length);
         }
 
         void write_string_memory(column_segment_t& segment,
@@ -190,6 +189,7 @@ namespace components::table {
 
             memcpy(result.data() + result_idx * sizeof(T), data_ptr, sizeof(T));
         }
+
         void validity_fetch_row(column_segment_t& segment,
                                 column_fetch_state& state,
                                 uint64_t row_id,
@@ -205,6 +205,7 @@ namespace components::table {
                 result_mask.set_invalid(result_idx);
             }
         }
+
         void string_fetch_row(column_segment_t& segment,
                               column_fetch_state& state,
                               uint64_t row_id,
@@ -224,8 +225,50 @@ namespace components::table {
             } else {
                 string_length = static_cast<uint32_t>(std::abs(dict_offset) - std::abs(base_data[row_id - 1]));
             }
-            result_data[result_idx] =
-                fetch_string_from_dict(segment, dict, result, baseptr, dict_offset, string_length);
+            result_data[result_idx] = fetch_string_from_dict(segment, dict, baseptr, dict_offset, string_length);
+        }
+
+        template<typename T>
+        bool fixed_size_check_row(column_segment_t& segment, uint64_t row_id, const table_filter_t* filter) {
+            auto& buffer_manager = segment.block->block_manager.buffer_manager;
+            auto handle = buffer_manager.pin(segment.block);
+
+            auto data_ptr = handle.ptr() + segment.block_offset() + row_id * sizeof(T);
+            const auto& const_filter = filter->cast<constant_filter_t>();
+            return const_filter.compare(*reinterpret_cast<T*>(data_ptr));
+        }
+
+        bool validity_check_row(column_segment_t& segment, uint64_t row_id, const table_filter_t* filter) {
+            assert(row_id >= 0 && row_id < uint64_t(segment.count.load()));
+            auto& buffer_manager = segment.block->block_manager.buffer_manager;
+            auto handle = buffer_manager.pin(segment.block);
+            auto dataptr = handle.ptr() + segment.block_offset();
+            vector::validity_mask_t mask(reinterpret_cast<uint64_t*>(dataptr));
+
+            const auto& const_filter = filter->cast<constant_filter_t>();
+            return const_filter.compare(mask.row_is_valid(row_id));
+        }
+
+        bool string_check_row(column_segment_t& segment,
+                              column_fetch_state& state,
+                              uint64_t row_id,
+                              const table_filter_t* filter) {
+            auto& handle = state.get_or_insert_handle(segment);
+
+            auto baseptr = handle.ptr() + segment.block_offset();
+            auto dict = dictionary(segment, handle);
+            auto base_data = reinterpret_cast<int32_t*>(baseptr + DICTIONARY_HEADER_SIZE);
+
+            auto dict_offset = base_data[row_id];
+            uint32_t string_length;
+            if (row_id == 0) {
+                string_length = static_cast<uint32_t>(std::abs(dict_offset));
+            } else {
+                string_length = static_cast<uint32_t>(std::abs(dict_offset) - std::abs(base_data[row_id - 1]));
+            }
+
+            const auto& const_filter = filter->cast<constant_filter_t>();
+            return const_filter.compare(fetch_string_from_dict(segment, dict, baseptr, dict_offset, string_length));
         }
 
         struct standard_fixed_size_t {
@@ -546,7 +589,7 @@ namespace components::table {
             for (uint64_t i = 0; i < scan_count; i++) {
                 auto string_length = static_cast<uint32_t>(std::abs(base_data[start + i]) - std::abs(previous_offset));
                 result_data[result_offset + i] =
-                    fetch_string_from_dict(segment, dict, result, baseptr, base_data[start + i], string_length);
+                    fetch_string_from_dict(segment, dict, baseptr, base_data[start + i], string_length);
                 previous_offset = base_data[start + i];
             }
         }
@@ -666,6 +709,47 @@ namespace components::table {
             assert(result.get_vector_type() == vector::vector_type::FLAT);
         }
     }
+    bool column_segment_t::check_predicate(uint64_t row_id, const table_filter_t* filter) {
+        switch (type.to_physical_type()) {
+            case types::physical_type::BOOL:
+            case types::physical_type::INT8:
+                return impl::fixed_size_check_row<int8_t>(*this, static_cast<int64_t>(row_id - start), filter);
+            case types::physical_type::INT16:
+                return impl::fixed_size_check_row<int16_t>(*this, static_cast<int64_t>(row_id - start), filter);
+            case types::physical_type::INT32:
+                return impl::fixed_size_check_row<int32_t>(*this, static_cast<int64_t>(row_id - start), filter);
+            case types::physical_type::INT64:
+                return impl::fixed_size_check_row<int64_t>(*this, static_cast<int64_t>(row_id - start), filter);
+            case types::physical_type::UINT8:
+                return impl::fixed_size_check_row<uint8_t>(*this, static_cast<int64_t>(row_id - start), filter);
+            case types::physical_type::UINT16:
+                return impl::fixed_size_check_row<uint16_t>(*this, static_cast<int64_t>(row_id - start), filter);
+            case types::physical_type::UINT32:
+                return impl::fixed_size_check_row<uint32_t>(*this, static_cast<int64_t>(row_id - start), filter);
+            case types::physical_type::UINT64:
+                return impl::fixed_size_check_row<uint64_t>(*this, static_cast<int64_t>(row_id - start), filter);
+            // case types::physical_type::INT128:
+            // return impl::fixed_size_check_row<int128_t>(*this, static_cast<int64_t>(row_id - start), filter);
+            // case types::physical_type::UINT128:
+            // return impl::fixed_size_check_row<uint128_t>(*this, static_cast<int64_t>(row_id - start), filter);
+            case types::physical_type::FLOAT:
+                return impl::fixed_size_check_row<float>(*this, static_cast<int64_t>(row_id - start), filter);
+            case types::physical_type::DOUBLE:
+                return impl::fixed_size_check_row<double>(*this, static_cast<int64_t>(row_id - start), filter);
+            // case types::physical_type::INTERVAL:
+            // return impl::fixed_size_check_row<interval_t>(*this, static_cast<int64_t>(row_id - start), filter);
+            case types::physical_type::LIST:
+                return impl::fixed_size_check_row<uint64_t>(*this, static_cast<int64_t>(row_id - start), filter);
+            case types::physical_type::BIT:
+                return impl::validity_check_row(*this, static_cast<int64_t>(row_id - start), filter);
+            case types::physical_type::STRING: {
+                column_fetch_state state;
+                return impl::string_check_row(*this, state, static_cast<int64_t>(row_id - start), filter);
+            }
+            default:
+                throw std::logic_error("Unsupported type for FixedSizeUncompressed::GetFunction");
+        }
+    }
 
     void column_segment_t::fetch_row(column_fetch_state& state,
                                      int64_t row_id,
@@ -757,50 +841,227 @@ namespace components::table {
         }
     }
 
+    template<class T, class COMP, bool HAS_NULL>
+    static uint64_t filter_selection(vector::unified_vector_format& uvf,
+                                     T predicate,
+                                     vector::indexing_vector_t& sel,
+                                     uint64_t approved_tuple_count,
+                                     vector::indexing_vector_t& result_sel) {
+        auto& mask = uvf.validity;
+        auto vec = uvf.get_data<T>();
+        uint64_t result_count = 0;
+        for (uint64_t i = 0; i < approved_tuple_count; i++) {
+            auto idx = sel.get_index(i);
+            auto vector_idx = uvf.referenced_indexing->get_index(idx);
+            COMP comparator{};
+            bool comparison_result =
+                (!HAS_NULL || mask.row_is_valid(vector_idx)) && comparator(vec[vector_idx], predicate);
+            result_sel.set_index(result_count, idx);
+            result_count += comparison_result;
+        }
+        return result_count;
+    }
+    template<class T>
+    static void filter_selection_switch(vector::unified_vector_format& uvf,
+                                        T predicate,
+                                        vector::indexing_vector_t& indexing,
+                                        uint64_t& approved_tuple_count,
+                                        expressions::compare_type comparison_type) {
+        vector::indexing_vector_t new_sel(indexing.resource(), approved_tuple_count);
+        auto& mask = uvf.validity;
+        // the inplace loops take the result as the last parameter
+        switch (comparison_type) {
+            case expressions::compare_type::eq: {
+                if (mask.all_valid()) {
+                    approved_tuple_count = filter_selection<T, std::equal_to<T>, false>(uvf,
+                                                                                        predicate,
+                                                                                        indexing,
+                                                                                        approved_tuple_count,
+                                                                                        new_sel);
+                } else {
+                    approved_tuple_count = filter_selection<T, std::equal_to<T>, true>(uvf,
+                                                                                       predicate,
+                                                                                       indexing,
+                                                                                       approved_tuple_count,
+                                                                                       new_sel);
+                }
+                break;
+            }
+            case expressions::compare_type::ne: {
+                if (mask.all_valid()) {
+                    approved_tuple_count = filter_selection<T, std::not_equal_to<T>, false>(uvf,
+                                                                                            predicate,
+                                                                                            indexing,
+                                                                                            approved_tuple_count,
+                                                                                            new_sel);
+                } else {
+                    approved_tuple_count = filter_selection<T, std::not_equal_to<T>, true>(uvf,
+                                                                                           predicate,
+                                                                                           indexing,
+                                                                                           approved_tuple_count,
+                                                                                           new_sel);
+                }
+                break;
+            }
+            case expressions::compare_type::lt: {
+                if (mask.all_valid()) {
+                    approved_tuple_count = filter_selection<T, std::less<T>, false>(uvf,
+                                                                                    predicate,
+                                                                                    indexing,
+                                                                                    approved_tuple_count,
+                                                                                    new_sel);
+                } else {
+                    approved_tuple_count = filter_selection<T, std::less<T>, true>(uvf,
+                                                                                   predicate,
+                                                                                   indexing,
+                                                                                   approved_tuple_count,
+                                                                                   new_sel);
+                }
+                break;
+            }
+            case expressions::compare_type::gt: {
+                if (mask.all_valid()) {
+                    approved_tuple_count = filter_selection<T, std::greater<T>, false>(uvf,
+                                                                                       predicate,
+                                                                                       indexing,
+                                                                                       approved_tuple_count,
+                                                                                       new_sel);
+                } else {
+                    approved_tuple_count = filter_selection<T, std::greater<T>, true>(uvf,
+                                                                                      predicate,
+                                                                                      indexing,
+                                                                                      approved_tuple_count,
+                                                                                      new_sel);
+                }
+                break;
+            }
+            case expressions::compare_type::lte: {
+                if (mask.all_valid()) {
+                    approved_tuple_count = filter_selection<T, std::less_equal<T>, false>(uvf,
+                                                                                          predicate,
+                                                                                          indexing,
+                                                                                          approved_tuple_count,
+                                                                                          new_sel);
+                } else {
+                    approved_tuple_count = filter_selection<T, std::less_equal<T>, true>(uvf,
+                                                                                         predicate,
+                                                                                         indexing,
+                                                                                         approved_tuple_count,
+                                                                                         new_sel);
+                }
+                break;
+            }
+            case expressions::compare_type::gte: {
+                if (mask.all_valid()) {
+                    approved_tuple_count = filter_selection<T, std::greater_equal<T>, false>(uvf,
+                                                                                             predicate,
+                                                                                             indexing,
+                                                                                             approved_tuple_count,
+                                                                                             new_sel);
+                } else {
+                    approved_tuple_count = filter_selection<T, std::greater_equal<T>, true>(uvf,
+                                                                                            predicate,
+                                                                                            indexing,
+                                                                                            approved_tuple_count,
+                                                                                            new_sel);
+                }
+                break;
+            }
+            default:
+                throw std::logic_error("Unknown comparison type for filter");
+        }
+        indexing = new_sel;
+    }
     uint64_t column_segment_t::filter_indexing(vector::indexing_vector_t& indexing,
                                                vector::vector_t& vector,
                                                vector::unified_vector_format& uvf,
                                                const table_filter_t& filter,
                                                uint64_t scan_count,
                                                uint64_t& approved_tuple_count) {
-        switch (filter.filter_type) {
-            case table_filter_type::CONJUNCTION_OR: {
-                uint64_t count_total = 0;
-                vector::indexing_vector_t result_indexing(vector.resource(), approved_tuple_count);
-                auto& conjunction_or = filter.cast<conjunction_or_filter_t>();
-                for (auto& child_filter : conjunction_or.child_filters) {
-                    vector::indexing_vector_t temp_indexing = indexing;
-                    uint64_t temp_tuple_count = approved_tuple_count;
-                    uint64_t temp_count =
-                        filter_indexing(temp_indexing, vector, uvf, *child_filter, scan_count, temp_tuple_count);
-                    for (uint64_t i = 0; i < temp_count; i++) {
-                        auto new_idx = temp_indexing.get_index(i);
-                        bool is_new_idx = true;
-                        for (uint64_t res_idx = 0; res_idx < count_total; res_idx++) {
-                            if (result_indexing.get_index(res_idx) == new_idx) {
-                                is_new_idx = false;
-                                break;
-                            }
-                        }
-                        if (is_new_idx) {
-                            result_indexing.set_index(count_total++, new_idx);
-                        }
-                    }
-                }
-                indexing = result_indexing;
-                approved_tuple_count = count_total;
-                return approved_tuple_count;
+        assert(filter.filter_type != expressions::compare_type::invalid);
+        assert(!is_union_compare_condition(filter.filter_type));
+        auto& constant_filter = filter.cast<constant_filter_t>();
+        switch (vector.type().to_physical_type()) {
+            case types::physical_type::UINT8: {
+                auto predicate = constant_filter.constant.value<uint8_t>();
+                filter_selection_switch<uint8_t>(uvf, predicate, indexing, approved_tuple_count, filter.filter_type);
+                break;
             }
-            case table_filter_type::CONJUNCTION_AND: {
-                auto& conjunction_and = filter.cast<conjunction_and_filter_t>();
-                for (auto& child_filter : conjunction_and.child_filters) {
-                    filter_indexing(indexing, vector, uvf, *child_filter, scan_count, approved_tuple_count);
-                }
-                return approved_tuple_count;
+            case types::physical_type::UINT16: {
+                auto predicate = constant_filter.constant.value<uint16_t>();
+                filter_selection_switch<uint16_t>(uvf, predicate, indexing, approved_tuple_count, filter.filter_type);
+                break;
+            }
+            case types::physical_type::UINT32: {
+                auto predicate = constant_filter.constant.value<uint32_t>();
+                filter_selection_switch<uint32_t>(uvf, predicate, indexing, approved_tuple_count, filter.filter_type);
+                break;
+            }
+            case types::physical_type::UINT64: {
+                auto predicate = constant_filter.constant.value<uint64_t>();
+                filter_selection_switch<uint64_t>(uvf, predicate, indexing, approved_tuple_count, filter.filter_type);
+                break;
+            }
+            // case types::physical_type::UINT128: {
+            //     auto predicate = constant_filter.constant.value<uint128_t>();
+            //     filter_selection_switch<uhugeint_t>(uvf, predicate, indexing, approved_tuple_count,
+            //                                       filter.filter_type);
+            //     break;
+            // }
+            case types::physical_type::INT8: {
+                auto predicate = constant_filter.constant.value<int8_t>();
+                filter_selection_switch<int8_t>(uvf, predicate, indexing, approved_tuple_count, filter.filter_type);
+                break;
+            }
+            case types::physical_type::INT16: {
+                auto predicate = constant_filter.constant.value<int16_t>();
+                filter_selection_switch<int16_t>(uvf, predicate, indexing, approved_tuple_count, filter.filter_type);
+                break;
+            }
+            case types::physical_type::INT32: {
+                auto predicate = constant_filter.constant.value<int32_t>();
+                filter_selection_switch<int32_t>(uvf, predicate, indexing, approved_tuple_count, filter.filter_type);
+                break;
+            }
+            case types::physical_type::INT64: {
+                auto predicate = constant_filter.constant.value<int64_t>();
+                filter_selection_switch<int64_t>(uvf, predicate, indexing, approved_tuple_count, filter.filter_type);
+                break;
+            }
+            // case types::physical_type::INT128: {
+            //     auto predicate = constant_filter.constant.value<int128_t>();
+            //     filter_selection_switch<hugeint_t>(uvf, predicate, indexing, approved_tuple_count,
+            //                                      filter.filter_type);
+            //     break;
+            // }
+            case types::physical_type::FLOAT: {
+                auto predicate = constant_filter.constant.value<float>();
+                filter_selection_switch<float>(uvf, predicate, indexing, approved_tuple_count, filter.filter_type);
+                break;
+            }
+            case types::physical_type::DOUBLE: {
+                auto predicate = constant_filter.constant.value<double>();
+                filter_selection_switch<double>(uvf, predicate, indexing, approved_tuple_count, filter.filter_type);
+                break;
+            }
+            case types::physical_type::STRING: {
+                auto predicate = constant_filter.constant.value<std::string_view>();
+                filter_selection_switch<std::string_view>(uvf,
+                                                          predicate,
+                                                          indexing,
+                                                          approved_tuple_count,
+                                                          filter.filter_type);
+                break;
+            }
+            case types::physical_type::BOOL: {
+                auto predicate = constant_filter.constant.value<bool>();
+                filter_selection_switch<bool>(uvf, predicate, indexing, approved_tuple_count, filter.filter_type);
+                break;
             }
             default:
-                throw std::logic_error("TODO: unsupported type for filter selection");
+                throw std::logic_error("Invalid type for filter value");
         }
+        return approved_tuple_count;
     }
 
     void column_segment_t::skip(column_scan_state& state) { state.internal_index = state.row_index; }

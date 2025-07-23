@@ -6,7 +6,10 @@
 #include <components/types/types.hpp>
 #include <cstdint>
 #include <string>
-#include <variant>
+
+namespace components::types {
+    class logical_value_t;
+}
 
 namespace components::document {
 
@@ -39,6 +42,7 @@ namespace components::document {
         std::string_view as_string() const noexcept;
         // value_t* as_array() const noexcept;
         // value_t* as_dict() const noexcept;
+        [[nodiscard]] types::logical_value_t as_logical_value() const;
 
         template<class T>
         T as() const;

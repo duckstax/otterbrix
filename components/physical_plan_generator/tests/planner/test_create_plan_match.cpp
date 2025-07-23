@@ -20,7 +20,7 @@ TEST_CASE("create_plan::match") {
     auto collection = init_collection(&resource);
     {
         auto node_match = make_node_match(&resource, get_name(), nullptr);
-        context_storage_t context;
+        services::context_storage_t context;
         context.emplace(get_name(), d(collection));
         auto plan = create_plan(context, node_match, components::logical_plan::limit_t::unlimit());
         plan->on_execute(nullptr);
@@ -31,7 +31,7 @@ TEST_CASE("create_plan::match") {
             make_node_match(&resource,
                             get_name(),
                             make_compare_expression(&resource, compare_type::eq, key("key"), core::parameter_id_t(1)));
-        context_storage_t context;
+        services::context_storage_t context;
         context.emplace(get_name(), d(collection));
         auto plan = create_plan(context, node_match, components::logical_plan::limit_t::unlimit());
         REQUIRE(node_match->to_string() == R"_($match: {"key": {$eq: #1}})_");

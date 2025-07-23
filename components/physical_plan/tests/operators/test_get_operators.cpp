@@ -3,7 +3,7 @@
 #include <components/tests/generaty.hpp>
 
 using namespace components;
-using namespace services::collection::operators;
+using namespace components::collection::operators;
 using key = components::expressions::key_t;
 
 TEST_CASE("operator::get::get_value") {

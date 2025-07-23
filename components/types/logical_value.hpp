@@ -3,6 +3,7 @@
 #include <cassert>
 #include <chrono>
 #include <memory>
+#include <msgpack.hpp>
 #include <variant>
 
 #include "types.hpp"
@@ -35,6 +36,8 @@ namespace components::types {
         bool operator<=(const logical_value_t& rhs) const;
         bool operator>=(const logical_value_t& rhs) const;
 
+        compare_t compare(const logical_value_t& rhs) const;
+
         const std::vector<logical_value_t>& children() const;
 
         static logical_value_t create_struct(const std::vector<logical_value_t>& fields);
@@ -52,6 +55,23 @@ namespace components::types {
                                           const std::vector<logical_value_t>& values);
         static logical_value_t create_list(const complex_logical_type& type,
                                            const std::vector<logical_value_t>& values);
+
+        static logical_value_t sum(const logical_value_t& value1, const logical_value_t& value2);
+        static logical_value_t subtract(const logical_value_t& value1, const logical_value_t& value2);
+        static logical_value_t mult(const logical_value_t& value1, const logical_value_t& value2);
+        static logical_value_t divide(const logical_value_t& value1, const logical_value_t& value2);
+        static logical_value_t modulus(const logical_value_t& value1, const logical_value_t& value2);
+        static logical_value_t exponent(const logical_value_t& value1, const logical_value_t& value2);
+        static logical_value_t sqr_root(const logical_value_t& value);
+        static logical_value_t cube_root(const logical_value_t& value);
+        static logical_value_t factorial(const logical_value_t& value);
+        static logical_value_t absolute(const logical_value_t& value);
+        static logical_value_t bit_and(const logical_value_t& value1, const logical_value_t& value2);
+        static logical_value_t bit_or(const logical_value_t& value1, const logical_value_t& value2);
+        static logical_value_t bit_xor(const logical_value_t& value1, const logical_value_t& value2);
+        static logical_value_t bit_not(const logical_value_t& value);
+        static logical_value_t bit_shift_l(const logical_value_t& value1, const logical_value_t& value2);
+        static logical_value_t bit_shift_r(const logical_value_t& value1, const logical_value_t& value2);
 
     private:
         complex_logical_type type_;
@@ -72,6 +92,8 @@ namespace components::types {
 
                      // everything bigger then 8 bytes or has no fixed size is allocated on the heap
 
+                     std::unique_ptr<int128_t>,
+                     std::unique_ptr<uint128_t>,
                      std::unique_ptr<std::string>,
                      std::unique_ptr<std::vector<logical_value_t>> // nested
                      >
@@ -80,10 +102,48 @@ namespace components::types {
 
     template<typename T>
     logical_value_t::logical_value_t(T value)
-        : type_(complex_logical_type::to_logical_type<T>())
+        : type_(to_logical_type<T>())
         , value_(value) {
         assert(type_ != logical_type::INVALID);
     }
+
+    template<>
+    inline logical_value_t::logical_value_t(std::chrono::nanoseconds value)
+        : type_(to_logical_type<std::chrono::nanoseconds>())
+        , value_(value.count()) {
+        assert(type_ != logical_type::INVALID);
+    }
+
+    template<>
+    inline logical_value_t::logical_value_t(std::chrono::microseconds value)
+        : type_(to_logical_type<std::chrono::microseconds>())
+        , value_(value.count()) {
+        assert(type_ != logical_type::INVALID);
+    }
+
+    template<>
+    inline logical_value_t::logical_value_t(std::chrono::milliseconds value)
+        : type_(to_logical_type<std::chrono::milliseconds>())
+        , value_(value.count()) {
+        assert(type_ != logical_type::INVALID);
+    }
+
+    template<>
+    inline logical_value_t::logical_value_t(std::chrono::seconds value)
+        : type_(to_logical_type<std::chrono::seconds>())
+        , value_(value.count()) {
+        assert(type_ != logical_type::INVALID);
+    }
+
+    template<>
+    inline logical_value_t::logical_value_t(int128_t value)
+        : type_(logical_type::HUGEINT)
+        , value_(std::make_unique<int128_t>(std::move(value))) {}
+
+    template<>
+    inline logical_value_t::logical_value_t(uint128_t value)
+        : type_(logical_type::UHUGEINT)
+        , value_(std::make_unique<uint128_t>(std::move(value))) {}
 
     template<>
     inline logical_value_t::logical_value_t(std::string value)
@@ -134,8 +194,15 @@ namespace components::types {
     }
     template<>
     inline int64_t logical_value_t::value<int64_t>() const {
-        assert(type_.type() == logical_type::BIGINT);
         return std::get<int64_t>(value_);
+    }
+    template<>
+    inline uint128_t logical_value_t::value<uint128_t>() const {
+        return *std::get<std::unique_ptr<uint128_t>>(value_);
+    }
+    template<>
+    inline int128_t logical_value_t::value<int128_t>() const {
+        return *std::get<std::unique_ptr<int128_t>>(value_);
     }
     template<>
     inline float logical_value_t::value<float>() const {
@@ -235,3 +302,164 @@ namespace components::types {
     }
 
 } // namespace components::types
+
+template<typename Stream>
+void to_msgpack_(msgpack::packer<Stream>& o, const components::types::logical_value_t& value) {
+    switch (value.type().type()) {
+        case components::types::logical_type::BOOLEAN: {
+            o.pack(value.value<bool>());
+            break;
+        }
+        case components::types::logical_type::UTINYINT: {
+            o.pack(value.value<uint8_t>());
+            break;
+        }
+        case components::types::logical_type::USMALLINT: {
+            o.pack(value.value<uint16_t>());
+            break;
+        }
+        case components::types::logical_type::UINTEGER: {
+            o.pack(value.value<uint32_t>());
+            break;
+        }
+        case components::types::logical_type::UBIGINT: {
+            o.pack(value.value<uint64_t>());
+            break;
+        }
+        case components::types::logical_type::TINYINT: {
+            o.pack(value.value<int8_t>());
+            break;
+        }
+        case components::types::logical_type::SMALLINT: {
+            o.pack(value.value<int16_t>());
+            break;
+        }
+        case components::types::logical_type::INTEGER: {
+            o.pack(value.value<int32_t>());
+            break;
+        }
+        case components::types::logical_type::BIGINT: {
+            o.pack(value.value<int64_t>());
+            break;
+        }
+        case components::types::logical_type::FLOAT: {
+            o.pack(value.value<float>());
+            break;
+        }
+        case components::types::logical_type::DOUBLE: {
+            o.pack(value.value<double>());
+            break;
+        }
+        case components::types::logical_type::STRING_LITERAL: {
+            o.pack(value.value<const std::string&>());
+            break;
+        }
+        case components::types::logical_type::NA: {
+            o.pack(msgpack::type::nil_t());
+            break;
+        }
+        default:
+            assert(false && "unsupported type");
+            break;
+    }
+}
+
+inline void to_msgpack_(const components::types::logical_value_t& value, msgpack::object& o) {
+    switch (value.type().type()) {
+        case components::types::logical_type::BOOLEAN: {
+            o.type = msgpack::type::BOOLEAN;
+            o.via.boolean = value.value<bool>();
+            break;
+        }
+        case components::types::logical_type::UTINYINT: {
+            o.type = msgpack::type::POSITIVE_INTEGER;
+            o.via.boolean = value.value<uint8_t>();
+            break;
+        }
+        case components::types::logical_type::USMALLINT: {
+            o.type = msgpack::type::POSITIVE_INTEGER;
+            o.via.boolean = value.value<uint16_t>();
+            break;
+        }
+        case components::types::logical_type::UINTEGER: {
+            o.type = msgpack::type::POSITIVE_INTEGER;
+            o.via.boolean = value.value<uint32_t>();
+            break;
+        }
+        case components::types::logical_type::UBIGINT: {
+            o.type = msgpack::type::POSITIVE_INTEGER;
+            o.via.boolean = value.value<uint64_t>();
+            break;
+        }
+        case components::types::logical_type::TINYINT: {
+            o.type = msgpack::type::NEGATIVE_INTEGER;
+            o.via.boolean = value.value<int8_t>();
+            break;
+        }
+        case components::types::logical_type::SMALLINT: {
+            o.type = msgpack::type::NEGATIVE_INTEGER;
+            o.via.boolean = value.value<int16_t>();
+            break;
+        }
+        case components::types::logical_type::INTEGER: {
+            o.type = msgpack::type::NEGATIVE_INTEGER;
+            o.via.boolean = value.value<int32_t>();
+            break;
+        }
+        case components::types::logical_type::BIGINT: {
+            o.type = msgpack::type::NEGATIVE_INTEGER;
+            o.via.boolean = value.value<int64_t>();
+            break;
+        }
+        case components::types::logical_type::FLOAT: {
+            o.type = msgpack::type::FLOAT32;
+            o.via.boolean = value.value<float>();
+            break;
+        }
+        case components::types::logical_type::DOUBLE: {
+            o.type = msgpack::type::FLOAT64;
+            o.via.boolean = value.value<double>();
+            break;
+        }
+        case components::types::logical_type::STRING_LITERAL: {
+            std::string s = value.value<const std::string&>();
+            o.type = msgpack::type::object_type::STR;
+            o.via.str.size = uint32_t(s.size());
+            o.via.str.ptr = s.c_str();
+            break;
+        }
+        case components::types::logical_type::NA: {
+            o.type = msgpack::type::object_type::NIL;
+            break;
+        }
+        default:
+            assert(false); // should be unreachable;
+            break;
+    }
+}
+
+// User defined class template specialization
+namespace msgpack {
+    MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {
+        namespace adaptor {
+
+            template<>
+            struct pack<components::types::logical_value_t> final {
+                template<typename Stream>
+                packer<Stream>& operator()(msgpack::packer<Stream>& o,
+                                           const components::types::logical_value_t& v) const {
+                    to_msgpack_(o, v);
+                    return o;
+                }
+            };
+
+            template<>
+            struct object_with_zone<components::types::logical_value_t> final {
+                void operator()(msgpack::object::with_zone& o, const components::types::logical_value_t& v) const {
+                    to_msgpack_(v, o);
+                }
+            };
+
+        } // namespace adaptor
+    }     // MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS)
+} // namespace msgpack

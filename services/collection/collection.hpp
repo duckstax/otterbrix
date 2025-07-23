@@ -13,6 +13,10 @@
 #include <components/log/log.hpp>
 #include <components/logical_plan/node.hpp>
 #include <components/session/session.hpp>
+#include <components/table/data_table.hpp>
+#include <components/table/storage/buffer_pool.hpp>
+#include <components/table/storage/in_memory_block_manager.hpp>
+#include <components/table/storage/standard_buffer_manager.hpp>
 
 #include <utility>
 
@@ -28,8 +32,36 @@ namespace services::collection {
 
     using document_id_t = components::document::document_id_t;
     using document_ptr = components::document::document_ptr;
-    using storage_t = core::pmr::btree::btree_t<document_id_t, document_ptr>;
+    using document_storage_t = core::pmr::btree::btree_t<document_id_t, document_ptr>;
     using cursor_storage_t = std::pmr::unordered_map<session_id_t, std::unique_ptr<components::cursor::sub_cursor_t>>;
+
+    class table_storage_t {
+    public:
+        explicit table_storage_t(std::pmr::memory_resource* resource)
+            : buffer_pool_(resource, uint64_t(1) << 32, false, uint64_t(1) << 24)
+            , buffer_manager_(resource, fs_, buffer_pool_)
+            , block_manager_(buffer_manager_, components::table::storage::DEFAULT_BLOCK_ALLOC_SIZE)
+            , table_(std::make_unique<components::table::data_table_t>(
+                  resource,
+                  block_manager_,
+                  std::vector<components::table::column_definition_t>{})) {}
+
+        explicit table_storage_t(std::pmr::memory_resource* resource,
+                                 std::vector<components::table::column_definition_t> columns)
+            : buffer_pool_(resource, uint64_t(1) << 32, false, uint64_t(1) << 24)
+            , buffer_manager_(resource, fs_, buffer_pool_)
+            , block_manager_(buffer_manager_, components::table::storage::DEFAULT_BLOCK_ALLOC_SIZE)
+            , table_(std::make_unique<components::table::data_table_t>(resource, block_manager_, std::move(columns))) {}
+
+        components::table::data_table_t& table() { return *table_; }
+
+    private:
+        core::filesystem::local_file_system_t fs_;
+        components::table::storage::buffer_pool_t buffer_pool_;
+        components::table::storage::standard_buffer_manager_t buffer_manager_;
+        components::table::storage::in_memory_block_manager_t block_manager_;
+        std::unique_ptr<components::table::data_table_t> table_;
+    };
 
     namespace executor {
         class executor_t;
@@ -42,7 +74,8 @@ namespace services::collection {
                                       const actor_zeta::address_t& mdisk,
                                       const log_t& log)
             : resource_(resource)
-            , storage_(resource_)
+            , document_storage_(resource_)
+            , table_storage_(resource_)
             , index_engine_(core::pmr::make_unique<components::index::index_engine_t>(resource_))
             , name_(name)
             , mdisk_(mdisk)
@@ -50,7 +83,25 @@ namespace services::collection {
             assert(resource != nullptr);
         }
 
-        storage_t& storage() noexcept { return storage_; }
+        explicit context_collection_t(std::pmr::memory_resource* resource,
+                                      const collection_full_name_t& name,
+                                      std::vector<components::table::column_definition_t> columns,
+                                      const actor_zeta::address_t& mdisk,
+                                      const log_t& log)
+            : resource_(resource)
+            , document_storage_(resource_)
+            , table_storage_(resource_, std::move(columns))
+            , index_engine_(core::pmr::make_unique<components::index::index_engine_t>(resource_))
+            , name_(name)
+            , mdisk_(mdisk)
+            , log_(log) {
+            assert(resource != nullptr);
+        }
+
+        // they are both accessable for now
+        // TODO: only one should exist at all times for a given context_collection_t
+        document_storage_t& document_storage() noexcept { return document_storage_; }
+        table_storage_t& table_storage() noexcept { return table_storage_; }
 
         components::index::index_engine_ptr& index_engine() noexcept { return index_engine_; }
 
@@ -76,7 +127,8 @@ namespace services::collection {
 
     private:
         std::pmr::memory_resource* resource_;
-        storage_t storage_;
+        document_storage_t document_storage_;
+        table_storage_t table_storage_;
         components::index::index_engine_ptr index_engine_;
 
         collection_full_name_t name_;
