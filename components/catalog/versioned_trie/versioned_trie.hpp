@@ -132,7 +132,7 @@ namespace components::catalog {
         template<typename KeyIter, typename Sentinel>
         iterator insert(KeyIter first, Sentinel last, Value value) {
             if (empty()) {
-                std::unique_ptr<node_t> new_node = std::make_unique<node_t>(resource_, &header_);
+                auto new_node = core::pmr::make_unique<node_t>(resource_, &header_);
                 header_.insert(std::move(new_node));
             }
 
@@ -172,12 +172,12 @@ namespace components::catalog {
 
             if (node->value().has_alive_versions()) {
                 // node has live versions and will not be deleted, do a cleanup
-                size_ -= node->value().cleanup_dead_versions();
+                size_ -= static_cast<size_type>(node->value().cleanup_dead_versions());
                 return;
             }
 
             // node has no children and versions, kill it
-            size_ -= node->value().size();
+            size_ -= static_cast<size_type>(node->value().size());
             const_cast<node_t*>(state.parent_)->erase(state.index_);
 
             // remove all its singular predecessors
@@ -256,7 +256,7 @@ namespace components::catalog {
         node_t* create_children(node_t* node, KeyIter first, Sentinel last) {
             auto retval = node;
             for (; first != last; ++first) {
-                std::unique_ptr<node_t> new_node = std::make_unique<node_t>(resource_, retval);
+                auto new_node = core::pmr::make_unique<node_t>(resource_, retval);
                 retval = retval->insert(*first, comp_, std::move(new_node))->get();
             }
             return retval;

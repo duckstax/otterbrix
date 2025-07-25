@@ -3,6 +3,7 @@
 #include <exception>
 #include <string>
 
+// TODO: assert, nothrow
 namespace components::catalog {
     class catalog_exception : public std::exception {
     protected:

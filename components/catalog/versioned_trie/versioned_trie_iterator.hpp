@@ -72,6 +72,8 @@ namespace components::catalog {
             return ptr_type(reference{std::move(deref_result.key), deref_result.value});
         }
 
+        versioned_entry<Value>& ref_counted() { return version_->get_version(version_index_); };
+
         const_versioned_trie_iterator& operator++() {
             auto node = const_cast<versioned_trie_node<Key, Value>*>(to_node(state_));
             if (node && !node->empty()) {
@@ -194,6 +196,8 @@ namespace components::catalog {
             reference&& deref_result = **this;
             return ptr_type(reference{std::move(deref_result.key), deref_result.value});
         }
+
+        versioned_entry<Value>& ref_counted() { return it_.ref_counted(); };
 
         versioned_trie_iterator& operator++() {
             ++it_;

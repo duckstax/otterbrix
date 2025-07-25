@@ -135,6 +135,7 @@ TEST_CASE("catalog::trie_test") {
             REQUIRE(it->value == 10);
 
             trie.insert(v1, 20);
+            REQUIRE(++it == trie.end());
         }
 
         REQUIRE(trie.find(v1)->value == 20);

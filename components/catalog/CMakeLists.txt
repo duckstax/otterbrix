@@ -1,6 +1,8 @@
 project(catalog CXX)
 
 set(SOURCE_${PROJECT_NAME}
+        versioned_trie/trie_utils.cpp
+
         transaction/schema_diff.cpp
         transaction/metadata_diff.cpp
 
@@ -10,9 +12,11 @@ set(SOURCE_${PROJECT_NAME}
 
         table_id.cpp
         schema.cpp
+        computed_schema.cpp
         table_metadata.cpp
         namespace_storage.cpp
         catalog.cpp
+        catalog_types.cpp
 )
 
 add_library(otterbrix_${PROJECT_NAME}
@@ -35,7 +39,7 @@ target_include_directories(
         PUBLIC
 )
 
-#if (DEV_MODE)
-add_definitions(-DDEV_MODE)
-add_subdirectory(tests)
-#endif ()
+if (DEV_MODE)
+    add_definitions(-DDEV_MODE)
+    add_subdirectory(tests)
+endif ()

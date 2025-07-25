@@ -5,6 +5,7 @@
 #include <optional>
 #include <set>
 #include <vector>
+#include <map>
 
 namespace components::catalog {
     template<typename Value>
@@ -23,6 +24,8 @@ namespace components::catalog {
         bool is_alive() const { return ref_count > 0; }
 
         Value value;
+
+    private:
         mutable uint64_t ref_count = 0;
     };
 

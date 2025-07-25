@@ -25,11 +25,14 @@ namespace components::catalog {
         // table operations
         [[nodiscard]] std::pmr::vector<table_id> list_tables(const table_namespace_t& namespace_name) const;
         [[nodiscard]] const schema& get_table_schema(const table_id& id) const;
+        [[nodiscard]] computed_schema& get_computed_table_schema(const table_id& id) const;
 
         void create_table(const table_id& id, table_metadata meta);
+        [[nodiscard]] computed_schema& create_computed_table(const table_id& id);
         void drop_table(const table_id& id);
         void rename_table(const table_id& from, std::pmr::string to);
         [[nodiscard]] bool table_exists(const table_id& id) const;
+        [[nodiscard]] bool table_computes(const table_id& id) const;
 
         transaction_scope begin_transaction(const table_id& id);
 

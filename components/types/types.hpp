@@ -285,10 +285,7 @@ namespace components::types {
             DECIMAL = 5,
             ENUM = 6,
             USER = 7,
-            FUNCTION = 8,
-            DETAILED_STRUCT = 9,
-            DETAILED_LIST = 10,
-            DETAILED_MAP = 11,
+            FUNCTION = 8
         };
 
         logical_type_extention() = default;
@@ -319,33 +316,21 @@ namespace components::types {
     class map_logical_type_extention : public logical_type_extention {
     public:
         map_logical_type_extention(const complex_logical_type& key, const complex_logical_type& value);
+        map_logical_type_extention(uint64_t key_id,
+                                   const types::complex_logical_type& key,
+                                   uint64_t value_id,
+                                   const types::complex_logical_type& value,
+                                   bool value_required);
 
         const complex_logical_type& key() const noexcept { return key_; }
         const complex_logical_type& value() const noexcept { return value_; }
-
-    protected:
-        map_logical_type_extention(extention_type extention,
-                                   const complex_logical_type& key,
-                                   const complex_logical_type& value);
-
-    private:
-        complex_logical_type key_;
-        complex_logical_type value_;
-    };
-
-    class detailed_map_logical_type_extention : public map_logical_type_extention {
-    public:
-        detailed_map_logical_type_extention(uint64_t key_id,
-                                            const types::complex_logical_type& key,
-                                            uint64_t value_id,
-                                            const types::complex_logical_type& value,
-                                            bool value_required);
-
         uint64_t key_id() const { return key_id_; }
         uint64_t value_id() const { return value_id_; }
         bool value_required() const { return value_required_; }
 
     private:
+        complex_logical_type key_;
+        complex_logical_type value_;
         uint64_t key_id_;
         uint64_t value_id_;
         bool value_required_;
@@ -354,23 +339,14 @@ namespace components::types {
     class list_logical_type_extention : public logical_type_extention {
     public:
         explicit list_logical_type_extention(complex_logical_type type);
+        list_logical_type_extention(uint64_t field_id, const types::complex_logical_type& type, bool required);
+
         const complex_logical_type& node() const noexcept { return type_; }
-
-    protected:
-        list_logical_type_extention(extention_type extention, complex_logical_type type);
-
-    private:
-        complex_logical_type type_;
-    };
-
-    class detailed_list_logical_type_extention : public types::list_logical_type_extention {
-    public:
-        detailed_list_logical_type_extention(uint64_t field_id, const types::complex_logical_type& type, bool required);
-
         uint64_t field_id() const noexcept { return field_id_; }
         bool required() const noexcept { return required_; }
 
     private:
+        complex_logical_type type_;
         uint64_t field_id_;
         bool required_;
     };
@@ -378,24 +354,16 @@ namespace components::types {
     class struct_logical_type_extention : public logical_type_extention {
     public:
         explicit struct_logical_type_extention(const std::vector<complex_logical_type>& fields);
-        const std::vector<complex_logical_type>& child_types() const;
 
-    protected:
-        struct_logical_type_extention(extention_type extention, const std::vector<complex_logical_type>& fields);
-
-    private:
-        std::vector<complex_logical_type> fields_;
-    };
-
-    class detailed_struct_logical_type_extention : public types::struct_logical_type_extention {
-    public:
         // fields must be aliased
-        detailed_struct_logical_type_extention(const std::vector<types::complex_logical_type>& columns,
-                                               const std::vector<field_description>& descriptions);
+        struct_logical_type_extention(const std::vector<types::complex_logical_type>& columns,
+                                      const std::vector<field_description>& descriptions);
 
+        const std::vector<complex_logical_type>& child_types() const;
         const std::vector<field_description>& descriptions() const { return descriptions_; }
 
     private:
+        std::vector<complex_logical_type> fields_;
         std::vector<field_description> descriptions_;
     };
 

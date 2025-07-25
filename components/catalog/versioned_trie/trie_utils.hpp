@@ -6,22 +6,16 @@
 #include <utility>
 #include <vector>
 
+#include <core/pmr.hpp>
+
 namespace components::catalog {
     template<typename Key, typename Value>
     struct versioned_trie_node;
 
     struct trie_match_result {
-        trie_match_result()
-            : node(nullptr)
-            , size(0)
-            , match(false)
-            , leaf(false) {}
+        trie_match_result();
 
-        trie_match_result(void const* n, std::ptrdiff_t s, bool m, bool l)
-            : node(n)
-            , size(s)
-            , match(m)
-            , leaf(l) {}
+        trie_match_result(void const* n, std::ptrdiff_t s, bool m, bool l);
 
         void const* node;
         std::ptrdiff_t size;
@@ -36,24 +30,23 @@ namespace components::catalog {
     };
 
     struct parent_index {
-        parent_index()
-            : value_(std::numeric_limits<std::size_t>::max()) {}
+        parent_index();
 
-        std::size_t value() const { return value_; }
+        std::size_t value() const;
 
         template<typename Key, typename Value, typename Iter>
-        void insert_at(std::unique_ptr<versioned_trie_node<Key, Value>> const& child,
+        void insert_at(core::pmr::unique_ptr<versioned_trie_node<Key, Value>> const& child,
                        std::ptrdiff_t offset,
                        Iter it,
                        Iter end) {
-            child->parent_index_.value_ = offset;
+            child->parent_index_.value_ = static_cast<std::size_t>(offset);
             for (; it != end; ++it) {
                 ++(*it)->parent_index_.value_;
             }
         }
 
         template<typename Key, typename Value>
-        void insert_ptr(std::unique_ptr<versioned_trie_node<Key, Value>> const& child) {
+        void insert_ptr(core::pmr::unique_ptr<versioned_trie_node<Key, Value>> const& child) {
             child->parent_index_.value_ = 0;
         }
 

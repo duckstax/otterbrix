@@ -51,18 +51,6 @@ namespace components::types {
                     extention_ = std::make_unique<function_logical_type_extention>(
                         *static_cast<function_logical_type_extention*>(other.extention_.get()));
                     break;
-                case logical_type_extention::extention_type::DETAILED_STRUCT:
-                    extention_ = std::make_unique<detailed_struct_logical_type_extention>(
-                        *static_cast<detailed_struct_logical_type_extention*>(other.extention_.get()));
-                    break;
-                case logical_type_extention::extention_type::DETAILED_LIST:
-                    extention_ = std::make_unique<detailed_list_logical_type_extention>(
-                        *static_cast<detailed_list_logical_type_extention*>(other.extention_.get()));
-                    break;
-                case logical_type_extention::extention_type::DETAILED_MAP:
-                    extention_ = std::make_unique<detailed_map_logical_type_extention>(
-                        *static_cast<detailed_map_logical_type_extention*>(other.extention_.get()));
-                    break;
                 default:
                     assert(false && "complex_logical_type copy: unimplemented extention type");
             }
@@ -107,18 +95,6 @@ namespace components::types {
                 case logical_type_extention::extention_type::FUNCTION:
                     extention_ = std::make_unique<function_logical_type_extention>(
                         *static_cast<function_logical_type_extention*>(other.extention_.get()));
-                    break;
-                case logical_type_extention::extention_type::DETAILED_STRUCT:
-                    extention_ = std::make_unique<detailed_struct_logical_type_extention>(
-                        *static_cast<detailed_struct_logical_type_extention*>(other.extention_.get()));
-                    break;
-                case logical_type_extention::extention_type::DETAILED_LIST:
-                    extention_ = std::make_unique<detailed_list_logical_type_extention>(
-                        *static_cast<detailed_list_logical_type_extention*>(other.extention_.get()));
-                    break;
-                case logical_type_extention::extention_type::DETAILED_MAP:
-                    extention_ = std::make_unique<detailed_map_logical_type_extention>(
-                        *static_cast<detailed_map_logical_type_extention*>(other.extention_.get()));
                     break;
                 default:
                     assert(false && "complex_logical_type copy: unimplemented extention type");
@@ -381,54 +357,48 @@ namespace components::types {
                                                            const complex_logical_type& value)
         : logical_type_extention(extention_type::MAP)
         , key_(key)
-        , value_(value) {}
+        , value_(value)
+        , key_id_(0)
+        , value_id_(0)
+        , value_required_(true) {}
 
-    map_logical_type_extention::map_logical_type_extention(extention_type extention,
-                                                           const complex_logical_type& key,
-                                                           const complex_logical_type& value)
-        : logical_type_extention(extention)
+    map_logical_type_extention::map_logical_type_extention(uint64_t key_id,
+                                                           const types::complex_logical_type& key,
+                                                           uint64_t value_id,
+                                                           const types::complex_logical_type& value,
+                                                           bool value_required)
+
+        : logical_type_extention(extention_type::MAP)
         , key_(key)
-        , value_(value) {}
-
-    detailed_map_logical_type_extention::detailed_map_logical_type_extention(uint64_t key_id,
-                                                                             const types::complex_logical_type& key,
-                                                                             uint64_t value_id,
-                                                                             const types::complex_logical_type& value,
-                                                                             bool value_required)
-
-        : map_logical_type_extention(extention_type::DETAILED_MAP, key, value)
+        , value_(value)
         , key_id_(key_id)
         , value_id_(value_id)
         , value_required_(value_required) {}
 
     list_logical_type_extention::list_logical_type_extention(complex_logical_type type)
         : logical_type_extention(extention_type::LIST)
-        , type_(std::move(type)) {}
+        , type_(std::move(type))
+        , field_id_(0)
+        , required_(true) {}
 
-    list_logical_type_extention::list_logical_type_extention(extention_type extention, complex_logical_type type)
-        : logical_type_extention(extention)
-        , type_(std::move(type)) {}
-
-    detailed_list_logical_type_extention::detailed_list_logical_type_extention(uint64_t field_id,
-                                                                               const types::complex_logical_type& type,
-                                                                               bool required)
-        : list_logical_type_extention(extention_type::DETAILED_LIST, type)
+    list_logical_type_extention::list_logical_type_extention(uint64_t field_id,
+                                                             const types::complex_logical_type& type,
+                                                             bool required)
+        : logical_type_extention(extention_type::LIST)
+        , type_(type)
         , field_id_(field_id)
         , required_(required) {}
 
     struct_logical_type_extention::struct_logical_type_extention(const std::vector<complex_logical_type>& fields)
         : logical_type_extention(extention_type::STRUCT)
-        , fields_(fields) {}
+        , fields_(fields)
+        , descriptions_() {}
 
-    struct_logical_type_extention::struct_logical_type_extention(extention_type extention,
-                                                                 const std::vector<complex_logical_type>& fields)
-        : logical_type_extention(extention)
-        , fields_(fields) {}
-
-    detailed_struct_logical_type_extention::detailed_struct_logical_type_extention(
+    struct_logical_type_extention::struct_logical_type_extention(
         const std::vector<types::complex_logical_type>& columns,
         const std::vector<field_description>& descriptions)
-        : struct_logical_type_extention(extention_type::DETAILED_STRUCT, columns)
+        : logical_type_extention(extention_type::STRUCT)
+        , fields_(columns)
         , descriptions_(descriptions) {
         assert(columns.size() == descriptions.size());
     }

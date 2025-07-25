@@ -121,7 +121,7 @@ namespace components::catalog {
         }
 
         return schema(resource,
-                      create_struct(std::move(new_columns), std::move(new_desc)),
+                      create_struct(new_columns, new_desc),
                       new_primary_key.value_or(base_schema.primary_key()));
     }
 

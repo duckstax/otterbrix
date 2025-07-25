@@ -1,11 +1,5 @@
 #pragma once
 
-#include <algorithm>
-#include <memory>
-#include <optional>
-#include <type_traits>
-#include <vector>
-
 #include "trie_containers.hpp"
 #include "trie_utils.hpp"
 
@@ -16,26 +10,30 @@ namespace components::catalog {
         using keys_t = std::vector<key_element>;
         using key_iterator = typename keys_t::const_iterator;
 
-        using children_t = std::vector<std::unique_ptr<versioned_trie_node>>;
+        using children_t = std::vector<core::pmr::unique_ptr<versioned_trie_node>>;
         using iterator = typename children_t::iterator;
         using const_iterator = typename children_t::const_iterator;
 
         versioned_trie_node(std::pmr::memory_resource* resource)
             : parent_(nullptr)
-            , value_(resource) {}
+            , value_(resource)
+            , resource(resource) {}
 
         versioned_trie_node(std::pmr::memory_resource* resource, versioned_trie_node* parent)
             : parent_(parent)
-            , value_(resource) {}
+            , value_(resource)
+            , resource(resource) {}
 
         versioned_trie_node(versioned_trie_node const& other)
             : keys_(other.keys_)
-            , value_(other.value_)
             , parent_(other.parent_)
-            , parent_index_(other.parent_index_) {
+            , parent_index_(other.parent_index_)
+            , value_(other.value_)
+            , resource(other.resource) {
             children_.reserve(other.children_.size());
             for (auto const& node : other.children_) {
-                std::unique_ptr<versioned_trie_node> new_node(new versioned_trie_node(*node));
+                core::pmr::unique_ptr<versioned_trie_node> new_node(new versioned_trie_node(*node),
+                                                                    core::pmr::deleter_t(resource));
                 children_.push_back(std::move(new_node));
             }
         }
@@ -134,6 +132,7 @@ namespace components::catalog {
                 node->parent_ = &other;
             }
             std::swap(parent_index_, other.parent_index_);
+            std::swap(resource, other.resource);
         }
 
         versioned_value<Value>& value() { return value_; }
@@ -143,7 +142,7 @@ namespace components::catalog {
         iterator end() { return children_.end(); }
 
         template<typename Compare>
-        iterator insert(key_element const& e, Compare const& comp, std::unique_ptr<versioned_trie_node>&& child) {
+        iterator insert(key_element const& e, Compare const& comp, core::pmr::unique_ptr<versioned_trie_node>&& child) {
             assert(child->empty());
             auto it = std::lower_bound(keys_.begin(), keys_.end(), e, comp);
             it = keys_.insert(it, e);
@@ -153,7 +152,7 @@ namespace components::catalog {
             return children_.insert(child_it, std::move(child));
         }
 
-        iterator insert(std::unique_ptr<versioned_trie_node>&& child) {
+        iterator insert(core::pmr::unique_ptr<versioned_trie_node>&& child) {
             assert(empty());
             parent_index_.insert_ptr(child);
             return children_.insert(children_.begin(), std::move(child));
@@ -169,10 +168,10 @@ namespace components::catalog {
         }
 
         void erase(versioned_trie_node const* child) {
-            auto const it =
-                std::find_if(children_.begin(),
-                             children_.end(),
-                             [child](std::unique_ptr<versioned_trie_node> const& ptr) { return child == ptr.get(); });
+            auto const it = std::find_if(
+                children_.begin(),
+                children_.end(),
+                [child](core::pmr::unique_ptr<versioned_trie_node> const& ptr) { return child == ptr.get(); });
             assert(it != children_.end());
             erase(it - children_.begin());
         }
@@ -198,6 +197,7 @@ namespace components::catalog {
         versioned_trie_node* parent_;
         parent_index parent_index_;
         versioned_value<Value> value_;
+        std::pmr::memory_resource* resource;
 
         friend struct parent_index;
     };

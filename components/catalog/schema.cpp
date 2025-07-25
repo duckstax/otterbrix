@@ -9,7 +9,7 @@ namespace components::catalog {
         : schema_struct(schema_struct)
         , primary_key_field_ids(primary_key, resource)
         , id_to_struct_idx(resource) {
-        auto& detailed_struct = to_detailed_struct(schema_struct);
+        auto& detailed_struct = to_struct(schema_struct);
         {
             std::pmr::unordered_set<std::pmr::string> names(resource);
             for (const auto& type : detailed_struct.child_types()) {
@@ -49,11 +49,11 @@ namespace components::catalog {
     }
 
     const types::field_description& schema::get_field_description(const std::pmr::string& name) const {
-        return to_detailed_struct(schema_struct).descriptions()[find_idx_by_name(name)];
+        return to_struct(schema_struct).descriptions()[find_idx_by_name(name)];
     }
 
     const types::field_description& schema::get_field_description(components::catalog::field_id_t id) const {
-        return to_detailed_struct(schema_struct).descriptions()[find_idx_by_id(id)];
+        return to_struct(schema_struct).descriptions()[find_idx_by_id(id)];
     }
 
     const types::complex_logical_type& schema::find_field(field_id_t id) const {
@@ -65,7 +65,7 @@ namespace components::catalog {
     const std::vector<types::complex_logical_type>& schema::columns() const { return schema_struct.child_types(); }
 
     const std::vector<types::field_description>& schema::descriptions() const {
-        return to_detailed_struct(schema_struct).descriptions();
+        return to_struct(schema_struct).descriptions();
     }
 
     field_id_t schema::highest_field_id() const { return highest; }
