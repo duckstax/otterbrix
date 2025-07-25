@@ -31,7 +31,6 @@ target_link_libraries(
         otterbrix_${PROJECT_NAME} PRIVATE
         otterbrix::types
         magic_enum::magic_enum
-        Boost::boost # temporary
 )
 
 target_include_directories(

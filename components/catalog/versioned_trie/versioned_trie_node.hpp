@@ -7,25 +7,30 @@ namespace components::catalog {
     template<typename Key, typename Value>
     struct versioned_trie_node {
         using key_element = typename Key::value_type;
-        using keys_t = std::vector<key_element>;
+        using keys_t = std::pmr::vector<key_element>;
         using key_iterator = typename keys_t::const_iterator;
 
-        using children_t = std::vector<core::pmr::unique_ptr<versioned_trie_node>>;
+        using children_t = std::pmr::vector<core::pmr::unique_ptr<versioned_trie_node>>;
         using iterator = typename children_t::iterator;
         using const_iterator = typename children_t::const_iterator;
 
         versioned_trie_node(std::pmr::memory_resource* resource)
-            : parent_(nullptr)
+            : keys_(resource)
+            , children_(resource)
+            , parent_(nullptr)
             , value_(resource)
             , resource(resource) {}
 
         versioned_trie_node(std::pmr::memory_resource* resource, versioned_trie_node* parent)
-            : parent_(parent)
+            : keys_(resource)
+            , children_(resource)
+            , parent_(parent)
             , value_(resource)
             , resource(resource) {}
 
         versioned_trie_node(versioned_trie_node const& other)
             : keys_(other.keys_)
+            , children_(other.resource)
             , parent_(other.parent_)
             , parent_index_(other.parent_index_)
             , value_(other.value_)

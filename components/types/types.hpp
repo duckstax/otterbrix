@@ -339,7 +339,7 @@ namespace components::types {
     class list_logical_type_extention : public logical_type_extention {
     public:
         explicit list_logical_type_extention(complex_logical_type type);
-        list_logical_type_extention(uint64_t field_id, const types::complex_logical_type& type, bool required);
+        list_logical_type_extention(uint64_t field_id, complex_logical_type type, bool required);
 
         const complex_logical_type& node() const noexcept { return type_; }
         uint64_t field_id() const noexcept { return field_id_; }
@@ -359,7 +359,7 @@ namespace components::types {
         struct_logical_type_extention(const std::vector<types::complex_logical_type>& columns,
                                       const std::vector<field_description>& descriptions);
 
-        const std::vector<complex_logical_type>& child_types() const;
+        const std::vector<complex_logical_type>& child_types() const { return fields_; }
         const std::vector<field_description>& descriptions() const { return descriptions_; }
 
     private:

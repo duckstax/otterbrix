@@ -382,10 +382,10 @@ namespace components::types {
         , required_(true) {}
 
     list_logical_type_extention::list_logical_type_extention(uint64_t field_id,
-                                                             const types::complex_logical_type& type,
+                                                             complex_logical_type type,
                                                              bool required)
         : logical_type_extention(extention_type::LIST)
-        , type_(type)
+        , type_(std::move(type))
         , field_id_(field_id)
         , required_(required) {}
 
@@ -402,8 +402,6 @@ namespace components::types {
         , descriptions_(descriptions) {
         assert(columns.size() == descriptions.size());
     }
-
-    const std::vector<complex_logical_type>& struct_logical_type_extention::child_types() const { return fields_; }
 
     decimal_logical_type_extention::decimal_logical_type_extention(uint8_t width, uint8_t scale)
         : logical_type_extention(extention_type::DECIMAL)
