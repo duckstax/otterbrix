@@ -415,6 +415,19 @@ namespace components::types {
         uint64_t length;
     };
 
+    struct field_description {
+        field_description() = default;
+
+        field_description(uint64_t field_id, bool required = true, std::string doc = "")
+            : field_id(field_id)
+            , required(required)
+            , doc(std::move(doc)) {}
+
+        uint64_t field_id;
+        bool required;
+        std::string doc;
+    };
+
     class logical_type_extention {
     public:
         // duplicates from logical_type, but declared separatly for clarity
@@ -459,32 +472,55 @@ namespace components::types {
     class map_logical_type_extention : public logical_type_extention {
     public:
         map_logical_type_extention(const complex_logical_type& key, const complex_logical_type& value);
+        map_logical_type_extention(uint64_t key_id,
+                                   const types::complex_logical_type& key,
+                                   uint64_t value_id,
+                                   const types::complex_logical_type& value,
+                                   bool value_required);
 
         const complex_logical_type& key() const noexcept { return key_; }
         const complex_logical_type& value() const noexcept { return value_; }
+        uint64_t key_id() const { return key_id_; }
+        uint64_t value_id() const { return value_id_; }
+        bool value_required() const { return value_required_; }
 
     private:
         complex_logical_type key_;
         complex_logical_type value_;
+        uint64_t key_id_;
+        uint64_t value_id_;
+        bool value_required_;
     };
 
     class list_logical_type_extention : public logical_type_extention {
     public:
         explicit list_logical_type_extention(complex_logical_type type);
+        list_logical_type_extention(uint64_t field_id, complex_logical_type type, bool required);
+
         const complex_logical_type& node() const noexcept { return type_; }
+        uint64_t field_id() const noexcept { return field_id_; }
+        bool required() const noexcept { return required_; }
 
     private:
         complex_logical_type type_;
+        uint64_t field_id_;
+        bool required_;
     };
 
     class struct_logical_type_extention : public logical_type_extention {
     public:
         explicit struct_logical_type_extention(const std::vector<complex_logical_type>& fields);
 
-        const std::vector<complex_logical_type>& child_types() const;
+        // fields must be aliased
+        struct_logical_type_extention(const std::vector<types::complex_logical_type>& columns,
+                                      const std::vector<field_description>& descriptions);
+
+        const std::vector<complex_logical_type>& child_types() const { return fields_; }
+        const std::vector<field_description>& descriptions() const { return descriptions_; }
 
     private:
         std::vector<complex_logical_type> fields_;
+        std::vector<field_description> descriptions_;
     };
 
     class decimal_logical_type_extention : public logical_type_extention {

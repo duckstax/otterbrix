@@ -5,6 +5,8 @@
 #include <type_traits>
 
 namespace core::pmr {
+    template<class Target>
+    void deallocate_ptr(std::pmr::memory_resource* ptr, Target* target);
 
     class deleter_t final {
     public:
@@ -13,9 +15,7 @@ namespace core::pmr {
 
         template<class T>
         void operator()(T* target) {
-            auto align = alignof(T);
-            target->~T();
-            ptr_->deallocate(target, sizeof(T), align);
+            deallocate_ptr(ptr_, target);
         }
 
     private:
@@ -70,7 +70,7 @@ namespace core::pmr {
     template<class Target>
     void deallocate_ptr(std::pmr::memory_resource* ptr, Target* target) {
         auto align = alignof(Target);
-        target->~T();
+        target->~Target();
         ptr->deallocate(target, sizeof(Target), align);
     }
 
