@@ -31,6 +31,9 @@ target_link_libraries(
         otterbrix_${PROJECT_NAME} PRIVATE
         otterbrix::types
         magic_enum::magic_enum
+        absl::int128
+        Boost::boost
+        msgpackc-cxx
 )
 
 target_include_directories(

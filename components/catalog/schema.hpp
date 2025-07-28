@@ -4,6 +4,7 @@
 #include "catalog_types.hpp"
 
 #include <algorithm>
+#include <memory_resource>
 #include <unordered_map>
 #include <unordered_set>
 

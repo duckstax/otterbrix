@@ -6,7 +6,6 @@
 
 #include <components/base/collection_full_name.hpp>
 #include <components/types/types.hpp>
-#include <magic_enum.hpp>
 #include <unordered_map>
 #include <unordered_set>
 

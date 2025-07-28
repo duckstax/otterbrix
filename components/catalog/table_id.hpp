@@ -3,6 +3,7 @@
 #include "catalog_exception.hpp"
 
 #include <components/base/collection_full_name.hpp>
+#include <memory_resource>
 #include <string>
 #include <vector>
 

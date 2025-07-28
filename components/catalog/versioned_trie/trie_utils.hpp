@@ -4,7 +4,6 @@
 #include <memory>
 #include <optional>
 #include <utility>
-#include <vector>
 
 #include <core/pmr.hpp>
 

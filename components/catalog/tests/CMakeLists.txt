@@ -15,6 +15,9 @@ target_link_libraries(
         otterbrix::catalog
         Catch2::Catch2
         magic_enum::magic_enum
+        absl::int128
+        Boost::boost
+        msgpackc-cxx
 )
 
 include(CTest)
