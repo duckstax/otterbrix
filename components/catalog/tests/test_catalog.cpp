@@ -172,3 +172,69 @@ TEST_CASE("catalog::trie_test") {
         REQUIRE(trie.empty());
     }
 }
+
+TEST_CASE("catalog::compute_schema") {
+    auto mr = std::pmr::synchronized_pool_resource();
+
+    catalog cat(&mr);
+    cat.create_namespace({"db"});
+    collection_full_name_t full{"db", "name"};
+
+    computed_schema& sch = cat.create_computing_table({&mr, full});
+    std::vector<complex_logical_type> types{logical_type::BOOLEAN,
+                                            logical_type::INTEGER,
+                                            logical_type::INTEGER_LITERAL,
+                                            logical_type::INTERVAL};
+    SECTION("simple") {
+        size_t cnt = 0;
+        auto types_copy = types;
+        for (const auto& t : types_copy) {
+            std::pmr::string field_str = "/field" + std::pmr::string(std::to_string(cnt++));
+            sch.append(field_str, t);
+            auto vs = sch.find_field_versions(field_str);
+            REQUIRE(vs.size() == 1);
+            REQUIRE(vs.back().type() == t.type());
+        }
+
+        auto str = sch.latest_types_struct();
+        for (const auto& t : types_copy) {
+            complex_logical_type::contains(str, t.type());
+        }
+    }
+
+    SECTION("MVCC") {
+        size_t cnt = 0;
+        auto types_copy = types;
+        std::pmr::string field_str = "/field";
+        for (const auto& t : types_copy) {
+            sch.append(field_str, t);
+            auto vs = sch.find_field_versions(field_str);
+            REQUIRE(vs.size() == ++cnt);
+        }
+
+        REQUIRE(sch.find_field_versions(field_str) == types_copy);
+
+        for (const auto& t : types) {
+            types_copy.erase(std::remove_if(types_copy.begin(), types_copy.end(), [&t](complex_logical_type type) {
+                return type.type() == t.type();
+            }));
+
+            sch.drop(field_str, t);
+            if (!types_copy.empty()) {
+                auto vs = complex_logical_type::create_struct(sch.find_field_versions(field_str));
+                for (const auto& t_alive : types_copy) {
+                    REQUIRE(complex_logical_type::contains(vs, t_alive.type()));
+                }
+            }
+        }
+
+        REQUIRE(cat.get_computing_table_schema({&mr, full}).latest_types_struct().child_types().empty());
+        std::pmr::string new_name = "test";
+        cat.rename_computing_table({&mr, full}, new_name);
+
+        REQUIRE(cat.table_computes({&mr, {"db"}, new_name}));
+        REQUIRE_FALSE(cat.table_computes({&mr, full}));
+
+        REQUIRE_FALSE(cat.table_exists({&mr, full}));
+    }
+}

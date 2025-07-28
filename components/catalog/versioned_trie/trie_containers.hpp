@@ -1,11 +1,11 @@
 #pragma once
 
 #include <algorithm>
+#include <map>
 #include <memory>
 #include <optional>
 #include <set>
 #include <vector>
-#include <map>
 
 namespace components::catalog {
     template<typename Value>
@@ -32,6 +32,8 @@ namespace components::catalog {
     template<typename Value>
     class versioned_value {
     public:
+        using versions_t = std::pmr::map<std::size_t, versioned_entry<Value>>;
+
         versioned_value() = default;
 
         versioned_value(std::pmr::memory_resource* resource)
@@ -44,6 +46,8 @@ namespace components::catalog {
         };
 
         versioned_entry<Value>& get_version(std::size_t idx) const { return versions_.at(idx); }
+
+        const versions_t& get_versions() const { return versions_; }
 
         void add_version(std::size_t version, Value v) const {
             versions_.emplace(version, versioned_entry<Value>(std::move(v)));
@@ -83,7 +87,7 @@ namespace components::catalog {
     private:
         auto get_last_element() const { return std::prev(versions_.end()); }
 
-        mutable std::pmr::map<std::size_t, versioned_entry<Value>> versions_;
+        mutable versions_t versions_;
     };
 
     template<typename Key, typename Value>

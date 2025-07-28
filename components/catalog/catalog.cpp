@@ -2,6 +2,9 @@
 #include "catalog_exception.hpp"
 #include "transaction/transaction_scope.hpp"
 
+namespace {
+}
+
 namespace components::catalog {
     catalog::catalog(std::pmr::memory_resource* resource)
         : namespaces(resource)
@@ -59,6 +62,13 @@ namespace components::catalog {
         return it->second.current_schema();
     }
 
+    computed_schema& catalog::get_computing_table_schema(const table_id& id) const {
+        auto& info = namespaces.get_namespace_info(id.get_namespace()).computing;
+        auto it = info.find(id.table_name());
+        assert(it != info.end());
+        return it->second;
+    }
+
     void catalog::create_table(const table_id& id, table_metadata meta) {
         if (!namespace_exists(id.get_namespace())) {
             throw no_such_namespace_exception("Namespace does not exist for table: " + id.to_string());
@@ -71,34 +81,80 @@ namespace components::catalog {
         namespaces.get_namespace_info(id.get_namespace()).tables.emplace(id.table_name(), std::move(meta));
     }
 
-    // todo: test drop during transaction
-    void catalog::drop_table(const table_id& id) {
-        if (!table_exists(id)) {
+    computed_schema& catalog::create_computing_table(const table_id& id) {
+        if (!namespace_exists(id.get_namespace())) {
+            throw no_such_namespace_exception("Namespace does not exist for table: " + id.to_string());
+        }
+
+        if (table_computes(id)) {
+            throw already_exists_exception("Table already being computed: " + id.to_string());
+        }
+
+        auto it = namespaces.get_namespace_info(id.get_namespace())
+                      .computing.emplace(id.table_name(), computed_schema(resource));
+        return it.first->second;
+    }
+
+    void catalog::drop_table(const table_id& id) { drop_table_impl<schema_type::REGULAR>(id); }
+
+    void catalog::drop_computing_table(const table_id& id) { drop_table_impl<schema_type::COMPUTING>(id); }
+
+    void catalog::rename_table(const table_id& from, std::pmr::string to) {
+        rename_table_impl<schema_type::REGULAR>(from, to);
+    }
+
+    void catalog::rename_computing_table(const table_id& from, std::pmr::string to) {
+        rename_table_impl<schema_type::COMPUTING>(from, to);
+    }
+
+    bool catalog::table_exists(const table_id& id) const { return table_exists_impl<schema_type::REGULAR>(id); }
+
+    bool catalog::table_computes(const components::catalog::table_id& id) const {
+        return table_exists_impl<schema_type::COMPUTING>(id);
+    }
+
+    template<catalog::schema_type type>
+    void catalog::drop_table_impl(const table_id& id) {
+        if (!table_exists_impl<type>(id)) {
             throw no_such_table_exception("Table does not exist: " + id.to_string());
         }
 
-        namespaces.get_namespace_info(id.get_namespace()).tables.erase(id.table_name());
+        auto& info = get_map_impl<type>(id.get_namespace());
+        info.erase(id.table_name());
     }
 
-    // todo: test rename during transaction
-    void catalog::rename_table(const table_id& from, std::pmr::string to) {
-        if (!table_exists(from)) {
+    template<catalog::schema_type type>
+    void catalog::rename_table_impl(const table_id& from, std::pmr::string to) {
+        if (!table_exists_impl<type>(from)) {
             throw no_such_table_exception("Source table does not exist: " + from.to_string());
         }
 
-        if (table_exists(table_id(resource, from.get_namespace(), to))) {
+        if (table_exists_impl<type>(table_id(resource, from.get_namespace(), to))) {
             throw already_exists_exception("Target table already exists: " + std::string(to));
         }
 
-        auto& info = namespaces.get_namespace_info(from.get_namespace()).tables;
+        auto& info = get_map_impl<type>(from.get_namespace());
         auto node = info.extract(from.table_name());
         node.key() = to;
         info.insert(std::move(node));
     }
 
-    bool catalog::table_exists(const table_id& id) const {
-        const auto& info = namespaces.get_namespace_info(id.get_namespace()).tables;
+    template<catalog::schema_type type>
+    bool catalog::table_exists_impl(const table_id& id) const {
+        const auto& info = get_map_impl<type>(id.get_namespace());
         return info.find(id.table_name()) != info.end();
+    }
+
+    template<catalog::schema_type type>
+    std::pmr::map<std::pmr::string,
+                  std::conditional_t<type == catalog::schema_type::REGULAR, table_metadata, computed_schema>>&
+    catalog::get_map_impl(const table_namespace_t& ns) const {
+        auto& info = namespaces.get_namespace_info(ns);
+        if constexpr (type == schema_type::REGULAR) {
+            return info.tables;
+        } else {
+            return info.computing;
+        }
     }
 
     transaction_scope catalog::begin_transaction(const table_id& id) {

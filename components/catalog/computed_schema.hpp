@@ -6,32 +6,28 @@
 
 #include <components/base/collection_full_name.hpp>
 #include <components/types/types.hpp>
+#include <magic_enum.hpp>
 #include <unordered_map>
 #include <unordered_set>
 
 namespace components::catalog {
     class computed_schema {
-        using versions = std::pmr::vector<types::complex_logical_type>;
-
     public:
         explicit computed_schema(std::pmr::memory_resource* resource);
 
-        void append(std::pmr::string json, const components::types::logical_type& type);
-        void drop(std::pmr::string json, const components::types::logical_type& type);
+        void append(std::pmr::string json, const types::complex_logical_type& type);
+        void drop(std::pmr::string json, const types::complex_logical_type& type);
 
-        const versions& find_field_versions(field_id_t id) const;
-        const versions& find_field_versions(const std::pmr::string& name) const;
-
-        [[nodiscard]] const std::vector<types::complex_logical_type>& latest_columns() const;
-        [[nodiscard]] field_id_t highest_field_id() const;
+        [[nodiscard]] std::vector<types::complex_logical_type> find_field_versions(const std::pmr::string& name) const;
+        [[nodiscard]] types::complex_logical_type latest_types_struct() const;
 
     private:
-        versioned_trie<std::pmr::string, components::types::logical_type> fields;
-        std::pmr::unordered_map<
-            std::pmr::string,
-            std::pmr::vector<std::reference_wrapper<versioned_entry<components::types::logical_type>>>>
-            existing_versions;
-        std::pmr::unordered_map<field_id_t, std::pmr::string> id_to_name;
-        field_id_t highest = 0;
+        using refcounted_entry_t = std::reference_wrapper<const versioned_value<types::complex_logical_type>>;
+
+        bool try_use_refcout(const std::pmr::string& json, const types::complex_logical_type& type, bool is_append);
+
+        versioned_trie<std::pmr::string, types::complex_logical_type> fields;
+        std::pmr::unordered_map<std::pmr::string, refcounted_entry_t> existing_versions;
+        std::pmr::memory_resource* resource;
     };
 } // namespace components::catalog
