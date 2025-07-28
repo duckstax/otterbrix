@@ -367,6 +367,17 @@ namespace components::table {
         fetch_row(pin.update_info(), row_in_vector, result, result_idx);
     }
 
+    bool update_segment_t::check_row(uint64_t row_id, const table_filter_t* filter) {
+        uint64_t vector_index = (row_id - column_data_->start()) / vector::DEFAULT_VECTOR_CAPACITY;
+        auto entry = update_node(vector_index);
+        if (!entry.is_set()) {
+            return true;
+        }
+        uint64_t row_in_vector = (row_id - column_data_->start()) - vector_index * vector::DEFAULT_VECTOR_CAPACITY;
+        auto pin = entry.pin();
+        return check_row(pin.update_info(), row_in_vector, filter);
+    }
+
     void update_segment_t::cleanup_update_internal(update_info_t& info) {
         assert(info.has_prev());
         auto prev = info.prev;
@@ -523,5 +534,19 @@ namespace components::table {
                 result_mask.set(result_index, info_data[it - tuples]);
             }
         });
+    }
+
+    bool update_segment_t::check_row_validity(update_info_t& info, uint64_t row_index, const table_filter_t* filter) {
+        bool result = true;
+        update_info_t::update_for_transaction(info, [&](update_info_t* current) {
+            auto info_data = current->data<bool>();
+            auto tuples = current->tuples();
+            auto it = std::lower_bound(tuples, tuples + current->N, row_index);
+            if (it != tuples + current->N && *it == row_index) {
+                const auto& const_filter = filter->cast<constant_filter_t>();
+                result = const_filter.compare(info_data[it - tuples]);
+            }
+        });
+        return result;
     }
 } // namespace components::table

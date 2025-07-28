@@ -6,11 +6,11 @@
 namespace services::collection::executor {
 
     struct plan_t {
-        std::stack<collection::operators::operator_ptr> sub_plans;
+        std::stack<components::collection::operators::operator_ptr> sub_plans;
         components::logical_plan::storage_parameters parameters;
         services::context_storage_t context_storage_;
 
-        explicit plan_t(std::stack<collection::operators::operator_ptr>&& sub_plans,
+        explicit plan_t(std::stack<components::collection::operators::operator_ptr>&& sub_plans,
                         components::logical_plan::storage_parameters parameters,
                         services::context_storage_t&& context_storage);
     };
@@ -47,12 +47,12 @@ namespace services::collection::executor {
 
     private:
         void traverse_plan_(const components::session::session_id_t& session,
-                            collection::operators::operator_ptr&& plan,
+                            components::collection::operators::operator_ptr&& plan,
                             components::logical_plan::storage_parameters&& parameters,
                             services::context_storage_t&& context_storage);
 
         void execute_sub_plan_(const components::session::session_id_t& session,
-                               collection::operators::operator_ptr plan,
+                               components::collection::operators::operator_ptr plan,
                                components::logical_plan::storage_parameters parameters);
 
         void execute_sub_plan_finish_(const components::session::session_id_t& session,
@@ -63,16 +63,16 @@ namespace services::collection::executor {
 
         void aggregate_document_impl(const components::session::session_id_t& session,
                                      context_collection_t* context_,
-                                     operators::operator_ptr plan);
+                                     components::collection::operators::operator_ptr plan);
         void update_document_impl(const components::session::session_id_t& session,
                                   context_collection_t* context_,
-                                  operators::operator_ptr plan);
+                                  components::collection::operators::operator_ptr plan);
         void insert_document_impl(const components::session::session_id_t& session,
                                   context_collection_t* context_,
-                                  operators::operator_ptr plan);
+                                  components::collection::operators::operator_ptr plan);
         void delete_document_impl(const components::session::session_id_t& session,
                                   context_collection_t* context_,
-                                  operators::operator_ptr plan);
+                                  components::collection::operators::operator_ptr plan);
 
     private:
         actor_zeta::address_t memory_storage_ = actor_zeta::address_t::empty_address();

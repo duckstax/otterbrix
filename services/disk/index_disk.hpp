@@ -2,18 +2,18 @@
 
 #include <components/document/document.hpp>
 #include <components/document/document_id.hpp>
-#include <components/document/value.hpp>
+#include <components/types/logical_value.hpp>
+#include <core/b_plus_tree/b_plus_tree.hpp>
+
 #include <filesystem>
 #include <memory_resource>
-
-#include "core/b_plus_tree/b_plus_tree.hpp"
 
 namespace services::disk {
 
     // TODO: add checkpoints to avoid flushing b+tree after each call
     class index_disk_t {
         using document_id_t = components::document::document_id_t;
-        using value_t = components::document::value_t;
+        using value_t = components::types::logical_value_t;
         using path_t = std::filesystem::path;
 
     public:

@@ -23,36 +23,37 @@ namespace services::disk {
         return get_field(msg.get(), "/1");
     };
 
-    components::types::physical_value convert(const components::document::value_t& value) {
-        switch (value.physical_type()) {
-            case components::types::physical_type::BOOL:
-                return components::types::physical_value(value.as_bool());
-            case components::types::physical_type::UINT8:
-                return components::types::physical_value(value.as<uint8_t>());
-            case components::types::physical_type::INT8:
-                return components::types::physical_value(value.as<int8_t>());
-            case components::types::physical_type::UINT16:
-                return components::types::physical_value(value.as<uint16_t>());
-            case components::types::physical_type::INT16:
-                return components::types::physical_value(value.as<int16_t>());
-            case components::types::physical_type::UINT32:
-                return components::types::physical_value(value.as<uint32_t>());
-            case components::types::physical_type::INT32:
-                return components::types::physical_value(value.as<int32_t>());
-            case components::types::physical_type::UINT64:
-                return components::types::physical_value(value.as<uint64_t>());
-            case components::types::physical_type::INT64:
-                return components::types::physical_value(value.as<int64_t>());
-            case components::types::physical_type::UINT128:
-            case components::types::physical_type::INT128:
-                return components::types::physical_value(value.as_int128());
-            case components::types::physical_type::FLOAT:
-                return components::types::physical_value(value.as_float());
-            case components::types::physical_type::DOUBLE:
-                return components::types::physical_value(value.as_double());
-            case components::types::physical_type::STRING:
-                return components::types::physical_value(value.as_string());
-            case components::types::physical_type::NA:
+    components::types::physical_value convert(const components::types::logical_value_t& value) {
+        switch (value.type().type()) {
+            case logical_type::BOOLEAN:
+                return components::types::physical_value(value.value<bool>());
+            case logical_type::UTINYINT:
+                return components::types::physical_value(value.value<uint8_t>());
+            case logical_type::TINYINT:
+                return components::types::physical_value(value.value<int8_t>());
+            case logical_type::USMALLINT:
+                return components::types::physical_value(value.value<uint16_t>());
+            case logical_type::SMALLINT:
+                return components::types::physical_value(value.value<int16_t>());
+            case logical_type::UINTEGER:
+                return components::types::physical_value(value.value<uint32_t>());
+            case logical_type::INTEGER:
+                return components::types::physical_value(value.value<int32_t>());
+            case logical_type::UBIGINT:
+                return components::types::physical_value(value.value<uint64_t>());
+            case logical_type::BIGINT:
+                return components::types::physical_value(value.value<int64_t>());
+            // case logical_type::UHUGEINT:
+            //     return components::types::physical_value(value.value<components::types::uint128_t>());
+            // case logical_type::HUGEINT:
+            //     return components::types::physical_value(value.value<components::types::int128_t>());
+            case logical_type::FLOAT:
+                return components::types::physical_value(value.value<float>());
+            case logical_type::DOUBLE:
+                return components::types::physical_value(value.value<double>());
+            case logical_type::STRING_LITERAL:
+                return components::types::physical_value(*value.value<std::string*>());
+            case logical_type::NA:
                 return components::types::physical_value();
             default:
                 assert(false && "unsupported type");
@@ -77,7 +78,7 @@ namespace services::disk {
             msgpack::sbuffer sbuf;
             msgpack::packer packer(sbuf);
             packer.pack_array(2);
-            to_msgpack_(packer, key.get_element());
+            packer.pack(key);
             packer.pack(value.to_string());
             db_->append(data_ptr_t(sbuf.data()), sbuf.size());
             db_->flush();
@@ -96,7 +97,7 @@ namespace services::disk {
             msgpack::sbuffer sbuf;
             msgpack::packer packer(sbuf);
             packer.pack_array(2);
-            to_msgpack_(packer, key.get_element());
+            packer.pack(key);
             packer.pack(doc.to_string());
             db_->remove(data_ptr_t(sbuf.data()), sbuf.size());
             db_->flush();

@@ -11,7 +11,7 @@ using namespace components::sql;
         auto resource = std::pmr::synchronized_pool_resource();                                                        \
         transform::transformer transformer(&resource);                                                                 \
         components::logical_plan::parameter_node_t agg(&resource);                                                     \
-        auto select = raw_parser(QUERY)->lst.front().data;                                                             \
+        auto select = linitial(raw_parser(QUERY));                                                                     \
         auto node = transformer.transform(transform::pg_cell_to_node_cast(select), &agg);                              \
         REQUIRE(node->to_string() == RESULT);                                                                          \
         REQUIRE(agg.parameters().parameters.size() == PARAMS.size());                                                  \

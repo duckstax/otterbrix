@@ -3,33 +3,33 @@
 #include <services/collection/collection.hpp>
 #include <vector>
 
-namespace services::collection::operators {
+namespace components::collection::operators {
 
-    operator_join_t::operator_join_t(context_collection_t* context,
+    operator_join_t::operator_join_t(services::collection::context_collection_t* context,
                                      type join_type,
                                      predicates::predicate_ptr&& predicate)
         : read_only_operator_t(context, operator_type::join)
         , join_type_(join_type)
         , predicate_(std::move(predicate)) {}
 
-    bool operator_join_t::check_expressions_(const components::document::document_ptr& left,
-                                             const components::document::document_ptr& right,
-                                             components::pipeline::context_t* context) {
+    bool operator_join_t::check_expressions_(const document::document_ptr& left,
+                                             const document::document_ptr& right,
+                                             pipeline::context_t* context) {
         return predicate_->check(left, right, context ? &context->parameters : nullptr);
     }
 
-    void operator_join_t::on_execute_impl(components::pipeline::context_t* context) {
+    void operator_join_t::on_execute_impl(pipeline::context_t* context) {
         if (!left_ || !right_) {
             return;
         }
         if (left_->output() && right_->output()) {
-            output_ = make_operator_data(left_->output()->resource());
+            output_ = base::operators::make_operator_data(left_->output()->resource());
 
             if (context_) {
                 // With introduction of raw_data without context, log is not guaranteed to be here
                 // TODO: acquire log from different means
-                trace(context_->log(), "operator_join::left_size(): {}", left_->output()->documents().size());
-                trace(context_->log(), "operator_join::right_size(): {}", right_->output()->documents().size());
+                trace(context_->log(), "operator_join::left_size(): {}", left_->output()->size());
+                trace(context_->log(), "operator_join::right_size(): {}", left_->output()->size());
             }
 
             switch (join_type_) {
@@ -54,12 +54,12 @@ namespace services::collection::operators {
 
             if (context_) {
                 // Same reason as above
-                trace(context_->log(), "operator_join::result_size(): {}", output_->documents().size());
+                trace(context_->log(), "operator_join::result_size(): {}", output_->size());
             }
         }
     }
 
-    void operator_join_t::inner_join_(components::pipeline::context_t* context) {
+    void operator_join_t::inner_join_(pipeline::context_t* context) {
         for (auto doc_left : left_->output()->documents()) {
             for (auto doc_right : right_->output()->documents()) {
                 if (check_expressions_(doc_left, doc_right, context)) {
@@ -69,11 +69,11 @@ namespace services::collection::operators {
         }
     }
 
-    void operator_join_t::outer_full_join_(components::pipeline::context_t* context) {
-        auto empty_left = components::document::make_document(left_->output()->resource());
-        auto empty_right = components::document::make_document(left_->output()->resource());
+    void operator_join_t::outer_full_join_(pipeline::context_t* context) {
+        auto empty_left = document::make_document(left_->output()->resource());
+        auto empty_right = document::make_document(left_->output()->resource());
         if (!left_->output()->documents().empty()) {
-            auto doc = left_->output()->documents().front();
+            auto doc = right_->output()->documents().front();
             auto fields = doc->json_trie()->as_object();
             for (auto it_field = fields->begin(); it_field != fields->end(); ++it_field) {
                 empty_left->set(it_field->first->get_mut()->get_string(), nullptr);
@@ -87,7 +87,7 @@ namespace services::collection::operators {
             }
         }
 
-        std::vector<bool> visited_right(right_->output()->documents().size(), false);
+        std::vector<bool> visited_right(right_->output()->size(), false);
         for (auto doc_left : left_->output()->documents()) {
             bool visited_left = false;
             size_t right_index = 0;
@@ -112,8 +112,8 @@ namespace services::collection::operators {
         }
     }
 
-    void operator_join_t::outer_left_join_(components::pipeline::context_t* context) {
-        auto empty_right = components::document::make_document(left_->output()->resource());
+    void operator_join_t::outer_left_join_(pipeline::context_t* context) {
+        auto empty_right = document::make_document(left_->output()->resource());
         if (!right_->output()->documents().empty()) {
             auto doc = right_->output()->documents().front();
             auto fields = doc->json_trie()->as_object();
@@ -136,8 +136,8 @@ namespace services::collection::operators {
         }
     }
 
-    void operator_join_t::outer_right_join_(components::pipeline::context_t* context) {
-        auto empty_left = components::document::make_document(left_->output()->resource());
+    void operator_join_t::outer_right_join_(pipeline::context_t* context) {
+        auto empty_left = document::make_document(left_->output()->resource());
         if (!left_->output()->documents().empty()) {
             auto doc = left_->output()->documents().front();
             auto fields = doc->json_trie()->as_object();
@@ -160,7 +160,7 @@ namespace services::collection::operators {
         }
     }
 
-    void operator_join_t::cross_join_(components::pipeline::context_t* context) {
+    void operator_join_t::cross_join_(pipeline::context_t* context) {
         for (auto doc_left : left_->output()->documents()) {
             for (auto doc_right : right_->output()->documents()) {
                 output_->append(std::move(document_t::merge(doc_left, doc_right, left_->output()->resource())));
@@ -168,4 +168,4 @@ namespace services::collection::operators {
         }
     }
 
-} // namespace services::collection::operators
+} // namespace components::collection::operators

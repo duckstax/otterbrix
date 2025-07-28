@@ -7,7 +7,8 @@
 
 namespace components::vector {
 
-    unified_vector_format::unified_vector_format() : validity(nullptr) {}
+    unified_vector_format::unified_vector_format()
+        : validity(nullptr) {}
     unified_vector_format::unified_vector_format(std::pmr::memory_resource* resource, uint64_t capacity)
         : validity(resource, capacity) {}
 
@@ -39,7 +40,7 @@ namespace components::vector {
         : parent(resource, capacity) {}
 
     vector_t::vector_t(std::pmr::memory_resource* resource, types::complex_logical_type type, uint64_t capacity)
-        : vector_t(resource, std::move(type), true, false, capacity) {}
+        : vector_t(resource, std::move(type), true, true, capacity) {}
 
     vector_t::vector_t(std::pmr::memory_resource* resource, const types::logical_value_t& value, uint64_t capacity)
         : type_(value.type())
@@ -55,7 +56,8 @@ namespace components::vector {
     }
 
     vector_t::vector_t(const vector_t& other, uint64_t offset, uint64_t count)
-        : type_(other.type())
+        : vector_type_(other.vector_type_)
+        , type_(other.type())
         , validity_(other.resource(), count) {
         slice(other, offset, count);
     }
@@ -71,7 +73,7 @@ namespace components::vector {
         , validity_(resource, capacity) {
         if (create_data) {
             auxiliary_.reset();
-            validity_.reset(capacity);
+            validity_.reset();
             auto internal_type = type_.type();
             if (internal_type == types::logical_type::STRUCT) {
                 auxiliary_ = std::make_shared<struct_vector_buffer_t>(resource, type_, capacity);
@@ -98,12 +100,14 @@ namespace components::vector {
     }
 
     vector_t::vector_t(const vector_t& other)
-        : type_(other.type_)
+        : vector_type_(other.vector_type_)
+        , type_(other.type_)
         , validity_(other.validity_) {
         reference(other);
     }
 
     vector_t& vector_t::operator=(const vector_t& other) {
+        vector_type_ = other.vector_type_;
         type_ = other.type_;
         reference(other);
         return *this;
@@ -361,6 +365,9 @@ namespace components::vector {
     }
 
     void vector_t::resize(uint64_t current_size, uint64_t new_size) {
+        if (current_size == new_size) {
+            return;
+        }
         if (!buffer_) {
             buffer_ = std::make_unique<vector_buffer_t>(resource(), vector_buffer_type::STANDARD);
         }
@@ -758,7 +765,7 @@ namespace components::vector {
     }
 
     bool vector_t::is_null(uint64_t index) const {
-        assert(vector_type_ == vector_type::FLAT);
+        assert(vector_type_ == vector_type::FLAT || vector_type_ == vector_type::CONSTANT);
         return !validity_.row_is_valid(index);
     }
 

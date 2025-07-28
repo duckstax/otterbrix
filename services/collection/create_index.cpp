@@ -36,17 +36,17 @@ namespace services::collection::executor {
         debug(log_, "collection::create_index_finish");
         auto& create_index = sessions::find(collection->sessions(), session, name).get<sessions::create_index_t>();
         components::index::set_disk_agent(collection->index_engine(), create_index.id_index, index_address);
-        components::index::insert(collection->index_engine(), create_index.id_index, collection->storage());
+        components::index::insert(collection->index_engine(), create_index.id_index, collection->document_storage());
         // TODO: revisit filling index_disk
         if (index_address != actor_zeta::address_t::empty_address()) {
             auto* index = components::index::search_index(collection->index_engine(), create_index.id_index);
             auto range = index->keys();
             std::vector<std::pair<components::document::value_t, document_id_t>> values;
-            values.reserve(collection->storage().size());
+            values.reserve(collection->document_storage().size());
             for (auto it = range.first; it != range.second; ++it) {
                 const auto& key_tmp = *it;
                 const std::string& key = key_tmp.as_string(); // hack
-                for (const auto& doc : collection->storage()) {
+                for (const auto& doc : collection->document_storage()) {
                     values.emplace_back(doc.second->get_value(key), doc.first);
                 }
             }
@@ -85,7 +85,7 @@ namespace services::collection::executor {
         components::index::sync_index_from_disk(collection->index_engine(),
                                                 current_message()->sender(),
                                                 result,
-                                                collection->storage());
+                                                collection->document_storage());
         auto& suspend_plan = sessions::find(collection->sessions(), session).get<sessions::suspend_plan_t>();
         auto res = std::make_unique<components::cursor::sub_cursor_t>(resource(), collection->name());
         suspend_plan.plan->on_execute(&suspend_plan.pipeline_context);

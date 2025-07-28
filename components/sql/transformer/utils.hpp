@@ -4,6 +4,8 @@
 #include <components/expressions/forward.hpp>
 #include <components/logical_plan/node_join.hpp>
 #include <components/sql/parser/nodes/parsenodes.h>
+#include <components/sql/parser/pg_functions.h>
+#include <components/types/types.hpp>
 #include <string>
 
 namespace components::sql::transform {
@@ -15,6 +17,12 @@ namespace components::sql::transform {
     template<class T>
     static T* pg_ptr_cast(void* ptr) {
         return reinterpret_cast<T*>(ptr);
+    }
+
+    template<class T>
+    static T* pg_ptr_assert_cast(void* ptr, NodeTag tag) {
+        assert(nodeTag(ptr));
+        return pg_ptr_cast<T>(ptr);
     }
 
     static Node& pg_cell_to_node_cast(void* node) { return pg_cast<Node&>(*reinterpret_cast<Node*>(node)); }
@@ -41,37 +49,37 @@ namespace components::sql::transform {
             case JOIN_RIGHT:
                 return logical_plan::join_type::right;
             default:
-                throw std::runtime_error("unsupported join type");
+                throw parser_exception_t{"unsupported join type", ""};
         }
     }
 
-    static components::expressions::compare_type get_compare_type(std::string_view str) {
-        static const std::unordered_map<std::string_view, components::expressions::compare_type> lookup = {
-            {"==", components::expressions::compare_type::eq},
-            {"=", components::expressions::compare_type::eq},
-            {"!=", components::expressions::compare_type::ne},
-            {"<>", components::expressions::compare_type::ne},
-            {"<", components::expressions::compare_type::lt},
-            {"<=", components::expressions::compare_type::lte},
-            {">", components::expressions::compare_type::gt},
-            {">=", components::expressions::compare_type::gte},
-            {"regexp", components::expressions::compare_type::regex},
-            {"~~", components::expressions::compare_type::regex}};
+    static expressions::compare_type get_compare_type(std::string_view str) {
+        static const std::unordered_map<std::string_view, expressions::compare_type> lookup = {
+            {"==", expressions::compare_type::eq},
+            {"=", expressions::compare_type::eq},
+            {"!=", expressions::compare_type::ne},
+            {"<>", expressions::compare_type::ne},
+            {"<", expressions::compare_type::lt},
+            {"<=", expressions::compare_type::lte},
+            {">", expressions::compare_type::gt},
+            {">=", expressions::compare_type::gte},
+            {"regexp", expressions::compare_type::regex},
+            {"~~", expressions::compare_type::regex}};
 
         if (auto it = lookup.find(str); it != lookup.end()) {
             return it->second;
         }
 
-        throw std::runtime_error("Unknown comparison operator: " + std::string(str));
+        throw parser_exception_t{"Unknown comparison operator: " + std::string(str), ""};
     }
 
-    static components::expressions::aggregate_type get_aggregate_type(std::string_view str) {
-        static const std::unordered_map<std::string_view, components::expressions::aggregate_type> lookup = {
-            {"count", components::expressions::aggregate_type::count},
-            {"sum", components::expressions::aggregate_type::sum},
-            {"min", components::expressions::aggregate_type::min},
-            {"max", components::expressions::aggregate_type::max},
-            {"avg", components::expressions::aggregate_type::avg},
+    static expressions::aggregate_type get_aggregate_type(std::string_view str) {
+        static const std::unordered_map<std::string_view, expressions::aggregate_type> lookup = {
+            {"count", expressions::aggregate_type::count},
+            {"sum", expressions::aggregate_type::sum},
+            {"min", expressions::aggregate_type::min},
+            {"max", expressions::aggregate_type::max},
+            {"avg", expressions::aggregate_type::avg},
         };
 
         if (auto it = lookup.find(str); it != lookup.end()) {
@@ -79,6 +87,44 @@ namespace components::sql::transform {
         }
 
         return expressions::aggregate_type::invalid;
+    }
+
+    static types::logical_type get_logical_type(std::string_view str) {
+        static const std::unordered_map<std::string_view, types::logical_type> lookup = {
+            // postgres built-ins
+            {"int2", types::logical_type::SMALLINT},
+            {"int4", types::logical_type::INTEGER},
+            {"int8_t", types::logical_type::BIGINT},
+            {"bool", types::logical_type::BOOLEAN},
+            {"float4", types::logical_type::FLOAT},
+            {"float8", types::logical_type::DOUBLE},
+            {"bit", types::logical_type::BIT},
+            {"numeric", types::logical_type::DECIMAL},
+
+            {"double", types::logical_type::DOUBLE},
+            {"tinyint", types::logical_type::TINYINT},
+            {"hugeint", types::logical_type::HUGEINT},
+            {"timestamp_sec", types::logical_type::TIMESTAMP_SEC},
+            {"timestamp_ms", types::logical_type::TIMESTAMP_MS},
+            {"timestamp_us", types::logical_type::TIMESTAMP_US},
+            {"timestamp_ns", types::logical_type::TIMESTAMP_NS},
+            {"blob", types::logical_type::BLOB},
+            {"utinyint", types::logical_type::UTINYINT},
+            {"usmallint", types::logical_type::USMALLINT},
+            {"uinteger", types::logical_type::UINTEGER},
+            {"uint", types::logical_type::UINTEGER},
+            {"ubigint", types::logical_type::UBIGINT},
+            {"uhugeint", types::logical_type::UHUGEINT},
+            {"pointer", types::logical_type::POINTER},
+            {"uuid", types::logical_type::UUID},
+            {"string", types::logical_type::STRING_LITERAL},
+        };
+
+        if (auto it = lookup.find(str); it != lookup.end()) {
+            return it->second;
+        }
+
+        return types::logical_type::NA;
     }
 
     std::string node_tag_to_string(NodeTag type);

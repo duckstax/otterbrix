@@ -24,7 +24,7 @@ namespace services::disk {
         using path_t = std::filesystem::path;
         using session_id_t = ::components::session::session_id_t;
         using document_id_t = components::document::document_id_t;
-        using value_t = components::document::value_t;
+        using value_t = components::types::logical_value_t;
 
     public:
         index_agent_disk_t(manager_disk_t*,

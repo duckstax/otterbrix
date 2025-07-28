@@ -4,17 +4,17 @@
 #include <components/index/index.hpp>
 #include <components/physical_plan/collection/operators/aggregate/operator_aggregate.hpp>
 
-namespace services::collection::operators::aggregate {
+namespace components::collection::operators::aggregate {
 
     class operator_sum_t final : public operator_aggregate_t {
     public:
-        explicit operator_sum_t(context_collection_t* collection, components::index::key_t key);
+        explicit operator_sum_t(services::collection::context_collection_t* collection, index::key_t key);
 
     private:
-        components::index::key_t key_;
+        index::key_t key_;
 
-        components::document::document_ptr aggregate_impl() final;
+        document::document_ptr aggregate_impl() final;
         std::string key_impl() const final;
     };
 
-} // namespace services::collection::operators::aggregate
+} // namespace components::collection::operators::aggregate

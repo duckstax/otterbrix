@@ -1,9 +1,9 @@
 #include "operator_sort.hpp"
 #include <services/collection/collection.hpp>
 
-namespace services::collection::operators {
+namespace components::collection::operators {
 
-    operator_sort_t::operator_sort_t(context_collection_t* context)
+    operator_sort_t::operator_sort_t(services::collection::context_collection_t* context)
         : read_only_operator_t(context, operator_type::sort) {}
 
     void operator_sort_t::add(const std::string& key, operator_sort_t::order order_) { sorter_.add(key, order_); }
@@ -14,9 +14,9 @@ namespace services::collection::operators {
         }
     }
 
-    void operator_sort_t::on_execute_impl(components::pipeline::context_t*) {
+    void operator_sort_t::on_execute_impl(pipeline::context_t*) {
         if (left_ && left_->output()) {
-            output_ = make_operator_data(left_->output()->resource());
+            output_ = base::operators::make_operator_data(left_->output()->resource());
             for (const auto& document : left_->output()->documents()) {
                 output_->append(document);
             }
@@ -25,4 +25,4 @@ namespace services::collection::operators {
         }
     }
 
-} // namespace services::collection::operators
+} // namespace components::collection::operators

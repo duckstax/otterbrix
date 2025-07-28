@@ -1,9 +1,7 @@
 #include "operator_get.hpp"
 
-namespace services::collection::operators::get {
+namespace components::collection::operators::get {
 
-    components::document::value_t operator_get_t::value(const components::document::document_ptr& document) {
-        return get_value_impl(document);
-    }
+    document::value_t operator_get_t::value(const document::document_ptr& document) { return get_value_impl(document); }
 
-} // namespace services::collection::operators::get
+} // namespace components::collection::operators::get

@@ -17,7 +17,7 @@ namespace services::collection::planner::impl {
 
     namespace {
 
-        void add_group_scalar(boost::intrusive_ptr<operators::operator_group_t>& group,
+        void add_group_scalar(boost::intrusive_ptr<components::collection::operators::operator_group_t>& group,
                               const components::expressions::scalar_expression_t* expr) {
             using components::expressions::scalar_type;
 
@@ -26,7 +26,8 @@ namespace services::collection::planner::impl {
                     auto field = expr->params().empty()
                                      ? expr->key()
                                      : std::get<components::expressions::key_t>(expr->params().front());
-                    group->add_key(expr->key().as_string(), operators::get::simple_value_t::create(field));
+                    group->add_key(expr->key().as_string(),
+                                   components::collection::operators::get::simple_value_t::create(field));
                     break;
                 }
                 default:
@@ -36,14 +37,15 @@ namespace services::collection::planner::impl {
         }
 
         void add_group_aggregate(context_collection_t* context,
-                                 boost::intrusive_ptr<operators::operator_group_t>& group,
+                                 boost::intrusive_ptr<components::collection::operators::operator_group_t>& group,
                                  const components::expressions::aggregate_expression_t* expr) {
             using components::expressions::aggregate_type;
 
             switch (expr->type()) {
                 case aggregate_type::count: {
                     group->add_value(expr->key().as_string(),
-                                     boost::intrusive_ptr(new operators::aggregate::operator_count_t(context)));
+                                     boost::intrusive_ptr(
+                                         new components::collection::operators::aggregate::operator_count_t(context)));
                     break;
                 }
                 case aggregate_type::sum: {
@@ -51,8 +53,10 @@ namespace services::collection::planner::impl {
                            "[add_group_aggregate] aggregate_type::sum:  variant intermediate_store_ holds the "
                            "alternative components::expressions::key_t");
                     auto field = std::get<components::expressions::key_t>(expr->params().front());
-                    group->add_value(expr->key().as_string(),
-                                     boost::intrusive_ptr(new operators::aggregate::operator_sum_t(context, field)));
+                    group->add_value(
+                        expr->key().as_string(),
+                        boost::intrusive_ptr(
+                            new components::collection::operators::aggregate::operator_sum_t(context, field)));
                     break;
                 }
                 case aggregate_type::avg: {
@@ -60,8 +64,10 @@ namespace services::collection::planner::impl {
                            "[add_group_aggregate] aggregate_type::avg:  variant intermediate_store_ holds the "
                            "alternative components::expressions::key_t");
                     auto field = std::get<components::expressions::key_t>(expr->params().front());
-                    group->add_value(expr->key().as_string(),
-                                     boost::intrusive_ptr(new operators::aggregate::operator_avg_t(context, field)));
+                    group->add_value(
+                        expr->key().as_string(),
+                        boost::intrusive_ptr(
+                            new components::collection::operators::aggregate::operator_avg_t(context, field)));
                     break;
                 }
                 case aggregate_type::min: {
@@ -69,8 +75,10 @@ namespace services::collection::planner::impl {
                            "[add_group_aggregate] aggregate_type::min:  variant intermediate_store_ holds the "
                            "alternative components::expressions::key_t");
                     auto field = std::get<components::expressions::key_t>(expr->params().front());
-                    group->add_value(expr->key().as_string(),
-                                     boost::intrusive_ptr(new operators::aggregate::operator_min_t(context, field)));
+                    group->add_value(
+                        expr->key().as_string(),
+                        boost::intrusive_ptr(
+                            new components::collection::operators::aggregate::operator_min_t(context, field)));
                     break;
                 }
                 case aggregate_type::max: {
@@ -78,8 +86,10 @@ namespace services::collection::planner::impl {
                            "[add_group_aggregate] aggregate_type::max:  variant intermediate_store_ holds the "
                            "alternative components::expressions::key_t");
                     auto field = std::get<components::expressions::key_t>(expr->params().front());
-                    group->add_value(expr->key().as_string(),
-                                     boost::intrusive_ptr(new operators::aggregate::operator_max_t(context, field)));
+                    group->add_value(
+                        expr->key().as_string(),
+                        boost::intrusive_ptr(
+                            new components::collection::operators::aggregate::operator_max_t(context, field)));
                     break;
                 }
                 default:
@@ -90,14 +100,14 @@ namespace services::collection::planner::impl {
 
     } // namespace
 
-    operators::operator_ptr create_plan_group(const context_storage_t& context,
-                                              const components::logical_plan::node_ptr& node) {
-        boost::intrusive_ptr<operators::operator_group_t> group;
+    components::collection::operators::operator_ptr create_plan_group(const context_storage_t& context,
+                                                                      const components::logical_plan::node_ptr& node) {
+        boost::intrusive_ptr<components::collection::operators::operator_group_t> group;
         auto collection_context = context.at(node->collection_full_name());
         if (collection_context) {
-            group = new operators::operator_group_t(collection_context);
+            group = new components::collection::operators::operator_group_t(collection_context);
         } else {
-            group = new operators::operator_group_t(node->resource());
+            group = new components::collection::operators::operator_group_t(node->resource());
         }
         std::for_each(node->expressions().begin(),
                       node->expressions().end(),

@@ -61,7 +61,9 @@ namespace components::table {
     public:
         std::unordered_map<uint64_t, std::unique_ptr<table_filter_t>> filters;
 
-        void push_filter(const column_index_t& col_idx, std::unique_ptr<table_filter_t> filter);
+        void push_filter(const column_index_t& col_idx, std::unique_ptr<table_filter_t> filter) {
+            filters.emplace(col_idx.primary_index(), std::move(filter));
+        }
 
         bool equals(table_filter_set_t& other) {
             if (filters.size() != other.filters.size()) {
@@ -169,7 +171,7 @@ namespace components::table {
 
         void initialize(const std::vector<types::complex_logical_type>& types);
         const std::vector<storage_index_t>& column_ids();
-        scan_filter_info& filter_info();
+        const table_filter_t* filter();
         bool scan(vector::data_chunk_t& result);
         bool scan_committed(vector::data_chunk_t& result, table_scan_type type);
         bool scan_committed(vector::data_chunk_t& result, std::unique_lock<std::mutex>& l, table_scan_type type);
@@ -186,13 +188,11 @@ namespace components::table {
         collection_scan_state table_state;
         collection_scan_state local_state;
         bool force_fetch_row = false;
-        scan_filter_info filters;
+        const table_filter_t* filter = nullptr;
 
-        void initialize(std::vector<storage_index_t> column_ids, table_filter_set_t* table_filters = nullptr);
+        void initialize(std::vector<storage_index_t> column_ids, const table_filter_t* table_filter_tree = nullptr);
 
         const std::vector<storage_index_t>& column_ids();
-
-        scan_filter_info& filter_info();
 
     private:
         std::vector<storage_index_t> column_ids_;
@@ -272,13 +272,9 @@ namespace components::table {
     };
 
     struct table_delete_state {
-        table_delete_state(std::pmr::memory_resource* resource,
-                           const std::vector<types::complex_logical_type>& types,
-                           uint64_t capacity = vector::DEFAULT_VECTOR_CAPACITY)
-            : verify_chunk(resource, types, capacity) {}
+        table_delete_state(std::pmr::memory_resource* resource) {}
         std::unique_ptr<constraint_state> constraint;
         bool has_delete_constraints = false;
-        vector::data_chunk_t verify_chunk;
         std::vector<storage_index_t> col_ids;
     };
 

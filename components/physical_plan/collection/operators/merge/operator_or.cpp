@@ -1,19 +1,19 @@
 #include "operator_or.hpp"
 #include <services/collection/collection.hpp>
 
-namespace services::collection::operators::merge {
+namespace components::collection::operators::merge {
 
-    operator_or_t::operator_or_t(context_collection_t* context, components::logical_plan::limit_t limit)
+    operator_or_t::operator_or_t(services::collection::context_collection_t* context, logical_plan::limit_t limit)
         : operator_merge_t(context, limit) {}
 
-    void operator_or_t::on_merge_impl(components::pipeline::context_t*) {
+    void operator_or_t::on_merge_impl(pipeline::context_t*) {
         //todo: optimize merge
         int count = 0;
         if (!limit_.check(count)) {
             return; //limit = 0
         }
         if (left_ && right_ && left_->output() && right_->output()) {
-            output_ = make_operator_data(left_->output()->resource());
+            output_ = base::operators::make_operator_data(left_->output()->resource());
             for (const auto& document : left_->output()->documents()) {
                 output_->append(document);
                 ++count;
@@ -37,4 +37,4 @@ namespace services::collection::operators::merge {
         }
     }
 
-} // namespace services::collection::operators::merge
+} // namespace components::collection::operators::merge

@@ -4,6 +4,8 @@
 #include <utility>
 
 #include "core/pmr.hpp"
+#include "vector/data_chunk.hpp"
+
 #include <components/index/disk/route.hpp>
 
 namespace components::index {
@@ -28,7 +30,7 @@ namespace components::index {
                 const auto& key_tmp = *j;
                 const std::string& key = key_tmp.as_string(); // hack
                 if (!(i->is_null(key))) {
-                    auto data = i->get_value(key);
+                    auto data = i->get_value(key).as_logical_value();
                     index->insert(data, i);
                 }
             }
@@ -45,7 +47,7 @@ namespace components::index {
                 const auto& key_tmp = *j;
                 const std::string& key = key_tmp.as_string(); // hack
                 if (!(doc.second->is_null(key))) {
-                    auto data = doc.second->get_value(key);
+                    auto data = doc.second->get_value(key).as_logical_value();
                     index->insert(data, {doc.first, doc.second});
                 }
             }
@@ -60,7 +62,7 @@ namespace components::index {
                 const auto& key_tmp = *j;
                 const std::string& key = key_tmp.as_string(); // hack
                 if (!(doc->is_null(key))) {
-                    auto data = doc->get_value(key);
+                    auto data = doc->get_value(key).as_logical_value();
                     index->insert(data, doc);
                 }
             }
@@ -99,13 +101,55 @@ namespace components::index {
         return true;
     }
 
+    bool is_match_column(const index_ptr& index, const components::vector::data_chunk_t& chunk) {
+        auto keys = index->keys();
+        for (auto key = keys.first; key != keys.second; ++key) {
+            if (key->is_string()) {
+                bool key_found = false;
+                for (const auto& column : chunk.data) {
+                    if (column.type().alias() == key->as_string()) {
+                        key_found = true;
+                        break;
+                    }
+                }
+                if (!key_found) {
+                    return false;
+                }
+            } else {
+                size_t column_index = key->is_int() ? key->as_int() : key->as_uint();
+                if (column_index >= chunk.column_count()) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     value_t get_value_by_index(const index_ptr& index, const document_ptr& document) {
         auto keys = index->keys();
         if (keys.first != keys.second) {
-            return document->get_value(keys.first->as_string());
+            return document->get_value(keys.first->as_string()).as_logical_value();
             //todo: multi values index
         }
         return value_t{};
+    }
+
+    value_t get_value_by_index(const index_ptr& index, const vector::data_chunk_t& chunk, size_t row) {
+        auto keys = index->keys();
+        if (keys.first != keys.second) {
+            //todo: multi values index
+            if (keys.first->is_string()) {
+                for (const auto& column : chunk.data) {
+                    if (column.type().alias() == keys.first->as_string()) {
+                        return column.value(row);
+                    }
+                }
+            } else {
+                size_t column_index = keys.first->is_int() ? keys.first->as_int() : keys.first->as_uint();
+                return chunk.data.at(column_index).value(row);
+            }
+        }
+        return types::logical_value_t{};
     }
 
     index_engine_t::index_engine_t(std::pmr::memory_resource* resource)
@@ -198,6 +242,38 @@ namespace components::index {
                                            services::index::handler_id(services::index::route::remove),
                                            key,
                                            document::get_document_id(document));
+                }
+            }
+        }
+    }
+
+    void
+    index_engine_t::insert_row(const vector::data_chunk_t& chunk, size_t row, pipeline::context_t* pipeline_context) {
+        for (auto& index : storage_) {
+            if (is_match_column(index, chunk)) {
+                auto key = get_value_by_index(index, chunk, row);
+                index->insert(key, row);
+                if (index->is_disk() && pipeline_context) {
+                    pipeline_context->send(index->disk_agent(),
+                                           services::index::handler_id(services::index::route::insert),
+                                           key,
+                                           row);
+                }
+            }
+        }
+    }
+
+    void
+    index_engine_t::delete_row(const vector::data_chunk_t& chunk, size_t row, pipeline::context_t* pipeline_context) {
+        for (auto& index : storage_) {
+            if (is_match_column(index, chunk)) {
+                auto key = get_value_by_index(index, chunk, row);
+                index->remove(key);
+                if (index->is_disk() && pipeline_context) {
+                    pipeline_context->send(index->disk_agent(),
+                                           services::index::handler_id(services::index::route::remove),
+                                           key,
+                                           row);
                 }
             }
         }

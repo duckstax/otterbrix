@@ -14,13 +14,6 @@
 
 namespace components::document {
 
-    enum class compare_t
-    {
-        less = -1,
-        equals = 0,
-        more = 1
-    };
-
     namespace impl {
 
         enum class error_code_t
@@ -171,9 +164,10 @@ namespace components::document {
             return T();
         }
 
-        compare_t compare(std::string_view json_pointer, const ptr& other, std::string_view other_json_pointer) const;
+        types::compare_t
+        compare(std::string_view json_pointer, const ptr& other, std::string_view other_json_pointer) const;
 
-        compare_t compare(std::string_view json_pointer, value_t value) const;
+        types::compare_t compare(std::string_view json_pointer, value_t value) const;
 
         std::pmr::string to_json() const;
 
@@ -383,7 +377,7 @@ namespace components::document {
                                      std::pmr::string& unescaped_key,
                                      document_t::allocator_type* allocator);
 
-    compare_t compare_(const impl::element* element1, const impl::element* element2);
+    types::compare_t compare_(const impl::element* element1, const impl::element* element2);
 
     document_id_t get_document_id(const document_ptr& doc);
 

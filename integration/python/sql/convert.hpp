@@ -35,8 +35,8 @@ auto from_object(const document_ptr& document, uint32_t index) -> py::object;
 auto to_pylist(const std::pmr::vector<std::string>& src) -> py::list;
 auto to_pylist(const std::pmr::vector<components::document::document_id_t>& src) -> py::list;
 
-auto to_sorter(const py::handle& sort_dict) -> services::storage::sort::sorter_t;
-auto to_order(const py::object& order) -> services::storage::sort::order;
+auto to_sorter(const py::handle& sort_dict) -> components::collection::sort::sorter_t;
+auto to_order(const py::object& order) -> components::collection::sort::order;
 
 auto to_statement(std::pmr::memory_resource* resource,
                   const py::handle& source,

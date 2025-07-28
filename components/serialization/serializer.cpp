@@ -223,6 +223,10 @@ namespace components::serializer {
     void json_serializer_t::append(std::string_view key, const expressions::key_t& key_val) {
         if (key_val.is_string()) {
             working_tree_.top()->emplace_back(key_val.as_string());
+        } else if (key_val.is_int()) {
+            working_tree_.top()->emplace_back(key_val.as_int());
+        } else if (key_val.is_uint()) {
+            working_tree_.top()->emplace_back(key_val.as_uint());
         } else {
             working_tree_.top()->emplace_back(nullptr);
         }
@@ -297,6 +301,10 @@ namespace components::serializer {
     void msgpack_serializer_t::append(std::string_view key, const expressions::key_t& key_val) {
         if (key_val.is_string()) {
             packer_.pack(key_val.as_string());
+        } else if (key_val.is_int()) {
+            packer_.pack(key_val.as_int());
+        } else if (key_val.is_uint()) {
+            packer_.pack(key_val.as_uint());
         } else {
             packer_.pack_nil();
         }
