@@ -63,29 +63,29 @@ TEST_CASE("example::sql::base") {
         {
             auto c = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection ORDER BY count;");
             REQUIRE(c->size() == 100);
-            REQUIRE(c->next()->get_long("count") == 0);
-            REQUIRE(c->next()->get_long("count") == 1);
-            REQUIRE(c->next()->get_long("count") == 2);
-            REQUIRE(c->next()->get_long("count") == 3);
-            REQUIRE(c->next()->get_long("count") == 4);
+            REQUIRE(c->next_document()->get_long("count") == 0);
+            REQUIRE(c->next_document()->get_long("count") == 1);
+            REQUIRE(c->next_document()->get_long("count") == 2);
+            REQUIRE(c->next_document()->get_long("count") == 3);
+            REQUIRE(c->next_document()->get_long("count") == 4);
         }
         {
             auto c = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection ORDER BY count DESC;");
             REQUIRE(c->size() == 100);
-            REQUIRE(c->next()->get_long("count") == 99);
-            REQUIRE(c->next()->get_long("count") == 98);
-            REQUIRE(c->next()->get_long("count") == 97);
-            REQUIRE(c->next()->get_long("count") == 96);
-            REQUIRE(c->next()->get_long("count") == 95);
+            REQUIRE(c->next_document()->get_long("count") == 99);
+            REQUIRE(c->next_document()->get_long("count") == 98);
+            REQUIRE(c->next_document()->get_long("count") == 97);
+            REQUIRE(c->next_document()->get_long("count") == 96);
+            REQUIRE(c->next_document()->get_long("count") == 95);
         }
         {
             auto c = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection ORDER BY name;");
             REQUIRE(c->size() == 100);
-            REQUIRE(c->next()->get_long("count") == 0);
-            REQUIRE(c->next()->get_long("count") == 1);
-            REQUIRE(c->next()->get_long("count") == 10);
-            REQUIRE(c->next()->get_long("count") == 11);
-            REQUIRE(c->next()->get_long("count") == 12);
+            REQUIRE(c->next_document()->get_long("count") == 0);
+            REQUIRE(c->next_document()->get_long("count") == 1);
+            REQUIRE(c->next_document()->get_long("count") == 10);
+            REQUIRE(c->next_document()->get_long("count") == 11);
+            REQUIRE(c->next_document()->get_long("count") == 12);
         }
     }
 
@@ -155,7 +155,7 @@ TEST_CASE("example::sql::group_by") {
                              R"_(GROUP BY name;)_");
         REQUIRE(c->size() == 10);
         int number = 0;
-        while (auto doc = c->next()) {
+        while (auto doc = c->next_document()) {
             REQUIRE(doc->get_string("name") == std::pmr::string("Name " + std::to_string(number)));
             REQUIRE(doc->get_long("count_") == 10);
             REQUIRE(doc->get_long("sum_") == 5 * (number % 20) + 5 * ((number + 10) % 20));
@@ -176,7 +176,7 @@ TEST_CASE("example::sql::group_by") {
                              R"_(ORDER BY name DESC;)_");
         REQUIRE(c->size() == 10);
         int number = 9;
-        while (auto doc = c->next()) {
+        while (auto doc = c->next_document()) {
             REQUIRE(doc->get_string("name") == std::pmr::string("Name " + std::to_string(number)));
             REQUIRE(doc->get_long("count_") == 10);
             REQUIRE(doc->get_long("sum_") == 5 * (number % 20) + 5 * ((number + 10) % 20));
