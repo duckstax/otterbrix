@@ -1,7 +1,7 @@
 #include "../schema.hpp"
 
 #include <bitset>
-#include <magic_enum.hpp>
+#include <optional>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -27,12 +27,13 @@ namespace components::catalog {
 
     private:
         // enum ordering is important: type must be updated before name
-        enum diff_info_type : uint16_t
+        enum diff_info_type : uint8_t
         {
             UPDATE_TYPE = 1,     // 00001
             UPDATE_NAME = 2,     // 00010
             UPDATE_DOC = 3,      // 00100
             UPDATE_OPTIONAL = 4, // 01000
+            COUNT                // sentinel
         };
 
         struct struct_entry {
@@ -45,7 +46,7 @@ namespace components::catalog {
                       types::field_description desc = types::field_description(),
                       types::complex_logical_type type = types::complex_logical_type());
 
-            std::bitset<magic_enum::enum_count<diff_info_type>() + 1> info;
+            std::bitset<diff_info_type::COUNT> info;
             struct_entry entry;
         };
 

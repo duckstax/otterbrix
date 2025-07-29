@@ -130,7 +130,9 @@ namespace components::catalog {
                                 const std::string& name) const {
         if (const auto& it = updates.find(name); it != updates.end()) {
             auto& info = it->second;
-            for (auto diff_type : magic_enum::enum_values<diff_info_type>()) {
+            for (uint8_t i = diff_info_type::UPDATE_TYPE; i < diff_info_type::COUNT; ++i) {
+                auto diff_type = static_cast<diff_info_type>(i);
+
                 if (!info.info.test(diff_type)) {
                     continue;
                 }
