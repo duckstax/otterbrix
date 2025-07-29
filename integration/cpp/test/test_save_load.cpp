@@ -38,7 +38,7 @@ cursor_t_ptr find_doc(otterbrix::wrapper_dispatcher_t* dispatcher,
     params->add_parameter(id_par{1}, new_value(gen_id(n_doc, dispatcher->resource())));
     auto cur = dispatcher->find_one(session_doc, aggregate, params);
     if (cur->is_success()) {
-        cur->next();
+        cur->next_document();
     }
     return cur;
 }
@@ -78,9 +78,9 @@ TEST_CASE("integration::cpp::test_save_load::disk") {
                 auto size = dispatcher->size(session, db_name, col_name);
                 REQUIRE(size == count_documents);
                 for (uint n_doc = 1; n_doc <= count_documents; ++n_doc) {
-                    REQUIRE(
-                        find_doc(dispatcher, tape.get(), db_name, col_name, int(n_doc))->get()->get_ulong("number") ==
-                        gen_doc_number(n_db, n_col, n_doc));
+                    REQUIRE(find_doc(dispatcher, tape.get(), db_name, col_name, int(n_doc))
+                                ->get_document()
+                                ->get_ulong("number") == gen_doc_number(n_db, n_col, n_doc));
                 }
             }
         }
@@ -239,17 +239,18 @@ TEST_CASE("integration::cpp::test_save_load::disk+wal") {
                 auto size = dispatcher->size(session, db_name, col_name);
                 REQUIRE(size == count_documents - 3);
 
-                REQUIRE_FALSE(find_doc(dispatcher, tape.get(), db_name, col_name, 1)->is_success());
-                REQUIRE_FALSE(find_doc(dispatcher, tape.get(), db_name, col_name, 2)->is_success());
-                REQUIRE_FALSE(find_doc(dispatcher, tape.get(), db_name, col_name, 3)->is_success());
-                REQUIRE_FALSE(find_doc(dispatcher, tape.get(), db_name, col_name, 4)->is_success());
+                REQUIRE(find_doc(dispatcher, tape.get(), db_name, col_name, 1)->size() == 0);
+                REQUIRE(find_doc(dispatcher, tape.get(), db_name, col_name, 2)->size() == 0);
+                REQUIRE(find_doc(dispatcher, tape.get(), db_name, col_name, 3)->size() == 0);
+                REQUIRE(find_doc(dispatcher, tape.get(), db_name, col_name, 4)->size() == 0);
 
-                REQUIRE(find_doc(dispatcher, tape.get(), db_name, col_name, 5)->get()->get_ulong("count") == 0);
+                REQUIRE(find_doc(dispatcher, tape.get(), db_name, col_name, 5)->get_document()->get_ulong("count") ==
+                        0);
 
                 for (uint n_doc = 6; n_doc <= count_documents + 1; ++n_doc) {
                     auto doc_find = find_doc(dispatcher, tape.get(), db_name, col_name, int(n_doc));
-                    REQUIRE(doc_find->get()->get_ulong("number") == gen_doc_number(n_db, n_col, n_doc));
-                    REQUIRE(doc_find->get()->get_ulong("count") == 1000);
+                    REQUIRE(doc_find->get_document()->get_ulong("number") == gen_doc_number(n_db, n_col, n_doc));
+                    REQUIRE(doc_find->get_document()->get_ulong("count") == 1000);
                 }
             }
         }

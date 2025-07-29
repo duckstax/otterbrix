@@ -74,11 +74,11 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
                                                "ORDER BY count;");
             REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 100);
-            REQUIRE(cur->next()->get_long("count") == 0);
-            REQUIRE(cur->next()->get_long("count") == 1);
-            REQUIRE(cur->next()->get_long("count") == 2);
-            REQUIRE(cur->next()->get_long("count") == 3);
-            REQUIRE(cur->next()->get_long("count") == 4);
+            REQUIRE(cur->next_document()->get_long("count") == 0);
+            REQUIRE(cur->next_document()->get_long("count") == 1);
+            REQUIRE(cur->next_document()->get_long("count") == 2);
+            REQUIRE(cur->next_document()->get_long("count") == 3);
+            REQUIRE(cur->next_document()->get_long("count") == 4);
         }
         {
             auto session = otterbrix::session_id_t();
@@ -87,11 +87,11 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
                                                "ORDER BY count DESC;");
             REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 100);
-            REQUIRE(cur->next()->get_long("count") == 99);
-            REQUIRE(cur->next()->get_long("count") == 98);
-            REQUIRE(cur->next()->get_long("count") == 97);
-            REQUIRE(cur->next()->get_long("count") == 96);
-            REQUIRE(cur->next()->get_long("count") == 95);
+            REQUIRE(cur->next_document()->get_long("count") == 99);
+            REQUIRE(cur->next_document()->get_long("count") == 98);
+            REQUIRE(cur->next_document()->get_long("count") == 97);
+            REQUIRE(cur->next_document()->get_long("count") == 96);
+            REQUIRE(cur->next_document()->get_long("count") == 95);
         }
         {
             auto session = otterbrix::session_id_t();
@@ -100,11 +100,11 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
                                                "ORDER BY name;");
             REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 100);
-            REQUIRE(cur->next()->get_long("count") == 0);
-            REQUIRE(cur->next()->get_long("count") == 1);
-            REQUIRE(cur->next()->get_long("count") == 10);
-            REQUIRE(cur->next()->get_long("count") == 11);
-            REQUIRE(cur->next()->get_long("count") == 12);
+            REQUIRE(cur->next_document()->get_long("count") == 0);
+            REQUIRE(cur->next_document()->get_long("count") == 1);
+            REQUIRE(cur->next_document()->get_long("count") == 10);
+            REQUIRE(cur->next_document()->get_long("count") == 11);
+            REQUIRE(cur->next_document()->get_long("count") == 12);
         }
     }
 
@@ -130,7 +130,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
             auto cur = dispatcher->execute_sql(session,
                                                "SELECT * FROM TestDatabase.TestCollection "
                                                "WHERE count > 90;");
-            REQUIRE_FALSE(cur->is_success());
+            REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 0);
         }
     }
@@ -158,7 +158,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
             auto cur = dispatcher->execute_sql(session,
                                                "SELECT * FROM TestDatabase.TestCollection "
                                                "WHERE count < 20;");
-            REQUIRE_FALSE(cur->is_success());
+            REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 0);
         }
         {
@@ -212,7 +212,7 @@ TEST_CASE("integration::cpp::test_collection::sql::group_by") {
         REQUIRE(cur->is_success());
         REQUIRE(cur->size() == 10);
         int number = 0;
-        while (auto doc = cur->next()) {
+        while (auto doc = cur->next_document()) {
             REQUIRE(doc->get_string("name") == std::pmr::string("Name " + std::to_string(number)));
             REQUIRE(doc->get_long("count_") == 10);
             REQUIRE(doc->get_long("sum_") == 5 * (number % 20) + 5 * ((number + 10) % 20));
@@ -236,7 +236,7 @@ TEST_CASE("integration::cpp::test_collection::sql::group_by") {
         REQUIRE(cur->is_success());
         REQUIRE(cur->size() == 10);
         int number = 9;
-        while (auto doc = cur->next()) {
+        while (auto doc = cur->next_document()) {
             REQUIRE(doc->get_string("name") == std::pmr::string("Name " + std::to_string(number)));
             REQUIRE(doc->get_long("count_") == 10);
             REQUIRE(doc->get_long("sum_") == 5 * (number % 20) + 5 * ((number + 10) % 20));

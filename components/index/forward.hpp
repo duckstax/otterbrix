@@ -18,6 +18,6 @@ namespace components::index {
     using id_index = uint32_t;
     using value_t = types::logical_value_t;
     using query_t = expressions::compare_expression_ptr;
-    using result_set_t = cursor::sub_cursor_t;
+    using result_set_t = cursor::cursor_t;
 
 } // namespace components::index

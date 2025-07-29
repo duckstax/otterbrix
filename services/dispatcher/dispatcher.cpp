@@ -429,10 +429,6 @@ namespace services::dispatcher {
         trace(log_, "Session : {}", session.data());
         auto it = cursor_.find(session);
         if (it != cursor_.end()) {
-            std::set<collection_full_name_t> collections;
-            for (auto& i : *it->second) {
-                collections.insert(i->collection_name());
-            }
             cursor_.erase(it);
         } else {
             error(log_, "Not find session : {}", session.data());

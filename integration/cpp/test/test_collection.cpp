@@ -202,7 +202,7 @@ TEST_CASE("integration::cpp::test_collection") {
         REQUIRE(cur->size() == 100);
         int count = 0;
         while (cur->has_next()) {
-            cur->next();
+            cur->next_document();
             ++count;
         }
         REQUIRE(count == 100);
@@ -222,7 +222,7 @@ TEST_CASE("integration::cpp::test_collection") {
             auto params = components::logical_plan::make_parameter_node(dispatcher->resource());
             params->add_parameter(id_par{1}, new_value(gen_id(1, dispatcher->resource())));
             auto cur = dispatcher->find_one(session, plan, params);
-            REQUIRE(cur->next()->get_long("count") == 1);
+            REQUIRE(cur->next_document()->get_long("count") == 1);
         }
         {
             auto session = otterbrix::session_id_t();
@@ -239,7 +239,7 @@ TEST_CASE("integration::cpp::test_collection") {
             params->add_parameter(id_par{1}, new_value(10));
             auto cur = dispatcher->find_one(session, plan, params);
             REQUIRE(cur->is_success());
-            REQUIRE(cur->next()->get_long("count") == 10);
+            REQUIRE(cur->next_document()->get_long("count") == 10);
         }
         {
             auto session = otterbrix::session_id_t();
@@ -263,7 +263,7 @@ TEST_CASE("integration::cpp::test_collection") {
             params->add_parameter(id_par{2}, new_value(std::string_view{"9$"}));
             auto cur = dispatcher->find_one(session, plan, params);
             REQUIRE(cur->is_success());
-            REQUIRE(cur->next()->get_long("count") == 99);
+            REQUIRE(cur->next_document()->get_long("count") == 99);
         }
     }
     INFO("drop_collection") {

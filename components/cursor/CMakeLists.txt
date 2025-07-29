@@ -19,9 +19,8 @@ set_property(TARGET otterbrix_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 
 target_link_libraries(
         otterbrix_${PROJECT_NAME} PRIVATE
-        actor-zeta::actor-zeta
-        Boost::boost
         absl::int128
+        msgpackc-cxx
 )
 
 target_include_directories(otterbrix_${PROJECT_NAME}

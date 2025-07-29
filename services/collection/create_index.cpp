@@ -87,19 +87,15 @@ namespace services::collection::executor {
                                                 result,
                                                 collection->document_storage());
         auto& suspend_plan = sessions::find(collection->sessions(), session).get<sessions::suspend_plan_t>();
-        auto res = std::make_unique<components::cursor::sub_cursor_t>(resource(), collection->name());
+        std::pmr::vector<document_ptr> documents(resource());
         suspend_plan.plan->on_execute(&suspend_plan.pipeline_context);
         if (suspend_plan.plan->is_executed()) {
             if (suspend_plan.plan->output()) {
-                for (const auto& document : suspend_plan.plan->output()->documents()) {
-                    res->append(document);
-                }
+                documents = suspend_plan.plan->output()->documents();
             }
         }
         sessions::remove(collection->sessions(), session);
-        auto cursor = make_cursor(resource());
-        cursor->push(std::move(res));
-        execute_sub_plan_finish_(session, cursor);
+        execute_sub_plan_finish_(session, make_cursor(resource(), std::move(documents)));
     }
 
 } // namespace services::collection::executor

@@ -2,6 +2,7 @@
 
 #include "core/pmr.hpp"
 #include "forward.hpp"
+#include <actor-zeta.hpp>
 
 namespace components::index {
 
