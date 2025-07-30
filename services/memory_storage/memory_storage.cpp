@@ -136,17 +136,15 @@ namespace services {
                              session,
                              make_cursor(resource(), error_code_t::collection_dropped));
         } else {
-            auto sub_cursor = std::make_unique<sub_cursor_t>(collection->resource(), collection->name());
+            std::pmr::vector<document_ptr> documents(resource());
             for (const auto& doc : collection->document_storage()) {
-                sub_cursor->append(doc.second);
+                documents.emplace_back(doc.second);
             }
-            auto cursor = make_cursor(collection->resource());
-            cursor->push(std::move(sub_cursor));
             actor_zeta::send(current_message()->sender(),
                              address(),
                              handler_id(collection::route::size_finish),
                              session,
-                             std::move(cursor));
+                             make_cursor(resource(), std::move(documents)));
         }
     }
 

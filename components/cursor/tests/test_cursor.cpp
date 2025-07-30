@@ -17,7 +17,7 @@ TEST_CASE("cursor::construction") {
     INFO("failed operation cursor") {
         auto cursor = components::cursor::make_cursor(&resource, components::cursor::operation_status_t::failure);
         REQUIRE_FALSE(cursor->is_success());
-        REQUIRE_FALSE(cursor->is_error());
+        REQUIRE(cursor->is_error());
     }
     INFO("successful operation cursor") {
         auto cursor = components::cursor::make_cursor(&resource, components::cursor::operation_status_t::success);
@@ -37,24 +37,23 @@ TEST_CASE("cursor::construction") {
 
 TEST_CASE("cursor::sort") {
     auto resource = std::pmr::synchronized_pool_resource();
-    components::cursor::cursor_t cursor(&resource);
-    collection_full_name_t name;
+    std::pmr::vector<components::document::document_ptr> docs(&resource);
     for (int i = 0; i < 10; ++i) {
-        auto sub_cursor = std::make_unique<components::cursor::sub_cursor_t>(&resource, name);
         for (int j = 0; j < 10; ++j) {
-            sub_cursor->append(gen_doc(10 * i + j + 1, &resource));
+            docs.emplace_back(gen_doc(10 * i + j + 1, &resource));
         }
-        cursor.push(std::move(sub_cursor));
     }
+
+    components::cursor::cursor_t cursor(&resource, std::move(docs));
     REQUIRE(cursor.size() == 100);
-    cursor.sort([](components::cursor::data_ptr doc1, components::cursor::data_ptr doc2) {
+    cursor.sort([](components::document::document_ptr doc1, components::document::document_ptr doc2) {
         return doc1->get_long("count") > doc2->get_long("count");
     });
-    REQUIRE(cursor.get(0)->get_long("count") == 100);
-    REQUIRE(cursor.get(99)->get_long("count") == 1);
-    cursor.sort([](components::cursor::data_ptr doc1, components::cursor::data_ptr doc2) {
+    REQUIRE(cursor.get_document(0)->get_long("count") == 100);
+    REQUIRE(cursor.get_document(99)->get_long("count") == 1);
+    cursor.sort([](components::document::document_ptr doc1, components::document::document_ptr doc2) {
         return doc1->get_long("count") < doc2->get_long("count");
     });
-    REQUIRE(cursor.get(0)->get_long("count") == 1);
-    REQUIRE(cursor.get(99)->get_long("count") == 100);
+    REQUIRE(cursor.get_document(0)->get_long("count") == 1);
+    REQUIRE(cursor.get_document(99)->get_long("count") == 100);
 }

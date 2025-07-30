@@ -70,7 +70,7 @@ namespace otterbrix {
                 throw std::runtime_error("wrapper_collection::insert_one error_result");
             }
             debug(log_, "wrapper_collection::insert_one {} inserted", cur->size());
-            return cur->size() > 0 ? get_document_id(cur->get()).to_string() : std::string();
+            return cur->size() > 0 ? get_document_id(cur->get_document()).to_string() : std::string();
         }
         throw std::runtime_error("wrapper_collection::insert_one");
         return std::string();
@@ -93,10 +93,8 @@ namespace otterbrix {
             }
             debug(log_, "wrapper_collection::insert_many {} inserted", cur->size());
             py::list list;
-            for (const auto& sub_cursor : *cur) {
-                for (const auto& doc : sub_cursor->data()) {
-                    list.append(get_document_id(doc).to_string());
-                }
+            for (const auto& doc : cur->document_data()) {
+                list.append(get_document_id(doc).to_string());
             }
             return list;
         }
@@ -150,7 +148,7 @@ namespace otterbrix {
             debug(log_,
                   "wrapper_collection::update_one {} modified, upsert id {}",
                   cur->size(),
-                  cur->size() == 0 ? "none" : get_document_id(cur->get()).to_string());
+                  cur->size() == 0 ? "none" : get_document_id(cur->get_document()).to_string());
             return wrapper_cursor_ptr{new wrapper_cursor{cur, ptr_}};
         }
         return wrapper_cursor_ptr{new wrapper_cursor{new components::cursor::cursor_t(ptr_->resource()), ptr_}};
@@ -202,7 +200,7 @@ namespace otterbrix {
             debug(log_,
                   "wrapper_collection::update_one {} modified, upsert id {}",
                   cur->size(),
-                  cur->size() == 0 ? "none" : get_document_id(cur->get()).to_string());
+                  cur->size() == 0 ? "none" : get_document_id(cur->get_document()).to_string());
             return wrapper_cursor_ptr{new wrapper_cursor{cur, ptr_}};
         }
         return wrapper_cursor_ptr{new wrapper_cursor{new components::cursor::cursor_t(ptr_->resource()), ptr_}};
@@ -233,7 +231,7 @@ namespace otterbrix {
             auto cur = ptr_->find_one(session_tmp, plan, params);
             debug(log_, "wrapper_collection::find_one {}", cur->size() > 0);
             if (cur->size() > 0) {
-                return from_document(cur->next()).cast<py::dict>();
+                return from_document(cur->next_document()).cast<py::dict>();
             }
             return py::dict();
         }

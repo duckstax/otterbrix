@@ -136,7 +136,7 @@ extern "C" doc_ptr cursor_next(cursor_ptr ptr) {
     auto storage = convert_cursor(ptr);
     auto doc_storage = std::make_unique<document_storage_t>();
     doc_storage->state = state_t::created;
-    doc_storage->document = storage->cursor->next();
+    doc_storage->document = storage->cursor->next_document();
     return reinterpret_cast<void*>(doc_storage.release());
 }
 
@@ -144,7 +144,7 @@ extern "C" doc_ptr cursor_get(cursor_ptr ptr) {
     auto storage = convert_cursor(ptr);
     auto doc_storage = std::make_unique<document_storage_t>();
     doc_storage->state = state_t::created;
-    doc_storage->document = storage->cursor->get();
+    doc_storage->document = storage->cursor->get_document();
     return reinterpret_cast<void*>(doc_storage.release());
 }
 
@@ -152,7 +152,7 @@ extern "C" doc_ptr cursor_get_by_index(cursor_ptr ptr, int index) {
     auto storage = convert_cursor(ptr);
     auto doc_storage = std::make_unique<document_storage_t>();
     doc_storage->state = state_t::created;
-    doc_storage->document = storage->cursor->get(static_cast<size_t>(index));
+    doc_storage->document = storage->cursor->get_document(static_cast<size_t>(index));
     return reinterpret_cast<void*>(doc_storage.release());
 }
 

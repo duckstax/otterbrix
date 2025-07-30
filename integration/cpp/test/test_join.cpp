@@ -65,11 +65,12 @@ TEST_CASE("integration::cpp::test_join") {
 
             for (int num = 0; num < 26; ++num) {
                 REQUIRE(cur->has_next());
-                cur->next();
-                REQUIRE(cur->get()->get_long("key_1") == (num + 25) * 2);
-                REQUIRE(cur->get()->get_long("key") == (num + 25) * 2);
-                REQUIRE(cur->get()->get_long("value") == (num + 25) * 2 * 10);
-                REQUIRE(cur->get()->get_string("name") == std::pmr::string("Name " + std::to_string((num + 25) * 2)));
+                cur->next_document();
+                REQUIRE(cur->get_document()->get_long("key_1") == (num + 25) * 2);
+                REQUIRE(cur->get_document()->get_long("key") == (num + 25) * 2);
+                REQUIRE(cur->get_document()->get_long("value") == (num + 25) * 2 * 10);
+                REQUIRE(cur->get_document()->get_string("name") ==
+                        std::pmr::string("Name " + std::to_string((num + 25) * 2)));
             }
         }
     }
@@ -89,32 +90,34 @@ TEST_CASE("integration::cpp::test_join") {
 
             for (int num = 0; num < 50; ++num) {
                 REQUIRE(cur->has_next());
-                cur->next();
-                REQUIRE(cur->get()->get_long("key_1") == num);
-                REQUIRE(cur->get()->get_long("key") == 0);
-                REQUIRE(cur->get()->get_long("value") == 0);
-                REQUIRE(cur->get()->get_string("name") == std::pmr::string("Name " + std::to_string(num)));
+                cur->next_document();
+                REQUIRE(cur->get_document()->get_long("key_1") == num);
+                REQUIRE(cur->get_document()->get_long("key") == 0);
+                REQUIRE(cur->get_document()->get_long("value") == 0);
+                REQUIRE(cur->get_document()->get_string("name") == std::pmr::string("Name " + std::to_string(num)));
             }
             for (int num = 0; num < 50; num += 2) {
                 REQUIRE(cur->has_next());
-                cur->next();
-                REQUIRE(cur->get()->get_long("key_1") == num + 50);
-                REQUIRE(cur->get()->get_long("key") == num + 50);
-                REQUIRE(cur->get()->get_long("value") == (num + 50) * 10);
-                REQUIRE(cur->get()->get_string("name") == std::pmr::string("Name " + std::to_string(num + 50)));
+                cur->next_document();
+                REQUIRE(cur->get_document()->get_long("key_1") == num + 50);
+                REQUIRE(cur->get_document()->get_long("key") == num + 50);
+                REQUIRE(cur->get_document()->get_long("value") == (num + 50) * 10);
+                REQUIRE(cur->get_document()->get_string("name") ==
+                        std::pmr::string("Name " + std::to_string(num + 50)));
                 REQUIRE(cur->has_next());
-                cur->next();
-                REQUIRE(cur->get()->get_long("key_1") == num + 51);
-                REQUIRE(cur->get()->get_long("key") == 0);
-                REQUIRE(cur->get()->get_long("value") == 0);
-                REQUIRE(cur->get()->get_string("name") == std::pmr::string("Name " + std::to_string(num + 51)));
+                cur->next_document();
+                REQUIRE(cur->get_document()->get_long("key_1") == num + 51);
+                REQUIRE(cur->get_document()->get_long("key") == 0);
+                REQUIRE(cur->get_document()->get_long("value") == 0);
+                REQUIRE(cur->get_document()->get_string("name") ==
+                        std::pmr::string("Name " + std::to_string(num + 51)));
             }
             REQUIRE(cur->has_next());
-            cur->next();
-            REQUIRE(cur->get()->get_long("key_1") == 100);
-            REQUIRE(cur->get()->get_long("key") == 100);
-            REQUIRE(cur->get()->get_long("value") == 1000);
-            REQUIRE(cur->get()->get_string("name") == std::pmr::string("Name " + std::to_string(100)));
+            cur->next_document();
+            REQUIRE(cur->get_document()->get_long("key_1") == 100);
+            REQUIRE(cur->get_document()->get_long("key") == 100);
+            REQUIRE(cur->get_document()->get_long("value") == 1000);
+            REQUIRE(cur->get_document()->get_string("name") == std::pmr::string("Name " + std::to_string(100)));
         }
     }
 
@@ -133,19 +136,20 @@ TEST_CASE("integration::cpp::test_join") {
 
             for (int num = 0; num < 26; ++num) {
                 REQUIRE(cur->has_next());
-                cur->next();
-                REQUIRE(cur->get()->get_long("key_1") == num * 2 + 50);
-                REQUIRE(cur->get()->get_long("key") == num * 2 + 50);
-                REQUIRE(cur->get()->get_long("value") == (num * 2 + 50) * 10);
-                REQUIRE(cur->get()->get_string("name") == std::pmr::string("Name " + std::to_string(num * 2 + 50)));
+                cur->next_document();
+                REQUIRE(cur->get_document()->get_long("key_1") == num * 2 + 50);
+                REQUIRE(cur->get_document()->get_long("key") == num * 2 + 50);
+                REQUIRE(cur->get_document()->get_long("value") == (num * 2 + 50) * 10);
+                REQUIRE(cur->get_document()->get_string("name") ==
+                        std::pmr::string("Name " + std::to_string(num * 2 + 50)));
             }
             for (int num = 0; num < 74; ++num) {
                 REQUIRE(cur->has_next());
-                cur->next();
-                REQUIRE(cur->get()->get_long("key_1") == 0);
-                REQUIRE(cur->get()->get_long("key") == num * 2 + 102);
-                REQUIRE(cur->get()->get_long("value") == (num * 2 + 102) * 10);
-                REQUIRE(cur->get()->get_string("name") == "");
+                cur->next_document();
+                REQUIRE(cur->get_document()->get_long("key_1") == 0);
+                REQUIRE(cur->get_document()->get_long("key") == num * 2 + 102);
+                REQUIRE(cur->get_document()->get_long("value") == (num * 2 + 102) * 10);
+                REQUIRE(cur->get_document()->get_string("name") == "");
             }
         }
     }
@@ -165,39 +169,41 @@ TEST_CASE("integration::cpp::test_join") {
 
             for (int num = 0; num < 50; ++num) {
                 REQUIRE(cur->has_next());
-                cur->next();
-                REQUIRE(cur->get()->get_long("key_1") == num);
-                REQUIRE(cur->get()->get_long("key") == 0);
-                REQUIRE(cur->get()->get_long("value") == 0);
-                REQUIRE(cur->get()->get_string("name") == std::pmr::string("Name " + std::to_string(num)));
+                cur->next_document();
+                REQUIRE(cur->get_document()->get_long("key_1") == num);
+                REQUIRE(cur->get_document()->get_long("key") == 0);
+                REQUIRE(cur->get_document()->get_long("value") == 0);
+                REQUIRE(cur->get_document()->get_string("name") == std::pmr::string("Name " + std::to_string(num)));
             }
             for (int num = 0; num < 50; num += 2) {
                 REQUIRE(cur->has_next());
-                cur->next();
-                REQUIRE(cur->get()->get_long("key_1") == num + 50);
-                REQUIRE(cur->get()->get_long("key") == num + 50);
-                REQUIRE(cur->get()->get_long("value") == (num + 50) * 10);
-                REQUIRE(cur->get()->get_string("name") == std::pmr::string("Name " + std::to_string(num + 50)));
+                cur->next_document();
+                REQUIRE(cur->get_document()->get_long("key_1") == num + 50);
+                REQUIRE(cur->get_document()->get_long("key") == num + 50);
+                REQUIRE(cur->get_document()->get_long("value") == (num + 50) * 10);
+                REQUIRE(cur->get_document()->get_string("name") ==
+                        std::pmr::string("Name " + std::to_string(num + 50)));
                 REQUIRE(cur->has_next());
-                cur->next();
-                REQUIRE(cur->get()->get_long("key_1") == num + 51);
-                REQUIRE(cur->get()->get_long("key") == 0);
-                REQUIRE(cur->get()->get_long("value") == 0);
-                REQUIRE(cur->get()->get_string("name") == std::pmr::string("Name " + std::to_string(num + 51)));
+                cur->next_document();
+                REQUIRE(cur->get_document()->get_long("key_1") == num + 51);
+                REQUIRE(cur->get_document()->get_long("key") == 0);
+                REQUIRE(cur->get_document()->get_long("value") == 0);
+                REQUIRE(cur->get_document()->get_string("name") ==
+                        std::pmr::string("Name " + std::to_string(num + 51)));
             }
             REQUIRE(cur->has_next());
-            cur->next();
-            REQUIRE(cur->get()->get_long("key_1") == 100);
-            REQUIRE(cur->get()->get_long("key") == 100);
-            REQUIRE(cur->get()->get_long("value") == 1000);
-            REQUIRE(cur->get()->get_string("name") == std::pmr::string("Name " + std::to_string(100)));
+            cur->next_document();
+            REQUIRE(cur->get_document()->get_long("key_1") == 100);
+            REQUIRE(cur->get_document()->get_long("key") == 100);
+            REQUIRE(cur->get_document()->get_long("value") == 1000);
+            REQUIRE(cur->get_document()->get_string("name") == std::pmr::string("Name " + std::to_string(100)));
             for (int num = 0; num < 74; ++num) {
                 REQUIRE(cur->has_next());
-                cur->next();
-                REQUIRE(cur->get()->get_long("key_1") == 0);
-                REQUIRE(cur->get()->get_long("key") == num * 2 + 102);
-                REQUIRE(cur->get()->get_long("value") == (num * 2 + 102) * 10);
-                REQUIRE(cur->get()->get_string("name") == "");
+                cur->next_document();
+                REQUIRE(cur->get_document()->get_long("key_1") == 0);
+                REQUIRE(cur->get_document()->get_long("key") == num * 2 + 102);
+                REQUIRE(cur->get_document()->get_long("value") == (num * 2 + 102) * 10);
+                REQUIRE(cur->get_document()->get_string("name") == "");
             }
         }
     }

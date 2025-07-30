@@ -183,7 +183,7 @@ TEST_CASE("integration::cpp::test_collection::logical_plan") {
             auto params = logical_plan::make_parameter_node(dispatcher->resource());
             params->add_parameter(id_par{1}, new_value(90));
             auto cur = dispatcher->execute_plan(session, agg, params);
-            REQUIRE_FALSE(cur->is_success());
+            REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 0);
         }
     }
@@ -258,7 +258,7 @@ TEST_CASE("integration::cpp::test_collection::logical_plan") {
             auto params = logical_plan::make_parameter_node(dispatcher->resource());
             params->add_parameter(id_par{1}, new_value(20));
             auto cur = dispatcher->execute_plan(session, agg, params);
-            REQUIRE_FALSE(cur->is_success());
+            REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 0);
         }
         {
@@ -290,8 +290,8 @@ TEST_CASE("integration::cpp::test_collection::logical_plan") {
             data.reserve(cur->size());
             for (int num = 0; num < cur->size(); ++num) {
                 REQUIRE(cur->has_next());
-                cur->next();
-                data.emplace_back(cur->get());
+                cur->next_document();
+                data.emplace_back(cur->get_document());
             }
         }
         {
@@ -335,8 +335,8 @@ TEST_CASE("integration::cpp::test_collection::logical_plan") {
             REQUIRE(cur->size() == 9);
             for (int num = 0; num < cur->size(); ++num) {
                 REQUIRE(cur->has_next());
-                cur->next();
-                REQUIRE((91 + num) * 2 == cur->get()->get_long("count"));
+                cur->next_document();
+                REQUIRE((91 + num) * 2 == cur->get_document()->get_long("count"));
             }
         }
     }
@@ -391,11 +391,12 @@ TEST_CASE("integration::cpp::test_collection::logical_plan") {
 
             for (int num = 0; num < 26; ++num) {
                 REQUIRE(cur->has_next());
-                cur->next();
-                REQUIRE(cur->get()->get_long("key_1") == (num + 25) * 2);
-                REQUIRE(cur->get()->get_long("key") == (num + 25) * 2);
-                REQUIRE(cur->get()->get_long("value") == (num + 25) * 2 * 10);
-                REQUIRE(cur->get()->get_string("name") == std::pmr::string("Name " + std::to_string((num + 25) * 2)));
+                cur->next_document();
+                REQUIRE(cur->get_document()->get_long("key_1") == (num + 25) * 2);
+                REQUIRE(cur->get_document()->get_long("key") == (num + 25) * 2);
+                REQUIRE(cur->get_document()->get_long("value") == (num + 25) * 2 * 10);
+                REQUIRE(cur->get_document()->get_string("name") ==
+                        std::pmr::string("Name " + std::to_string((num + 25) * 2)));
             }
         }
         INFO("left is raw data") {
@@ -416,11 +417,12 @@ TEST_CASE("integration::cpp::test_collection::logical_plan") {
 
             for (int num = 0; num < 26; ++num) {
                 REQUIRE(cur->has_next());
-                cur->next();
-                REQUIRE(cur->get()->get_long("key_1") == (num + 25) * 2);
-                REQUIRE(cur->get()->get_long("key") == (num + 25) * 2);
-                REQUIRE(cur->get()->get_long("value") == (num + 25) * 2 * 10);
-                REQUIRE(cur->get()->get_string("name") == std::pmr::string("Name " + std::to_string((num + 25) * 2)));
+                cur->next_document();
+                REQUIRE(cur->get_document()->get_long("key_1") == (num + 25) * 2);
+                REQUIRE(cur->get_document()->get_long("key") == (num + 25) * 2);
+                REQUIRE(cur->get_document()->get_long("value") == (num + 25) * 2 * 10);
+                REQUIRE(cur->get_document()->get_string("name") ==
+                        std::pmr::string("Name " + std::to_string((num + 25) * 2)));
             }
         }
         INFO("both are raw data") {
@@ -440,11 +442,12 @@ TEST_CASE("integration::cpp::test_collection::logical_plan") {
 
             for (int num = 0; num < 26; ++num) {
                 REQUIRE(cur->has_next());
-                cur->next();
-                REQUIRE(cur->get()->get_long("key_1") == (num + 25) * 2);
-                REQUIRE(cur->get()->get_long("key") == (num + 25) * 2);
-                REQUIRE(cur->get()->get_long("value") == (num + 25) * 2 * 10);
-                REQUIRE(cur->get()->get_string("name") == std::pmr::string("Name " + std::to_string((num + 25) * 2)));
+                cur->next_document();
+                REQUIRE(cur->get_document()->get_long("key_1") == (num + 25) * 2);
+                REQUIRE(cur->get_document()->get_long("key") == (num + 25) * 2);
+                REQUIRE(cur->get_document()->get_long("value") == (num + 25) * 2 * 10);
+                REQUIRE(cur->get_document()->get_string("name") ==
+                        std::pmr::string("Name " + std::to_string((num + 25) * 2)));
             }
         }
         INFO("join raw data with aggregate") {
@@ -527,12 +530,12 @@ TEST_CASE("integration::cpp::test_collection::logical_plan") {
 
             for (int num = 12; num >= 0; --num) {
                 REQUIRE(cur->has_next());
-                cur->next();
-                REQUIRE(cur->get()->get_long("count") == 1);
-                REQUIRE(cur->get()->get_long("sum") == (num + 25) * 2 * 10);
-                REQUIRE(cur->get()->get_long("avg") == (num + 25) * 2);
-                REQUIRE(cur->get()->get_long("min") == (num + 25) * 2 * 10);
-                REQUIRE(cur->get()->get_long("max") == (num + 25) * 2 * 10);
+                cur->next_document();
+                REQUIRE(cur->get_document()->get_long("count") == 1);
+                REQUIRE(cur->get_document()->get_long("sum") == (num + 25) * 2 * 10);
+                REQUIRE(cur->get_document()->get_long("avg") == (num + 25) * 2);
+                REQUIRE(cur->get_document()->get_long("min") == (num + 25) * 2 * 10);
+                REQUIRE(cur->get_document()->get_long("max") == (num + 25) * 2 * 10);
             }
         }
         INFO("just raw data") {
@@ -544,8 +547,8 @@ TEST_CASE("integration::cpp::test_collection::logical_plan") {
 
             for (int num = 0; num < cur->size(); ++num) {
                 REQUIRE(cur->has_next());
-                cur->next();
-                REQUIRE(cur->get() == documents_left[num]);
+                cur->next_document();
+                REQUIRE(cur->get_document() == documents_left[num]);
             }
         }
     }
