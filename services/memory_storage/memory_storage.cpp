@@ -325,7 +325,7 @@ namespace services {
             }
             if (!check_collection_(session, name)) {
                 trace(log_,
-                      "memory_storage_t:execute_plan_impl: collection not found {}, sesion: {}",
+                      "memory_storage_t:execute_plan_impl: collection not found {}, session: {}",
                       name.to_string(),
                       session.data());
                 return;

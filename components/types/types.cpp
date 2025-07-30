@@ -342,7 +342,6 @@ namespace components::types {
     complex_logical_type complex_logical_type::create_struct(const std::vector<complex_logical_type>& fields) {
         return complex_logical_type(logical_type::STRUCT, std::make_unique<struct_logical_type_extention>(fields));
     }
-
     logical_type_extention::logical_type_extention(extention_type t, std::string alias)
         : type_(t)
         , alias_(std::move(alias)) {}
@@ -358,17 +357,51 @@ namespace components::types {
                                                            const complex_logical_type& value)
         : logical_type_extention(extention_type::MAP)
         , key_(key)
-        , value_(value) {}
+        , value_(value)
+        , key_id_(0)
+        , value_id_(0)
+        , value_required_(true) {}
+
+    map_logical_type_extention::map_logical_type_extention(uint64_t key_id,
+                                                           const types::complex_logical_type& key,
+                                                           uint64_t value_id,
+                                                           const types::complex_logical_type& value,
+                                                           bool value_required)
+
+        : logical_type_extention(extention_type::MAP)
+        , key_(key)
+        , value_(value)
+        , key_id_(key_id)
+        , value_id_(value_id)
+        , value_required_(value_required) {}
 
     list_logical_type_extention::list_logical_type_extention(complex_logical_type type)
         : logical_type_extention(extention_type::LIST)
-        , type_(std::move(type)) {}
+        , type_(std::move(type))
+        , field_id_(0)
+        , required_(true) {}
+
+    list_logical_type_extention::list_logical_type_extention(uint64_t field_id,
+                                                             complex_logical_type type,
+                                                             bool required)
+        : logical_type_extention(extention_type::LIST)
+        , type_(std::move(type))
+        , field_id_(field_id)
+        , required_(required) {}
 
     struct_logical_type_extention::struct_logical_type_extention(const std::vector<complex_logical_type>& fields)
         : logical_type_extention(extention_type::STRUCT)
-        , fields_(fields) {}
+        , fields_(fields)
+        , descriptions_() {}
 
-    const std::vector<complex_logical_type>& struct_logical_type_extention::child_types() const { return fields_; }
+    struct_logical_type_extention::struct_logical_type_extention(
+        const std::vector<types::complex_logical_type>& columns,
+        const std::vector<field_description>& descriptions)
+        : logical_type_extention(extention_type::STRUCT)
+        , fields_(columns)
+        , descriptions_(descriptions) {
+        assert(columns.size() == descriptions.size());
+    }
 
     decimal_logical_type_extention::decimal_logical_type_extention(uint8_t width, uint8_t scale)
         : logical_type_extention(extention_type::DECIMAL)
