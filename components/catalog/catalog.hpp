@@ -28,7 +28,7 @@ namespace components::catalog {
         [[nodiscard]] computed_schema& get_computing_table_schema(const table_id& id) const;
 
         void create_table(const table_id& id, table_metadata meta);
-        [[nodiscard]] computed_schema& create_computing_table(const table_id& id);
+        void create_computing_table(const table_id& id);
         void drop_table(const table_id& id);
         void drop_computing_table(const table_id& id);
         void rename_table(const table_id& from, std::pmr::string to);

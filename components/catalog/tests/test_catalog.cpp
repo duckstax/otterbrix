@@ -180,7 +180,8 @@ TEST_CASE("catalog::compute_schema") {
     cat.create_namespace({"db"});
     collection_full_name_t full{"db", "name"};
 
-    computed_schema& sch = cat.create_computing_table({&mr, full});
+    cat.create_computing_table({&mr, full});
+    computed_schema& sch = cat.get_computing_table_schema({&mr, full});
     std::vector<complex_logical_type> types{logical_type::BOOLEAN,
                                             logical_type::INTEGER,
                                             logical_type::INTEGER_LITERAL,

@@ -125,9 +125,6 @@ namespace services {
 
     void memory_storage_t::size(const components::session::session_id_t& session, collection_full_name_t&& name) {
         trace(log_, "collection {}::{}::size", name.database, name.collection);
-        if (!check_collection_(session, name)) {
-            return;
-        }
         auto collection = collections_.at(name).get();
         if (collection->dropped()) {
             actor_zeta::send(current_message()->sender(),
@@ -190,54 +187,9 @@ namespace services {
         behavior()(current_message());
     }
 
-    bool memory_storage_t::is_exists_database_(const database_name_t& name) const {
-        return databases_.find(name) != databases_.end();
-    }
-
-    bool memory_storage_t::is_exists_collection_(const collection_full_name_t& name) const {
-        return collections_.contains(name);
-    }
-
-    bool memory_storage_t::check_database_(const components::session::session_id_t& session,
-                                           const database_name_t& name) {
-        if (!is_exists_database_(name)) {
-            actor_zeta::send(current_message()->sender(),
-                             this->address(),
-                             handler_id(route::execute_plan_finish),
-                             session,
-                             make_cursor(resource(), error_code_t::database_not_exists, "database not exists"));
-            return false;
-        }
-        return true;
-    }
-
-    bool memory_storage_t::check_collection_(const components::session::session_id_t& session,
-                                             const collection_full_name_t& name) {
-        if (check_database_(session, name.database)) {
-            if (!is_exists_collection_(name)) {
-                actor_zeta::send(current_message()->sender(),
-                                 this->address(),
-                                 handler_id(route::execute_plan_finish),
-                                 session,
-                                 make_cursor(resource(), error_code_t::collection_not_exists, "collection not exists"));
-                return false;
-            }
-            return true;
-        }
-        return false;
-    }
-
     void memory_storage_t::create_database_(const components::session::session_id_t& session,
                                             components::logical_plan::node_ptr logical_plan) {
         trace(log_, "memory_storage_t:create_database {}", logical_plan->database_name());
-        if (is_exists_database_(logical_plan->database_name())) {
-            actor_zeta::send(current_message()->sender(),
-                             this->address(),
-                             handler_id(route::execute_plan_finish),
-                             session,
-                             make_cursor(resource(), error_code_t::database_already_exists, "database already exists"));
-            return;
-        }
         databases_.insert(logical_plan->database_name());
         actor_zeta::send(current_message()->sender(),
                          this->address(),
@@ -249,59 +201,44 @@ namespace services {
     void memory_storage_t::drop_database_(const components::session::session_id_t& session,
                                           components::logical_plan::node_ptr logical_plan) {
         trace(log_, "memory_storage_t:drop_database {}", logical_plan->database_name());
-        if (check_database_(session, logical_plan->database_name())) {
-            databases_.erase(logical_plan->database_name());
-            actor_zeta::send(current_message()->sender(),
-                             this->address(),
-                             handler_id(route::execute_plan_finish),
-                             session,
-                             make_cursor(resource(), operation_status_t::success));
-        }
+        databases_.erase(logical_plan->database_name());
+        actor_zeta::send(current_message()->sender(),
+                         this->address(),
+                         handler_id(route::execute_plan_finish),
+                         session,
+                         make_cursor(resource(), operation_status_t::success));
     }
 
     void memory_storage_t::create_collection_(const components::session::session_id_t& session,
                                               components::logical_plan::node_ptr logical_plan) {
         trace(log_, "memory_storage_t:create_collection {}", logical_plan->collection_full_name().to_string());
-        if (check_database_(session, logical_plan->database_name())) {
-            if (is_exists_collection_(logical_plan->collection_full_name())) {
-                actor_zeta::send(
-                    current_message()->sender(),
-                    this->address(),
-                    handler_id(route::execute_plan_finish),
-                    session,
-                    make_cursor(resource(), error_code_t::collection_already_exists, "collection already exists"));
-                return;
-            }
-            collections_.emplace(logical_plan->collection_full_name(),
-                                 new collection::context_collection_t(resource(),
-                                                                      logical_plan->collection_full_name(),
-                                                                      manager_disk_,
-                                                                      log_.clone()));
-            auto cursor = make_cursor(resource(), operation_status_t::success);
-            actor_zeta::send(current_message()->sender(),
-                             this->address(),
-                             handler_id(route::execute_plan_finish),
-                             session,
-                             cursor);
-        }
+        collections_.emplace(logical_plan->collection_full_name(),
+                             new collection::context_collection_t(resource(),
+                                                                  logical_plan->collection_full_name(),
+                                                                  manager_disk_,
+                                                                  log_.clone()));
+        auto cursor = make_cursor(resource(), operation_status_t::success);
+        actor_zeta::send(current_message()->sender(),
+                         this->address(),
+                         handler_id(route::execute_plan_finish),
+                         session,
+                         cursor);
     }
 
     void memory_storage_t::drop_collection_(const components::session::session_id_t& session,
                                             components::logical_plan::node_ptr logical_plan) {
         trace(log_, "memory_storage_t:drop_collection {}", logical_plan->collection_full_name().to_string());
-        if (check_collection_(session, logical_plan->collection_full_name())) {
-            sessions_.emplace(session, session_t{logical_plan, current_message()->sender(), 1});
-            actor_zeta::send(current_message()->sender(),
-                             address(),
-                             handler_id(route::execute_plan_finish),
-                             session,
-                             collections_.at(logical_plan->collection_full_name())->drop()
-                                 ? make_cursor(resource(), operation_status_t::success)
-                                 : make_cursor(resource(), error_code_t::other_error, "collection not dropped"));
-            sessions_.erase(session);
-            collections_.erase(logical_plan->collection_full_name());
-            trace(log_, "memory_storage_t:drop_collection_finish {}", logical_plan->collection_full_name().to_string());
-        }
+        sessions_.emplace(session, session_t{logical_plan, current_message()->sender(), 1});
+        actor_zeta::send(current_message()->sender(),
+                         address(),
+                         handler_id(route::execute_plan_finish),
+                         session,
+                         collections_.at(logical_plan->collection_full_name())->drop()
+                             ? make_cursor(resource(), operation_status_t::success)
+                             : make_cursor(resource(), error_code_t::other_error, "collection not dropped"));
+        sessions_.erase(session);
+        collections_.erase(logical_plan->collection_full_name());
+        trace(log_, "memory_storage_t:drop_collection_finish {}", logical_plan->collection_full_name().to_string());
     }
 
     void memory_storage_t::execute_plan_impl(const components::session::session_id_t& session,
@@ -320,13 +257,6 @@ namespace services {
                 // raw_data from ql does not belong to any collection
                 collections_context_storage.emplace(std::move(name), nullptr);
                 continue;
-            }
-            if (!check_collection_(session, name)) {
-                trace(log_,
-                      "memory_storage_t:execute_plan_impl: collection not found {}, session: {}",
-                      name.to_string(),
-                      session.data());
-                return;
             }
             collections_context_storage.emplace(std::move(name), collections_.at(name).get());
         }

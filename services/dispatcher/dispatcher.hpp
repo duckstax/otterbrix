@@ -9,10 +9,12 @@
 #include <core/excutor.hpp>
 #include <core/spinlock/spinlock.hpp>
 
+#include <components/catalog/catalog.hpp>
 #include <components/cursor/cursor.hpp>
 #include <components/document/document.hpp>
 #include <components/log/log.hpp>
 #include <components/logical_plan/node.hpp>
+#include <components/logical_plan/node_data.hpp>
 #include <services/disk/result.hpp>
 #include <services/wal/base.hpp>
 #include <services/wal/record.hpp>
@@ -72,6 +74,7 @@ namespace services::dispatcher {
         actor_zeta::behavior_t wal_success_;
 
         log_t log_;
+        components::catalog::catalog catalog_;
         actor_zeta::address_t manager_dispatcher_;
         actor_zeta::address_t memory_storage_;
         actor_zeta::address_t manager_wal_;
@@ -85,6 +88,8 @@ namespace services::dispatcher {
         services::wal::id_t last_wal_id_{0};
         std::size_t load_count_answers_{0};
 
+        components::cursor::cursor_t_ptr check_namespace_exists(const components::catalog::table_id id);
+        components::cursor::cursor_t_ptr check_collectction_exists(const components::catalog::table_id id);
         components::logical_plan::node_ptr create_logic_plan(components::logical_plan::node_ptr plan);
         // TODO figure out what to do with records
         std::vector<services::wal::record_t> records_;

@@ -25,18 +25,7 @@ namespace components::catalog {
         namespaces.create_namespace(namespace_name);
     }
 
-    void catalog::drop_namespace(const table_namespace_t& namespace_name) {
-        auto descendants = namespaces.get_all_descendants(namespace_name);
-
-        for (const auto& des : descendants) {
-            if (!namespaces.get_namespace_info(des).tables.empty()) {
-                throw not_supported_exception("Cannot drop namespace with existing tables: " +
-                                              table_id(resource, namespace_name).to_string());
-            }
-        }
-
-        namespaces.drop_namespace(namespace_name);
-    }
+    void catalog::drop_namespace(const table_namespace_t& namespace_name) { namespaces.drop_namespace(namespace_name); }
 
     std::pmr::vector<table_id> catalog::list_tables(const table_namespace_t& namespace_name) const {
         if (!namespace_exists(namespace_name)) {
@@ -81,7 +70,7 @@ namespace components::catalog {
         namespaces.get_namespace_info(id.get_namespace()).tables.emplace(id.table_name(), std::move(meta));
     }
 
-    computed_schema& catalog::create_computing_table(const table_id& id) {
+    void catalog::create_computing_table(const table_id& id) {
         if (!namespace_exists(id.get_namespace())) {
             throw no_such_namespace_exception("Namespace does not exist for table: " + id.to_string());
         }
@@ -90,9 +79,7 @@ namespace components::catalog {
             throw already_exists_exception("Table already being computed: " + id.to_string());
         }
 
-        auto it = namespaces.get_namespace_info(id.get_namespace())
-                      .computing.emplace(id.table_name(), computed_schema(resource));
-        return it.first->second;
+        namespaces.get_namespace_info(id.get_namespace()).computing.emplace(id.table_name(), computed_schema(resource));
     }
 
     void catalog::drop_table(const table_id& id) { drop_table_impl<schema_type::REGULAR>(id); }

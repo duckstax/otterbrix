@@ -14,6 +14,7 @@
 
 using namespace components::logical_plan;
 using namespace components::cursor;
+using namespace components::catalog;
 
 namespace services::dispatcher {
 
@@ -61,6 +62,7 @@ namespace services::dispatcher {
                                                  this,
                                                  &dispatcher_t::wal_success))
         , log_(log.clone())
+        , catalog_(resource())
         , manager_dispatcher_(manager_dispatcher->address())
         , memory_storage_(mstorage)
         , manager_wal_(mwal)
@@ -151,6 +153,14 @@ namespace services::dispatcher {
         trace(log_, "dispatcher_t::load_from_memory_storage_result, session: {}", session.data());
         actor_zeta::send(manager_disk_, address(), disk::handler_id(disk::route::load_indexes), session);
         actor_zeta::send(manager_wal_, address(), wal::handler_id(wal::route::load), session, load_result_.wal_id());
+        for (const auto& database : (*load_result_)) {
+            collection_full_name_t name;
+            name.database = database.name;
+            catalog_.create_namespace({database.name.c_str()});
+            for (const auto& collection : database.collections) {
+                catalog_.create_computing_table({resource(), {database.name, collection.name}});
+            }
+        }
         load_result_.clear();
     }
 
@@ -229,6 +239,52 @@ namespace services::dispatcher {
         trace(log_, "dispatcher_t::execute_plan: session {}, {}", session.data(), plan->to_string());
         make_session(session_to_address_, session, session_t(address, plan, params));
         auto logic_plan = create_logic_plan(plan);
+        table_id id(resource(), logic_plan->collection_full_name());
+        cursor_t_ptr error;
+
+        switch (logic_plan->type()) {
+            case node_type::create_database_t:
+                if (!check_namespace_exists(id)) {
+                    error = make_cursor(resource(), error_code_t::database_already_exists, "database already exists");
+                }
+                break;
+            case node_type::drop_database_t:
+                error = check_namespace_exists(id);
+                break;
+            case node_type::create_collection_t:
+                if (!check_collectction_exists(id)) {
+                    error =
+                        make_cursor(resource(), error_code_t::collection_already_exists, "collection already exists");
+                }
+                break;
+            case node_type::drop_collection_t:
+                error = check_collectction_exists(id);
+                break;
+            default:
+                auto dependency_tree_collections_names = logic_plan->collection_dependencies();
+                while (!dependency_tree_collections_names.empty()) {
+                    collection_full_name_t name =
+                        dependency_tree_collections_names.extract(dependency_tree_collections_names.begin()).value();
+                    if (name.empty()) {
+                        // raw_data from ql does not belong to any collection
+                        continue;
+                    }
+                    if ((error = check_collectction_exists({resource(), name}))) {
+                        trace(log_,
+                              "dispatcher_t:execute_plan: collection not found {}, session: {}",
+                              name.to_string(),
+                              session.data());
+                        break;
+                    }
+                }
+                break;
+        }
+
+        if (error) {
+            execute_plan_finish(session, std::move(error));
+            return;
+        }
+
         actor_zeta::send(memory_storage_,
                          dispatcher_t::address(),
                          memory_storage::handler_id(memory_storage::route::execute_plan),
@@ -245,7 +301,7 @@ namespace services::dispatcher {
         trace(log_,
               "dispatcher_t::execute_plan_finish: session {}, {}, {}",
               session.data(),
-              plan->to_string(),
+              plan.get() ? plan->to_string() : "",
               result->is_success());
         if (result->is_success()) {
             //todo: delete
@@ -407,6 +463,10 @@ namespace services::dispatcher {
               database_name,
               collection);
         make_session(session_to_address_, session, session_t(std::move(sender)));
+        auto error = check_collectction_exists({resource(), {database_name, collection}});
+        if (error) {
+            size_finish(session, std::move(error));
+        }
         actor_zeta::send(memory_storage_,
                          dispatcher_t::address(),
                          collection::handler_id(collection::route::size),
@@ -444,6 +504,43 @@ namespace services::dispatcher {
         }
 
         auto session_obj = find_session(session_to_address_, session);
+        auto node = session_obj.node();
+        table_id id(resource(), node->collection_full_name());
+        switch (node->type()) {
+            case node_type::create_database_t:
+                catalog_.create_namespace(id.get_namespace());
+                break;
+            case node_type::drop_database_t:
+                catalog_.drop_namespace(id.get_namespace());
+                break;
+            case node_type::create_collection_t: {
+                auto node_info = reinterpret_cast<node_create_collection_ptr&>(node);
+                if (node_info->schema().empty()) {
+                    catalog_.create_computing_table(id);
+                } else {
+                    std::vector<components::types::field_description> desc;
+                    desc.reserve(node_info->schema().size());
+                    for (size_t i = 0; i < node_info->schema().size();
+                         desc.push_back(components::types::field_description(i++)))
+                        ;
+
+                    auto sch =
+                        schema(resource(), components::catalog::create_struct(node_info->schema(), std::move(desc)));
+                    catalog_.create_table(id, table_metadata(resource(), std::move(sch)));
+                }
+                break;
+            }
+            case node_type::drop_collection_t:
+                if (catalog_.table_exists(id)) {
+                    catalog_.drop_table(id);
+                } else {
+                    catalog_.drop_computing_table(id);
+                }
+                break;
+            default:
+                break;
+        }
+
         const bool is_from_wal = session_obj.address().get() == manager_wal_.get();
         if (is_from_wal) {
             return;
@@ -473,6 +570,31 @@ namespace services::dispatcher {
             return true;
         }
         return false;
+    }
+
+    components::cursor::cursor_t_ptr dispatcher_t::check_namespace_exists(const components::catalog::table_id id) {
+        cursor_t_ptr error;
+        if (!catalog_.namespace_exists(id.get_namespace())) {
+            error = make_cursor(resource(), error_code_t::database_not_exists, "database does not exist");
+        }
+        return error;
+    }
+
+    components::cursor::cursor_t_ptr dispatcher_t::check_collectction_exists(const components::catalog::table_id id) {
+        cursor_t_ptr error;
+        if (!(error = check_namespace_exists(id)).get()) {
+            bool exists = catalog_.table_exists(id);
+            bool computes = catalog_.table_computes(id);
+            // table can either compute or exist with schema - not both
+            if (exists == computes) {
+                error = make_cursor(resource(),
+                                    error_code_t::collection_not_exists,
+                                    (exists) ? "collection exists and computes schema at the same time"
+                                             : "collection does not exist");
+            }
+        }
+
+        return error;
     }
 
     components::logical_plan::node_ptr dispatcher_t::create_logic_plan(components::logical_plan::node_ptr plan) {
