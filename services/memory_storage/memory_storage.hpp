@@ -88,11 +88,6 @@ namespace services {
     private:
         void enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit* unit) final;
 
-        bool is_exists_database_(const database_name_t& name) const;
-        bool is_exists_collection_(const collection_full_name_t& name) const;
-        bool check_database_(const components::session::session_id_t& session, const database_name_t& name);
-        bool check_collection_(const components::session::session_id_t& session, const collection_full_name_t& name);
-
         void create_database_(const components::session::session_id_t& session,
                               components::logical_plan::node_ptr logical_plan);
         void drop_database_(const components::session::session_id_t& session,

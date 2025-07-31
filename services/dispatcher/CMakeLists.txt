@@ -22,6 +22,7 @@ target_link_libraries(
         otterbrix_${PROJECT_NAME} PRIVATE
         otterbrix::log
         otterbrix::logical_plan
+        otterbrix::catalog
         otterbrix::cursor
         otterbrix::session
         otterbrix::planner

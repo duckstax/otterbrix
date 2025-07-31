@@ -513,7 +513,7 @@ namespace components::types {
 
         // fields must be aliased
         struct_logical_type_extention(const std::vector<types::complex_logical_type>& columns,
-                                      const std::vector<field_description>& descriptions);
+                                      std::vector<field_description> descriptions);
 
         const std::vector<complex_logical_type>& child_types() const { return fields_; }
         const std::vector<field_description>& descriptions() const { return descriptions_; }

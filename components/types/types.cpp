@@ -396,11 +396,11 @@ namespace components::types {
 
     struct_logical_type_extention::struct_logical_type_extention(
         const std::vector<types::complex_logical_type>& columns,
-        const std::vector<field_description>& descriptions)
+        std::vector<field_description> descriptions)
         : logical_type_extention(extention_type::STRUCT)
         , fields_(columns)
-        , descriptions_(descriptions) {
-        assert(columns.size() == descriptions.size());
+        , descriptions_(std::move(descriptions)) {
+        assert(fields_.size() == descriptions_.size());
     }
 
     decimal_logical_type_extention::decimal_logical_type_extention(uint8_t width, uint8_t scale)
