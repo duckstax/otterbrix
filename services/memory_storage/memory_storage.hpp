@@ -74,6 +74,7 @@ namespace services {
         actor_zeta::behavior_t create_documents_finish_;
         actor_zeta::behavior_t execute_plan_;
         actor_zeta::behavior_t execute_plan_finish_;
+        actor_zeta::behavior_t execute_plan_delete_finish_;
 
         actor_zeta::address_t manager_dispatcher_{actor_zeta::address_t::empty_address()};
         actor_zeta::address_t manager_disk_{actor_zeta::address_t::empty_address()};
@@ -103,6 +104,11 @@ namespace services {
 
         void execute_plan_finish(const components::session::session_id_t& session,
                                  components::cursor::cursor_t_ptr cursor);
+
+        void
+        execute_plan_delete_finish(const components::session::session_id_t& session,
+                                   components::cursor::cursor_t_ptr cursor,
+                                   components::base::operators::operator_write_data_t::updated_types_map_t updates);
 
         void create_documents_finish(const components::session::session_id_t& session);
     };

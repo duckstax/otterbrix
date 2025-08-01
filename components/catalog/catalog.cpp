@@ -128,6 +128,10 @@ namespace components::catalog {
 
     template<catalog::schema_type type>
     bool catalog::table_exists_impl(const table_id& id) const {
+        if (!namespace_exists(id.get_namespace())) {
+            return false;
+        }
+
         const auto& info = get_map_impl<type>(id.get_namespace());
         return info.find(id.table_name()) != info.end();
     }

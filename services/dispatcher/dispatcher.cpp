@@ -15,6 +15,7 @@
 using namespace components::logical_plan;
 using namespace components::cursor;
 using namespace components::catalog;
+using namespace components::types;
 
 namespace services::dispatcher {
 
@@ -45,6 +46,11 @@ namespace services::dispatcher {
                                         memory_storage::handler_id(memory_storage::route::execute_plan_finish),
                                         this,
                                         &dispatcher_t::execute_plan_finish))
+        , execute_plan_delete_finish_(
+              actor_zeta::make_behavior(resource(),
+                                        memory_storage::handler_id(memory_storage::route::execute_plan_delete_finish),
+                                        this,
+                                        &dispatcher_t::execute_plan_delete_finish))
         , size_(actor_zeta::make_behavior(resource(),
                                           collection::handler_id(collection::route::size),
                                           this,
@@ -100,6 +106,10 @@ namespace services::dispatcher {
                 }
                 case memory_storage::handler_id(memory_storage::route::execute_plan_finish): {
                     execute_plan_finish_(msg);
+                    break;
+                }
+                case memory_storage::handler_id(memory_storage::route::execute_plan_delete_finish): {
+                    execute_plan_delete_finish_(msg);
                     break;
                 }
                 case collection::handler_id(collection::route::size): {
@@ -327,6 +337,12 @@ namespace services::dispatcher {
                     break;
                 }
 
+                case node_type::drop_database_t: {
+                    trace(log_, "dispatcher_t::execute_plan_finish: {}", to_string(plan->type()));
+                    catalog_.drop_namespace(table_id(resource(), plan->collection_full_name()).get_namespace());
+                    break;
+                }
+
                 case node_type::create_collection_t: {
                     trace(log_, "dispatcher_t::execute_plan_finish: {}", to_string(plan->type()));
                     actor_zeta::send(manager_disk_,
@@ -453,6 +469,13 @@ namespace services::dispatcher {
         }
     }
 
+    void dispatcher_t::execute_plan_delete_finish(const components::session::session_id_t& session,
+                                                  cursor_t_ptr cursor,
+                                                  recomputed_types updates) {
+        update_result_ = std::move(updates);
+        execute_plan_finish(session, std::move(cursor));
+    }
+
     void dispatcher_t::size(const components::session::session_id_t& session,
                             std::string& database_name,
                             std::string& collection,
@@ -497,49 +520,19 @@ namespace services::dispatcher {
 
     void dispatcher_t::wal_success(const components::session::session_id_t& session, services::wal::id_t wal_id) {
         trace(log_, "dispatcher_t::wal_success session : {}, wal id: {}", session.data(), wal_id);
-        actor_zeta::send(manager_disk_, dispatcher_t::address(), disk::handler_id(disk::route::flush), session, wal_id);
 
         if (!is_session_exist(session_to_address_, session)) {
+            actor_zeta::send(manager_disk_,
+                             dispatcher_t::address(),
+                             disk::handler_id(disk::route::flush),
+                             session,
+                             wal_id);
             return;
         }
 
         auto session_obj = find_session(session_to_address_, session);
-        auto node = session_obj.node();
-        table_id id(resource(), node->collection_full_name());
-        switch (node->type()) {
-            case node_type::create_database_t:
-                catalog_.create_namespace(id.get_namespace());
-                break;
-            case node_type::drop_database_t:
-                catalog_.drop_namespace(id.get_namespace());
-                break;
-            case node_type::create_collection_t: {
-                auto node_info = reinterpret_cast<node_create_collection_ptr&>(node);
-                if (node_info->schema().empty()) {
-                    catalog_.create_computing_table(id);
-                } else {
-                    std::vector<components::types::field_description> desc;
-                    desc.reserve(node_info->schema().size());
-                    for (size_t i = 0; i < node_info->schema().size();
-                         desc.push_back(components::types::field_description(i++)))
-                        ;
-
-                    auto sch =
-                        schema(resource(), components::catalog::create_struct(node_info->schema(), std::move(desc)));
-                    catalog_.create_table(id, table_metadata(resource(), std::move(sch)));
-                }
-                break;
-            }
-            case node_type::drop_collection_t:
-                if (catalog_.table_exists(id)) {
-                    catalog_.drop_table(id);
-                } else {
-                    catalog_.drop_computing_table(id);
-                }
-                break;
-            default:
-                break;
-        }
+        update_catalog(session_obj.node());
+        actor_zeta::send(manager_disk_, dispatcher_t::address(), disk::handler_id(disk::route::flush), session, wal_id);
 
         const bool is_from_wal = session_obj.address().get() == manager_wal_.get();
         if (is_from_wal) {
@@ -572,6 +565,8 @@ namespace services::dispatcher {
         return false;
     }
 
+    const components::catalog::catalog& dispatcher_t::current_catalog() { return catalog_; }
+
     components::cursor::cursor_t_ptr dispatcher_t::check_namespace_exists(const components::catalog::table_id id) {
         cursor_t_ptr error;
         if (!catalog_.namespace_exists(id.get_namespace())) {
@@ -601,6 +596,94 @@ namespace services::dispatcher {
         //todo: cache logical plans
         components::planner::planner_t planner;
         return planner.create_plan(resource(), std::move(plan));
+    }
+
+    void dispatcher_t::update_catalog(components::logical_plan::node_ptr node) {
+        table_id id(resource(), node->collection_full_name());
+        switch (node->type()) {
+            case node_type::create_database_t:
+                catalog_.create_namespace(id.get_namespace());
+                break;
+            case node_type::drop_database_t:
+                catalog_.drop_namespace(id.get_namespace());
+                break;
+            case node_type::create_collection_t: {
+                auto node_info = reinterpret_cast<node_create_collection_ptr&>(node);
+                if (node_info->schema().empty()) {
+                    catalog_.create_computing_table(id);
+                } else {
+                    std::vector<components::types::field_description> desc;
+                    desc.reserve(node_info->schema().size());
+                    for (size_t i = 0; i < node_info->schema().size();
+                         desc.push_back(components::types::field_description(i++)))
+                        ;
+
+                    auto sch = schema(
+                        resource(),
+                        components::catalog::create_struct(
+                            std::vector<complex_logical_type>(node_info->schema().begin(), node_info->schema().end()),
+                            std::move(desc)));
+                    catalog_.create_table(id, table_metadata(resource(), std::move(sch)));
+                }
+                break;
+            }
+            case node_type::drop_collection_t:
+                if (catalog_.table_exists(id)) {
+                    catalog_.drop_table(id);
+                } else {
+                    catalog_.drop_computing_table(id);
+                }
+                break;
+            case node_type::insert_t: {
+                if (!node->children().size() || node->children().back()->type() != node_type::data_t) {
+                    // only inserts with documents are supported for now
+                    break;
+                }
+
+                std::optional<std::reference_wrapper<computed_schema>> comp_sch;
+                std::optional<std::reference_wrapper<const schema>> sch;
+                if (catalog_.table_computes(id)) {
+                    comp_sch = catalog_.get_computing_table_schema(id);
+                } else {
+                    sch = catalog_.get_table_schema(id);
+                }
+
+                auto node_info = reinterpret_cast<node_data_ptr&>(node->children().back());
+                for (const auto& doc : node_info->documents()) {
+                    for (const auto& [key, value] : *doc->json_trie()->as_object()) {
+                        auto key_val = key->get_mut()->get_string().value();
+                        auto log_type = components::base::operators::type_from_json(value.get());
+
+                        if (!!comp_sch) {
+                            comp_sch.value().get().append(std::pmr::string(key_val), log_type);
+                        }
+                        //                        else { // todo: type conversion tree
+                        //                            auto asserted_type = sch.value().get().find_field(std::pmr::string(key_val));
+                        //                            if (asserted_type != log_type) {
+                        //                                error(log_,
+                        //                                      "Schema failure: inserted value of incorrect type into column {}",
+                        //                                      std::string(key_val));
+                        //                                result_storage_[session] =
+                        //                                    make_cursor(resource(), error_code_t::other_error, "Schema failure");
+                        //                            }
+                        //                        }
+                    }
+                }
+                break;
+            }
+            case node_type::delete_t: {
+                if (catalog_.table_computes(id)) {
+                    auto sch = catalog_.get_computing_table_schema(id);
+                    for (const auto& [name_type, refcount] : update_result_) {
+                        sch.drop_n(name_type.first, name_type.second, refcount);
+                    }
+                    update_result_.clear();
+                }
+                break;
+            }
+            default:
+                break;
+        }
     }
 
     manager_dispatcher_t::manager_dispatcher_t(std::pmr::memory_resource* resource_ptr,
@@ -735,6 +818,8 @@ namespace services::dispatcher {
     }
 
     void manager_dispatcher_t::close_cursor(const components::session::session_id_t&) {}
+
+    const components::catalog::catalog& manager_dispatcher_t::catalog() { return dispatchers_[0]->current_catalog(); }
 
     auto manager_dispatcher_t::dispatcher() -> actor_zeta::address_t { return dispatchers_[0]->address(); }
 

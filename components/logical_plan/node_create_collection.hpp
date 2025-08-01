@@ -10,23 +10,23 @@ namespace components::logical_plan {
     public:
         explicit node_create_collection_t(std::pmr::memory_resource* resource,
                                           const collection_full_name_t& collection,
-                                          std::vector<types::complex_logical_type> schema = {});
+                                          std::pmr::vector<types::complex_logical_type> schema = {});
 
         static node_ptr deserialize(serializer::base_deserializer_t* deserializer);
 
-        const std::vector<types::complex_logical_type>& schema() const;
+        const std::pmr::vector<types::complex_logical_type>& schema() const;
 
     private:
         hash_t hash_impl() const final;
         std::string to_string_impl() const final;
         void serialize_impl(serializer::base_serializer_t* serializer) const final;
 
-        std::vector<types::complex_logical_type> schema_;
+        std::pmr::vector<types::complex_logical_type> schema_;
     };
 
     using node_create_collection_ptr = boost::intrusive_ptr<node_create_collection_t>;
     node_create_collection_ptr make_node_create_collection(std::pmr::memory_resource* resource,
                                                            const collection_full_name_t& collection,
-                                                           std::vector<types::complex_logical_type> schema = {});
+                                                           std::pmr::vector<types::complex_logical_type> schema = {});
 
 } // namespace components::logical_plan

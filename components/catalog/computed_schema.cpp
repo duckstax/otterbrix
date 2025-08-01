@@ -27,6 +27,12 @@ namespace components::catalog {
         // todo: define if it is an error
     }
 
+    void computed_schema::drop_n(std::pmr::string json, const types::complex_logical_type& type, size_t n) {
+        if (try_use_refcout(json, type, false, n)) {
+            return;
+        }
+    }
+
     std::vector<types::complex_logical_type> computed_schema::find_field_versions(const std::pmr::string& name) const {
         std::vector<types::complex_logical_type> retval;
         auto it = existing_versions.find(name);
@@ -48,7 +54,7 @@ namespace components::catalog {
         retval.reserve(existing_versions.size());
         for (const auto& [name, entry] : existing_versions) {
             auto& v = entry.get();
-            if (auto id = v.latest_version_id(); !!id) {
+            if (auto id = v.latest_version_id(); !!id && v.get_version(*id).is_alive()) {
                 retval.push_back(v.get_version(id.value()).value);
                 retval.back().set_alias(name.c_str());
             }
@@ -59,7 +65,8 @@ namespace components::catalog {
 
     bool computed_schema::try_use_refcout(const std::pmr::string& json,
                                           const types::complex_logical_type& type,
-                                          bool is_append) {
+                                          bool is_append,
+                                          size_t n) {
         if (auto it_all_versions = existing_versions.find(json); it_all_versions != existing_versions.end()) {
             auto& versioned_value = it_all_versions->second.get();
             auto it_map = versioned_value.get_versions();
@@ -76,7 +83,7 @@ namespace components::catalog {
                 if (is_append) {
                     refcount.add_ref();
                 } else {
-                    refcount.release_ref();
+                    refcount.release_n(n);
                     if (!it_all_versions->second.get().has_alive_versions()) {
                         // deleted last version, do cleanup
                         existing_versions.erase(it_all_versions);

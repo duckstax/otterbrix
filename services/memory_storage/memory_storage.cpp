@@ -43,7 +43,13 @@ namespace services {
         , execute_plan_finish_(actor_zeta::make_behavior(resource(),
                                                          collection::handler_id(collection::route::execute_plan_finish),
                                                          this,
-                                                         &memory_storage_t::execute_plan_finish)) {
+                                                         &memory_storage_t::execute_plan_finish))
+        , execute_plan_delete_finish_(actor_zeta::make_behavior(resource(),
+                                                                handler_id(route::execute_plan_delete_finish),
+                                                                this,
+                                                                &memory_storage_t::execute_plan_delete_finish))
+
+    {
         ZoneScoped;
         trace(log_, "memory_storage start thread pool");
         //TODO MIGHT BE CHANGED
@@ -88,6 +94,10 @@ namespace services {
                 }
                 case collection::handler_id(collection::route::execute_plan_finish): {
                     execute_plan_finish_(msg);
+                    break;
+                }
+                case handler_id(route::execute_plan_delete_finish): {
+                    execute_plan_delete_finish_(msg);
                     break;
                 }
             }
@@ -277,6 +287,24 @@ namespace services {
               session.data(),
               result->is_success());
         actor_zeta::send(s.sender, address(), handler_id(route::execute_plan_finish), session, std::move(result));
+        sessions_.erase(session);
+    }
+
+    void memory_storage_t::execute_plan_delete_finish(
+        const components::session::session_id_t& session,
+        cursor_t_ptr result,
+        components::base::operators::operator_write_data_t::updated_types_map_t updates) {
+        auto& s = sessions_.at(session);
+        debug(log_,
+              "memory_storage_t:execute_plan_delete_finish: session: {}, success: {}",
+              session.data(),
+              result->is_success());
+        actor_zeta::send(s.sender,
+                         address(),
+                         handler_id(route::execute_plan_delete_finish),
+                         session,
+                         std::move(result),
+                         std::move(updates));
         sessions_.erase(session);
     }
 

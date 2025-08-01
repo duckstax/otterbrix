@@ -102,9 +102,9 @@ if (DEV_MODE OR ALLOW_BENCHMARK)
     )
 endif()
 
-if (DEV_MODE)
+#if (DEV_MODE)
     add_subdirectory(test)
-endif()
+#endif()
 
 if (ALLOW_BENCHMARK)
     add_subdirectory(benchmark)

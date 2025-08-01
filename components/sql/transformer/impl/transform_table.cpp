@@ -55,7 +55,7 @@ namespace components::sql::transform {
     logical_plan::node_ptr transformer::transform_create_table(CreateStmt& node) {
         auto coldefs = reinterpret_cast<List*>(node.tableElts);
 
-        std::vector<complex_logical_type> columns;
+        std::pmr::vector<complex_logical_type> columns(resource);
         columns.reserve(list_length(coldefs));
         for (auto data : coldefs->lst) {
             auto coldef = pg_ptr_assert_cast<ColumnDef>(data.data, T_ColumnDef);

@@ -15,6 +15,7 @@
 #include <components/log/log.hpp>
 #include <components/logical_plan/node.hpp>
 #include <components/logical_plan/node_data.hpp>
+#include <components/physical_plan/base/operators/operator_write_data.hpp>
 #include <services/disk/result.hpp>
 #include <services/wal/base.hpp>
 #include <services/wal/record.hpp>
@@ -28,6 +29,8 @@ namespace services::dispatcher {
 
     class dispatcher_t final : public actor_zeta::basic_actor<dispatcher_t> {
     public:
+        using recomputed_types = components::base::operators::operator_write_data_t::updated_types_map_t;
+
         dispatcher_t(manager_dispatcher_t*,
                      actor_zeta::address_t&,
                      actor_zeta::address_t&,
@@ -51,6 +54,9 @@ namespace services::dispatcher {
                           actor_zeta::address_t address);
         void execute_plan_finish(const components::session::session_id_t& session,
                                  components::cursor::cursor_t_ptr cursor);
+        void execute_plan_delete_finish(const components::session::session_id_t& session,
+                                        components::cursor::cursor_t_ptr cursor,
+                                        recomputed_types updates);
         void size(const components::session::session_id_t& session,
                   std::string& database_name,
                   std::string& collection,
@@ -60,6 +66,8 @@ namespace services::dispatcher {
         void wal_success(const components::session::session_id_t& session, services::wal::id_t wal_id);
         bool load_from_wal_in_progress(const components::session::session_id_t& session);
 
+        const components::catalog::catalog& current_catalog();
+
     private:
         // Behaviors
         actor_zeta::behavior_t load_;
@@ -68,6 +76,7 @@ namespace services::dispatcher {
         actor_zeta::behavior_t load_from_wal_result_;
         actor_zeta::behavior_t execute_plan_;
         actor_zeta::behavior_t execute_plan_finish_;
+        actor_zeta::behavior_t execute_plan_delete_finish_;
         actor_zeta::behavior_t size_;
         actor_zeta::behavior_t size_finish_;
         actor_zeta::behavior_t close_cursor_;
@@ -84,6 +93,7 @@ namespace services::dispatcher {
         std::unordered_map<components::session::session_id_t, components::cursor::cursor_t_ptr>
             result_storage_; // to be able return result from wal_success
         disk::result_load_t load_result_;
+        recomputed_types update_result_;
         components::session::session_id_t load_session_;
         services::wal::id_t last_wal_id_{0};
         std::size_t load_count_answers_{0};
@@ -91,6 +101,7 @@ namespace services::dispatcher {
         components::cursor::cursor_t_ptr check_namespace_exists(const components::catalog::table_id id);
         components::cursor::cursor_t_ptr check_collectction_exists(const components::catalog::table_id id);
         components::logical_plan::node_ptr create_logic_plan(components::logical_plan::node_ptr plan);
+        void update_catalog(components::logical_plan::node_ptr node);
         // TODO figure out what to do with records
         std::vector<services::wal::record_t> records_;
     };
@@ -137,6 +148,8 @@ namespace services::dispatcher {
         void
         size(const components::session::session_id_t& session, std::string& database_name, std::string& collection);
         void close_cursor(const components::session::session_id_t& session);
+
+        const components::catalog::catalog& catalog();
 
     protected:
         auto enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void override;
