@@ -25,14 +25,17 @@ namespace components::catalog {
         // table operations
         [[nodiscard]] std::pmr::vector<table_id> list_tables(const table_namespace_t& namespace_name) const;
         [[nodiscard]] const schema& get_table_schema(const table_id& id) const;
-        [[nodiscard]] computed_schema& get_computing_table_schema(const table_id& id) const;
+        [[nodiscard]] computed_schema& get_computing_table_schema(const table_id& id);
 
-        void create_table(const table_id& id, table_metadata meta);
-        void create_computing_table(const table_id& id);
+        [[nodiscard]] catalog_error create_table(const table_id& id, table_metadata meta);
+        [[nodiscard]] catalog_error create_computing_table(const table_id& id);
+
+        [[nodiscard]] catalog_error rename_table(const table_id& from, std::pmr::string to);
+        [[nodiscard]] catalog_error rename_computing_table(const table_id& from, std::pmr::string to);
+
         void drop_table(const table_id& id);
         void drop_computing_table(const table_id& id);
-        void rename_table(const table_id& from, std::pmr::string to);
-        void rename_computing_table(const table_id& from, std::pmr::string to);
+
         [[nodiscard]] bool table_exists(const table_id& id) const;
         [[nodiscard]] bool table_computes(const table_id& id) const;
 
@@ -49,7 +52,7 @@ namespace components::catalog {
         void drop_table_impl(const table_id& id);
 
         template<catalog::schema_type>
-        void rename_table_impl(const table_id& from, std::pmr::string to);
+        catalog_error rename_table_impl(const table_id& from, std::pmr::string to);
 
         template<catalog::schema_type>
         bool table_exists_impl(const table_id& id) const;

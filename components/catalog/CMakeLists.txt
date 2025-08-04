@@ -16,6 +16,7 @@ set(SOURCE_${PROJECT_NAME}
         table_metadata.cpp
         namespace_storage.cpp
         catalog.cpp
+        catalog_error.cpp
         catalog_types.cpp
 )
 
@@ -41,6 +42,5 @@ target_include_directories(
 )
 
 if (DEV_MODE)
-    add_definitions(-DDEV_MODE)
     add_subdirectory(tests)
 endif ()

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "catalog_exception.hpp"
 #include "schema.hpp"
 #include "versioned_trie/versioned_trie.hpp"
 

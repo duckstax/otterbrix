@@ -7,17 +7,17 @@ namespace components::catalog {
 
     void namespace_storage::create_namespace(const table_namespace_t& namespace_name) {
         if (namespace_name.empty()) {
-            throw catalog_exception("Namespace name cannot be empty");
+            throw std::logic_error("Namespace name cannot be empty");
         }
 
         if (namespace_exists(namespace_name)) {
-            throw already_exists_exception("Namespace already exists");
+            return;
         }
 
         if (namespace_name.size() > 1) {
             auto parent = get_parent_namespace(namespace_name);
             if (!namespace_exists(parent)) {
-                throw no_such_namespace_exception("Parent namespace does not exist");
+                create_namespace(parent);
             }
         }
 
@@ -26,16 +26,8 @@ namespace components::catalog {
     }
 
     void namespace_storage::drop_namespace(const table_namespace_t& namespace_name) {
-        if (namespace_name.empty()) {
-            throw catalog_exception("Namespace name cannot be empty");
-        }
-
-        if (!namespace_exists(namespace_name)) {
-            throw no_such_namespace_exception("Namespace does not exist");
-        }
-
-        if (has_child_namespaces(namespace_name)) {
-            throw not_supported_exception("Cannot drop namespace with child namespaces"); // todo: allow?
+        if (namespace_name.empty() || !namespace_exists(namespace_name)) {
+            return;
         }
 
         table_namespace_t path(namespace_name.begin(), namespace_name.end(), resource);
@@ -70,7 +62,8 @@ namespace components::catalog {
     std::pmr::vector<table_namespace_t>
     namespace_storage::list_child_namespaces(const table_namespace_t& parent) const {
         if (!namespace_exists(parent)) {
-            throw no_such_namespace_exception("Parent namespace does not exist");
+            // use result with: no_such_namespace_exception("Parent namespace does not exist");
+            return {};
         }
 
         std::pmr::vector<table_namespace_t> result(resource);
@@ -109,7 +102,8 @@ namespace components::catalog {
     std::pmr::vector<table_namespace_t>
     namespace_storage::get_all_descendants(const table_namespace_t& namespace_name) const {
         if (!namespace_exists(namespace_name)) {
-            throw no_such_namespace_exception("Namespace does not exist");
+            // use result with: no_such_namespace_exception("Namespace does not exist");
+            return {};
         }
 
         std::pmr::vector<table_namespace_t> result(resource);
@@ -133,7 +127,7 @@ namespace components::catalog {
     namespace_storage::namespace_info&
     namespace_storage::get_namespace_info(const components::catalog::table_namespace_t& namespace_name) {
         if (!namespace_exists(namespace_name)) {
-            throw no_such_namespace_exception("Namespace does not exist");
+            throw std::logic_error("Namespace does not exist");
         }
 
         return namespaces.find(namespace_name)->value;

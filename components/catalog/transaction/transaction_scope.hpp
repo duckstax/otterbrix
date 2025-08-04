@@ -22,6 +22,7 @@ namespace components::catalog {
         transaction_scope& operator=(transaction_scope&& other) noexcept;
 
         [[nodiscard]] metadata_transaction& transaction();
+        [[nodiscard]] const catalog_error& error() const;
 
         void commit();
         void abort();
@@ -30,6 +31,7 @@ namespace components::catalog {
         bool is_committed = false;
         bool is_aborted = false;
         table_id id;
+        catalog_error error_;
         std::weak_ptr<transaction_list> transaction_list_;
         std::reference_wrapper<namespace_storage> ns_storage;
         std::unique_ptr<metadata_transaction> transaction_;

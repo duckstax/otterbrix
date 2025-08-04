@@ -46,42 +46,42 @@ namespace components::catalog {
         return *this;
     }
 
-    metadata_transaction& transaction_scope::transaction() {
-        if (!transaction_) {
-            throw catalog_exception("Transaction is not available");
-        }
-        return *transaction_;
-    }
+    metadata_transaction& transaction_scope::transaction() { return *transaction_; }
+
+    const catalog_error& transaction_scope::error() const { return error_; }
 
     void transaction_scope::commit() {
         if (is_committed || is_aborted) {
-            throw commit_failed_exception("Transaction already finalized!");
+            error_ = catalog_error(transaction_mistake_t::TRANSACTION_FINALIZED, "Transaction already finalized!");
+            return;
         }
 
         if (transaction_list_.expired()) {
-            throw commit_failed_exception("Transaction list has been destroyed!");
+            error_ = catalog_error(transaction_mistake_t::COMMIT_FAILED, "Transaction list has been destroyed!");
+            return;
         }
 
         auto list = transaction_list_.lock();
-        transaction_->commit([&](metadata_diff&& diff) {
+        error_ = transaction_->commit([&](metadata_diff&& diff) {
             auto& info = ns_storage.get().get_namespace_info(id.get_namespace()).tables;
 
             if (auto it = info.find(id.table_name()); it != info.end()) {
                 auto new_diff = diff.apply(it->second);
                 it->second = new_diff;
-                return;
+                return catalog_error();
             }
 
-            throw commit_failed_exception("Table not found!");
+            return catalog_error(transaction_mistake_t::COMMIT_FAILED, "Table not found!");
         });
 
-        is_committed = true;
+        (!!error_) ? (is_aborted = true) : (is_committed = true);
         list->remove_transaction(id);
     }
 
     void transaction_scope::abort() {
         if (is_committed) {
-            throw commit_failed_exception("Transaction already committed!");
+            error_ = catalog_error(transaction_mistake_t::TRANSACTION_FINALIZED, "Transaction already committed!");
+            return;
         }
 
         if (is_aborted) {

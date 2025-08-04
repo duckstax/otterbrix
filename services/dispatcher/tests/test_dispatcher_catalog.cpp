@@ -94,15 +94,15 @@ struct test_dispatcher : actor_zeta::cooperative_supervisor<test_dispatcher> {
         });
     }
 
-    void execute_plan_finish(const components::session::session_id_t& session, cursor_t_ptr result) {
+    void execute_plan_finish(components::session::session_id_t& session, cursor_t_ptr result) {
         if (!!assertion_) {
-            assertion_(result, manager_dispatcher->catalog());
+            assertion_(result, const_cast<catalog&>(manager_dispatcher->catalog()));
         }
     }
 
     void step() { scheduler->run(); }
 
-    void step_with_assertion(std::function<void(cursor_t_ptr, const catalog&)> assertion) {
+    void step_with_assertion(std::function<void(cursor_t_ptr, catalog&)> assertion) {
         assertion_ = std::move(assertion);
         step();
     }
@@ -131,7 +131,7 @@ private:
     std::unique_ptr<memory_storage_t, actor_zeta::pmr::deleter_t> memory_storage;
     components::sql::transform::transformer transformer_;
     actor_zeta::behavior_t execute_plan_finish_;
-    std::function<void(cursor_t_ptr, const catalog&)> assertion_;
+    std::function<void(cursor_t_ptr, catalog&)> assertion_;
 };
 
 TEST_CASE("dispatcher::schemeful_operations") {
@@ -194,7 +194,7 @@ TEST_CASE("dispatcher::computed_operations") {
 
     table_id id(&mr, {"test"}, "test");
     test.execute_sql("CREATE TABLE test.test();");
-    test.step_with_assertion([&id](cursor_t_ptr cur, const catalog& catalog) {
+    test.step_with_assertion([&id](cursor_t_ptr cur, catalog& catalog) {
         REQUIRE(cur->is_success());
         REQUIRE(catalog.table_computes(id));
 
@@ -210,7 +210,7 @@ TEST_CASE("dispatcher::computed_operations") {
     }
 
     test.execute_sql(query.str());
-    test.step_with_assertion([&id](cursor_t_ptr cur, const catalog& catalog) {
+    test.step_with_assertion([&id](cursor_t_ptr cur, catalog& catalog) {
         auto name = catalog.get_computing_table_schema(id).find_field_versions("name");
         auto count = catalog.get_computing_table_schema(id).find_field_versions("count");
 
@@ -224,7 +224,7 @@ TEST_CASE("dispatcher::computed_operations") {
     });
 
     test.execute_sql("INSERT INTO test.test (_id, name, count) VALUES ('" + gen_id(100) + "', 10, 30.1);");
-    test.step_with_assertion([&id](cursor_t_ptr cur, const catalog& catalog) {
+    test.step_with_assertion([&id](cursor_t_ptr cur, catalog& catalog) {
         auto name = catalog.get_computing_table_schema(id).find_field_versions("name");
         auto count = catalog.get_computing_table_schema(id).find_field_versions("count");
 
@@ -238,7 +238,7 @@ TEST_CASE("dispatcher::computed_operations") {
     });
 
     test.execute_sql("DELETE FROM test.test where count < 100;");
-    test.step_with_assertion([&id](cursor_t_ptr cur, const catalog& catalog) {
+    test.step_with_assertion([&id](cursor_t_ptr cur, catalog& catalog) {
         auto name = catalog.get_computing_table_schema(id).find_field_versions("name");
         auto count = catalog.get_computing_table_schema(id).find_field_versions("count");
 
@@ -253,7 +253,7 @@ TEST_CASE("dispatcher::computed_operations") {
     });
 
     test.execute_sql("DELETE FROM test.test");
-    test.step_with_assertion([&id](cursor_t_ptr cur, const catalog& catalog) {
+    test.step_with_assertion([&id](cursor_t_ptr cur, catalog& catalog) {
         REQUIRE(cur->is_success());
 
         auto sch = catalog.get_computing_table_schema(id);

@@ -168,7 +168,8 @@ namespace services::dispatcher {
             name.database = database.name;
             catalog_.create_namespace({database.name.c_str()});
             for (const auto& collection : database.collections) {
-                catalog_.create_computing_table({resource(), {database.name, collection.name}});
+                auto err = catalog_.create_computing_table({resource(), {database.name, collection.name}});
+                assert(!err);
             }
         }
         load_result_.clear();
@@ -472,7 +473,7 @@ namespace services::dispatcher {
     void dispatcher_t::execute_plan_delete_finish(const components::session::session_id_t& session,
                                                   cursor_t_ptr cursor,
                                                   recomputed_types updates) {
-        update_result_ = std::move(updates);
+        update_result_ = updates;
         execute_plan_finish(session, std::move(cursor));
     }
 
@@ -610,7 +611,8 @@ namespace services::dispatcher {
             case node_type::create_collection_t: {
                 auto node_info = reinterpret_cast<node_create_collection_ptr&>(node);
                 if (node_info->schema().empty()) {
-                    catalog_.create_computing_table(id);
+                    auto err = catalog_.create_computing_table(id);
+                    assert(!err);
                 } else {
                     std::vector<components::types::field_description> desc;
                     desc.reserve(node_info->schema().size());
@@ -623,7 +625,8 @@ namespace services::dispatcher {
                         components::catalog::create_struct(
                             std::vector<complex_logical_type>(node_info->schema().begin(), node_info->schema().end()),
                             std::move(desc)));
-                    catalog_.create_table(id, table_metadata(resource(), std::move(sch)));
+                    auto err = catalog_.create_table(id, table_metadata(resource(), std::move(sch)));
+                    assert(!err);
                 }
                 break;
             }
@@ -673,7 +676,7 @@ namespace services::dispatcher {
             }
             case node_type::delete_t: {
                 if (catalog_.table_computes(id)) {
-                    auto sch = catalog_.get_computing_table_schema(id);
+                    auto& sch = catalog_.get_computing_table_schema(id);
                     for (const auto& [name_type, refcount] : update_result_) {
                         sch.drop_n(name_type.first, name_type.second, refcount);
                     }

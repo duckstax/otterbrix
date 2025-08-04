@@ -22,7 +22,7 @@ namespace components::catalog {
             }
         }
 
-        void release_n(size_t n) { ref_count = std::max(ref_count, n) - n; }
+        void release_n(size_t n) { ref_count = std::max(ref_count, static_cast<uint64_t>(n)) - n; }
 
         bool is_alive() const { return ref_count > 0; }
 

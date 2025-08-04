@@ -2,6 +2,7 @@
 
 using namespace components::types;
 
+// todo: use result, monad interface of it will make this code MUCH cleaner
 namespace components::catalog {
     schema::schema(std::pmr::memory_resource* resource,
                    const components::types::complex_logical_type& schema_struct,
@@ -14,7 +15,8 @@ namespace components::catalog {
             std::pmr::unordered_set<std::pmr::string> names(resource);
             for (const auto& type : detailed_struct.child_types()) {
                 if (names.find(type.alias().c_str()) != names.end()) {
-                    throw schema_exception("Duplicate column with name \"" + type.alias() + "\", names must be unique");
+                    error_ = catalog_error(catalog_mistake_t::DUPLICATE_COLUMN,
+                                           "Duplicate column with name \"" + type.alias() + "\", names must be unique");
                 }
 
                 names.emplace(type.alias());
@@ -26,8 +28,9 @@ namespace components::catalog {
             size_t idx = 0;
             for (const auto& desc : detailed_struct.descriptions()) {
                 if (id_to_struct_idx.find(desc.field_id) != id_to_struct_idx.end()) {
-                    throw schema_exception("Duplicate id in schema: " + std::to_string(desc.field_id) +
-                                           ", ids must be unique");
+                    error_ = catalog_error(catalog_mistake_t::DUPLICATE_COLUMN,
+                                           "Duplicate id in schema: " + std::to_string(desc.field_id) +
+                                               ", ids must be unique");
                 }
 
                 id_to_struct_idx.emplace(desc.field_id, idx++);
@@ -36,7 +39,8 @@ namespace components::catalog {
 
             for (field_id_t key : primary_key_field_ids) {
                 if (id_to_struct_idx.find(key) == id_to_struct_idx.end()) {
-                    throw schema_exception("No field with such id: " + std::to_string(key));
+                    error_ = catalog_error(catalog_mistake_t::MISSING_PRIMARY_KEY_ID,
+                                           "No field with id from primary key: " + std::to_string(key));
                 }
             }
 
@@ -70,15 +74,25 @@ namespace components::catalog {
 
     field_id_t schema::highest_field_id() const { return highest; }
 
+    const catalog_error& schema::error() const { return error_; }
+
     size_t schema::find_idx_by_id(field_id_t id) const {
+        if (!!error_) {
+            throw std::logic_error("Schema is in error state - unable to find field: " + error_.what());
+        }
+
         if (auto it = id_to_struct_idx.find(id); it != id_to_struct_idx.end()) {
             return it->second;
         }
 
-        throw schema_exception("No field with such id: " + std::to_string(id));
+        throw std::logic_error("No field with such id: " + std::to_string(id));
     }
 
     size_t schema::find_idx_by_name(const std::pmr::string& name) const {
+        if (!!error_) {
+            throw std::logic_error("Schema is in error state - unable to find field: " + error_.what());
+        }
+
         const auto& fields = schema_struct.child_types();
 
         auto it = std::find_if(fields.cbegin(), fields.cend(), [&name](const complex_logical_type& type) -> bool {
@@ -89,6 +103,6 @@ namespace components::catalog {
             return static_cast<size_t>(it - fields.cbegin());
         }
 
-        throw schema_exception("No field with such name: \"" + std::string(name) + "\"");
+        throw std::logic_error("No field with such name: \"" + std::string(name) + "\"");
     }
 } // namespace components::catalog

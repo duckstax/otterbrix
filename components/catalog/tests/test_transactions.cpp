@@ -23,8 +23,8 @@ TEST_CASE("catalog::transactions::commit_abort") {
         auto scope = cat.begin_transaction({&mr, full});
         scope.transaction().add_column("new_col", complex_logical_type(logical_type::HUGEINT));
         scope.commit();
-        REQUIRE_THROWS(scope.commit());
-        REQUIRE_THROWS(scope.abort());
+        scope.commit();
+        REQUIRE(scope.error().transaction_mistake() == transaction_mistake_t::TRANSACTION_FINALIZED);
     }
     {
         auto new_schema = cat.get_table_schema({&mr, full});
@@ -41,8 +41,10 @@ TEST_CASE("catalog::transactions::commit_abort") {
         auto scope = cat.begin_transaction({&mr, full});
         scope.transaction().rename_column("new_col", "new_col_1");
         scope.abort();
-        REQUIRE_THROWS(scope.transaction().rename_column("new_col", "new_new_col"));
-        REQUIRE_THROWS(scope.commit());
+        scope.transaction().rename_column("new_col", "new_new_col");
+        REQUIRE(scope.transaction().error().transaction_mistake() == transaction_mistake_t::TRANSACTION_INACTIVE);
+        scope.commit();
+        REQUIRE(scope.error().transaction_mistake() == transaction_mistake_t::TRANSACTION_FINALIZED);
     }
     // new_col still exists
     {
@@ -64,7 +66,8 @@ TEST_CASE("catalog::transactions::changes") {
         auto column = complex_logical_type(logical_type::BIGINT);
         column.set_alias("col");
         schema sch(&mr, create_struct({column}, {field_description(1, false, "test")}), {1});
-        cat.create_table({&mr, full}, {&mr, sch});
+        auto err = cat.create_table({&mr, full}, {&mr, sch});
+        REQUIRE(!err);
     }
 
     {
@@ -146,7 +149,8 @@ TEST_CASE("catalog::transactions::edge_cases") {
         {
             auto scope = cat->begin_transaction({&mr, full});
             cat.reset(nullptr);
-            REQUIRE_THROWS(scope.commit());
+            scope.commit();
+            REQUIRE(scope.error().transaction_mistake() == transaction_mistake_t::COMMIT_FAILED);
             // must be abortable
         }
     }
@@ -162,16 +166,16 @@ TEST_CASE("catalog::transactions::edge_cases") {
         {
             auto scope = cat.begin_transaction({&mr, full});
             scope.transaction().make_optional("name");
-            cat.rename_table({&mr, full}, "name1");
-
-            REQUIRE_THROWS(scope.commit());
+            auto _ = cat.rename_table({&mr, full}, "name1");
+            scope.commit();
+            REQUIRE(scope.error().transaction_mistake() == transaction_mistake_t::COMMIT_FAILED);
         }
 
         {
             auto scope = cat.begin_transaction(table_id(&mr, table_namespace_t{"db", "name1"}));
             scope.transaction().make_optional("name");
             cat.drop_namespace({"db"});
-
+            // todo: get_namespace_info still throws if namespace is missing
             REQUIRE_THROWS(scope.commit());
         }
     }

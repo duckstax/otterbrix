@@ -20,6 +20,6 @@ add_subdirectory(types)
 add_subdirectory(vector)
 add_subdirectory(table)
 
-#if (DEV_MODE)
+if (DEV_MODE)
     add_subdirectory(tests)
-#endif()
+endif()

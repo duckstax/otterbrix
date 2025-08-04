@@ -57,6 +57,6 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-all")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-all")
 
-#if (DEV_MODE)
+if (DEV_MODE)
     add_subdirectory(test)
-#endif ()
+endif ()

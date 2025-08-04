@@ -1,12 +1,12 @@
 #pragma once
 
-#include "catalog_exception.hpp"
 #include "computed_schema.hpp"
 #include "table_id.hpp"
 #include "table_metadata.hpp"
 #include "versioned_trie/versioned_trie.hpp"
 
 #include <map>
+#include <stdexcept>
 
 namespace components::catalog {
     class namespace_storage {

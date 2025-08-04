@@ -48,7 +48,10 @@ TEST_CASE("catalog::schema_test") {
         std::vector<field_description> desc{{1}};
         auto sch = schema(&mr, create_struct(fields, n_field_descriptions<4>()));
 
-        cat.create_table({&mr, full}, {&mr, sch});
+        {
+            auto err = cat.create_table({&mr, full}, {&mr, sch});
+            REQUIRE(!err);
+        }
         REQUIRE(cat.table_exists({&mr, full}));
 
         auto tbl = cat.get_table_schema({&mr, full});
@@ -64,7 +67,8 @@ TEST_CASE("catalog::schema_test") {
 
         for (size_t i = 0; i < 10; ++i) {
             collection_full_name_t full_n{"db", "fields" + std::to_string(i)};
-            cat.create_table({&mr, full_n}, {&mr, sch});
+            auto err = cat.create_table({&mr, full_n}, {&mr, sch});
+            REQUIRE(!err);
         }
 
         auto tbls = cat.list_tables({"db"}); // sorted with std::map
@@ -81,13 +85,12 @@ TEST_CASE("catalog::trie_test") {
     SECTION("correctness") {
         catalog cat(&mr);
 
-        cat.create_namespace({"1"});
+        // nested namespaces will be created as well
         cat.create_namespace({"2"});
         cat.create_namespace({"3"});
-        cat.create_namespace({"2", "3"});
-        cat.create_namespace({"2", "3", "4"});
-        cat.create_namespace({"2", "4"});
         cat.create_namespace({"1", "2"});
+        cat.create_namespace({"2", "4"});
+        cat.create_namespace({"2", "3", "4"});
 
         auto children = cat.list_namespaces({"2"});
         REQUIRE(children.size() == 2);
@@ -180,7 +183,10 @@ TEST_CASE("catalog::compute_schema") {
     cat.create_namespace({"db"});
     collection_full_name_t full{"db", "name"};
 
-    cat.create_computing_table({&mr, full});
+    {
+        auto err = cat.create_computing_table({&mr, full});
+        REQUIRE(!err);
+    }
     computed_schema& sch = cat.get_computing_table_schema({&mr, full});
     std::vector<complex_logical_type> types{logical_type::BOOLEAN,
                                             logical_type::INTEGER,
@@ -231,7 +237,10 @@ TEST_CASE("catalog::compute_schema") {
 
         REQUIRE(cat.get_computing_table_schema({&mr, full}).latest_types_struct().child_types().empty());
         std::pmr::string new_name = "test";
-        cat.rename_computing_table({&mr, full}, new_name);
+        {
+            auto err = cat.rename_computing_table({&mr, full}, new_name);
+            REQUIRE(!err);
+        }
 
         REQUIRE(cat.table_computes({&mr, {"db"}, new_name}));
         REQUIRE_FALSE(cat.table_computes({&mr, full}));

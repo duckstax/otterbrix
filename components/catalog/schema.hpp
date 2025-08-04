@@ -1,10 +1,11 @@
 #pragma once
 
-#include "catalog_exception.hpp"
+#include "catalog_error.hpp"
 #include "catalog_types.hpp"
 
 #include <algorithm>
 #include <memory_resource>
+#include <stdexcept>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -26,6 +27,8 @@ namespace components::catalog {
         [[nodiscard]] const std::vector<types::field_description>& descriptions() const;
         [[nodiscard]] field_id_t highest_field_id() const;
 
+        [[nodiscard]] const catalog_error& error() const;
+
     private:
         size_t find_idx_by_id(field_id_t id) const;
         size_t find_idx_by_name(const std::pmr::string& name) const;
@@ -34,5 +37,6 @@ namespace components::catalog {
         std::pmr::vector<field_id_t> primary_key_field_ids;
         std::pmr::unordered_map<field_id_t, size_t> id_to_struct_idx;
         field_id_t highest = 0;
+        mutable catalog_error error_;
     };
 } // namespace components::catalog
