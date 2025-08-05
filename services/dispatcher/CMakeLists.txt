@@ -37,5 +37,5 @@ target_include_directories(otterbrix_${PROJECT_NAME} PUBLIC
 )
 
 if (DEV_MODE)
-    #    add_subdirectory(tests)
+    add_subdirectory(tests)
 endif ()

@@ -38,6 +38,7 @@ namespace components::catalog {
 
     private:
         metadata_transaction(std::pmr::memory_resource* resource);
+        metadata_transaction(std::pmr::memory_resource* resource, catalog_error error);
 
         bool ensure_active();
 

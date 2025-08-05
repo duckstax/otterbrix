@@ -6,10 +6,6 @@ namespace components::catalog {
         , resource(resource) {}
 
     void namespace_storage::create_namespace(const table_namespace_t& namespace_name) {
-        if (namespace_name.empty()) {
-            throw std::logic_error("Namespace name cannot be empty");
-        }
-
         if (namespace_exists(namespace_name)) {
             return;
         }

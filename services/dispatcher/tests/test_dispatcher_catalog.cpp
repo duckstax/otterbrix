@@ -146,8 +146,8 @@ TEST_CASE("dispatcher::schemeful_operations") {
     test.step_with_assertion([&id](cursor_t_ptr cur, const catalog& catalog) {
         REQUIRE(catalog.table_exists(id));
         auto sch = catalog.get_table_schema(id);
-        REQUIRE(sch.find_field("fld1").type() == logical_type::INTEGER);
-        REQUIRE(sch.find_field("fld2").type() == logical_type::STRING_LITERAL);
+        REQUIRE(sch.find_field("fld1")->type_data().front().type() == logical_type::INTEGER);
+        REQUIRE(sch.find_field("fld2")->type_data().front().type() == logical_type::STRING_LITERAL);
 
         REQUIRE(cur->is_success());
     });
@@ -223,7 +223,7 @@ TEST_CASE("dispatcher::computed_operations") {
         REQUIRE(count.back().type() == logical_type::BIGINT);
     });
 
-    test.execute_sql("INSERT INTO test.test (_id, name, count) VALUES ('" + gen_id(100) + "', 10, 30.1);");
+    test.execute_sql("INSERT INTO test.test (_id, name, count) VALUES ('" + gen_id(100) + "', 10, 'test');");
     test.step_with_assertion([&id](cursor_t_ptr cur, catalog& catalog) {
         auto name = catalog.get_computing_table_schema(id).find_field_versions("name");
         auto count = catalog.get_computing_table_schema(id).find_field_versions("count");
@@ -234,7 +234,7 @@ TEST_CASE("dispatcher::computed_operations") {
         REQUIRE(name.back().type() == logical_type::BIGINT);
 
         REQUIRE(count.size() == 2);
-        REQUIRE(count.back().type() == logical_type::FLOAT);
+        REQUIRE(count.back().type() == logical_type::STRING_LITERAL);
     });
 
     test.execute_sql("DELETE FROM test.test where count < 100;");
@@ -249,7 +249,7 @@ TEST_CASE("dispatcher::computed_operations") {
         REQUIRE(name.back().type() == logical_type::BIGINT);
 
         REQUIRE(count.size() == 1);
-        REQUIRE(count.back().type() == logical_type::FLOAT);
+        REQUIRE(count.back().type() == logical_type::STRING_LITERAL);
     });
 
     test.execute_sql("DELETE FROM test.test");

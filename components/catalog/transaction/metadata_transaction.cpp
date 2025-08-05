@@ -4,6 +4,14 @@ namespace components::catalog {
     metadata_transaction::metadata_transaction(std::pmr::memory_resource* resource)
         : metadata_diff_(resource)
         , schema_diff_(resource)
+        , error_()
+        , savepoints_(resource) {}
+
+    metadata_transaction::metadata_transaction(std::pmr::memory_resource* resource,
+                                               components::catalog::catalog_error error)
+        : metadata_diff_(resource)
+        , schema_diff_(resource)
+        , error_(std::move(error))
         , savepoints_(resource) {}
 
     bool metadata_transaction::ensure_active() {

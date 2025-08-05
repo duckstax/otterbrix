@@ -9,7 +9,8 @@ namespace components::catalog {
                    const std::pmr::vector<field_id_t>& primary_key)
         : schema_struct(schema_struct)
         , primary_key_field_ids(primary_key, resource)
-        , id_to_struct_idx(resource) {
+        , id_to_struct_idx(resource)
+        , resource(resource) {
         auto& detailed_struct = to_struct(schema_struct);
         {
             std::pmr::unordered_set<std::pmr::string> names(resource);
@@ -48,20 +49,43 @@ namespace components::catalog {
         }
     }
 
-    const complex_logical_type& schema::find_field(const std::pmr::string& name) const {
-        return schema_struct.child_types()[find_idx_by_name(name)];
+    cursor::cursor_t_ptr schema::find_field(field_id_t id) const {
+        size_t idx = find_idx_by_id(id);
+
+        if (!!error_) {
+            return cursor::make_cursor(resource, cursor::error_code_t::schema_error, error_.what());
+        }
+
+        return cursor::make_cursor(resource, {schema_struct.child_types()[idx]});
     }
 
-    const types::field_description& schema::get_field_description(const std::pmr::string& name) const {
+    cursor::cursor_t_ptr schema::find_field(const std::pmr::string& name) const {
+        size_t idx = find_idx_by_name(name);
+
+        if (!!error_) {
+            return cursor::make_cursor(resource, cursor::error_code_t::schema_error, error_.what());
+        }
+
+        return cursor::make_cursor(resource, {schema_struct.child_types()[idx]});
+    }
+
+    std::optional<schema::field_description_cref>
+    schema::get_field_description(components::catalog::field_id_t id) const {
+        size_t idx = find_idx_by_id(id);
+        if (!!error_) {
+            return {};
+        }
+
+        return to_struct(schema_struct).descriptions()[idx];
+    }
+
+    std::optional<schema::field_description_cref> schema::get_field_description(const std::pmr::string& name) const {
+        size_t idx = find_idx_by_name(name);
+        if (!!error_) {
+            return {};
+        }
+
         return to_struct(schema_struct).descriptions()[find_idx_by_name(name)];
-    }
-
-    const types::field_description& schema::get_field_description(components::catalog::field_id_t id) const {
-        return to_struct(schema_struct).descriptions()[find_idx_by_id(id)];
-    }
-
-    const types::complex_logical_type& schema::find_field(field_id_t id) const {
-        return schema_struct.child_types()[find_idx_by_id(id)];
     }
 
     const std::pmr::vector<field_id_t>& schema::primary_key() const { return primary_key_field_ids; }
@@ -77,22 +101,15 @@ namespace components::catalog {
     const catalog_error& schema::error() const { return error_; }
 
     size_t schema::find_idx_by_id(field_id_t id) const {
-        if (!!error_) {
-            throw std::logic_error("Schema is in error state - unable to find field: " + error_.what());
-        }
-
         if (auto it = id_to_struct_idx.find(id); it != id_to_struct_idx.end()) {
             return it->second;
         }
 
-        throw std::logic_error("No field with such id: " + std::to_string(id));
+        error_ = catalog_error(catalog_mistake_t::FIELD_MISSING, "No field with such id: " + std::to_string(id));
+        return {};
     }
 
     size_t schema::find_idx_by_name(const std::pmr::string& name) const {
-        if (!!error_) {
-            throw std::logic_error("Schema is in error state - unable to find field: " + error_.what());
-        }
-
         const auto& fields = schema_struct.child_types();
 
         auto it = std::find_if(fields.cbegin(), fields.cend(), [&name](const complex_logical_type& type) -> bool {
@@ -103,6 +120,8 @@ namespace components::catalog {
             return static_cast<size_t>(it - fields.cbegin());
         }
 
-        throw std::logic_error("No field with such name: \"" + std::string(name) + "\"");
+        error_ =
+            catalog_error(catalog_mistake_t::FIELD_MISSING, "No field with such name: \"" + std::string(name) + "\"");
+        return {};
     }
 } // namespace components::catalog

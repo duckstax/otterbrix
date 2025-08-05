@@ -1,4 +1,6 @@
 #include "catalog/catalog.hpp"
+
+#include <components/cursor/cursor.hpp>
 #include <components/types/types.hpp>
 
 namespace test {
@@ -16,4 +18,6 @@ namespace test {
                                     components::types::complex_logical_type log_t,
                                     components::catalog::catalog& cat,
                                     std::pmr::memory_resource* resource);
+
+    components::types::logical_type front_cursor_type(components::cursor::cursor_t_ptr cursor);
 } // namespace test

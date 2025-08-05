@@ -22,9 +22,9 @@ TEST_CASE("catalog::schema_test") {
         REQUIRE(cat.table_exists({&mr, full}));
 
         auto tbl = cat.get_table_schema({&mr, full});
-        REQUIRE(tbl.find_field("name").type() == logical_type::BIGINT);
+        REQUIRE(front_cursor_type(tbl.find_field("name")) == logical_type::BIGINT);
 
-        auto desc = tbl.get_field_description("name");
+        auto desc = tbl.get_field_description("name")->get();
         REQUIRE(desc.required == true);
         REQUIRE(desc.doc == "test");
         REQUIRE(desc.field_id == 1);
@@ -55,15 +55,15 @@ TEST_CASE("catalog::schema_test") {
         REQUIRE(cat.table_exists({&mr, full}));
 
         auto tbl = cat.get_table_schema({&mr, full});
-        REQUIRE(tbl.find_field("flag").type() == logical_type::BOOLEAN);
-        REQUIRE(tbl.find_field("number").type() == logical_type::INTEGER);
-        REQUIRE(tbl.find_field("name").type() == logical_type::STRING_LITERAL);
-        REQUIRE(tbl.find_field("array").type() == logical_type::LIST);
+        REQUIRE(front_cursor_type(tbl.find_field("flag")) == logical_type::BOOLEAN);
+        REQUIRE(front_cursor_type(tbl.find_field("number")) == logical_type::INTEGER);
+        REQUIRE(front_cursor_type(tbl.find_field("name")) == logical_type::STRING_LITERAL);
+        REQUIRE(front_cursor_type(tbl.find_field("array")) == logical_type::LIST);
 
-        REQUIRE(tbl.get_field_description("flag").field_id == 1);
-        REQUIRE(tbl.get_field_description("number").field_id == 2);
-        REQUIRE(tbl.get_field_description("name").field_id == 3);
-        REQUIRE(tbl.get_field_description("array").field_id == 4);
+        REQUIRE(tbl.get_field_description("flag")->get().field_id == 1);
+        REQUIRE(tbl.get_field_description("number")->get().field_id == 2);
+        REQUIRE(tbl.get_field_description("name")->get().field_id == 3);
+        REQUIRE(tbl.get_field_description("array")->get().field_id == 4);
 
         for (size_t i = 0; i < 10; ++i) {
             collection_full_name_t full_n{"db", "fields" + std::to_string(i)};

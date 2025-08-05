@@ -13,6 +13,13 @@ TEST_CASE("catalog::transactions::commit_abort") {
     auto mr = std::pmr::synchronized_pool_resource();
     catalog cat(&mr);
 
+    {
+        auto scope = cat.begin_transaction({&mr, collection_full_name_t()});
+        REQUIRE(scope.transaction().error().transaction_mistake() == transaction_mistake_t::MISSING_TABLE);
+        REQUIRE(scope.error().transaction_mistake() == transaction_mistake_t::MISSING_TABLE);
+        scope.commit();
+    }
+
     cat.create_namespace({"db"});
     REQUIRE(cat.namespace_exists({"db"}));
 
@@ -29,7 +36,7 @@ TEST_CASE("catalog::transactions::commit_abort") {
     {
         auto new_schema = cat.get_table_schema({&mr, full});
         REQUIRE(new_schema.columns().size() == 2);
-        REQUIRE(new_schema.find_field("new_col").type() == logical_type::HUGEINT);
+        REQUIRE(front_cursor_type(new_schema.find_field("new_col")) == logical_type::HUGEINT);
     }
 
     {
@@ -50,7 +57,7 @@ TEST_CASE("catalog::transactions::commit_abort") {
     {
         auto new_schema = cat.get_table_schema({&mr, full});
         REQUIRE(new_schema.columns().size() == 2);
-        REQUIRE(new_schema.find_field("new_col").type() == logical_type::HUGEINT);
+        REQUIRE(front_cursor_type(new_schema.find_field("new_col")) == logical_type::HUGEINT);
     }
 }
 
@@ -84,11 +91,11 @@ TEST_CASE("catalog::transactions::changes") {
         auto new_schema = cat.get_table_schema({&mr, full});
         REQUIRE(new_schema.columns().size() == 2);
 
-        REQUIRE(new_schema.find_field("new_col").type() == logical_type::STRING_LITERAL);
-        REQUIRE(new_schema.get_field_description("new_col").doc == "test1");
+        REQUIRE(front_cursor_type(new_schema.find_field("new_col")) == logical_type::STRING_LITERAL);
+        REQUIRE(new_schema.get_field_description("new_col")->get().doc == "test1");
 
-        REQUIRE(new_schema.find_field("new_old_col").type() == logical_type::HUGEINT);
-        REQUIRE(new_schema.get_field_description("new_old_col").doc == "test");
+        REQUIRE(front_cursor_type(new_schema.find_field("new_old_col")) == logical_type::HUGEINT);
+        REQUIRE(new_schema.get_field_description("new_old_col")->get().doc == "test");
     }
 }
 
@@ -112,7 +119,7 @@ TEST_CASE("catalog::transactions::savepoints") {
 
         scope.commit();
     }
-    REQUIRE(cat.get_table_schema({&mr, full}).find_field("name").type() == logical_type::BIGINT);
+    REQUIRE(front_cursor_type(cat.get_table_schema({&mr, full}).find_field("name")) == logical_type::BIGINT);
 
     {
         auto scope = cat.begin_transaction({&mr, full});
@@ -130,7 +137,7 @@ TEST_CASE("catalog::transactions::savepoints") {
     {
         auto new_schema = cat.get_table_schema({&mr, full});
         REQUIRE(new_schema.columns().size() == 2);
-        REQUIRE(new_schema.find_field("new_old_col").type() == logical_type::BIGINT);
+        REQUIRE(front_cursor_type(new_schema.find_field("new_old_col")) == logical_type::BIGINT);
     }
 }
 
@@ -175,7 +182,6 @@ TEST_CASE("catalog::transactions::edge_cases") {
             auto scope = cat.begin_transaction(table_id(&mr, table_namespace_t{"db", "name1"}));
             scope.transaction().make_optional("name");
             cat.drop_namespace({"db"});
-            // todo: get_namespace_info still throws if namespace is missing
             REQUIRE_THROWS(scope.commit());
         }
     }

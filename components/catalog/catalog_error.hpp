@@ -21,6 +21,7 @@ namespace components::catalog {
         NO_MISTAKE,
         TRANSACTION_INACTIVE,
         TRANSACTION_FINALIZED,
+        MISSING_TABLE,
         MISSING_SAVEPOINT,
         COMMIT_FAILED,
     };

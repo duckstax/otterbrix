@@ -4,6 +4,7 @@
 
 #include <components/base/collection_full_name.hpp>
 #include <components/document/document.hpp>
+#include <components/types/types.hpp>
 #include <components/vector/data_chunk.hpp>
 
 #include <boost/smart_ptr/intrusive_ptr.hpp>
@@ -31,7 +32,8 @@ namespace components::cursor {
         index_create_fail = 5,
         collection_dropped = 6,
         sql_parse_error = 7,
-        create_physical_plan_error = 8
+        create_physical_plan_error = 8,
+        schema_error = 9,
     };
 
     struct error_t {
@@ -49,6 +51,8 @@ namespace components::cursor {
         explicit cursor_t(std::pmr::memory_resource* resource, operation_status_t op_status);
         explicit cursor_t(std::pmr::memory_resource* resource, std::pmr::vector<document::document_ptr>&& documents);
         explicit cursor_t(std::pmr::memory_resource* resource, vector::data_chunk_t&& chunk);
+        explicit cursor_t(std::pmr::memory_resource* resource,
+                          std::pmr::vector<components::types::complex_logical_type>&& types);
 
         bool uses_table_data() const;
 
@@ -56,6 +60,8 @@ namespace components::cursor {
         const std::pmr::vector<document::document_ptr>& document_data() const;
         vector::data_chunk_t& chunk_data();
         const vector::data_chunk_t& chunk_data() const;
+        std::pmr::vector<components::types::complex_logical_type>& type_data();
+        const std::pmr::vector<components::types::complex_logical_type>& type_data() const;
 
         std::size_t size() const;
         // std::pmr::vector<std::unique_ptr<sub_cursor_t>>::iterator begin();
@@ -82,6 +88,7 @@ namespace components::cursor {
         index_t current_index_{start_index};
         std::pmr::vector<document::document_ptr> document_data_;
         vector::data_chunk_t table_data_;
+        std::pmr::vector<components::types::complex_logical_type> type_data_;
         error_t error_;
         bool success_{true};
         bool uses_table_data_{true};
@@ -95,5 +102,7 @@ namespace components::cursor {
     make_cursor(std::pmr::memory_resource* resource, error_code_t type, const std::string& what = std::string());
     cursor_t_ptr make_cursor(std::pmr::memory_resource* resource, std::pmr::vector<document::document_ptr>&& documents);
     cursor_t_ptr make_cursor(std::pmr::memory_resource* resource, vector::data_chunk_t&& chunk);
+    cursor_t_ptr make_cursor(std::pmr::memory_resource* resource,
+                             std::pmr::vector<components::types::complex_logical_type>&& types);
 
 } // namespace components::cursor

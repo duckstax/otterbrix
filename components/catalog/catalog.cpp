@@ -147,10 +147,12 @@ namespace components::catalog {
 
     transaction_scope catalog::begin_transaction(const table_id& id) {
         if (!table_exists(id)) {
-            throw std::logic_error("Table does not exist: " + std::string(id.table_name()));
+            return {resource,
+                    catalog_error(transaction_mistake_t::MISSING_TABLE,
+                                  "Table does not exist: " + std::string(id.table_name()))};
         }
 
         transactions->add_transaction(id);
-        return transaction_scope(transactions, id, namespaces, resource);
+        return {resource, transactions, id, namespaces};
     }
 } // namespace components::catalog
