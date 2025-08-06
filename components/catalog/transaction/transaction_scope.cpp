@@ -3,8 +3,8 @@
 namespace components::catalog {
     transaction_scope::transaction_scope(std::pmr::memory_resource* resource,
                                          std::weak_ptr<transaction_list> transactions,
-                                         const components::catalog::table_id& id,
-                                         components::catalog::namespace_storage& ns_storage)
+                                         const table_id& id,
+                                         namespace_storage* ns_storage)
 
         : id(id)
         , error_()
@@ -13,11 +13,11 @@ namespace components::catalog {
         transaction_ = std::unique_ptr<metadata_transaction>(new metadata_transaction(resource));
     }
 
-    transaction_scope::transaction_scope(std::pmr::memory_resource* resource, components::catalog::catalog_error error)
+    transaction_scope::transaction_scope(std::pmr::memory_resource* resource, catalog_error error)
         : id(table_id(nullptr, table_namespace_t{}, ""))
         , error_(std::move(error))
         , transaction_list_()
-        , ns_storage() {
+        , ns_storage(nullptr) {
         transaction_ = std::unique_ptr<metadata_transaction>(new metadata_transaction(resource, error_));
     }
 
@@ -70,10 +70,10 @@ namespace components::catalog {
             error_ = catalog_error(transaction_mistake_t::COMMIT_FAILED, "Transaction list has been destroyed!");
         }
 
-        if (!error_) {
+        if (!error_ && !!ns_storage) {
             auto list = transaction_list_.lock();
             error_ = transaction_->commit([&](metadata_diff&& diff) {
-                auto& info = ns_storage->get().get_namespace_info(id.get_namespace()).tables;
+                auto& info = ns_storage->get_namespace_info(id.get_namespace()).tables;
 
                 if (auto it = info.find(id.table_name()); it != info.end()) {
                     auto new_diff = diff.apply(it->second);
@@ -86,7 +86,7 @@ namespace components::catalog {
 
             list->remove_transaction(id);
 
-            if (!!error_) {
+            if (!error_) {
                 is_committed = true;
                 return;
             }

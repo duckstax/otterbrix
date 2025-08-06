@@ -153,6 +153,6 @@ namespace components::catalog {
         }
 
         transactions->add_transaction(id);
-        return {resource, transactions, id, namespaces};
+        return {resource, transactions, id, &namespaces};
     }
 } // namespace components::catalog

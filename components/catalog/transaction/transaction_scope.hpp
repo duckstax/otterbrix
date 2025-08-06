@@ -14,7 +14,7 @@ namespace components::catalog {
         transaction_scope(std::pmr::memory_resource* resource,
                           std::weak_ptr<transaction_list> transactions,
                           const table_id& id,
-                          namespace_storage& ns_storage);
+                          namespace_storage* ns_storage);
 
         transaction_scope(std::pmr::memory_resource* resource, catalog_error error);
 
@@ -38,7 +38,7 @@ namespace components::catalog {
         table_id id;
         catalog_error error_;
         std::weak_ptr<transaction_list> transaction_list_;
-        std::optional<std::reference_wrapper<namespace_storage>> ns_storage;
+        namespace_storage* ns_storage;
         std::unique_ptr<metadata_transaction> transaction_;
     };
 } // namespace components::catalog
