@@ -2,51 +2,53 @@
 
 namespace components::catalog {
     catalog::catalog(std::pmr::memory_resource* resource)
-        : namespaces(resource)
-        , transactions(std::make_shared<transaction_list>(resource))
-        , resource(resource) {}
+        : namespaces_(resource)
+        , transactions_(std::make_shared<transaction_list>(resource))
+        , resource_(resource) {}
 
-    std::pmr::vector<table_namespace_t> catalog::list_namespaces() const { return namespaces.list_root_namespaces(); }
+    std::pmr::vector<table_namespace_t> catalog::list_namespaces() const { return namespaces_.list_root_namespaces(); }
 
     std::pmr::vector<table_namespace_t> catalog::list_namespaces(const table_namespace_t& parent) const {
-        return namespaces.list_child_namespaces(parent);
+        return namespaces_.list_child_namespaces(parent);
     }
 
     bool catalog::namespace_exists(const table_namespace_t& namespace_name) const {
-        return namespaces.namespace_exists(namespace_name);
+        return namespaces_.namespace_exists(namespace_name);
     }
 
     void catalog::create_namespace(const table_namespace_t& namespace_name) {
-        namespaces.create_namespace(namespace_name);
+        namespaces_.create_namespace(namespace_name);
     }
 
-    void catalog::drop_namespace(const table_namespace_t& namespace_name) { namespaces.drop_namespace(namespace_name); }
+    void catalog::drop_namespace(const table_namespace_t& namespace_name) {
+        namespaces_.drop_namespace(namespace_name);
+    }
 
     std::pmr::vector<table_id> catalog::list_tables(const table_namespace_t& namespace_name) const {
+        std::pmr::vector<table_id> result(resource_);
         if (!namespace_exists(namespace_name)) {
-            return {};
+            return result;
         }
 
-        std::pmr::vector<table_id> result(resource);
-        const auto& info = namespaces.get_namespace_info(namespace_name).tables;
+        const auto& info = namespaces_.get_namespace_info(namespace_name).tables;
         result.reserve(info.size());
 
         for (const auto& meta : info) {
-            result.push_back(table_id(resource, namespace_name, meta.first));
+            result.push_back(table_id(resource_, namespace_name, meta.first));
         }
 
         return result;
     }
 
     const schema& catalog::get_table_schema(const table_id& id) const {
-        const auto& info = namespaces.get_namespace_info(id.get_namespace()).tables;
+        const auto& info = namespaces_.get_namespace_info(id.get_namespace()).tables;
         auto it = info.find(id.table_name());
         assert(it != info.end());
         return it->second.current_schema();
     }
 
     computed_schema& catalog::get_computing_table_schema(const table_id& id) {
-        auto& info = namespaces.get_namespace_info(id.get_namespace()).computing;
+        auto& info = namespaces_.get_namespace_info(id.get_namespace()).computing;
         auto it = info.find(id.table_name());
         assert(it != info.end());
         return it->second;
@@ -61,7 +63,7 @@ namespace components::catalog {
             return {catalog_mistake_t::ALREADY_EXISTS, "Table already exists: " + id.to_string()};
         }
 
-        namespaces.get_namespace_info(id.get_namespace()).tables.emplace(id.table_name(), std::move(meta));
+        namespaces_.get_namespace_info(id.get_namespace()).tables.emplace(id.table_name(), std::move(meta));
         return {};
     }
 
@@ -74,7 +76,8 @@ namespace components::catalog {
             return {catalog_mistake_t::ALREADY_EXISTS, "Table already being computed: " + id.to_string()};
         }
 
-        namespaces.get_namespace_info(id.get_namespace()).computing.emplace(id.table_name(), computed_schema(resource));
+        namespaces_.get_namespace_info(id.get_namespace())
+            .computing.emplace(id.table_name(), computed_schema(resource_));
         return {};
     }
 
@@ -112,7 +115,7 @@ namespace components::catalog {
             return {catalog_mistake_t::ALREADY_EXISTS, "Source table does not exist: " + from.to_string()};
         }
 
-        if (table_exists_impl<type>(table_id(resource, from.get_namespace(), to))) {
+        if (table_exists_impl<type>(table_id(resource_, from.get_namespace(), to))) {
             return {catalog_mistake_t::ALREADY_EXISTS, "Target table already exists: " + std::string(to)};
         }
 
@@ -137,7 +140,7 @@ namespace components::catalog {
     std::pmr::map<std::pmr::string,
                   std::conditional_t<type == catalog::schema_type::REGULAR, table_metadata, computed_schema>>&
     catalog::get_map_impl(const table_namespace_t& ns) const {
-        auto& info = namespaces.get_namespace_info(ns);
+        auto& info = namespaces_.get_namespace_info(ns);
         if constexpr (type == schema_type::REGULAR) {
             return info.tables;
         } else {
@@ -147,12 +150,12 @@ namespace components::catalog {
 
     transaction_scope catalog::begin_transaction(const table_id& id) {
         if (!table_exists(id)) {
-            return {resource,
+            return {resource_,
                     catalog_error(transaction_mistake_t::MISSING_TABLE,
                                   "Table does not exist: " + std::string(id.table_name()))};
         }
 
-        transactions->add_transaction(id);
-        return {resource, transactions, id, &namespaces};
+        transactions_->add_transaction(id);
+        return {resource_, transactions_, id, &namespaces_};
     }
 } // namespace components::catalog

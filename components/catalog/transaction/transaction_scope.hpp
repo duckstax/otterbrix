@@ -33,12 +33,12 @@ namespace components::catalog {
         void abort();
 
     private:
-        bool is_committed = false;
-        bool is_aborted = false;
-        table_id id;
+        bool is_committed_ = false;
+        bool is_aborted_ = false;
+        table_id id_;
         catalog_error error_;
         std::weak_ptr<transaction_list> transaction_list_;
-        namespace_storage* ns_storage;
+        namespace_storage* ns_storage_;
         std::unique_ptr<metadata_transaction> transaction_;
     };
 } // namespace components::catalog

@@ -55,11 +55,11 @@ namespace components::catalog {
                        const std::string& name) const;
 
         // aliases are using std::string, not pmr, avoid copy hell
-        std::pmr::vector<struct_entry> added_columns;
-        std::pmr::unordered_map<std::string, diff_info> updates;
-        std::pmr::unordered_map<std::string, std::string> renames;
-        std::pmr::unordered_set<std::string> deleted_columns;
-        std::optional<std::pmr::vector<field_id_t>> new_primary_key;
-        std::pmr::memory_resource* resource;
+        std::pmr::vector<struct_entry> added_columns_;
+        std::pmr::unordered_map<std::string, diff_info> updates_;
+        std::pmr::unordered_map<std::string, std::string> renames_;
+        std::pmr::unordered_set<std::string> deleted_columns_;
+        std::optional<std::pmr::vector<field_id_t>> new_primary_key_;
+        std::pmr::memory_resource* resource_;
     };
 } // namespace components::catalog

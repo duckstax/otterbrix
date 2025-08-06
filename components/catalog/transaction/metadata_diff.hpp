@@ -13,7 +13,7 @@ namespace components::catalog {
 
     private:
         schema_diff schema_diff_;
-        std::optional<std::pmr::string> new_desc;
+        std::optional<std::pmr::string> new_desc_;
         std::pmr::memory_resource* resource_;
     };
 } // namespace components::catalog

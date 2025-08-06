@@ -17,6 +17,6 @@ namespace components::catalog {
         bool has_active_transactions(const table_id& id);
 
     private:
-        std::pmr::unordered_set<table_id> active_transactions;
+        std::pmr::unordered_set<table_id> active_transactions_;
     };
 } // namespace components::catalog

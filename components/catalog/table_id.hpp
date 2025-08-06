@@ -24,9 +24,9 @@ namespace components::catalog {
         [[nodiscard]] std::string to_string() const;
 
     private:
-        table_namespace_t namespace_parts;
-        std::pmr::string name;
-        std::pmr::memory_resource* resource;
+        table_namespace_t namespace_parts_;
+        std::pmr::string name_;
+        std::pmr::memory_resource* resource_;
     };
 } // namespace components::catalog
 

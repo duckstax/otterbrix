@@ -28,8 +28,7 @@ namespace components::catalog {
                              bool is_append,
                              size_t n = 1);
 
-        versioned_trie<std::pmr::string, types::complex_logical_type> fields;
-        std::pmr::unordered_map<std::pmr::string, refcounted_entry_t> existing_versions;
-        std::pmr::memory_resource* resource;
+        versioned_trie<std::pmr::string, types::complex_logical_type> fields_;
+        std::pmr::unordered_map<std::pmr::string, refcounted_entry_t> existing_versions_;
     };
 } // namespace components::catalog

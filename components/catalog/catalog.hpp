@@ -62,9 +62,9 @@ namespace components::catalog {
                       std::conditional_t<type == schema_type::REGULAR, table_metadata, computed_schema>>&
         get_map_impl(const table_namespace_t& ns) const;
 
-        mutable namespace_storage namespaces;
-        std::shared_ptr<transaction_list> transactions; // the ONLY strong ref to list
-        std::pmr::memory_resource* resource;
+        mutable namespace_storage namespaces_;
+        std::shared_ptr<transaction_list> transactions_; // the ONLY strong ref to list
+        std::pmr::memory_resource* resource_;
 
         friend class transaction_scope;
     };

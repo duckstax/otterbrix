@@ -45,7 +45,7 @@ namespace components::catalog {
 
         table_namespace_t get_parent_namespace(const table_namespace_t& namespace_name) const;
 
-        trie_type namespaces;
-        std::pmr::memory_resource* resource;
+        trie_type namespaces_;
+        std::pmr::memory_resource* resource_;
     };
 } // namespace components::catalog

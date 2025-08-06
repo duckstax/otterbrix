@@ -14,22 +14,22 @@ namespace components::catalog {
         versioned_entry(Value v)
             : value(std::move(v)) {}
 
-        void add_ref() const { ++ref_count; }
+        void add_ref() const { ++ref_count_; }
 
         void release_ref() const {
-            if (ref_count > 0) {
-                --ref_count;
+            if (ref_count_ > 0) {
+                --ref_count_;
             }
         }
 
-        void release_n(size_t n) { ref_count = std::max(ref_count, static_cast<uint64_t>(n)) - n; }
+        void release_n(size_t n) { ref_count_ = std::max(ref_count_, static_cast<uint64_t>(n)) - n; }
 
-        bool is_alive() const { return ref_count > 0; }
+        bool is_alive() const { return ref_count_ > 0; }
 
         Value value;
 
     private:
-        mutable uint64_t ref_count = 0;
+        mutable uint64_t ref_count_ = 0;
     };
 
     template<typename Value>
