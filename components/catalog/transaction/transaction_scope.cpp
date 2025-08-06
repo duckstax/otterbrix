@@ -14,7 +14,7 @@ namespace components::catalog {
     }
 
     transaction_scope::transaction_scope(std::pmr::memory_resource* resource, catalog_error error)
-        : id(table_id(nullptr, table_namespace_t{}, ""))
+        : id(table_id(resource, table_namespace_t{}, ""))
         , error_(std::move(error))
         , transaction_list_()
         , ns_storage(nullptr) {
