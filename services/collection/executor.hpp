@@ -55,11 +55,14 @@ namespace services::collection::executor {
                                components::collection::operators::operator_ptr plan,
                                components::logical_plan::storage_parameters parameters);
 
-        void execute_sub_plan_finish_(const components::session::session_id_t& session,
-                                      components::cursor::cursor_t_ptr cursor);
+        void
+        execute_sub_plan_finish_(const components::session::session_id_t& session,
+                                 components::cursor::cursor_t_ptr cursor,
+                                 components::base::operators::operator_write_data_t::updated_types_map_t updates = {});
 
         void execute_plan_finish_(const components::session::session_id_t& session,
-                                  components::cursor::cursor_t_ptr&& cursor);
+                                  components::cursor::cursor_t_ptr&& cursor,
+                                  components::base::operators::operator_write_data_t::updated_types_map_t updates = {});
 
         void aggregate_document_impl(const components::session::session_id_t& session,
                                      context_collection_t* context_,

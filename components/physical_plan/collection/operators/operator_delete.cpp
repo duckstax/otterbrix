@@ -20,6 +20,7 @@ namespace components::collection::operators {
                         if (it != context_->document_storage().end()) {
                             context_->document_storage().erase(it);
                             modified_->append(id);
+                            components::base::operators::update_types_from_document(modified_->updated_types_map(), doc_left);
                             context_->index_engine()->delete_document(doc_left, pipeline_context);
                         }
                         break;
@@ -34,6 +35,7 @@ namespace components::collection::operators {
                 if (it != context_->document_storage().end()) {
                     context_->document_storage().erase(it);
                     modified_->append(id);
+                    components::base::operators::update_types_from_document(modified_->updated_types_map(), document);
                     context_->index_engine()->delete_document(document, pipeline_context);
                 }
             }

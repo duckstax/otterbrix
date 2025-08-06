@@ -1,12 +1,12 @@
 #pragma once
 
-#include "catalog_exception.hpp"
 #include "computed_schema.hpp"
 #include "table_id.hpp"
 #include "table_metadata.hpp"
 #include "versioned_trie/versioned_trie.hpp"
 
 #include <map>
+#include <stdexcept>
 
 namespace components::catalog {
     class namespace_storage {
@@ -45,7 +45,7 @@ namespace components::catalog {
 
         table_namespace_t get_parent_namespace(const table_namespace_t& namespace_name) const;
 
-        trie_type namespaces;
-        std::pmr::memory_resource* resource;
+        trie_type namespaces_;
+        std::pmr::memory_resource* resource_;
     };
 } // namespace components::catalog

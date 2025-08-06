@@ -9,6 +9,7 @@
 #include <core/system_command.hpp>
 #include <services/disk/route.hpp>
 #include <services/memory_storage/memory_storage.hpp>
+#include <services/memory_storage/route.hpp>
 
 using namespace components::cursor;
 
@@ -206,13 +207,16 @@ namespace services::collection::executor {
         }
     }
 
-    void executor_t::execute_sub_plan_finish_(const components::session::session_id_t& session, cursor_t_ptr result) {
+    void executor_t::execute_sub_plan_finish_(
+        const components::session::session_id_t& session,
+        cursor_t_ptr result,
+        components::base::operators::operator_write_data_t::updated_types_map_t updates) {
         if (result->is_error() || !plans_.contains(session)) {
-            execute_plan_finish_(session, std::move(result));
+            execute_plan_finish_(session, std::move(result), std::move(updates));
         }
         auto& plan = plans_.at(session);
         if (plan.sub_plans.size() == 1) {
-            execute_plan_finish_(session, std::move(result));
+            execute_plan_finish_(session, std::move(result), std::move(updates));
         } else {
             assert(!plan.sub_plans.empty() && "executor_t:execute_sub_plan_finish_: sub plans execution failed");
             plan.sub_plans.pop();
@@ -220,13 +224,25 @@ namespace services::collection::executor {
         }
     }
 
-    void executor_t::execute_plan_finish_(const components::session::session_id_t& session, cursor_t_ptr&& cursor) {
+    void
+    executor_t::execute_plan_finish_(const components::session::session_id_t& session,
+                                     cursor_t_ptr&& cursor,
+                                     components::base::operators::operator_write_data_t::updated_types_map_t updates) {
         trace(log_, "executor::execute_plan_finish, success: {}", cursor->is_success());
-        actor_zeta::send(memory_storage_,
-                         address(),
-                         handler_id(route::execute_plan_finish),
-                         session,
-                         std::move(cursor));
+        if (updates.empty()) {
+            actor_zeta::send(memory_storage_,
+                             address(),
+                             handler_id(route::execute_plan_finish),
+                             session,
+                             std::move(cursor));
+        } else {
+            actor_zeta::send(memory_storage_,
+                             address(),
+                             handler_id(memory_storage::route::execute_plan_delete_finish),
+                             session,
+                             std::move(cursor),
+                             std::move(updates));
+        }
         plans_.erase(session);
     }
 
@@ -344,7 +360,9 @@ namespace services::collection::executor {
                          modified);
         std::pmr::vector<document_ptr> documents(resource());
         documents.resize(plan->modified()->size());
-        execute_sub_plan_finish_(session, make_cursor(resource(), std::move(documents)));
+        execute_sub_plan_finish_(session,
+                                 make_cursor(resource(), std::move(documents)),
+                                 std::move(plan->modified()->updated_types_map()));
     }
 
 } // namespace services::collection::executor

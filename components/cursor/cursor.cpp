@@ -13,18 +13,21 @@ namespace components::cursor {
     cursor_t::cursor_t(std::pmr::memory_resource* resource)
         : document_data_(resource)
         , table_data_(resource, {})
+        , type_data_(resource)
         , error_(error_code_t::none)
         , success_(true) {}
 
     cursor_t::cursor_t(std::pmr::memory_resource* resource, const error_t& error)
         : document_data_(resource)
         , table_data_(resource, {})
+        , type_data_(resource)
         , error_(error)
         , success_(false) {}
 
     cursor_t::cursor_t(std::pmr::memory_resource* resource, operation_status_t op_status)
         : document_data_(resource)
         , table_data_(resource, {})
+        , type_data_(resource)
         , error_(error_code_t::none)
         , success_(op_status == operation_status_t::success) {}
 
@@ -32,6 +35,7 @@ namespace components::cursor {
         : size_(documents.size())
         , document_data_(std::move(documents))
         , table_data_(resource, {})
+        , type_data_(resource)
         , error_(error_code_t::none)
         , success_(true)
         , uses_table_data_(false) {}
@@ -40,6 +44,17 @@ namespace components::cursor {
         : size_(chunk.size())
         , document_data_(resource)
         , table_data_(std::move(chunk))
+        , type_data_(resource)
+        , error_(error_code_t::none)
+        , success_(true)
+        , uses_table_data_(true) {}
+
+    cursor_t::cursor_t(std::pmr::memory_resource* resource,
+                       std::pmr::vector<components::types::complex_logical_type>&& types)
+        : size_(types.size())
+        , document_data_(resource)
+        , table_data_(resource, {})
+        , type_data_(std::move(types))
         , error_(error_code_t::none)
         , success_(true)
         , uses_table_data_(true) {}
@@ -49,6 +64,8 @@ namespace components::cursor {
     const std::pmr::vector<document::document_ptr>& cursor_t::document_data() const { return document_data_; }
     vector::data_chunk_t& cursor_t::chunk_data() { return table_data_; }
     const vector::data_chunk_t& cursor_t::chunk_data() const { return table_data_; }
+    std::pmr::vector<components::types::complex_logical_type>& cursor_t::type_data() { return type_data_; }
+    const std::pmr::vector<components::types::complex_logical_type>& cursor_t::type_data() const { return type_data_; }
 
     std::size_t cursor_t::size() const { return size_; }
     bool cursor_t::has_next() const { return static_cast<std::size_t>(current_index_ + 1) < size_; }
@@ -95,4 +112,8 @@ namespace components::cursor {
         return cursor_t_ptr{new cursor_t(resource, std::move(chunk))};
     }
 
+    cursor_t_ptr make_cursor(std::pmr::memory_resource* resource,
+                             std::pmr::vector<components::types::complex_logical_type>&& types) {
+        return cursor_t_ptr{new cursor_t(resource, std::move(types))};
+    }
 } // namespace components::cursor

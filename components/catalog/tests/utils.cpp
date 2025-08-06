@@ -12,4 +12,9 @@ namespace test {
         schema sch(resource, create_struct({log_t}, {field_description(1, true, "test")}), {1});
         cat.create_table({resource, name}, {resource, sch});
     }
+
+    components::types::logical_type front_cursor_type(components::cursor::cursor_t_ptr cursor) {
+        assert(cursor->type_data().size());
+        return cursor->type_data().front().type();
+    }
 } // namespace test

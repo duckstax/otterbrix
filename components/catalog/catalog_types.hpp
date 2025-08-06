@@ -14,7 +14,7 @@ namespace components::catalog {
     create_list(field_id_t field_id, const types::complex_logical_type& type, bool required = true);
 
     [[nodiscard]] types::complex_logical_type create_struct(const std::vector<types::complex_logical_type>& columns,
-                                                            const std::vector<types::field_description>& descriptions);
+                                                            std::vector<types::field_description> descriptions);
 
     [[nodiscard]] types::complex_logical_type create_map(field_id_t key_id,
                                                          const types::complex_logical_type& key,

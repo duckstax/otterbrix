@@ -2,44 +2,32 @@
 
 namespace components::catalog {
     namespace_storage::namespace_storage(std::pmr::memory_resource* resource)
-        : namespaces(resource)
-        , resource(resource) {}
+        : namespaces_(resource)
+        , resource_(resource) {}
 
     void namespace_storage::create_namespace(const table_namespace_t& namespace_name) {
-        if (namespace_name.empty()) {
-            throw catalog_exception("Namespace name cannot be empty");
-        }
-
         if (namespace_exists(namespace_name)) {
-            throw already_exists_exception("Namespace already exists");
+            return;
         }
 
         if (namespace_name.size() > 1) {
             auto parent = get_parent_namespace(namespace_name);
             if (!namespace_exists(parent)) {
-                throw no_such_namespace_exception("Parent namespace does not exist");
+                create_namespace(parent);
             }
         }
 
-        table_namespace_t path(namespace_name.begin(), namespace_name.end(), resource);
-        namespaces.insert({path, namespace_info(resource)});
+        table_namespace_t path(namespace_name.begin(), namespace_name.end(), resource_);
+        namespaces_.insert({path, namespace_info(resource_)});
     }
 
     void namespace_storage::drop_namespace(const table_namespace_t& namespace_name) {
-        if (namespace_name.empty()) {
-            throw catalog_exception("Namespace name cannot be empty");
+        if (namespace_name.empty() || !namespace_exists(namespace_name)) {
+            return;
         }
 
-        if (!namespace_exists(namespace_name)) {
-            throw no_such_namespace_exception("Namespace does not exist");
-        }
-
-        if (has_child_namespaces(namespace_name)) {
-            throw not_supported_exception("Cannot drop namespace with child namespaces"); // todo: allow?
-        }
-
-        table_namespace_t path(namespace_name.begin(), namespace_name.end(), resource);
-        namespaces.erase(path);
+        table_namespace_t path(namespace_name.begin(), namespace_name.end(), resource_);
+        namespaces_.erase(path);
     }
 
     bool namespace_storage::namespace_exists(const table_namespace_t& namespace_name) const {
@@ -47,19 +35,19 @@ namespace components::catalog {
             return false;
         }
 
-        table_namespace_t path(namespace_name.begin(), namespace_name.end(), resource);
-        auto it = namespaces.find(path);
-        return it != namespaces.end();
+        table_namespace_t path(namespace_name.begin(), namespace_name.end(), resource_);
+        auto it = namespaces_.find(path);
+        return it != namespaces_.end();
     }
 
     // todo: reuse list_child
     std::pmr::vector<table_namespace_t> namespace_storage::list_root_namespaces() const {
-        std::pmr::vector<table_namespace_t> result(resource);
+        std::pmr::vector<table_namespace_t> result(resource_);
 
-        for (auto it = namespaces.begin(); it != namespaces.end(); ++it) {
+        for (auto it = namespaces_.begin(); it != namespaces_.end(); ++it) {
             if (it->key.size() == 1) {
                 auto a = it->key;
-                table_namespace_t ns(a.begin(), a.end(), resource);
+                table_namespace_t ns(a.begin(), a.end(), resource_);
                 result.push_back(std::move(ns));
             }
         }
@@ -69,15 +57,15 @@ namespace components::catalog {
 
     std::pmr::vector<table_namespace_t>
     namespace_storage::list_child_namespaces(const table_namespace_t& parent) const {
+        std::pmr::vector<table_namespace_t> result(resource_);
         if (!namespace_exists(parent)) {
-            throw no_such_namespace_exception("Parent namespace does not exist");
+            // use result with: no_such_namespace_exception("Parent namespace does not exist");
+            return result;
         }
 
-        std::pmr::vector<table_namespace_t> result(resource);
-        table_namespace_t next(resource);
-
-        if (auto res = namespaces.longest_match(parent); res.match && !res.leaf) {
-            namespaces.copy_next_key_elements(res, std::back_inserter(next));
+        table_namespace_t next(resource_);
+        if (auto res = namespaces_.longest_match(parent); res.match && !res.leaf) {
+            namespaces_.copy_next_key_elements(res, std::back_inserter(next));
             result.reserve(next.size());
 
             for (auto&& ext : next) {
@@ -91,10 +79,10 @@ namespace components::catalog {
     }
 
     std::pmr::vector<table_namespace_t> namespace_storage::list_all_namespaces() const {
-        std::pmr::vector<table_namespace_t> result(resource);
+        std::pmr::vector<table_namespace_t> result(resource_);
 
-        for (const auto& [path, info] : namespaces) {
-            table_namespace_t ns(path.begin(), path.end(), resource);
+        for (const auto& [path, info] : namespaces_) {
+            table_namespace_t ns(path.begin(), path.end(), resource_);
             result.push_back(std::move(ns));
         }
 
@@ -102,18 +90,19 @@ namespace components::catalog {
     }
 
     bool namespace_storage::has_child_namespaces(const table_namespace_t& namespace_name) const {
-        auto match_res = namespaces.longest_match(namespace_name);
+        auto match_res = namespaces_.longest_match(namespace_name);
         return !match_res.leaf;
     }
 
     std::pmr::vector<table_namespace_t>
     namespace_storage::get_all_descendants(const table_namespace_t& namespace_name) const {
+        std::pmr::vector<table_namespace_t> result(resource_);
         if (!namespace_exists(namespace_name)) {
-            throw no_such_namespace_exception("Namespace does not exist");
+            // use result with: no_such_namespace_exception("Namespace does not exist");
+            return result;
         }
 
-        std::pmr::vector<table_namespace_t> result(resource);
-        std::pmr::vector<table_namespace_t> stack(resource); // recursion may overflow?
+        std::pmr::vector<table_namespace_t> stack(resource_); // recursion may overflow?
 
         stack.push_back(namespace_name);
         while (!stack.empty()) {
@@ -133,22 +122,22 @@ namespace components::catalog {
     namespace_storage::namespace_info&
     namespace_storage::get_namespace_info(const components::catalog::table_namespace_t& namespace_name) {
         if (!namespace_exists(namespace_name)) {
-            throw no_such_namespace_exception("Namespace does not exist");
+            throw std::logic_error("Namespace does not exist");
         }
 
-        return namespaces.find(namespace_name)->value;
+        return namespaces_.find(namespace_name)->value;
     }
 
-    void namespace_storage::clear() { namespaces.clear(); }
+    void namespace_storage::clear() { namespaces_.clear(); }
 
-    size_t namespace_storage::size() const { return static_cast<size_t>(namespaces.size()); }
+    size_t namespace_storage::size() const { return static_cast<size_t>(namespaces_.size()); }
 
     table_namespace_t namespace_storage::get_parent_namespace(const table_namespace_t& namespace_name) const {
         if (namespace_name.empty()) {
-            return table_namespace_t(resource);
+            return table_namespace_t(resource_);
         }
 
-        table_namespace_t parent(namespace_name.begin(), namespace_name.end() - 1, resource);
+        table_namespace_t parent(namespace_name.begin(), namespace_name.end() - 1, resource_);
         return parent;
     }
 } // namespace components::catalog

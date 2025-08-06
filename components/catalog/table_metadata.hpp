@@ -15,8 +15,8 @@ namespace components::catalog {
         [[nodiscard]] const schema& current_schema() const;
 
     private:
-        schema schema_struct;
-        std::pmr::string table_description;
+        schema schema_struct_;
+        std::pmr::string table_description_;
         timestamp last_updated_ms_;
         field_id_t next_column_id_;
     };

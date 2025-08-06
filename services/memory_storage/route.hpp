@@ -8,6 +8,7 @@ namespace services::memory_storage {
     {
         execute_plan,
         execute_plan_finish,
+        execute_plan_delete_finish,
         load,
         load_finish
     };

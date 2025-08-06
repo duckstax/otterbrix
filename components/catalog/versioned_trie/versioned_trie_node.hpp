@@ -19,26 +19,26 @@ namespace components::catalog {
             , children_(resource)
             , parent_(nullptr)
             , value_(resource)
-            , resource(resource) {}
+            , resource_(resource) {}
 
         versioned_trie_node(std::pmr::memory_resource* resource, versioned_trie_node* parent)
             : keys_(resource)
             , children_(resource)
             , parent_(parent)
             , value_(resource)
-            , resource(resource) {}
+            , resource_(resource) {}
 
         versioned_trie_node(versioned_trie_node const& other)
             : keys_(other.keys_)
-            , children_(other.resource)
+            , children_(other.resource_)
             , parent_(other.parent_)
             , parent_index_(other.parent_index_)
             , value_(other.value_)
-            , resource(other.resource) {
+            , resource_(other.resource_) {
             children_.reserve(other.children_.size());
             for (auto const& node : other.children_) {
                 core::pmr::unique_ptr<versioned_trie_node> new_node(new versioned_trie_node(*node),
-                                                                    core::pmr::deleter_t(resource));
+                                                                    core::pmr::deleter_t(resource_));
                 children_.push_back(std::move(new_node));
             }
         }
@@ -137,7 +137,7 @@ namespace components::catalog {
                 node->parent_ = &other;
             }
             std::swap(parent_index_, other.parent_index_);
-            std::swap(resource, other.resource);
+            std::swap(resource_, other.resource_);
         }
 
         versioned_value<Value>& value() { return value_; }
@@ -202,7 +202,7 @@ namespace components::catalog {
         versioned_trie_node* parent_;
         parent_index parent_index_;
         versioned_value<Value> value_;
-        std::pmr::memory_resource* resource;
+        std::pmr::memory_resource* resource_;
 
         friend struct parent_index;
     };

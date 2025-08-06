@@ -2,9 +2,8 @@
 
 namespace components::catalog {
     computed_schema::computed_schema(std::pmr::memory_resource* resource)
-        : fields(resource)
-        , existing_versions(resource)
-        , resource(resource) {}
+        : fields_(resource)
+        , existing_versions_(resource) {}
 
     void computed_schema::append(std::pmr::string json, const types::complex_logical_type& type) {
         if (try_use_refcout(json, type, true)) {
@@ -12,10 +11,10 @@ namespace components::catalog {
         }
 
         // otherwise a new version is created
-        fields.insert(json, type);
-        auto ref = std::cref(fields.find(json).ref_counted());
+        fields_.insert(json, type);
+        auto ref = std::cref(fields_.find(json).ref_counted());
         ref.get().get_version(ref.get().latest_version_id().value()).add_ref();
-        existing_versions.emplace(json, std::move(ref));
+        existing_versions_.emplace(json, std::move(ref));
     }
 
     void computed_schema::drop(std::pmr::string json, const types::complex_logical_type& type) {
@@ -27,10 +26,16 @@ namespace components::catalog {
         // todo: define if it is an error
     }
 
+    void computed_schema::drop_n(std::pmr::string json, const types::complex_logical_type& type, size_t n) {
+        if (try_use_refcout(json, type, false, n)) {
+            return;
+        }
+    }
+
     std::vector<types::complex_logical_type> computed_schema::find_field_versions(const std::pmr::string& name) const {
         std::vector<types::complex_logical_type> retval;
-        auto it = existing_versions.find(name);
-        assert(it != existing_versions.end());
+        auto it = existing_versions_.find(name);
+        assert(it != existing_versions_.end());
         auto& vrs = it->second.get().get_versions();
         retval.reserve(vrs.size());
 
@@ -45,10 +50,10 @@ namespace components::catalog {
 
     types::complex_logical_type computed_schema::latest_types_struct() const {
         std::vector<types::complex_logical_type> retval;
-        retval.reserve(existing_versions.size());
-        for (const auto& [name, entry] : existing_versions) {
+        retval.reserve(existing_versions_.size());
+        for (const auto& [name, entry] : existing_versions_) {
             auto& v = entry.get();
-            if (auto id = v.latest_version_id(); !!id) {
+            if (auto id = v.latest_version_id(); !!id && v.get_version(*id).is_alive()) {
                 retval.push_back(v.get_version(id.value()).value);
                 retval.back().set_alias(name.c_str());
             }
@@ -59,8 +64,9 @@ namespace components::catalog {
 
     bool computed_schema::try_use_refcout(const std::pmr::string& json,
                                           const types::complex_logical_type& type,
-                                          bool is_append) {
-        if (auto it_all_versions = existing_versions.find(json); it_all_versions != existing_versions.end()) {
+                                          bool is_append,
+                                          size_t n) {
+        if (auto it_all_versions = existing_versions_.find(json); it_all_versions != existing_versions_.end()) {
             auto& versioned_value = it_all_versions->second.get();
             auto it_map = versioned_value.get_versions();
             auto it_version = std::find_if(
@@ -76,11 +82,11 @@ namespace components::catalog {
                 if (is_append) {
                     refcount.add_ref();
                 } else {
-                    refcount.release_ref();
+                    refcount.release_n(n);
                     if (!it_all_versions->second.get().has_alive_versions()) {
                         // deleted last version, do cleanup
-                        existing_versions.erase(it_all_versions);
-                        fields.erase(json);
+                        existing_versions_.erase(it_all_versions);
+                        fields_.erase(json);
                     }
                 }
 

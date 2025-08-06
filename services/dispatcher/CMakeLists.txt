@@ -22,6 +22,7 @@ target_link_libraries(
         otterbrix_${PROJECT_NAME} PRIVATE
         otterbrix::log
         otterbrix::logical_plan
+        otterbrix::catalog
         otterbrix::cursor
         otterbrix::session
         otterbrix::planner
@@ -36,5 +37,5 @@ target_include_directories(otterbrix_${PROJECT_NAME} PUBLIC
 )
 
 if (DEV_MODE)
-    #    add_subdirectory(tests)
+    add_subdirectory(tests)
 endif ()

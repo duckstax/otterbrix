@@ -22,9 +22,9 @@ TEST_CASE("catalog::schema_test") {
         REQUIRE(cat.table_exists({&mr, full}));
 
         auto tbl = cat.get_table_schema({&mr, full});
-        REQUIRE(tbl.find_field("name").type() == logical_type::BIGINT);
+        REQUIRE(front_cursor_type(tbl.find_field("name")) == logical_type::BIGINT);
 
-        auto desc = tbl.get_field_description("name");
+        auto desc = tbl.get_field_description("name")->get();
         REQUIRE(desc.required == true);
         REQUIRE(desc.doc == "test");
         REQUIRE(desc.field_id == 1);
@@ -48,23 +48,27 @@ TEST_CASE("catalog::schema_test") {
         std::vector<field_description> desc{{1}};
         auto sch = schema(&mr, create_struct(fields, n_field_descriptions<4>()));
 
-        cat.create_table({&mr, full}, {&mr, sch});
+        {
+            auto err = cat.create_table({&mr, full}, {&mr, sch});
+            REQUIRE(!err);
+        }
         REQUIRE(cat.table_exists({&mr, full}));
 
         auto tbl = cat.get_table_schema({&mr, full});
-        REQUIRE(tbl.find_field("flag").type() == logical_type::BOOLEAN);
-        REQUIRE(tbl.find_field("number").type() == logical_type::INTEGER);
-        REQUIRE(tbl.find_field("name").type() == logical_type::STRING_LITERAL);
-        REQUIRE(tbl.find_field("array").type() == logical_type::LIST);
+        REQUIRE(front_cursor_type(tbl.find_field("flag")) == logical_type::BOOLEAN);
+        REQUIRE(front_cursor_type(tbl.find_field("number")) == logical_type::INTEGER);
+        REQUIRE(front_cursor_type(tbl.find_field("name")) == logical_type::STRING_LITERAL);
+        REQUIRE(front_cursor_type(tbl.find_field("array")) == logical_type::LIST);
 
-        REQUIRE(tbl.get_field_description("flag").field_id == 1);
-        REQUIRE(tbl.get_field_description("number").field_id == 2);
-        REQUIRE(tbl.get_field_description("name").field_id == 3);
-        REQUIRE(tbl.get_field_description("array").field_id == 4);
+        REQUIRE(tbl.get_field_description("flag")->get().field_id == 1);
+        REQUIRE(tbl.get_field_description("number")->get().field_id == 2);
+        REQUIRE(tbl.get_field_description("name")->get().field_id == 3);
+        REQUIRE(tbl.get_field_description("array")->get().field_id == 4);
 
         for (size_t i = 0; i < 10; ++i) {
             collection_full_name_t full_n{"db", "fields" + std::to_string(i)};
-            cat.create_table({&mr, full_n}, {&mr, sch});
+            auto err = cat.create_table({&mr, full_n}, {&mr, sch});
+            REQUIRE(!err);
         }
 
         auto tbls = cat.list_tables({"db"}); // sorted with std::map
@@ -81,13 +85,12 @@ TEST_CASE("catalog::trie_test") {
     SECTION("correctness") {
         catalog cat(&mr);
 
-        cat.create_namespace({"1"});
+        // nested namespaces will be created as well
         cat.create_namespace({"2"});
         cat.create_namespace({"3"});
-        cat.create_namespace({"2", "3"});
-        cat.create_namespace({"2", "3", "4"});
-        cat.create_namespace({"2", "4"});
         cat.create_namespace({"1", "2"});
+        cat.create_namespace({"2", "4"});
+        cat.create_namespace({"2", "3", "4"});
 
         auto children = cat.list_namespaces({"2"});
         REQUIRE(children.size() == 2);
@@ -180,7 +183,11 @@ TEST_CASE("catalog::compute_schema") {
     cat.create_namespace({"db"});
     collection_full_name_t full{"db", "name"};
 
-    computed_schema& sch = cat.create_computing_table({&mr, full});
+    {
+        auto err = cat.create_computing_table({&mr, full});
+        REQUIRE(!err);
+    }
+    computed_schema& sch = cat.get_computing_table_schema({&mr, full});
     std::vector<complex_logical_type> types{logical_type::BOOLEAN,
                                             logical_type::INTEGER,
                                             logical_type::INTEGER_LITERAL,
@@ -230,7 +237,10 @@ TEST_CASE("catalog::compute_schema") {
 
         REQUIRE(cat.get_computing_table_schema({&mr, full}).latest_types_struct().child_types().empty());
         std::pmr::string new_name = "test";
-        cat.rename_computing_table({&mr, full}, new_name);
+        {
+            auto err = cat.rename_computing_table({&mr, full}, new_name);
+            REQUIRE(!err);
+        }
 
         REQUIRE(cat.table_computes({&mr, {"db"}, new_name}));
         REQUIRE_FALSE(cat.table_computes({&mr, full}));
