@@ -19,9 +19,10 @@ namespace components::collection::operators {
         }
         if (left_->output()) {
             output_ = base::operators::make_operator_data(left_->output()->resource());
-            for (auto& doc : left_->output()->documents()) {
-                if (predicate_->check(doc, pipeline_context ? &pipeline_context->parameters : nullptr)) {
-                    output_->append(doc);
+            for (size_t i = 0; i < left_->output()->documents().size(); i++) {
+                if (predicate_->check(left_->output()->documents()[i],
+                                      pipeline_context ? &pipeline_context->parameters : nullptr)) {
+                    output_->append(left_->output()->documents()[i]);
                     ++count;
                     if (!limit_.check(count)) {
                         return;

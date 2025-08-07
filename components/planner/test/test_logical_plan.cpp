@@ -166,14 +166,14 @@ TEST_CASE("logical_plan::insert") {
         auto plan = make_node_insert(&resource, {database_name, collection_name}, std::move(documents));
         components::planner::planner_t planner;
         auto node = planner.create_plan(&resource, plan);
-        REQUIRE(node->to_string() == R"_($insert: {$raw_data: {$documents: 0}})_");
+        REQUIRE(node->to_string() == R"_($insert: {$raw_data: {$rows: 0}})_");
     }
     {
         std::pmr::vector<components::document::document_ptr> documents = {gen_doc(1, &resource)};
         auto plan = make_node_insert(&resource, {database_name, collection_name}, std::move(documents));
         components::planner::planner_t planner;
         auto node = planner.create_plan(&resource, plan);
-        REQUIRE(node->to_string() == R"_($insert: {$raw_data: {$documents: 1}})_");
+        REQUIRE(node->to_string() == R"_($insert: {$raw_data: {$rows: 1}})_");
     }
     {
         std::pmr::vector<components::document::document_ptr> documents = {gen_doc(1, &resource),
@@ -184,13 +184,13 @@ TEST_CASE("logical_plan::insert") {
         auto plan = make_node_insert(&resource, {database_name, collection_name}, std::move(documents));
         components::planner::planner_t planner;
         auto node = planner.create_plan(&resource, plan);
-        REQUIRE(node->to_string() == R"_($insert: {$raw_data: {$documents: 5}})_");
+        REQUIRE(node->to_string() == R"_($insert: {$raw_data: {$rows: 5}})_");
     }
     {
         auto plan = make_node_insert(&resource, {database_name, collection_name}, {gen_doc(1, &resource)});
         components::planner::planner_t planner;
         auto node = planner.create_plan(&resource, plan);
-        REQUIRE(node->to_string() == R"_($insert: {$raw_data: {$documents: 1}})_");
+        REQUIRE(node->to_string() == R"_($insert: {$raw_data: {$rows: 1}})_");
     }
 }
 

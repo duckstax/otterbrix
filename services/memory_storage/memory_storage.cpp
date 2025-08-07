@@ -1,6 +1,8 @@
 #include "memory_storage.hpp"
 #include "route.hpp"
 #include <cassert>
+#include <components/logical_plan/node_create_collection.hpp>
+#include <components/logical_plan/node_data.hpp>
 #include <components/physical_plan_generator/create_plan.hpp>
 #include <core/system_command.hpp>
 #include <core/tracy/tracy.hpp>
@@ -111,7 +113,8 @@ namespace services {
 
     void memory_storage_t::execute_plan(const components::session::session_id_t& session,
                                         components::logical_plan::node_ptr logical_plan,
-                                        components::logical_plan::storage_parameters parameters) {
+                                        components::logical_plan::storage_parameters parameters,
+                                        components::catalog::used_format_t used_format) {
         using components::logical_plan::node_type;
 
         switch (logical_plan->type()) {
@@ -128,7 +131,7 @@ namespace services {
                 drop_collection_(session, std::move(logical_plan));
                 break;
             default:
-                execute_plan_impl(session, std::move(logical_plan), std::move(parameters));
+                execute_plan_impl(session, std::move(logical_plan), std::move(parameters), used_format);
                 break;
         }
     }
@@ -143,15 +146,25 @@ namespace services {
                              session,
                              make_cursor(resource(), error_code_t::collection_dropped));
         } else {
-            std::pmr::vector<document_ptr> documents(resource());
-            for (const auto& doc : collection->document_storage()) {
-                documents.emplace_back(doc.second);
+            if (collection->uses_datatable()) {
+                components::vector::data_chunk_t chunk(resource(), collection->table_storage().table().copy_types());
+                chunk.set_cardinality(collection->table_storage().table().calculate_size());
+                actor_zeta::send(current_message()->sender(),
+                                 address(),
+                                 handler_id(collection::route::size_finish),
+                                 session,
+                                 make_cursor(resource(), std::move(chunk)));
+            } else {
+                std::pmr::vector<document_ptr> documents(resource());
+                for (const auto& doc : collection->document_storage()) {
+                    documents.emplace_back(doc.second);
+                }
+                actor_zeta::send(current_message()->sender(),
+                                 address(),
+                                 handler_id(collection::route::size_finish),
+                                 session,
+                                 make_cursor(resource(), std::move(documents)));
             }
-            actor_zeta::send(current_message()->sender(),
-                             address(),
-                             handler_id(collection::route::size_finish),
-                             session,
-                             make_cursor(resource(), std::move(documents)));
         }
     }
 
@@ -222,11 +235,27 @@ namespace services {
     void memory_storage_t::create_collection_(const components::session::session_id_t& session,
                                               components::logical_plan::node_ptr logical_plan) {
         trace(log_, "memory_storage_t:create_collection {}", logical_plan->collection_full_name().to_string());
-        collections_.emplace(logical_plan->collection_full_name(),
-                             new collection::context_collection_t(resource(),
-                                                                  logical_plan->collection_full_name(),
-                                                                  manager_disk_,
-                                                                  log_.clone()));
+        auto create_collection_plan =
+            reinterpret_cast<const components::logical_plan::node_create_collection_ptr&>(logical_plan);
+        if (create_collection_plan->schema().empty()) {
+            collections_.emplace(logical_plan->collection_full_name(),
+                                 new collection::context_collection_t(resource(),
+                                                                      logical_plan->collection_full_name(),
+                                                                      manager_disk_,
+                                                                      log_.clone()));
+        } else {
+            std::vector<components::table::column_definition_t> columns;
+            columns.reserve(create_collection_plan->schema().size());
+            for (const auto& type : create_collection_plan->schema()) {
+                columns.emplace_back(type.alias(), type);
+            }
+            collections_.emplace(logical_plan->collection_full_name(),
+                                 new collection::context_collection_t(resource(),
+                                                                      logical_plan->collection_full_name(),
+                                                                      std::move(columns),
+                                                                      manager_disk_,
+                                                                      log_.clone()));
+        }
         auto cursor = make_cursor(resource(), operation_status_t::success);
         actor_zeta::send(current_message()->sender(),
                          this->address(),
@@ -253,31 +282,35 @@ namespace services {
 
     void memory_storage_t::execute_plan_impl(const components::session::session_id_t& session,
                                              components::logical_plan::node_ptr logical_plan,
-                                             components::logical_plan::storage_parameters parameters) {
+                                             components::logical_plan::storage_parameters parameters,
+                                             components::catalog::used_format_t used_format) {
         trace(log_,
               "memory_storage_t:execute_plan_impl: collection: {}, sesion: {}",
               logical_plan->collection_full_name().to_string(),
               session.data());
-        auto dependency_tree_collections_names = logical_plan->collection_dependencies();
-        context_storage_t collections_context_storage;
-        while (!dependency_tree_collections_names.empty()) {
-            collection_full_name_t name =
-                dependency_tree_collections_names.extract(dependency_tree_collections_names.begin()).value();
-            if (name.empty()) {
-                // raw_data from ql does not belong to any collection
-                collections_context_storage.emplace(std::move(name), nullptr);
-                continue;
+        if (used_format != components::catalog::used_format_t::undefined) {
+            auto dependency_tree_collections_names = logical_plan->collection_dependencies();
+            context_storage_t collections_context_storage;
+            while (!dependency_tree_collections_names.empty()) {
+                collection_full_name_t name =
+                    dependency_tree_collections_names.extract(dependency_tree_collections_names.begin()).value();
+                if (name.empty()) {
+                    // raw_data from ql does not belong to any collection
+                    collections_context_storage.emplace(std::move(name), nullptr);
+                    continue;
+                }
+                collections_context_storage.emplace(std::move(name), collections_.at(name).get());
             }
-            collections_context_storage.emplace(std::move(name), collections_.at(name).get());
+            sessions_.emplace(session, session_t{logical_plan, current_message()->sender(), 1});
+            actor_zeta::send(executor_address_,
+                             address(),
+                             collection::handler_id(collection::route::execute_plan),
+                             session,
+                             logical_plan,
+                             parameters,
+                             std::move(collections_context_storage),
+                             used_format);
         }
-        sessions_.emplace(session, session_t{logical_plan, current_message()->sender(), 1});
-        actor_zeta::send(executor_address_,
-                         address(),
-                         collection::handler_id(collection::route::execute_plan),
-                         session,
-                         logical_plan,
-                         parameters,
-                         std::move(collections_context_storage));
     }
 
     void memory_storage_t::execute_plan_finish(const components::session::session_id_t& session, cursor_t_ptr result) {

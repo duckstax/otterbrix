@@ -30,11 +30,12 @@ namespace components::table::operators {
         std::pmr::vector<group_key_t> keys_;
         std::pmr::vector<group_value_t> values_;
         std::pmr::vector<impl::value_matrix_t> inputs_;
+        std::pmr::vector<types::complex_logical_type> result_types_;
         impl::value_matrix_t transposed_output_;
 
         void on_execute_impl(pipeline::context_t* pipeline_context) final;
 
-        void create_list_documents();
+        void create_list_rows();
         void calc_aggregate_values(pipeline::context_t* pipeline_context);
     };
 

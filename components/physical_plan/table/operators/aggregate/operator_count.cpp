@@ -9,8 +9,6 @@ namespace components::table::operators::aggregate {
         : operator_aggregate_t(context) {}
 
     types::logical_value_t operator_count_t::aggregate_impl() {
-        auto resource = left_ && left_->output() ? left_->output()->resource() : context_->resource();
-        auto doc = document::make_document(resource);
         types::logical_value_t result;
         if (left_ && left_->output()) {
             result = types::logical_value_t(uint64_t(left_->output()->size()));

@@ -9,7 +9,10 @@
 
 namespace components::table {
 
-    static int64_t sort_indexing_vector(vector::indexing_vector_t& indexing, uint64_t count, int64_t* ids) {
+    static int64_t sort_indexing_vector(std::pmr::memory_resource* resource,
+                                        vector::indexing_vector_t& indexing,
+                                        uint64_t count,
+                                        int64_t* ids) {
         assert(count > 0);
 
         bool is_sorted = true;
@@ -24,7 +27,7 @@ namespace components::table {
         if (is_sorted) {
             return count;
         }
-        vector::indexing_vector_t sorted_indexing(indexing.resource(), count);
+        vector::indexing_vector_t sorted_indexing(resource, count);
         for (uint64_t i = 0; i < count; i++) {
             sorted_indexing.set_index(i, indexing.get_index(i));
         }
@@ -292,7 +295,7 @@ namespace components::table {
         }
 
         vector::indexing_vector_t indexing;
-        count = sort_indexing_vector(indexing, count, ids);
+        count = sort_indexing_vector(base_data.resource(), indexing, count, ids);
         assert(count > 0);
 
         auto first_id = ids[indexing.get_index(0)];

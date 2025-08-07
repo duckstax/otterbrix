@@ -9,6 +9,8 @@ namespace components::table::operators {
 
     void operator_sort_t::add(size_t index, operator_sort_t::order order_) { sorter_.add(index, order_); }
 
+    void operator_sort_t::add(const std::string& key, operator_sort_t::order order_) { sorter_.add(key, order_); }
+
     void operator_sort_t::add(const std::vector<size_t>& indices, order order_) {
         for (const auto& index : indices) {
             sorter_.add(index, order_);
@@ -22,7 +24,7 @@ namespace components::table::operators {
             auto matrix = impl::transpose(left_->output()->resource(), chunk);
             std::sort(matrix.begin(), matrix.end(), sorter_);
             output_ = base::operators::make_operator_data(
-                context_->resource(),
+                left_->output()->resource(),
                 impl::transpose(left_->output()->resource(), matrix, chunk.types()));
         }
     }

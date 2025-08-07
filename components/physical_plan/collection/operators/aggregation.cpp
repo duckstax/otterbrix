@@ -2,7 +2,7 @@
 
 #include <components/physical_plan/collection/operators/scan/transfer_scan.hpp>
 
-namespace components::base::operators {
+namespace components::collection::operators {
 
     aggregation::aggregation(services::collection::context_collection_t* context)
         : read_only_operator_t(context, operator_type::aggregate) {}
@@ -24,10 +24,9 @@ namespace components::base::operators {
                 executor = std::move(match_);
             }
         } else {
-            executor = match_
-                           ? std::move(match_)
-                           : static_cast<operator_ptr>(boost::intrusive_ptr(
-                                 new collection::operators::transfer_scan(context_, logical_plan::limit_t::unlimit())));
+            executor = match_ ? std::move(match_)
+                              : static_cast<operator_ptr>(boost::intrusive_ptr(
+                                    new transfer_scan(context_, logical_plan::limit_t::unlimit())));
         }
         if (group_) {
             group_->set_children(std::move(executor));
@@ -40,4 +39,4 @@ namespace components::base::operators {
         set_children(std::move(executor));
     }
 
-} // namespace components::base::operators
+} // namespace components::collection::operators

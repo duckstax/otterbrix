@@ -39,7 +39,9 @@ namespace otterbrix {
             -> components::cursor::cursor_t_ptr;
         [[deprecated]] auto create_collection(const session_id_t& session,
                                               const database_name_t& database,
-                                              const collection_name_t& collection) -> components::cursor::cursor_t_ptr;
+                                              const collection_name_t& collection,
+                                              std::pmr::vector<components::types::complex_logical_type> schema = {})
+            -> components::cursor::cursor_t_ptr;
         [[deprecated]] auto drop_collection(const session_id_t& session,
                                             const database_name_t& database,
                                             const collection_name_t& collection) -> components::cursor::cursor_t_ptr;

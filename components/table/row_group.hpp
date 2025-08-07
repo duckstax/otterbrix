@@ -46,7 +46,7 @@ namespace components::table {
                                                 vector::vector_t& intermediate);
         std::unique_ptr<row_group_t> remove_column(collection_t* collection, uint64_t removed_column);
 
-        void initialize_empty(const std::vector<types::complex_logical_type>& types);
+        void initialize_empty(const std::pmr::vector<types::complex_logical_type>& types);
 
         bool initialize_scan(collection_scan_state& state);
         bool initialize_scan_with_offset(collection_scan_state& state, uint64_t vector_offset);

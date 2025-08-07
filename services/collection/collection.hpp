@@ -79,7 +79,8 @@ namespace services::collection {
             , index_engine_(core::pmr::make_unique<components::index::index_engine_t>(resource_))
             , name_(name)
             , mdisk_(mdisk)
-            , log_(log) {
+            , log_(log)
+            , uses_datatable_(false) {
             assert(resource != nullptr);
         }
 
@@ -94,7 +95,8 @@ namespace services::collection {
             , index_engine_(core::pmr::make_unique<components::index::index_engine_t>(resource_))
             , name_(name)
             , mdisk_(mdisk)
-            , log_(log) {
+            , log_(log)
+            , uses_datatable_(true) {
             assert(resource != nullptr);
         }
 
@@ -123,6 +125,8 @@ namespace services::collection {
 
         bool dropped() const noexcept { return dropped_; }
 
+        bool uses_datatable() const noexcept { return uses_datatable_; }
+
         actor_zeta::address_t disk() noexcept { return mdisk_; }
 
     private:
@@ -139,6 +143,7 @@ namespace services::collection {
         actor_zeta::address_t mdisk_;
         log_t log_;
 
+        bool uses_datatable_;
         bool dropped_{false};
     };
 

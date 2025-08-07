@@ -77,8 +77,8 @@ namespace components::table {
         parent.is_root_ = false;
     }
 
-    std::vector<types::complex_logical_type> data_table_t::copy_types() const {
-        std::vector<types::complex_logical_type> types;
+    [[nodiscard]] std::pmr::vector<types::complex_logical_type> data_table_t::copy_types() const {
+        std::pmr::vector<types::complex_logical_type> types(resource_);
         types.reserve(column_definitions_.size());
         for (auto& it : column_definitions_) {
             types.push_back(it.type());
@@ -164,7 +164,7 @@ namespace components::table {
         uint64_t end = row_start + count;
 
         std::vector<storage_index_t> column_ids;
-        std::vector<types::complex_logical_type> types;
+        std::pmr::vector<types::complex_logical_type> types(resource_);
         for (uint64_t i = 0; i < this->column_definitions_.size(); i++) {
             auto& col = this->column_definitions_[i];
             column_ids.emplace_back(i);
@@ -210,7 +210,7 @@ namespace components::table {
 
     std::unique_ptr<table_delete_state>
     data_table_t::initialize_delete(const std::vector<std::unique_ptr<bound_constraint_t>>& bound_constraints) {
-        std::vector<types::complex_logical_type> types;
+        std::pmr::vector<types::complex_logical_type> types(resource_);
         auto result = std::make_unique<table_delete_state>(resource_);
         if (result->has_delete_constraints) {
             for (uint64_t i = 0; i < column_definitions_.size(); i++) {

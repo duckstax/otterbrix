@@ -1,6 +1,5 @@
 #pragma once
 
-#include <components/document/document_id.hpp>
 #include <components/physical_plan/base/operators/operator.hpp>
 
 namespace components::table::operators {
@@ -13,6 +12,7 @@ namespace components::table::operators {
 
     private:
         vector::vector_t rows_;
+        size_t size_{0};
 
         void on_execute_impl(pipeline::context_t* pipeline_context) final;
     };

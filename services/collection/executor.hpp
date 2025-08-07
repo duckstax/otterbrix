@@ -1,7 +1,10 @@
 #pragma once
 
+#include <components/catalog/table_metadata.hpp>
+
 #include <services/collection/collection.hpp>
 #include <services/memory_storage/context_storage.hpp>
+#include <stack>
 
 namespace services::collection::executor {
 
@@ -24,7 +27,8 @@ namespace services::collection::executor {
         void execute_plan(const components::session::session_id_t& session,
                           components::logical_plan::node_ptr logical_plan,
                           components::logical_plan::storage_parameters parameters,
-                          services::context_storage_t&& context_storage);
+                          services::context_storage_t&& context_storage,
+                          components::catalog::used_format_t data_format);
 
         void create_documents(const session_id_t& session,
                               context_collection_t* collection,

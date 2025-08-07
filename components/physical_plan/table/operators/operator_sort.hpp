@@ -12,6 +12,8 @@ namespace components::table::operators {
         explicit operator_sort_t(services::collection::context_collection_t* context);
 
         void add(size_t index, order order_ = order::ascending);
+        // TODO: remove this method, calculate index via schema
+        void add(const std::string& key, order order_ = order::ascending);
         void add(const std::vector<size_t>& indices, order order_ = order::ascending);
 
     private:

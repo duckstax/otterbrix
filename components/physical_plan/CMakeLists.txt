@@ -7,7 +7,6 @@ set(${PROJECT_NAME}_SOURCES
         base/operators/operator_write_data.cpp
         base/operators/operator_empty.cpp
         base/operators/operator_raw_data.cpp
-        base/operators/aggregation.cpp
         base/operators/operator_add_index.cpp
         base/operators/operator_drop_index.cpp
 
@@ -36,6 +35,7 @@ set(${PROJECT_NAME}_SOURCES
 
         collection/operators/sort/sort.cpp
 
+        collection/operators/aggregation.cpp
         collection/operators/operator_insert.cpp
         collection/operators/operator_delete.cpp
         collection/operators/operator_update.cpp
@@ -67,6 +67,7 @@ set(${PROJECT_NAME}_SOURCES
 
         table/operators/sort/sort.cpp
 
+        table/operators/aggregation.cpp
         table/operators/operator_insert.cpp
         table/operators/operator_delete.cpp
         table/operators/operator_update.cpp

@@ -1,3 +1,4 @@
+#pragma once
 #include "catalog/catalog.hpp"
 
 #include <components/cursor/cursor.hpp>

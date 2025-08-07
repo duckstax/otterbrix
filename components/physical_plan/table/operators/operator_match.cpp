@@ -30,14 +30,16 @@ namespace components::table::operators {
             for (size_t i = 0; i < chunk.size(); i++) {
                 if (check_expr_general(expression_, &pipeline_context->parameters, chunk, name_index_map, i)) {
                     for (size_t j = 0; j < chunk.column_count(); j++) {
-                        out_chunk.data[j].push_back(chunk.data[j].value(i));
-                        ++count;
-                        if (!limit_.check(count)) {
-                            return;
-                        }
+                        out_chunk.set_value(j, count, chunk.data[j].value(i));
+                    }
+                    ++count;
+                    if (!limit_.check(count)) {
+                        out_chunk.set_cardinality(count);
+                        return;
                     }
                 }
             }
+            out_chunk.set_cardinality(count);
         }
     }
 

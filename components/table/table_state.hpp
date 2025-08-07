@@ -169,7 +169,7 @@ namespace components::table {
 
         std::random_device random;
 
-        void initialize(const std::vector<types::complex_logical_type>& types);
+        void initialize(const std::pmr::vector<types::complex_logical_type>& types);
         const std::vector<storage_index_t>& column_ids();
         const table_filter_t* filter();
         bool scan(vector::data_chunk_t& result);

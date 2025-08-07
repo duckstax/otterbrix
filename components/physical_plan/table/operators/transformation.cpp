@@ -22,10 +22,10 @@ namespace components::table::operators::impl {
 
     vector::data_chunk_t transpose(std::pmr::memory_resource* resource,
                                    const value_matrix_t& matrix,
-                                   const std::vector<types::complex_logical_type>& types) {
+                                   const std::pmr::vector<types::complex_logical_type>& types) {
         auto chunk = vector::data_chunk_t(resource, types, matrix.size());
-        for (size_t i = 0; i < chunk.size(); i++) {
-            for (size_t j = 0; j < chunk.column_count(); j++) {
+        for (size_t i = 0; i < matrix.size(); i++) {
+            for (size_t j = 0; j < types.size(); j++) {
                 chunk.set_value(j, i, matrix[i][j]);
             }
         }

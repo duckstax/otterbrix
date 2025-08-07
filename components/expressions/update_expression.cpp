@@ -285,7 +285,7 @@ namespace components::expressions {
                     break;
             }
             assert(index < from.column_count());
-            output_ = from.data[key_.as_uint()].value(row_from);
+            output_ = from.data[index].value(row_from);
         } else if (side_ == side_t::to) {
             size_t index = -1;
             switch (key_.which()) {
@@ -300,7 +300,7 @@ namespace components::expressions {
                     break;
             }
             assert(index < to.column_count());
-            output_ = to.data[key_.as_uint()].value(row_to);
+            output_ = to.data[index].value(row_to);
         }
         return false;
     }
