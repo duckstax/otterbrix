@@ -1,7 +1,6 @@
 #pragma once
 
 #include "operator_aggregate.hpp"
-#include <components/document/document.hpp>
 #include <components/index/index.hpp>
 
 namespace components::table::operators::aggregate {

@@ -100,6 +100,9 @@ namespace services::dispatcher {
 
         components::cursor::cursor_t_ptr check_namespace_exists(const components::catalog::table_id id);
         components::cursor::cursor_t_ptr check_collectction_exists(const components::catalog::table_id id);
+        components::cursor::cursor_t_ptr
+        check_collections_format_(const components::logical_plan::node_ptr& logical_plan);
+
         components::logical_plan::node_ptr create_logic_plan(components::logical_plan::node_ptr plan);
         void update_catalog(components::logical_plan::node_ptr node);
         // TODO figure out what to do with records

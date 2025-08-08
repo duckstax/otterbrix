@@ -59,7 +59,7 @@ namespace components::table {
 
     storage::block_manager_t& row_group_t::block_manager() { return collection_->block_manager(); }
 
-    void row_group_t::initialize_empty(const std::vector<types::complex_logical_type>& types) {
+    void row_group_t::initialize_empty(const std::pmr::vector<types::complex_logical_type>& types) {
         assert(columns_.empty());
         for (uint64_t i = 0; i < types.size(); i++) {
             auto column_data =

@@ -28,7 +28,7 @@ namespace components::table {
     public:
         collection_t(std::pmr::memory_resource* resource,
                      storage::block_manager_t& block_manager,
-                     std::vector<types::complex_logical_type> types,
+                     std::pmr::vector<types::complex_logical_type> types,
                      uint64_t row_start,
                      uint64_t total_rows = 0,
                      uint64_t row_group_size = vector::DEFAULT_VECTOR_CAPACITY);
@@ -77,7 +77,7 @@ namespace components::table {
                            vector::data_chunk_t& updates);
 
         std::vector<column_segment_info> get_column_segment_info();
-        const std::vector<types::complex_logical_type>& types() const;
+        const std::pmr::vector<types::complex_logical_type>& types() const;
 
         std::shared_ptr<collection_t> add_column(column_definition_t& new_column);
         std::shared_ptr<collection_t> remove_column(uint64_t col_idx);
@@ -102,7 +102,7 @@ namespace components::table {
         storage::block_manager_t& block_manager_;
         uint64_t row_group_size_;
         std::atomic<uint64_t> total_rows_;
-        std::vector<types::complex_logical_type> types_;
+        std::pmr::vector<types::complex_logical_type> types_;
         uint64_t row_start_;
         std::shared_ptr<row_group_segment_tree_t> row_groups_;
         uint64_t allocation_size_;

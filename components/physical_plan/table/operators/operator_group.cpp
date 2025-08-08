@@ -12,14 +12,16 @@ namespace components::table::operators {
         , keys_(context_->resource())
         , values_(context_->resource())
         , inputs_(context_->resource())
+        , result_types_(context_->resource())
         , transposed_output_(context_->resource()) {}
 
     operator_group_t::operator_group_t(std::pmr::memory_resource* resource)
         : read_write_operator_t(nullptr, operator_type::aggregate)
         , keys_(resource)
         , values_(resource)
-        , inputs_(context_->resource())
-        , transposed_output_(context_->resource()) {}
+        , inputs_(resource)
+        , result_types_(resource)
+        , transposed_output_(resource) {}
 
     void operator_group_t::add_key(const std::string& name, get::operator_get_ptr&& getter) {
         keys_.push_back({name, std::move(getter)});
@@ -33,19 +35,26 @@ namespace components::table::operators {
         if (left_ && left_->output()) {
             output_ =
                 base::operators::make_operator_data(left_->output()->resource(), left_->output()->data_chunk().types());
-            create_list_documents();
+            create_list_rows();
             calc_aggregate_values(pipeline_context);
-            output_ = base::operators::make_operator_data(left_->output()->resource(),
-                                                          impl::transpose(left_->output()->resource(),
-                                                                          transposed_output_,
-                                                                          left_->output()->data_chunk().types()));
+            output_ = base::operators::make_operator_data(
+                left_->output()->resource(),
+                impl::transpose(left_->output()->resource(), transposed_output_, result_types_));
         }
     }
 
-    void operator_group_t::create_list_documents() {
+    void operator_group_t::create_list_rows() {
         auto& chunk = left_->output()->data_chunk();
 
         auto matrix = impl::transpose(left_->output()->resource(), chunk);
+        if (!matrix.empty()) {
+            for (const auto& key : keys_) {
+                auto value = key.getter->value(matrix.front());
+                if (!value.is_null()) {
+                    result_types_.emplace_back(value.type());
+                }
+            }
+        }
 
         for (const auto& row : matrix) {
             std::pmr::vector<types::logical_value_t> new_row(row.get_allocator().resource());
@@ -65,7 +74,7 @@ namespace components::table::operators {
                 bool is_new = true;
                 for (size_t i = 0; i < transposed_output_.size(); i++) {
                     if (new_row == transposed_output_[i]) {
-                        inputs_.at(i).emplace_back(row);
+                        inputs_.at(i).emplace_back(std::move(row));
                         is_new = false;
                         break;
                     }
@@ -73,7 +82,7 @@ namespace components::table::operators {
                 if (is_new) {
                     transposed_output_.emplace_back(std::move(new_row));
                     auto input = impl::value_matrix_t(row.get_allocator().resource());
-                    input.emplace_back(row);
+                    input.emplace_back(std::move(row));
                     inputs_.emplace_back(std::move(input));
                 }
             }
@@ -88,11 +97,13 @@ namespace components::table::operators {
                 aggregator->clear(); //todo: need copy aggregator
                 aggregator->set_children(boost::intrusive_ptr(new components::base::operators::operator_empty_t(
                     context_,
-                    base::operators::make_operator_data(context_->resource(),
-                                                        impl::transpose(context_->resource(), inputs_.at(i), types)))));
+                    base::operators::make_operator_data(
+                        left_->output()->resource(),
+                        impl::transpose(left_->output()->resource(), inputs_.at(i), types)))));
                 aggregator->on_execute(pipeline_context);
-                aggregator->set_value(transposed_output_.at(i), value.name);
+                aggregator->set_value(transposed_output_[i], value.name);
             }
+            result_types_.emplace_back(aggregator->value().type());
         }
     }
 

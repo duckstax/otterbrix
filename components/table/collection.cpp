@@ -15,7 +15,7 @@ namespace components::table {
 
     collection_t::collection_t(std::pmr::memory_resource* resource,
                                storage::block_manager_t& block_manager,
-                               std::vector<types::complex_logical_type> types,
+                               std::pmr::vector<types::complex_logical_type> types,
                                uint64_t row_start,
                                uint64_t total_rows,
                                uint64_t row_group_size)
@@ -31,7 +31,7 @@ namespace components::table {
 
     uint64_t collection_t::total_rows() const { return total_rows_.load(); }
 
-    const std::vector<types::complex_logical_type>& collection_t::types() const { return types_; }
+    const std::pmr::vector<types::complex_logical_type>& collection_t::types() const { return types_; }
 
     void collection_t::append_row_group(std::unique_lock<std::mutex>& l, uint64_t start_row) {
         assert(start_row >= row_start_);
@@ -87,7 +87,7 @@ namespace components::table {
 
     bool collection_t::scan(const std::vector<storage_index_t>& column_ids,
                             const std::function<bool(vector::data_chunk_t& chunk)>& fun) {
-        std::vector<types::complex_logical_type> scan_types;
+        std::pmr::vector<types::complex_logical_type> scan_types(resource_);
         for (uint64_t i = 0; i < column_ids.size(); i++) {
             scan_types.push_back(types_[column_ids[i].primary_index()]);
         }

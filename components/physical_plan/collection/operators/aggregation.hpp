@@ -1,8 +1,8 @@
 #pragma once
 
-#include "operator.hpp"
+#include <components/physical_plan/base/operators/operator.hpp>
 
-namespace components::base::operators {
+namespace components::collection::operators {
 
     class aggregation final : public read_only_operator_t {
     public:
@@ -21,4 +21,4 @@ namespace components::base::operators {
         void on_prepare_impl() final;
     };
 
-} // namespace components::base::operators
+} // namespace components::collection::operators

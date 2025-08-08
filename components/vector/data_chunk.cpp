@@ -5,7 +5,7 @@
 namespace components::vector {
 
     data_chunk_t::data_chunk_t(std::pmr::memory_resource* resource,
-                               const std::vector<types::complex_logical_type>& types,
+                               const std::pmr::vector<types::complex_logical_type>& types,
                                uint64_t capacity)
         : resource_(resource)
         , capacity_(capacity)
@@ -164,8 +164,8 @@ namespace components::vector {
         }
     }
 
-    std::vector<types::complex_logical_type> data_chunk_t::types() const {
-        std::vector<types::complex_logical_type> types;
+    std::pmr::vector<types::complex_logical_type> data_chunk_t::types() const {
+        std::pmr::vector<types::complex_logical_type> types(resource_);
         for (uint64_t i = 0; i < column_count(); i++) {
             types.push_back(data[i].type());
         }

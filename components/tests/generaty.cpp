@@ -71,7 +71,7 @@ components::vector::data_chunk_t gen_data_chunk(size_t size, std::pmr::memory_re
     using namespace components::types;
     constexpr size_t array_size = 5;
 
-    std::vector<complex_logical_type> types;
+    std::pmr::vector<complex_logical_type> types(resource);
 
     types.emplace_back(logical_type::BIGINT);
     types.back().set_alias("count");

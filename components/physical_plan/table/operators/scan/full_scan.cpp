@@ -5,9 +5,10 @@
 
 namespace components::table::operators {
 
-    std::unique_ptr<table::table_filter_t> transform_predicate(const expressions::compare_expression_ptr& exresssion,
-                                                               const std::vector<types::complex_logical_type> types,
-                                                               const logical_plan::storage_parameters* parameters) {
+    std::unique_ptr<table::table_filter_t>
+    transform_predicate(const expressions::compare_expression_ptr& exresssion,
+                        const std::pmr::vector<types::complex_logical_type> types,
+                        const logical_plan::storage_parameters* parameters) {
         if (!exresssion || exresssion->type() == expressions::compare_type::all_true) {
             return nullptr;
         }

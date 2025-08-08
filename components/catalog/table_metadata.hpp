@@ -1,7 +1,6 @@
 #pragma once
 
 #include "schema.hpp"
-#include "table_id.hpp"
 
 #include <chrono>
 
@@ -19,5 +18,12 @@ namespace components::catalog {
         std::pmr::string table_description_;
         timestamp last_updated_ms_;
         field_id_t next_column_id_;
+    };
+
+    enum class used_format_t : uint8_t
+    {
+        documents = 0,
+        columns = 1,
+        undefined = 2
     };
 } // namespace components::catalog
