@@ -1,18 +1,18 @@
 name: manylinux2014
 
-#on:
-#  push:
-#    paths-ignore:
-#      - '**.md'
-#    tags:
-#      - '*'
-#    branches:
-#      - '**'
-#  pull_request:
-#    paths-ignore:
-#      - '**.md'
-#    branches:
-#      - '**'
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+    tags:
+      - '*'
+    branches:
+      - '**'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+    branches:
+      - '**'
 
 
 env:
