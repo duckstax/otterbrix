@@ -60,7 +60,10 @@ jobs:
 
       - name: Set env conan dependencies
         run: |
-          pip3 install --user --retries=30 conan==2.15.0 cmake scikit-build
+          pip3 install --user --retries=30 --upgrade pip
+          pip3 install --user --retries=30 scikit-build
+          pip3 install --user --retries=30 conan==2.15.0 cmake
+
           conan profile detect --force
           conan remote add otterbrix http://conan.otterbrix.com
 
