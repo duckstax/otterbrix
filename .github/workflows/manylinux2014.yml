@@ -60,11 +60,15 @@ jobs:
 
       - name: Set env conan dependencies
         run: |
-          echo "${HOME}/.local/bin" >> $GITHUB_PATH
           pip3 install --user --retries=30 --upgrade pip
           pip3 install --user --retries=30 scikit-build
           pip3 install --user --retries=30 conan==2.15.0 cmake
 
+      - name: Add user local bin to PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Use conan
+        run: |
           conan profile detect --force
           conan remote add otterbrix http://conan.otterbrix.com
 
