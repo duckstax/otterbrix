@@ -76,12 +76,16 @@ jobs:
         run: |
           pwd
           ls
-          conan install conanfile.py --build missing  \
-          --build fmt \
-          --build spdlog  \
-          -s build_type=Release \
-          -s compiler.cppstd=gnu17 \
-          -g CMakeDeps -g CMakeToolchain
+          
+          conan install . --build missing -s build_type=Release -s compiler.cppstd=gnu17
+          
+          #conan install conanfile.py --build missing  \
+          #-o boost/*:header_only=True \
+          #--build fmt \
+          #--build spdlog  \
+          #-s build_type=Release \
+          #-s compiler.cppstd=gnu17 \
+          #-g CMakeDeps -g CMakeToolchain
 
       - name: Build wheel
         run: |
@@ -212,8 +216,4 @@ jobs:
       - name: Publish wheels
         env:
           TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-        run: |
-          echo "Pretend to upload"
-          twine upload --skip-existing *
-        working-directory: ./app
+          TWINE_PA
