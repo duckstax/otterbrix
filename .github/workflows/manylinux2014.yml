@@ -77,7 +77,7 @@ jobs:
           pwd
           ls
           
-          conan install . --build missing -s build_type=Release -s compiler.cppstd=gnu17
+          conan install conanfile.py --build missing -s build_type=Release -s compiler.cppstd=gnu17
           
           #conan install conanfile.py --build missing  \
           #-o boost/*:header_only=True \
