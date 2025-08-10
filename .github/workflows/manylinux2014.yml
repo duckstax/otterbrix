@@ -216,4 +216,9 @@ jobs:
       - name: Publish wheels
         env:
           TWINE_USERNAME: __token__
-          TWINE_PA
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+
+        run: |
+          echo "Pretend to upload"
+          twine upload --skip-existing *
+        working-directory: ./app
