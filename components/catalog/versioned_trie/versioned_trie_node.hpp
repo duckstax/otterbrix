@@ -44,7 +44,9 @@ namespace components::catalog {
         }
 
         versioned_trie_node(versioned_trie_node&& other)
-            : parent_(nullptr) {
+            : keys_(other.resource_)
+            , children_(other.resource_)
+            , parent_(nullptr) {
             swap(other);
         }
 
@@ -55,6 +57,7 @@ namespace components::catalog {
             temp.swap(*this);
             return *this;
         }
+
         versioned_trie_node& operator=(versioned_trie_node&& rhs) {
             assert(parent_ == nullptr && "Move assignments of trie_node_ts are defined only for the "
                                          "header node.");

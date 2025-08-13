@@ -1,8 +1,9 @@
 #pragma once
 
-#include "../namespace_storage.hpp"
-#include "../table_metadata.hpp"
 #include "metadata_diff.hpp"
+#include <components/catalog/namespace_storage.hpp>
+#include <components/catalog/table_metadata.hpp>
+
 #include <map>
 
 namespace components::catalog {
