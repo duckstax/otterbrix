@@ -52,7 +52,7 @@ namespace components::catalog {
     cursor::cursor_t_ptr schema::find_field(field_id_t id) const {
         size_t idx = find_idx_by_id(id);
 
-        if (!!error_) {
+        if (static_cast<bool>(error_)) {
             return cursor::make_cursor(resource_, cursor::error_code_t::schema_error, error_.what());
         }
 
@@ -62,7 +62,7 @@ namespace components::catalog {
     cursor::cursor_t_ptr schema::find_field(const std::pmr::string& name) const {
         size_t idx = find_idx_by_name(name);
 
-        if (!!error_) {
+        if (static_cast<bool>(error_)) {
             return cursor::make_cursor(resource_, cursor::error_code_t::schema_error, error_.what());
         }
 
@@ -72,7 +72,7 @@ namespace components::catalog {
     std::optional<schema::field_description_cref>
     schema::get_field_description(components::catalog::field_id_t id) const {
         size_t idx = find_idx_by_id(id);
-        if (!!error_) {
+        if (static_cast<bool>(error_)) {
             return {};
         }
 
@@ -81,7 +81,7 @@ namespace components::catalog {
 
     std::optional<schema::field_description_cref> schema::get_field_description(const std::pmr::string& name) const {
         size_t idx = find_idx_by_name(name);
-        if (!!error_) {
+        if (static_cast<bool>(error_)) {
             return {};
         }
 

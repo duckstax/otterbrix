@@ -34,10 +34,10 @@ namespace otterbrix {
         wrapper_dispatcher_t(std::pmr::memory_resource*, actor_zeta::address_t, log_t& log);
         ~wrapper_dispatcher_t();
         auto load() -> void;
-        [[deprecated]] auto create_database(const session_id_t& session,
-                                            const database_name_t& database) -> components::cursor::cursor_t_ptr;
-        [[deprecated]] auto drop_database(const session_id_t& session,
-                                          const database_name_t& database) -> components::cursor::cursor_t_ptr;
+        [[deprecated]] auto create_database(const session_id_t& session, const database_name_t& database)
+            -> components::cursor::cursor_t_ptr;
+        [[deprecated]] auto drop_database(const session_id_t& session, const database_name_t& database)
+            -> components::cursor::cursor_t_ptr;
         [[deprecated]] auto create_collection(const session_id_t& session,
                                               const database_name_t& database,
                                               const collection_name_t& collection,
@@ -50,27 +50,27 @@ namespace otterbrix {
                                        const database_name_t& database,
                                        const collection_name_t& collection,
                                        document_ptr document) -> components::cursor::cursor_t_ptr;
-        [[deprecated]] auto
-        insert_many(const session_id_t& session,
-                    const database_name_t& database,
-                    const collection_name_t& collection,
-                    const std::pmr::vector<document_ptr>& documents) -> components::cursor::cursor_t_ptr;
-        [[deprecated]] auto
-        find(const session_id_t& session,
-             components::logical_plan::node_aggregate_ptr condition,
-             components::logical_plan::parameter_node_ptr params) -> components::cursor::cursor_t_ptr;
-        [[deprecated]] auto
-        find_one(const session_id_t& session,
-                 components::logical_plan::node_aggregate_ptr condition,
-                 components::logical_plan::parameter_node_ptr params) -> components::cursor::cursor_t_ptr;
-        [[deprecated]] auto
-        delete_one(const session_id_t& session,
-                   components::logical_plan::node_match_ptr condition,
-                   components::logical_plan::parameter_node_ptr params) -> components::cursor::cursor_t_ptr;
-        [[deprecated]] auto
-        delete_many(const session_id_t& session,
-                    components::logical_plan::node_match_ptr condition,
-                    components::logical_plan::parameter_node_ptr params) -> components::cursor::cursor_t_ptr;
+        [[deprecated]] auto insert_many(const session_id_t& session,
+                                        const database_name_t& database,
+                                        const collection_name_t& collection,
+                                        const std::pmr::vector<document_ptr>& documents)
+            -> components::cursor::cursor_t_ptr;
+        [[deprecated]] auto find(const session_id_t& session,
+                                 components::logical_plan::node_aggregate_ptr condition,
+                                 components::logical_plan::parameter_node_ptr params)
+            -> components::cursor::cursor_t_ptr;
+        [[deprecated]] auto find_one(const session_id_t& session,
+                                     components::logical_plan::node_aggregate_ptr condition,
+                                     components::logical_plan::parameter_node_ptr params)
+            -> components::cursor::cursor_t_ptr;
+        [[deprecated]] auto delete_one(const session_id_t& session,
+                                       components::logical_plan::node_match_ptr condition,
+                                       components::logical_plan::parameter_node_ptr params)
+            -> components::cursor::cursor_t_ptr;
+        [[deprecated]] auto delete_many(const session_id_t& session,
+                                        components::logical_plan::node_match_ptr condition,
+                                        components::logical_plan::parameter_node_ptr params)
+            -> components::cursor::cursor_t_ptr;
         [[deprecated]] auto update_one(const session_id_t& session,
                                        components::logical_plan::node_match_ptr condition,
                                        components::logical_plan::parameter_node_ptr params,
@@ -84,14 +84,14 @@ namespace otterbrix {
         [[deprecated]] auto size(const session_id_t& session,
                                  const database_name_t& database,
                                  const collection_name_t& collection) -> size_t;
-        auto create_index(const session_id_t& session,
-                          components::logical_plan::node_create_index_ptr node) -> components::cursor::cursor_t_ptr;
-        auto drop_index(const session_id_t& session,
-                        components::logical_plan::node_drop_index_ptr node) -> components::cursor::cursor_t_ptr;
-        auto
-        execute_plan(const session_id_t& session,
-                     components::logical_plan::node_ptr plan,
-                     components::logical_plan::parameter_node_ptr params = nullptr) -> components::cursor::cursor_t_ptr;
+        auto create_index(const session_id_t& session, components::logical_plan::node_create_index_ptr node)
+            -> components::cursor::cursor_t_ptr;
+        auto drop_index(const session_id_t& session, components::logical_plan::node_drop_index_ptr node)
+            -> components::cursor::cursor_t_ptr;
+        auto execute_plan(const session_id_t& session,
+                          components::logical_plan::node_ptr plan,
+                          components::logical_plan::parameter_node_ptr params = nullptr)
+            -> components::cursor::cursor_t_ptr;
         auto execute_sql(const session_id_t& session, const std::string& query) -> components::cursor::cursor_t_ptr;
 
         auto get_schema(const session_id_t& session,

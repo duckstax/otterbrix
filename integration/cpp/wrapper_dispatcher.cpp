@@ -75,8 +75,8 @@ namespace otterbrix {
         wait(approved_session);
     }
 
-    auto wrapper_dispatcher_t::create_database(const session_id_t& session,
-                                               const database_name_t& database) -> cursor_t_ptr {
+    auto wrapper_dispatcher_t::create_database(const session_id_t& session, const database_name_t& database)
+        -> cursor_t_ptr {
         auto plan = components::logical_plan::make_node_create_database(resource(), {database, {}});
         return send_plan(session, plan, components::logical_plan::make_parameter_node(resource()));
     }

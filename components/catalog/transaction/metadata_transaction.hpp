@@ -54,7 +54,7 @@ namespace components::catalog {
                     error_ = fun(std::move(metadata_diff_));
                 }
 
-                state_ = (!!error_) ? State::ABORTED : State::COMMITTED;
+                state_ = static_cast<bool>(error_) ? State::ABORTED : State::COMMITTED;
             }
             return error_;
         }
