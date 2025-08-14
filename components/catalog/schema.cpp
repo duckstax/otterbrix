@@ -100,6 +100,8 @@ namespace components::catalog {
 
     const catalog_error& schema::error() const { return error_; }
 
+    types::complex_logical_type schema::schema_struct() const { return schema_struct_; }
+
     size_t schema::find_idx_by_id(field_id_t id) const {
         if (auto it = id_to_struct_idx_.find(id); it != id_to_struct_idx_.end()) {
             return it->second;
