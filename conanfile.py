@@ -43,6 +43,8 @@ class OtterbrixConan(ConanFile):
         self.options["actor-zeta/*"].fPIC = True
         self.options["actor-zeta/*"].exceptions_disable = False
         self.options["actor-zeta/*"].rtti_disable = False
+        self.options["boost/*"].header_only = True
+
 
     def validate(self):
         if not check_min_cppstd(self, 17):
