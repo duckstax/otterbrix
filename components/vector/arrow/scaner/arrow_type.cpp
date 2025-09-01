@@ -15,7 +15,7 @@ namespace components::vector::arrow {
     }
 
     const arrow_column_map_t& arrow_table_schema_t::get_columns() const { return arrow_convert_data_; }
-    std::vector<types::complex_logical_type>& arrow_table_schema_t::get_types() { return types_; }
+    std::pmr::vector<types::complex_logical_type>& arrow_table_schema_t::get_types() { return types_; }
 
     std::vector<std::string>& arrow_table_schema_t::get_names() { return column_names_; }
     void arrow_type::set_dictionary(std::unique_ptr<arrow_type> dictionary) {

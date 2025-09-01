@@ -104,12 +104,12 @@ namespace components::vector::arrow {
     struct arrow_table_schema_t {
         void add_column(size_t index, std::shared_ptr<arrow_type> type, const std::string& name);
         const arrow_column_map_t& get_columns() const;
-        std::vector<types::complex_logical_type>& get_types();
+        std::pmr::vector<types::complex_logical_type>& get_types();
         std::vector<std::string>& get_names();
 
     private:
         arrow_column_map_t arrow_convert_data_;
-        std::vector<types::complex_logical_type> types_;
+        std::pmr::vector<types::complex_logical_type> types_;
         std::vector<std::string> column_names_;
     };
 

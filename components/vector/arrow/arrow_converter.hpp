@@ -10,7 +10,7 @@
 
 namespace components::vector::arrow {
 
-    void to_arrow_schema(ArrowSchema* out_schema, const std::vector<types::complex_logical_type>& types);
+    void to_arrow_schema(ArrowSchema* out_schema, const std::pmr::vector<types::complex_logical_type>& types);
     void to_arrow_array(data_chunk_t& input, ArrowArray* out_array);
     std::unique_ptr<arrow_type> type_from_schema(ArrowSchema& schema);
     std::unique_ptr<arrow_type> arrow_logical_type(ArrowSchema& schema);

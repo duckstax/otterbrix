@@ -16,7 +16,7 @@ TEST_CASE("data_chunk to arrow") {
     auto list_length = [&](size_t i) { return i - (i / max_list_size) * max_list_size; };
 
     auto resource = std::pmr::synchronized_pool_resource();
-    std::vector<complex_logical_type> types;
+    std::pmr::vector<complex_logical_type> types(&resource);
 
     types.emplace_back(logical_type::BIGINT);
     types.back().set_alias("fixed_size");
@@ -116,10 +116,9 @@ TEST_CASE("data_chunk to arrow") {
     }
 
     ArrowSchema schema;
+    ArrowArray arrow_array;
     to_arrow_schema(&schema, types);
-    arrow_appender_t appender(types, chunk_size);
-    appender.append(chunk, 0, chunk_size, chunk_size);
-    auto arrow_array = appender.finalize();
+    to_arrow_array(chunk, &arrow_array);
     auto res = data_chunk_from_arrow(&resource, &arrow_array, schema_from_arrow(&schema));
     REQUIRE(chunk.column_count() == res.column_count());
     REQUIRE(chunk.size() == res.size());

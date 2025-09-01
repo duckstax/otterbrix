@@ -21,7 +21,7 @@ namespace components::vector::arrow {
     using types::logical_type;
     using types::physical_type;
 
-    arrow_appender_t::arrow_appender_t(std::vector<complex_logical_type> types, uint64_t initial_capacity)
+    arrow_appender_t::arrow_appender_t(std::pmr::vector<complex_logical_type> types, uint64_t initial_capacity)
         : types_(std::move(types)) {
         for (auto& type : types_) {
             auto entry = initialize_child(type, initial_capacity);

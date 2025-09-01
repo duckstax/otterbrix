@@ -213,7 +213,7 @@ namespace components::vector::arrow {
         }
     }
 
-    void to_arrow_schema(ArrowSchema* out_schema, const std::vector<complex_logical_type>& types) {
+    void to_arrow_schema(ArrowSchema* out_schema, const std::pmr::vector<complex_logical_type>& types) {
         assert(out_schema);
         uint64_t column_count = types.size();
         auto root_holder = std::make_unique<otterbrix_arrow_schema_holder>();

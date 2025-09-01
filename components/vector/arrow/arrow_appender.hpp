@@ -24,7 +24,7 @@ namespace components::vector::arrow {
 
     class arrow_appender_t {
     public:
-        arrow_appender_t(std::vector<types::complex_logical_type> types, uint64_t initial_capacity);
+        arrow_appender_t(std::pmr::vector<types::complex_logical_type> types, uint64_t initial_capacity);
         ~arrow_appender_t() = default;
 
         void append(data_chunk_t& input, uint64_t from, uint64_t to, uint64_t input_size);
@@ -38,7 +38,7 @@ namespace components::vector::arrow {
         static void add_children(appender::arrow_append_data_t& data, uint64_t count);
 
     private:
-        std::vector<types::complex_logical_type> types_;
+        std::pmr::vector<types::complex_logical_type> types_;
         std::vector<std::unique_ptr<appender::arrow_append_data_t>> root_data_;
         uint64_t row_count_ = 0;
     };
