@@ -232,7 +232,7 @@ namespace components::vector::vector_ops {
             input.to_unified_format(count, idata);
 
             auto& child = input.entry();
-            auto array_size = static_cast<types::array_logical_type_extention*>(input.type().extention())->size();
+            auto array_size = static_cast<types::array_logical_type_extension*>(input.type().extension())->size();
 
             auto is_flat = input.get_vector_type() == vector_type::FLAT;
             auto is_constant = input.get_vector_type() == vector_type::CONSTANT;
@@ -564,7 +564,7 @@ namespace components::vector::vector_ops {
               uint64_t source_offset,
               uint64_t target_offset,
               uint64_t copy_count) {
-        indexing_vector_t owned_sel;
+        indexing_vector_t owned_sel(source.resource());
         const indexing_vector_t* indexing_ptr = &indexing;
 
         const vector_t* source_ptr = &source;
@@ -591,7 +591,7 @@ namespace components::vector::vector_ops {
                     return;
                 }
                 case vector_type::CONSTANT:
-                    indexing_ptr = zero_indexing_vector(copy_count, owned_sel);
+                    indexing_ptr = zero_indexing_vector(source_ptr->resource(), copy_count, owned_sel);
                     finished = true;
                     break;
                 case vector_type::FLAT:
@@ -802,7 +802,7 @@ namespace components::vector::vector_ops {
                         }
                     }
                     uint64_t source_child_size = child_rows.size();
-                    indexing_vector_t child_sel(child_rows.data());
+                    indexing_vector_t child_sel(source_ptr->resource(), child_rows.data());
 
                     uint64_t old_target_child_len =
                         static_cast<list_vector_buffer_t*>(target.auxiliary().get())->size();
@@ -850,7 +850,12 @@ namespace components::vector::vector_ops {
               uint64_t source_count,
               uint64_t source_offset,
               uint64_t target_offset) {
-        copy(source, target, *incremental_indexing_vector(), source_count, source_offset, target_offset);
+        copy(source,
+             target,
+             *incremental_indexing_vector(source.resource()),
+             source_count,
+             source_offset,
+             target_offset);
     }
 
     void hash(vector_t& input, vector_t& result, uint64_t count) {

@@ -291,7 +291,7 @@ namespace components::table {
             return;
         }
 
-        vector::indexing_vector_t indexing;
+        vector::indexing_vector_t indexing(update.resource());
         count = sort_indexing_vector(indexing, count, ids);
         assert(count > 0);
 

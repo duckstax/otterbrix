@@ -535,7 +535,7 @@ TEST_CASE("data_table_t") {
         }
     }
 
-    INFO("Extention") {
+    INFO("Extension") {
         std::unique_ptr<data_table_t> extended_table;
 
         {
@@ -556,7 +556,7 @@ TEST_CASE("data_table_t") {
             }
             extended_table->update_column(v, {7}, chunk);
         }
-        // Scan after extention
+        // Scan after extension
         {
             std::vector<storage_index_t> column_indices;
             column_indices.reserve(extended_table->column_count());

@@ -141,8 +141,8 @@ namespace components::vector {
         , nested_data_(std::make_unique<vector_t>(
               resource,
               array_type.child_type(),
-              capacity * static_cast<types::array_logical_type_extention*>(array_type.extention())->size()))
-        , underlying_size_(static_cast<types::array_logical_type_extention*>(array_type.extention())->size())
+              capacity * static_cast<types::array_logical_type_extension*>(array_type.extension())->size()))
+        , underlying_size_(static_cast<types::array_logical_type_extension*>(array_type.extension())->size())
         , size_(capacity) {}
 
     child_vector_buffer_t::child_vector_buffer_t(vector_t vector)

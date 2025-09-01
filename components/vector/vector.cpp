@@ -7,13 +7,13 @@
 
 namespace components::vector {
 
-    unified_vector_format::unified_vector_format()
-        : validity(nullptr) {}
     unified_vector_format::unified_vector_format(std::pmr::memory_resource* resource, uint64_t capacity)
-        : validity(resource, capacity) {}
+        : validity(resource, capacity)
+        , owned_indexing(resource) {}
 
     unified_vector_format::unified_vector_format(unified_vector_format&& other) noexcept
-        : validity(std::move(other.validity)) {
+        : validity(std::move(other.validity))
+        , owned_indexing(validity.resource()) {
         bool refers_to_self = other.referenced_indexing == &other.owned_indexing;
         std::swap(referenced_indexing, other.referenced_indexing);
         std::swap(data, other.data);
@@ -213,7 +213,7 @@ namespace components::vector {
             auto& child_vec = new_vector.entry();
             auto& other_child_vec = other.entry();
             assert(type_.size() == other.type_.size());
-            const auto array_size = static_cast<types::array_logical_type_extention*>(type_.extention())->size();
+            const auto array_size = static_cast<types::array_logical_type_extension*>(type_.extension())->size();
             child_vec.slice(other_child_vec, offset * array_size, end * array_size);
             new_vector.validity_.slice(other.validity_, offset, end - offset);
             reference(new_vector);
@@ -288,7 +288,7 @@ namespace components::vector {
                     entry->set_null(position, value);
                 }
             } else if (internal_type == types::logical_type::ARRAY) {
-                auto array_size = static_cast<types::array_logical_type_extention*>(type_.extention())->size();
+                auto array_size = static_cast<types::array_logical_type_extension*>(type_.extension())->size();
                 auto child_offset = position * array_size;
                 for (uint64_t i = 0; i < array_size; i++) {
                     entry().set_null(child_offset + i, value);
@@ -528,7 +528,7 @@ namespace components::vector {
                 break;
             }
             case types::logical_type::ARRAY: {
-                auto array_size = static_cast<types::array_logical_type_extention*>(type_.extention())->size();
+                auto array_size = static_cast<types::array_logical_type_extension*>(type_.extension())->size();
                 auto& child = entry();
                 if (val.is_null()) {
                     for (uint64_t i = 0; i < array_size; i++) {
@@ -606,9 +606,9 @@ namespace components::vector {
             // case types::logical_type::UHUGEINT:
             // return types::logical_value_t::UHUGEINT(reinterpret_cast<uint128_t*>(data_)[index]);
             case types::logical_type::DECIMAL: {
-                assert(type_.extention()->type() == types::logical_type_extention::extention_type::DECIMAL);
-                auto width = static_cast<types::decimal_logical_type_extention*>(type_.extention())->width();
-                auto scale = static_cast<types::decimal_logical_type_extention*>(type_.extention())->scale();
+                assert(type_.extension()->type() == types::logical_type_extension::extension_type::DECIMAL);
+                auto width = static_cast<types::decimal_logical_type_extension*>(type_.extension())->width();
+                auto scale = static_cast<types::decimal_logical_type_extension*>(type_.extension())->scale();
                 return types::logical_value_t::create_decimal(reinterpret_cast<int64_t*>(data_)[index], width, scale);
             }
             case types::logical_type::POINTER:
@@ -649,7 +649,7 @@ namespace components::vector {
                 return types::logical_value_t::create_list(type_.child_type(), std::move(children));
             }
             case types::logical_type::ARRAY: {
-                auto stride = static_cast<types::array_logical_type_extention*>(type_.extention())->size();
+                auto stride = static_cast<types::array_logical_type_extension*>(type_.extension())->size();
                 auto offset = index * stride;
                 auto& child_vec = entry();
                 std::vector<types::logical_value_t> children;
@@ -659,7 +659,7 @@ namespace components::vector {
                 }
                 return types::logical_value_t::create_array(
                     types::complex_logical_type(
-                        static_cast<types::array_logical_type_extention*>(type_.extention())->internal_type()),
+                        static_cast<types::array_logical_type_extension*>(type_.extension())->internal_type()),
                     children);
             }
             default:
@@ -864,7 +864,7 @@ namespace components::vector {
                     }
                     case types::logical_type::ARRAY: {
                         auto& original_child = entry();
-                        auto array_size = static_cast<types::array_logical_type_extention*>(type_.extention())->size();
+                        auto array_size = static_cast<types::array_logical_type_extension*>(type_.extension())->size();
                         auto flattened_buffer = std::make_unique<array_vector_buffer_t>(resource(), type_, count);
                         auto& new_child = flattened_buffer->nested_data();
 
@@ -966,13 +966,13 @@ namespace components::vector {
                 break;
             }
             case vector_type::CONSTANT:
-                format.referenced_indexing = zero_indexing_vector(count, format.owned_indexing);
+                format.referenced_indexing = zero_indexing_vector(resource(), count, format.owned_indexing);
                 format.data = data_;
                 format.validity = validity_;
                 break;
             default:
                 flatten(count);
-                format.referenced_indexing = incremental_indexing_vector();
+                format.referenced_indexing = incremental_indexing_vector(resource());
                 format.data = data_;
                 format.validity = validity_;
                 break;
@@ -991,7 +991,7 @@ namespace components::vector {
 
         } else if (input.type_.type() == types::logical_type::ARRAY) {
             auto& child = input.entry();
-            auto array_size = static_cast<types::array_logical_type_extention*>(input.type_.extention())->size();
+            auto array_size = static_cast<types::array_logical_type_extension*>(input.type_.extension())->size();
             auto child_count = count * array_size;
             data.children.emplace_back(recursive_unified_vector_format{input.resource(), count});
             recursive_to_unified_format(child, child_count, data.children.back());
@@ -1053,7 +1053,7 @@ namespace components::vector {
                 auto& child = entry();
                 assert(child.get_vector_type() == vector_type::CONSTANT ||
                        child.get_vector_type() == vector_type::FLAT);
-                auto array_size = static_cast<types::array_logical_type_extention*>(type_.extention())->size();
+                auto array_size = static_cast<types::array_logical_type_extension*>(type_.extension())->size();
                 if (child.get_vector_type() == vector_type::CONSTANT) {
                     assert(array_size == 1);
                     child.set_null(is_null);

@@ -614,8 +614,8 @@ namespace components::types {
             //     return logical_value_t((uint128_t)value);
             case logical_type::DECIMAL:
                 return create_decimal(value,
-                                      static_cast<decimal_logical_type_extention*>(type.extention())->width(),
-                                      static_cast<decimal_logical_type_extention*>(type.extention())->scale());
+                                      static_cast<decimal_logical_type_extension*>(type.extension())->width(),
+                                      static_cast<decimal_logical_type_extension*>(type.extension())->scale());
             case logical_type::FLOAT:
                 return logical_value_t((float) value);
             case logical_type::DOUBLE:
@@ -668,6 +668,30 @@ namespace components::types {
         logical_value_t result;
         result.type_ = complex_logical_type::create_list(internal_type);
         result.value_ = std::make_unique<std::vector<logical_value_t>>(values);
+        return result;
+    }
+
+    logical_value_t
+    logical_value_t::create_union(std::vector<complex_logical_type> types, uint8_t tag, logical_value_t value) {
+        assert(!types.empty());
+        assert(types.size() > tag);
+
+        assert(value.type() == types[tag]);
+
+        logical_value_t result;
+        // add the tag to the front of the struct
+        auto union_values = std::make_unique<std::vector<logical_value_t>>();
+        union_values->emplace_back(tag);
+        for (size_t i = 0; i < types.size(); i++) {
+            if (i != tag) {
+                union_values->emplace_back(types[i]);
+            } else {
+                union_values->emplace_back(nullptr);
+            }
+        }
+        (*union_values)[tag + 1] = std::move(value);
+        result.value_ = std::move(union_values);
+        result.type_ = complex_logical_type::create_union(std::move(types));
         return result;
     }
 

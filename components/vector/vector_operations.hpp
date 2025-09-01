@@ -19,14 +19,14 @@ namespace components::vector::vector_ops {
             if (left.is_null() || right.is_null() || !comp(*ldata, *rdata)) {
                 if (false_sel) {
                     for (int64_t i = 0; i < count; i++) {
-                        false_sel->set_index(i, incremental_indexing_vector()->get_index(i));
+                        false_sel->set_index(i, incremental_indexing_vector(left.resource())->get_index(i));
                     }
                 }
                 return 0;
             } else {
                 if (true_sel) {
                     for (int64_t i = 0; i < count; i++) {
-                        true_sel->set_index(i, incremental_indexing_vector()->get_index(i));
+                        true_sel->set_index(i, incremental_indexing_vector(left.resource())->get_index(i));
                     }
                 }
                 return count;
@@ -53,7 +53,7 @@ namespace components::vector::vector_ops {
                 int64_t next = std::min<int64_t>(base_idx + validity_mask_t::BITS_PER_VALUE, count);
                 if (validity_entry == validity_data_t::MAX_ENTRY) {
                     for (; base_idx < next; base_idx++) {
-                        int64_t result_idx = incremental_indexing_vector()->get_index(base_idx);
+                        int64_t result_idx = incremental_indexing_vector(validity_mask.resource())->get_index(base_idx);
                         int64_t lidx = LEFT_CONSTANT ? 0 : base_idx;
                         int64_t ridx = RIGHT_CONSTANT ? 0 : base_idx;
                         COMP comp{};
@@ -70,7 +70,8 @@ namespace components::vector::vector_ops {
                 } else if (validity_entry == 0) {
                     if (HAS_FALSE_SEL) {
                         for (; base_idx < next; base_idx++) {
-                            int64_t result_idx = incremental_indexing_vector()->get_index(base_idx);
+                            int64_t result_idx =
+                                incremental_indexing_vector(validity_mask.resource())->get_index(base_idx);
                             false_sel->set_index(false_count, result_idx);
                             false_count++;
                         }
@@ -79,7 +80,7 @@ namespace components::vector::vector_ops {
                 } else {
                     int64_t start = base_idx;
                     for (; base_idx < next; base_idx++) {
-                        int64_t result_idx = incremental_indexing_vector()->get_index(base_idx);
+                        int64_t result_idx = incremental_indexing_vector(validity_mask.resource())->get_index(base_idx);
                         int64_t lidx = LEFT_CONSTANT ? 0 : base_idx;
                         int64_t ridx = RIGHT_CONSTANT ? 0 : base_idx;
                         COMP comp{};
@@ -147,7 +148,7 @@ namespace components::vector::vector_ops {
             if (LEFT_CONSTANT && left.is_null() || RIGHT_CONSTANT && right.is_null()) {
                 if (false_sel) {
                     for (int64_t i = 0; i < count; i++) {
-                        false_sel->set_index(i, incremental_indexing_vector()->get_index(i));
+                        false_sel->set_index(i, incremental_indexing_vector(left.resource())->get_index(i));
                     }
                 }
                 return 0;
@@ -191,7 +192,7 @@ namespace components::vector::vector_ops {
                                     indexing_vector_t* false_sel) {
             int64_t true_count = 0, false_count = 0;
             for (int64_t i = 0; i < count; i++) {
-                auto result_idx = incremental_indexing_vector()->get_index(i);
+                auto result_idx = incremental_indexing_vector(lvalidity.resource())->get_index(i);
                 auto lindex = lsel->get_index(i);
                 auto rindex = rsel->get_index(i);
                 COMP comp{};
