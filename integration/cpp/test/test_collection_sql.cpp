@@ -85,7 +85,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
                 if (type.type() != logical_type::ARRAY) {
                     return false;
                 }
-                auto array = static_cast<types::array_logical_type_extention*>(type.extention());
+                auto array = static_cast<types::array_logical_type_extension*>(type.extention());
                 return type.alias() == "field2" && array->internal_type() == logical_type::INTEGER &&
                        array->size() == 10;
             }));

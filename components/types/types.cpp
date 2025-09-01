@@ -431,7 +431,7 @@ namespace components::types {
         , return_type_(std::move(return_type))
         , argument_types_(std::move(arguments)) {}
 
-    bool operator==(const logical_type_extention& lhs, const logical_type_extention& rhs) {
+    bool operator==(const logical_type_extension& lhs, const logical_type_extension& rhs) {
         // TODO: check with inheritance
         return lhs.type() == rhs.type() && lhs.alias() == rhs.alias();
     }
