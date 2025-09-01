@@ -37,8 +37,10 @@ namespace components::table::operators {
 
             auto res_types = chunk_left.types();
             for (const auto& type : chunk_right.types()) {
-                if (std::find(res_types.begin(), res_types.end(), type) == res_types.end()) {
-                    res_types.push_back(type);
+                if (std::find_if(res_types.begin(), res_types.end(), [&type](const types::complex_logical_type& rhs) {
+                        return type.alias() == rhs.alias();
+                    }) == res_types.end()) {
+                    res_types.emplace_back(type);
                 }
             }
 
@@ -95,31 +97,32 @@ namespace components::table::operators {
         const auto& chunk_left = left_->output()->data_chunk();
         const auto& chunk_right = right_->output()->data_chunk();
         auto& chunk_res = output_->data_chunk();
-        // TODO: fix edge case with same data type in both chunks
-        assert(chunk_res.column_count() == chunk_left.column_count() + chunk_right.column_count());
+
+        size_t res_index = 0;
         for (size_t i = 0; i < chunk_left.size(); i++) {
             for (size_t j = 0; j < chunk_right.size(); j++) {
                 if (check_predicate_(context, i, j)) {
                     for (const auto& column : chunk_left.data) {
-                        chunk_res.data[name_index_map_res_.at(column.type().alias())].push_back(column.value(i));
+                        chunk_res.set_value(name_index_map_res_.at(column.type().alias()), res_index, column.value(i));
                     }
                     for (const auto& column : chunk_right.data) {
-                        chunk_res.data[name_index_map_res_.at(column.type().alias())].push_back(column.value(i));
+                        chunk_res.set_value(name_index_map_res_.at(column.type().alias()), res_index, column.value(j));
                     }
+                    ++res_index;
                 }
             }
         }
+        chunk_res.set_cardinality(res_index);
     }
 
     void operator_join_t::outer_full_join_(pipeline::context_t* context) {
         const auto& chunk_left = left_->output()->data_chunk();
         const auto& chunk_right = right_->output()->data_chunk();
         auto& chunk_res = output_->data_chunk();
-        // TODO: fix edge case with same data type in both chunks
-        assert(chunk_res.column_count() == chunk_left.column_count() + chunk_right.column_count());
 
         std::vector<bool> visited_right(right_->output()->size(), false);
 
+        size_t res_index = 0;
         for (size_t i = 0; i < chunk_left.size(); i++) {
             bool visited_left = false;
             size_t right_index = 0;
@@ -128,21 +131,24 @@ namespace components::table::operators {
                     visited_left = true;
                     visited_right[right_index] = true;
                     for (const auto& column : chunk_left.data) {
-                        chunk_res.data[name_index_map_res_.at(column.type().alias())].push_back(column.value(i));
+                        chunk_res.set_value(name_index_map_res_.at(column.type().alias()), res_index, column.value(i));
                     }
                     for (const auto& column : chunk_right.data) {
-                        chunk_res.data[name_index_map_res_.at(column.type().alias())].push_back(column.value(i));
+                        chunk_res.set_value(name_index_map_res_.at(column.type().alias()), res_index, column.value(j));
                     }
+                    ++res_index;
                 }
                 right_index++;
                 if (!visited_left) {
                     for (const auto& column : chunk_left.data) {
-                        chunk_res.data[name_index_map_res_.at(column.type().alias())].push_back(column.value(i));
+                        chunk_res.set_value(name_index_map_res_.at(column.type().alias()), res_index, column.value(i));
                     }
                     for (const auto& column : chunk_right.data) {
-                        chunk_res.data[name_index_map_res_.at(column.type().alias())].push_back(
-                            types::logical_value_t{nullptr});
+                        chunk_res.set_value(name_index_map_res_.at(column.type().alias()),
+                                            res_index,
+                                            types::logical_value_t{nullptr});
                     }
+                    ++res_index;
                 }
             }
         }
@@ -151,12 +157,14 @@ namespace components::table::operators {
                 continue;
             }
             for (const auto& column : chunk_left.data) {
-                chunk_res.data[name_index_map_res_.at(column.type().alias())].push_back(
-                    types::logical_value_t{nullptr});
+                chunk_res.set_value(name_index_map_res_.at(column.type().alias()),
+                                    res_index,
+                                    types::logical_value_t{nullptr});
             }
             for (const auto& column : chunk_right.data) {
-                chunk_res.data[name_index_map_res_.at(column.type().alias())].push_back(column.value(i));
+                chunk_res.set_value(name_index_map_res_.at(column.type().alias()), res_index, column.value(i));
             }
+            ++res_index;
         }
     }
 
@@ -164,28 +172,31 @@ namespace components::table::operators {
         const auto& chunk_left = left_->output()->data_chunk();
         const auto& chunk_right = right_->output()->data_chunk();
         auto& chunk_res = output_->data_chunk();
-        // TODO: fix edge case with same data type in both chunks
 
+        size_t res_index = 0;
         for (size_t i = 0; i < chunk_left.size(); i++) {
             bool visited_left = false;
             for (size_t j = 0; j < chunk_right.size(); j++) {
                 if (check_predicate_(context, i, j)) {
                     visited_left = true;
                     for (const auto& column : chunk_left.data) {
-                        chunk_res.data[name_index_map_res_.at(column.type().alias())].push_back(column.value(i));
+                        chunk_res.set_value(name_index_map_res_.at(column.type().alias()), res_index, column.value(i));
                     }
                     for (const auto& column : chunk_right.data) {
-                        chunk_res.data[name_index_map_res_.at(column.type().alias())].push_back(column.value(i));
+                        chunk_res.set_value(name_index_map_res_.at(column.type().alias()), res_index, column.value(j));
                     }
+                    ++res_index;
                 }
                 if (!visited_left) {
                     for (const auto& column : chunk_left.data) {
-                        chunk_res.data[name_index_map_res_.at(column.type().alias())].push_back(column.value(i));
+                        chunk_res.set_value(name_index_map_res_.at(column.type().alias()), res_index, column.value(i));
                     }
                     for (const auto& column : chunk_right.data) {
-                        chunk_res.data[name_index_map_res_.at(column.type().alias())].push_back(
-                            types::logical_value_t{nullptr});
+                        chunk_res.set_value(name_index_map_res_.at(column.type().alias()),
+                                            res_index,
+                                            types::logical_value_t{nullptr});
                     }
+                    ++res_index;
                 }
             }
         }
@@ -195,28 +206,31 @@ namespace components::table::operators {
         const auto& chunk_left = left_->output()->data_chunk();
         const auto& chunk_right = right_->output()->data_chunk();
         auto& chunk_res = output_->data_chunk();
-        // TODO: fix edge case with same data type in both chunks
 
+        size_t res_index = 0;
         for (size_t i = 0; i < chunk_right.size(); i++) {
             bool visited_right = false;
             for (size_t j = 0; j < chunk_left.size(); j++) {
                 if (check_predicate_(context, i, j)) {
                     visited_right = true;
                     for (const auto& column : chunk_left.data) {
-                        chunk_res.data[name_index_map_res_.at(column.type().alias())].push_back(column.value(i));
+                        chunk_res.set_value(name_index_map_res_.at(column.type().alias()), res_index, column.value(i));
                     }
                     for (const auto& column : chunk_right.data) {
-                        chunk_res.data[name_index_map_res_.at(column.type().alias())].push_back(column.value(i));
+                        chunk_res.set_value(name_index_map_res_.at(column.type().alias()), res_index, column.value(j));
                     }
+                    ++res_index;
                 }
                 if (!visited_right) {
                     for (const auto& column : chunk_left.data) {
-                        chunk_res.data[name_index_map_res_.at(column.type().alias())].push_back(
-                            types::logical_value_t{nullptr});
+                        chunk_res.set_value(name_index_map_res_.at(column.type().alias()),
+                                            res_index,
+                                            types::logical_value_t{nullptr});
                     }
                     for (const auto& column : chunk_right.data) {
-                        chunk_res.data[name_index_map_res_.at(column.type().alias())].push_back(column.value(i));
+                        chunk_res.set_value(name_index_map_res_.at(column.type().alias()), res_index, column.value(j));
                     }
+                    ++res_index;
                 }
             }
         }
@@ -226,16 +240,17 @@ namespace components::table::operators {
         const auto& chunk_left = left_->output()->data_chunk();
         const auto& chunk_right = right_->output()->data_chunk();
         auto& chunk_res = output_->data_chunk();
-        // TODO: fix edge case with same data type in both chunks
-        assert(chunk_res.column_count() == chunk_left.column_count() + chunk_right.column_count());
+
+        size_t res_index = 0;
         for (size_t i = 0; i < chunk_left.size(); i++) {
             for (size_t j = 0; j < chunk_right.size(); j++) {
                 for (const auto& column : chunk_left.data) {
-                    chunk_res.data[name_index_map_res_.at(column.type().alias())].push_back(column.value(i));
+                    chunk_res.set_value(name_index_map_res_.at(column.type().alias()), res_index, column.value(i));
                 }
                 for (const auto& column : chunk_right.data) {
-                    chunk_res.data[name_index_map_res_.at(column.type().alias())].push_back(column.value(i));
+                    chunk_res.set_value(name_index_map_res_.at(column.type().alias()), res_index, column.value(j));
                 }
+                ++res_index;
             }
         }
     }

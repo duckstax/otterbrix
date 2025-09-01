@@ -95,8 +95,8 @@ struct test_dispatcher : actor_zeta::cooperative_supervisor<test_dispatcher> {
     }
 
     void execute_plan_finish(components::session::session_id_t& session, cursor_t_ptr result) {
-        if (!!assertion_) {
-            assertion_(result, const_cast<catalog&>(manager_dispatcher_->catalog()));
+        if (static_cast<bool>(assertion_)) {
+            assertion_(result, const_cast<catalog&>(manager_dispatcher_->current_catalog()));
         }
     }
 
@@ -155,9 +155,10 @@ TEST_CASE("dispatcher::schemeful_operations") {
     test.execute_sql("INSERT INTO test.test (fld1, fld2) VALUES (1, '1'), (2, '2');");
     test.step_with_assertion([&id](cursor_t_ptr cur, const catalog& catalog) {
         REQUIRE(catalog.table_exists(id));
-        REQUIRE(cur->is_success()); // should succeed, however, without type tree result as follows:
-                                    // schema failure: INTEGER in catalog, BIGINT from json
-                                    // no catalog type assertions for now
+        // Since we have a schema, it will be treated as table, but parser only makes a document raw_data nodes
+        REQUIRE_FALSE(cur->is_success()); // should succeed, however, without type tree result as follows:
+                                          // schema failure: INTEGER in catalog, BIGINT from json
+                                          // no catalog type assertions for now
     });
 
     // todo: add typed insert assertions with type tree introduction

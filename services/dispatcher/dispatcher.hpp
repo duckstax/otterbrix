@@ -100,6 +100,9 @@ namespace services::dispatcher {
 
         components::cursor::cursor_t_ptr check_namespace_exists(const components::catalog::table_id id);
         components::cursor::cursor_t_ptr check_collectction_exists(const components::catalog::table_id id);
+        components::cursor::cursor_t_ptr
+        check_collections_format_(const components::logical_plan::node_ptr& logical_plan);
+
         components::logical_plan::node_ptr create_logic_plan(components::logical_plan::node_ptr plan);
         void update_catalog(components::logical_plan::node_ptr node);
         // TODO figure out what to do with records
@@ -149,7 +152,10 @@ namespace services::dispatcher {
         size(const components::session::session_id_t& session, std::string& database_name, std::string& collection);
         void close_cursor(const components::session::session_id_t& session);
 
-        const components::catalog::catalog& catalog();
+        const components::catalog::catalog& current_catalog();
+
+        void get_schema(const components::session::session_id_t& session,
+                        const std::pmr::vector<std::pair<database_name_t, collection_name_t>>& ids);
 
     protected:
         auto enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void override;
@@ -160,6 +166,7 @@ namespace services::dispatcher {
         actor_zeta::behavior_t load_;
         actor_zeta::behavior_t execute_plan_;
         actor_zeta::behavior_t size_;
+        actor_zeta::behavior_t schema_;
         actor_zeta::behavior_t close_cursor_;
         actor_zeta::behavior_t sync_;
 

@@ -7,7 +7,7 @@ namespace components::base::operators {
         , data_(std::pmr::vector<document::document_ptr>(resource)) {}
 
     operator_data_t::operator_data_t(std::pmr::memory_resource* resource,
-                                     const std::vector<types::complex_logical_type>& types,
+                                     const std::pmr::vector<types::complex_logical_type>& types,
                                      uint64_t capacity)
         : resource_(resource)
         , data_(vector::data_chunk_t(resource, types, capacity)) {}
@@ -52,6 +52,12 @@ namespace components::base::operators {
     vector::data_chunk_t& operator_data_t::data_chunk() { return std::get<vector::data_chunk_t>(data_); }
 
     const vector::data_chunk_t& operator_data_t::data_chunk() const { return std::get<vector::data_chunk_t>(data_); }
+
+    bool operator_data_t::uses_data_chunk() const { return std::holds_alternative<vector::data_chunk_t>(data_); }
+
+    bool operator_data_t::uses_documents() const {
+        return std::holds_alternative<std::pmr::vector<document::document_ptr>>(data_);
+    }
 
     std::pmr::memory_resource* operator_data_t::resource() { return resource_; }
 

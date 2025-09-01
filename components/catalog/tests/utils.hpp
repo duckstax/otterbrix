@@ -1,5 +1,6 @@
-#include "catalog/catalog.hpp"
+#pragma once
 
+#include <components/catalog/catalog.hpp>
 #include <components/cursor/cursor.hpp>
 #include <components/types/types.hpp>
 

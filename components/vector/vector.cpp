@@ -391,7 +391,7 @@ namespace components::vector {
                 std::unique_ptr<std::byte[], core::pmr::array_deleter_t>(
                     new (resource()->allocate(target_size, alignof(std::byte))) std::byte[target_size],
                     core::pmr::array_deleter_t(resource(), target_size, alignof(std::byte)));
-            memcpy(new_data.get(), resize_info_entry.data, old_size);
+            memcpy(new_data.get(), resize_info_entry.data, std::min(old_size, target_size));
             resize_info_entry.buffer->set_data(std::move(new_data));
             resize_info_entry.vec.data_ = resize_info_entry.buffer->data();
         }

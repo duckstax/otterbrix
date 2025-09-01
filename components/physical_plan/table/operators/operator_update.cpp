@@ -77,10 +77,12 @@ namespace components::table::operators {
                             for (size_t k = 0; k < chunk_left.column_count(); k++) {
                                 out_chunk.data[k].set_value(index, chunk_left.data[k].value(i));
                             }
+                            ++index;
                             context_->index_engine()->insert_row(chunk_left, i, pipeline_context);
                         }
                     }
                 }
+                out_chunk.set_cardinality(index);
                 context_->table_storage().table().update(*state, row_ids, chunk_left);
             }
         } else if (left_ && left_->output()) {
@@ -133,6 +135,7 @@ namespace components::table::operators {
                         index++;
                     }
                 }
+                out_chunk.set_cardinality(index);
                 row_ids.resize(chunk.size(), index);
                 context_->table_storage().table().update(*state, row_ids, left_->output()->data_chunk());
             }

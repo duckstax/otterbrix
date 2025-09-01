@@ -47,9 +47,9 @@ namespace components::table::operators {
             }
             ids.resize(chunk_left.size() * chunk_right.size(), index);
             auto state = context_->table_storage().table().initialize_delete({});
-            context_->table_storage().table().delete_rows(*state, ids, ids.size());
-            for (size_t i = 0; i < ids.size(); i++) {
-                size_t id = *ids.data<int64_t>();
+            context_->table_storage().table().delete_rows(*state, ids, index);
+            for (size_t i = 0; i < index; i++) {
+                size_t id = ids.data<int64_t>()[i];
                 modified_->append(id);
                 context_->index_engine()->delete_row(chunk_left, id, pipeline_context);
             }

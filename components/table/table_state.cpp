@@ -159,7 +159,7 @@ namespace components::table {
         , valid_indexing(resource, vector::DEFAULT_VECTOR_CAPACITY)
         , parent_(parent) {}
 
-    void collection_scan_state::initialize(const std::vector<types::complex_logical_type>& types) {
+    void collection_scan_state::initialize(const std::pmr::vector<types::complex_logical_type>& types) {
         auto& ids = column_ids();
         column_scans.resize(ids.size());
         for (uint64_t i = 0; i < ids.size(); i++) {

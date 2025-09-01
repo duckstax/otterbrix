@@ -12,7 +12,7 @@ namespace components::table::operators::aggregate {
     protected:
         explicit operator_aggregate_t(services::collection::context_collection_t* collection);
 
-        std::pmr::vector<types::logical_value_t> aggregate_result_;
+        types::logical_value_t aggregate_result_;
 
     private:
         void on_execute_impl(pipeline::context_t* pipeline_context) final;

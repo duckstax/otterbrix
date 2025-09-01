@@ -10,3 +10,10 @@ namespace services::collection::planner::impl {
                                                                        const components::logical_plan::node_ptr& node);
 
 }
+
+namespace services::table::planner::impl {
+
+    components::base::operators::operator_ptr create_plan_update(const context_storage_t& context,
+                                                                 const components::logical_plan::node_ptr& node);
+
+}

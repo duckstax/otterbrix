@@ -1,7 +1,6 @@
 #pragma once
 
 #include <components/base/collection_full_name.hpp>
-#include <stack>
 #include <unordered_map>
 
 namespace services {

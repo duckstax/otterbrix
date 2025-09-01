@@ -9,6 +9,7 @@
 #include <services/collection/route.hpp>
 #include <services/disk/manager_disk.hpp>
 #include <services/disk/route.hpp>
+#include <services/memory_storage/context_storage.hpp>
 #include <services/memory_storage/route.hpp>
 #include <services/wal/route.hpp>
 
@@ -252,6 +253,7 @@ namespace services::dispatcher {
         auto logic_plan = create_logic_plan(plan);
         table_id id(resource(), logic_plan->collection_full_name());
         cursor_t_ptr error;
+        used_format_t used_format = used_format_t::undefined;
 
         switch (logic_plan->type()) {
             case node_type::create_database_t:
@@ -271,24 +273,14 @@ namespace services::dispatcher {
             case node_type::drop_collection_t:
                 error = check_collectction_exists(id);
                 break;
-            default:
-                auto dependency_tree_collections_names = logic_plan->collection_dependencies();
-                while (!dependency_tree_collections_names.empty()) {
-                    collection_full_name_t name =
-                        dependency_tree_collections_names.extract(dependency_tree_collections_names.begin()).value();
-                    if (name.empty()) {
-                        // raw_data from ql does not belong to any collection
-                        continue;
-                    }
-                    if ((error = check_collectction_exists({resource(), name}))) {
-                        trace(log_,
-                              "dispatcher_t:execute_plan: collection not found {}, session: {}",
-                              name.to_string(),
-                              session.data());
-                        break;
-                    }
+            default: {
+                auto check_result = check_collections_format_(plan);
+                if (check_result->is_error()) {
+                    error = std::move(check_result);
+                } else {
+                    used_format = check_result->uses_table_data() ? used_format_t::columns : used_format_t::documents;
                 }
-                break;
+            }
         }
 
         if (error) {
@@ -301,7 +293,8 @@ namespace services::dispatcher {
                          memory_storage::handler_id(memory_storage::route::execute_plan),
                          session,
                          std::move(logic_plan),
-                         params->take_parameters());
+                         params->take_parameters(),
+                         used_format);
     }
 
     void dispatcher_t::execute_plan_finish(const components::session::session_id_t& session, cursor_t_ptr result) {
@@ -592,6 +585,75 @@ namespace services::dispatcher {
 
         return error;
     }
+    components::cursor::cursor_t_ptr
+    dispatcher_t::check_collections_format_(const components::logical_plan::node_ptr& logical_plan) {
+        used_format_t used_format = used_format_t::undefined;
+        cursor_t_ptr result = make_cursor(resource(), operation_status_t::success);
+        auto check_format = [&](const components::logical_plan::node_t* node) {
+            used_format_t check = used_format_t::undefined;
+            // pull check format from collection referenced by logical_plan
+            if (!node->collection_full_name().empty()) {
+                table_id id(resource(), node->collection_full_name());
+                if (auto res = check_collectction_exists(id); !res) {
+                    check = catalog_.get_table_format(id);
+                } else {
+                    result = res;
+                    return false;
+                }
+            }
+            // pull/double-check check format from collection referenced by logical_plan and data stored inside node_data_t
+            if (node->type() == components::logical_plan::node_type::data_t) {
+                const auto* data_node = reinterpret_cast<const components::logical_plan::node_data_t*>(node);
+                if (check == used_format_t::undefined) {
+                    check = static_cast<used_format_t>(data_node->uses_data_chunk());
+                } else if (check != static_cast<used_format_t>(data_node->uses_data_chunk())) {
+                    result =
+                        make_cursor(resource(),
+                                    error_code_t::incompatible_storage_types,
+                                    "logical plan data format is not the same as referenced collection data format");
+                    return false;
+                }
+            }
+
+            // compare check to previously gathered
+            if (used_format == check) {
+                return true;
+            } else if (used_format == used_format_t::undefined) {
+                used_format = check;
+                return true;
+            } else if (check == used_format_t::undefined) {
+                return true;
+            }
+            result = make_cursor(resource(),
+                                 error_code_t::incompatible_storage_types,
+                                 "logical plan data format is not the same as referenced collection data format");
+            return false;
+        };
+
+        std::queue<components::logical_plan::node_t*> look_up;
+        look_up.emplace(logical_plan.get());
+        while (!look_up.empty()) {
+            auto plan_node = look_up.front();
+
+            if (check_format(plan_node)) {
+                for (const auto& child : plan_node->children()) {
+                    look_up.emplace(child.get());
+                }
+                look_up.pop();
+            } else {
+                return result;
+            }
+        }
+
+        switch (used_format) {
+            case used_format_t::documents:
+                return make_cursor(resource(), std::pmr::vector<document_ptr>{resource()});
+            case used_format_t::columns:
+                return make_cursor(resource(), components::vector::data_chunk_t{resource(), {}, 0});
+            case used_format_t::undefined:
+                return make_cursor(resource(), error_code_t::incompatible_storage_types, "undefined storage format");
+        }
+    }
 
     components::logical_plan::node_ptr dispatcher_t::create_logic_plan(components::logical_plan::node_ptr plan) {
         //todo: cache logical plans
@@ -652,27 +714,29 @@ namespace services::dispatcher {
                 }
 
                 auto node_info = reinterpret_cast<node_data_ptr&>(node->children().back());
-                for (const auto& doc : node_info->documents()) {
-                    for (const auto& [key, value] : *doc->json_trie()->as_object()) {
-                        auto key_val = key->get_mut()->get_string().value();
-                        auto log_type = components::base::operators::type_from_json(value.get());
+                if (node_info->uses_documents()) {
+                    for (const auto& doc : node_info->documents()) {
+                        for (const auto& [key, value] : *doc->json_trie()->as_object()) {
+                            auto key_val = key->get_mut()->get_string().value();
+                            auto log_type = components::base::operators::type_from_json(value.get());
 
-                        if (!!comp_sch) {
-                            comp_sch.value().get().append(std::pmr::string(key_val), log_type);
+                            if (comp_sch.has_value()) {
+                                comp_sch.value().get().append(std::pmr::string(key_val), log_type);
+                            }
+                            // else { // todo: type conversion tree
+                            //     auto asserted_type = sch.value().get().find_field(std::pmr::string(key_val));
+                            //     if (asserted_type != log_type) {
+                            //         error(log_,
+                            //               "Schema failure: inserted value of incorrect type into column {}",
+                            //               std::string(key_val));
+                            //         result_storage_[session] =
+                            //             make_cursor(resource(), error_code_t::other_error, "Schema failure");
+                            //     }
+                            // }
                         }
-                        //                        else { // todo: type conversion tree
-                        //                            auto asserted_type = sch.value().get().find_field(std::pmr::string(key_val));
-                        //                            if (asserted_type != log_type) {
-                        //                                error(log_,
-                        //                                      "Schema failure: inserted value of incorrect type into column {}",
-                        //                                      std::string(key_val));
-                        //                                result_storage_[session] =
-                        //                                    make_cursor(resource(), error_code_t::other_error, "Schema failure");
-                        //                            }
-                        //                        }
                     }
+                    break;
                 }
-                break;
             }
             case node_type::delete_t: {
                 if (catalog_.table_computes(id)) {
@@ -706,6 +770,10 @@ namespace services::dispatcher {
                                           collection::handler_id(collection::route::size),
                                           this,
                                           &manager_dispatcher_t::size))
+        , schema_(actor_zeta::make_behavior(resource(),
+                                            collection::handler_id(collection::route::schema),
+                                            this,
+                                            &manager_dispatcher_t::get_schema))
         , close_cursor_(actor_zeta::make_behavior(resource(),
                                                   collection::handler_id(collection::route::close_cursor),
                                                   this,
@@ -746,6 +814,10 @@ namespace services::dispatcher {
                 }
                 case collection::handler_id(collection::route::size): {
                     size_(msg);
+                    break;
+                }
+                case collection::handler_id(collection::route::schema): {
+                    schema_(msg);
                     break;
                 }
                 case collection::handler_id(collection::route::close_cursor): {
@@ -820,9 +892,39 @@ namespace services::dispatcher {
                          current_message()->sender());
     }
 
+    void manager_dispatcher_t::get_schema(const components::session::session_id_t& session,
+                                          const std::pmr::vector<std::pair<database_name_t, collection_name_t>>& ids) {
+        auto& catalog = const_cast<components::catalog::catalog&>(current_catalog());
+        std::pmr::vector<complex_logical_type> schemas;
+        schemas.reserve(ids.size());
+
+        for (const auto& [db, coll] : ids) {
+            table_id id(resource(), {db, coll});
+            if (catalog.table_exists(id)) {
+                schemas.push_back(catalog.get_table_schema(id).schema_struct());
+                continue;
+            }
+
+            if (catalog.table_computes(id)) {
+                schemas.push_back(catalog.get_computing_table_schema(id).latest_types_struct());
+                continue;
+            }
+
+            schemas.push_back(logical_type::INVALID);
+        }
+
+        actor_zeta::send(current_message()->sender(),
+                         address(),
+                         collection::handler_id(collection::route::schema_finish),
+                         session,
+                         make_cursor(resource(), std::move(schemas)));
+    }
+
     void manager_dispatcher_t::close_cursor(const components::session::session_id_t&) {}
 
-    const components::catalog::catalog& manager_dispatcher_t::catalog() { return dispatchers_[0]->current_catalog(); }
+    const components::catalog::catalog& manager_dispatcher_t::current_catalog() {
+        return dispatchers_[0]->current_catalog();
+    }
 
     auto manager_dispatcher_t::dispatcher() -> actor_zeta::address_t { return dispatchers_[0]->address(); }
 

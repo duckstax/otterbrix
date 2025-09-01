@@ -34,6 +34,7 @@ namespace components::cursor {
         sql_parse_error = 7,
         create_physical_plan_error = 8,
         schema_error = 9,
+        incompatible_storage_types = 10,
     };
 
     struct error_t {

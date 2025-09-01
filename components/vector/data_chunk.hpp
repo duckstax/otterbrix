@@ -7,7 +7,7 @@ namespace components::vector {
     class data_chunk_t {
     public:
         data_chunk_t(std::pmr::memory_resource* resource,
-                     const std::vector<types::complex_logical_type>& types,
+                     const std::pmr::vector<types::complex_logical_type>& types,
                      uint64_t capacity = DEFAULT_VECTOR_CAPACITY);
         data_chunk_t(const data_chunk_t&) = delete;
         data_chunk_t& operator=(const data_chunk_t&) = delete;
@@ -70,7 +70,7 @@ namespace components::vector {
         void hash(vector_t& result);
         void hash(std::vector<uint64_t>& column_ids, vector_t& result);
 
-        std::vector<types::complex_logical_type> types() const;
+        [[nodiscard]] std::pmr::vector<types::complex_logical_type> types() const;
         size_t column_index(std::string_view key) const;
 
         std::pmr::memory_resource* resource() const;

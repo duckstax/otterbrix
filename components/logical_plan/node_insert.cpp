@@ -91,6 +91,22 @@ namespace components::logical_plan {
         return res;
     }
 
+    node_insert_ptr make_node_insert(std::pmr::memory_resource* resource,
+                                     const collection_full_name_t& collection,
+                                     const components::vector::data_chunk_t& chunk) {
+        auto res = make_node_insert(resource, collection);
+        res->append_child(make_node_raw_data(resource, chunk));
+        return res;
+    }
+
+    node_insert_ptr make_node_insert(std::pmr::memory_resource* resource,
+                                     const collection_full_name_t& collection,
+                                     components::vector::data_chunk_t&& chunk) {
+        auto res = make_node_insert(resource, collection);
+        res->append_child(make_node_raw_data(resource, std::move(chunk)));
+        return res;
+    }
+
     node_insert_ptr
     make_node_insert(std::pmr::memory_resource* resource,
                      const collection_full_name_t& collection,

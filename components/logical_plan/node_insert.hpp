@@ -3,7 +3,7 @@
 #include "node.hpp"
 
 #include <components/document/document.hpp>
-#include <components/document/msgpack/msgpack_encoder.hpp>
+#include <components/vector/data_chunk.hpp>
 
 namespace components::logical_plan {
 
@@ -35,6 +35,14 @@ namespace components::logical_plan {
     node_insert_ptr make_node_insert(std::pmr::memory_resource* resource,
                                      const collection_full_name_t& collection,
                                      std::pmr::vector<components::document::document_ptr>&& documents);
+
+    node_insert_ptr make_node_insert(std::pmr::memory_resource* resource,
+                                     const collection_full_name_t& collection,
+                                     const components::vector::data_chunk_t& chunk);
+
+    node_insert_ptr make_node_insert(std::pmr::memory_resource* resource,
+                                     const collection_full_name_t& collection,
+                                     components::vector::data_chunk_t&& chunk);
 
     node_insert_ptr
     make_node_insert(std::pmr::memory_resource* resource,

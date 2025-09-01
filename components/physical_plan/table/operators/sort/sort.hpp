@@ -20,8 +20,12 @@ namespace components::table::sort {
     public:
         explicit sorter_t() = default;
         explicit sorter_t(size_t index, order order_ = order::ascending);
+        explicit sorter_t(const std::string& key, order order_ = order::ascending);
 
         void add(size_t index, order order_ = order::ascending);
+        // slow, but does not require a schema; TODO: remove
+        void add(const std::string& key, order order_ = order::ascending);
+
         bool operator()(const std::pmr::vector<types::logical_value_t>& vec1,
                         const std::pmr::vector<types::logical_value_t>& vec2) const {
             for (const auto& f : functions_) {
