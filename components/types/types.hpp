@@ -354,8 +354,10 @@ namespace components::types {
 
     class complex_logical_type {
     public:
-        complex_logical_type(logical_type type = logical_type::NA);
-        complex_logical_type(logical_type type, std::unique_ptr<logical_type_extension> extension);
+        complex_logical_type(logical_type type = logical_type::NA, std::string alias = "");
+        complex_logical_type(logical_type type,
+                             std::unique_ptr<logical_type_extension> extension,
+                             std::string alias = "");
         complex_logical_type(const complex_logical_type& other);
         complex_logical_type(complex_logical_type&& other) noexcept = default;
         complex_logical_type& operator=(const complex_logical_type& other);
@@ -389,13 +391,16 @@ namespace components::types {
 
         static bool type_is_constant_size(logical_type type);
 
-        static complex_logical_type create_decimal(uint8_t width, uint8_t scale);
-        static complex_logical_type create_list(const complex_logical_type& internal_type);
-        static complex_logical_type create_array(const complex_logical_type& internal_type, size_t array_size);
+        static complex_logical_type create_decimal(uint8_t width, uint8_t scale, std::string alias = "");
+        static complex_logical_type create_list(const complex_logical_type& internal_type, std::string alias = "");
+        static complex_logical_type
+        create_array(const complex_logical_type& internal_type, size_t array_size, std::string alias = "");
         static complex_logical_type create_map(const complex_logical_type& key_type,
-                                               const complex_logical_type& value_type);
-        static complex_logical_type create_struct(const std::vector<complex_logical_type>& fields);
-        static complex_logical_type create_union(std::vector<complex_logical_type> fields);
+                                               const complex_logical_type& value_type,
+                                               std::string alias = "");
+        static complex_logical_type create_struct(const std::vector<complex_logical_type>& fields,
+                                                  std::string alias = "");
+        static complex_logical_type create_union(std::vector<complex_logical_type> fields, std::string alias = "");
 
     private:
         logical_type type_ = logical_type::NA;

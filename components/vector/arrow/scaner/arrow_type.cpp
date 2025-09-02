@@ -134,28 +134,29 @@ namespace components::vector::arrow {
             return std::make_unique<arrow_type>(types::logical_type::TIMESTAMP_SEC);
         } else if (format == "tDs") {
             return std::make_unique<arrow_type>(types::logical_type::INTERVAL,
-                                                std::make_unique<arrow_date_time_info>(ArrowDateTimeType::SECONDS));
+                                                std::make_unique<arrow_date_time_info>(arrow_date_time_type::SECONDS));
         } else if (format == "tDm") {
             return std::make_unique<arrow_type>(
                 types::logical_type::INTERVAL,
-                std::make_unique<arrow_date_time_info>(ArrowDateTimeType::MILLISECONDS));
+                std::make_unique<arrow_date_time_info>(arrow_date_time_type::MILLISECONDS));
         } else if (format == "tDu") {
             return std::make_unique<arrow_type>(
                 types::logical_type::INTERVAL,
-                std::make_unique<arrow_date_time_info>(ArrowDateTimeType::MICROSECONDS));
+                std::make_unique<arrow_date_time_info>(arrow_date_time_type::MICROSECONDS));
         } else if (format == "tDn") {
-            return std::make_unique<arrow_type>(types::logical_type::INTERVAL,
-                                                std::make_unique<arrow_date_time_info>(ArrowDateTimeType::NANOSECONDS));
+            return std::make_unique<arrow_type>(
+                types::logical_type::INTERVAL,
+                std::make_unique<arrow_date_time_info>(arrow_date_time_type::NANOSECONDS));
         } else if (format == "tiD") {
             return std::make_unique<arrow_type>(types::logical_type::INTERVAL,
-                                                std::make_unique<arrow_date_time_info>(ArrowDateTimeType::DAYS));
+                                                std::make_unique<arrow_date_time_info>(arrow_date_time_type::DAYS));
         } else if (format == "tiM") {
             return std::make_unique<arrow_type>(types::logical_type::INTERVAL,
-                                                std::make_unique<arrow_date_time_info>(ArrowDateTimeType::MONTHS));
+                                                std::make_unique<arrow_date_time_info>(arrow_date_time_type::MONTHS));
         } else if (format == "tin") {
             return std::make_unique<arrow_type>(
                 types::logical_type::INTERVAL,
-                std::make_unique<arrow_date_time_info>(ArrowDateTimeType::MONTH_DAY_NANO));
+                std::make_unique<arrow_date_time_info>(arrow_date_time_type::MONTH_DAY_NANO));
         } else if (format == "z") {
             auto type_info = std::make_unique<arrow_string_info>(arrow_variable_size_type::NORMAL);
             return std::make_unique<arrow_type>(types::logical_type::BLOB, std::move(type_info));
@@ -174,18 +175,19 @@ namespace components::vector::arrow {
             if (format[2] == 'n') {
                 return std::make_unique<arrow_type>(
                     types::logical_type::TIMESTAMP_NS,
-                    std::make_unique<arrow_date_time_info>(ArrowDateTimeType::NANOSECONDS));
+                    std::make_unique<arrow_date_time_info>(arrow_date_time_type::NANOSECONDS));
             } else if (format[2] == 'u') {
                 return std::make_unique<arrow_type>(
                     types::logical_type::TIMESTAMP_US,
-                    std::make_unique<arrow_date_time_info>(ArrowDateTimeType::MICROSECONDS));
+                    std::make_unique<arrow_date_time_info>(arrow_date_time_type::MICROSECONDS));
             } else if (format[2] == 'm') {
                 return std::make_unique<arrow_type>(
                     types::logical_type::TIMESTAMP_MS,
-                    std::make_unique<arrow_date_time_info>(ArrowDateTimeType::MILLISECONDS));
+                    std::make_unique<arrow_date_time_info>(arrow_date_time_type::MILLISECONDS));
             } else if (format[2] == 's') {
-                return std::make_unique<arrow_type>(types::logical_type::TIMESTAMP_SEC,
-                                                    std::make_unique<arrow_date_time_info>(ArrowDateTimeType::SECONDS));
+                return std::make_unique<arrow_type>(
+                    types::logical_type::TIMESTAMP_SEC,
+                    std::make_unique<arrow_date_time_info>(arrow_date_time_type::SECONDS));
             } else {
                 throw std::runtime_error(" Timestamp precision of not accepted");
             }

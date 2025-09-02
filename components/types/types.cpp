@@ -5,12 +5,22 @@
 
 namespace components::types {
 
-    complex_logical_type::complex_logical_type(logical_type type)
-        : type_(type) {}
+    complex_logical_type::complex_logical_type(logical_type type, std::string alias)
+        : type_(type) {
+        if (!alias.empty()) {
+            set_alias(alias);
+        }
+    }
 
-    complex_logical_type::complex_logical_type(logical_type type, std::unique_ptr<logical_type_extension> extension)
+    complex_logical_type::complex_logical_type(logical_type type,
+                                               std::unique_ptr<logical_type_extension> extension,
+                                               std::string alias)
         : type_(type)
-        , extension_(std::move(extension)) {}
+        , extension_(std::move(extension)) {
+        if (!alias.empty()) {
+            set_alias(alias);
+        }
+    }
 
     complex_logical_type::complex_logical_type(const complex_logical_type& other)
         : type_(other.type_) {
@@ -317,36 +327,50 @@ namespace components::types {
         return type >= logical_type::BOOLEAN && type <= logical_type::DOUBLE;
     }
 
-    complex_logical_type complex_logical_type::create_decimal(uint8_t width, uint8_t scale) {
+    complex_logical_type complex_logical_type::create_decimal(uint8_t width, uint8_t scale, std::string alias) {
         assert(width >= scale);
         return complex_logical_type(logical_type::DECIMAL,
-                                    std::make_unique<decimal_logical_type_extension>(width, scale));
+                                    std::make_unique<decimal_logical_type_extension>(width, scale),
+                                    std::move(alias));
     }
 
-    complex_logical_type complex_logical_type::create_list(const complex_logical_type& internal_type) {
-        return complex_logical_type(logical_type::LIST, std::make_unique<list_logical_type_extension>(internal_type));
+    complex_logical_type complex_logical_type::create_list(const complex_logical_type& internal_type,
+                                                           std::string alias) {
+        return complex_logical_type(logical_type::LIST,
+                                    std::make_unique<list_logical_type_extension>(internal_type),
+                                    std::move(alias));
     }
 
     complex_logical_type complex_logical_type::create_array(const complex_logical_type& internal_type,
-                                                            size_t array_size) {
+                                                            size_t array_size,
+                                                            std::string alias) {
         return complex_logical_type(logical_type::ARRAY,
-                                    std::make_unique<array_logical_type_extension>(internal_type, array_size));
+                                    std::make_unique<array_logical_type_extension>(internal_type, array_size),
+                                    std::move(alias));
     }
 
     complex_logical_type complex_logical_type::create_map(const complex_logical_type& key_type,
-                                                          const complex_logical_type& value_type) {
+                                                          const complex_logical_type& value_type,
+                                                          std::string alias) {
         return complex_logical_type(logical_type::MAP,
-                                    std::make_unique<map_logical_type_extension>(key_type, value_type));
+                                    std::make_unique<map_logical_type_extension>(key_type, value_type),
+                                    std::move(alias));
     }
 
-    complex_logical_type complex_logical_type::create_struct(const std::vector<complex_logical_type>& fields) {
-        return complex_logical_type(logical_type::STRUCT, std::make_unique<struct_logical_type_extension>(fields));
+    complex_logical_type complex_logical_type::create_struct(const std::vector<complex_logical_type>& fields,
+                                                             std::string alias) {
+        return complex_logical_type(logical_type::STRUCT,
+                                    std::make_unique<struct_logical_type_extension>(fields),
+                                    std::move(alias));
     }
 
-    complex_logical_type complex_logical_type::create_union(std::vector<complex_logical_type> fields) {
+    complex_logical_type complex_logical_type::create_union(std::vector<complex_logical_type> fields,
+                                                            std::string alias) {
         // union types always have a hidden "tag" field in front
         fields.emplace(fields.begin(), complex_logical_type{logical_type::UTINYINT});
-        return complex_logical_type(logical_type::UNION, std::make_unique<struct_logical_type_extension>(fields));
+        return complex_logical_type(logical_type::UNION,
+                                    std::make_unique<struct_logical_type_extension>(fields),
+                                    std::move(alias));
     }
 
     logical_type_extension::logical_type_extension(extension_type t, std::string alias)

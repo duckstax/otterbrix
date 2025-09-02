@@ -20,11 +20,11 @@ namespace components::vector::arrow {
 
     const std::vector<std::shared_ptr<arrow_type>>& arrow_struct_info::get_children() const { return children_; }
 
-    arrow_date_time_info::arrow_date_time_info(ArrowDateTimeType size)
+    arrow_date_time_info::arrow_date_time_info(arrow_date_time_type size)
         : arrow_type_info(arrow_type_info_type::DATE_TIME)
         , size_type_(size) {}
 
-    ArrowDateTimeType arrow_date_time_info::date_time_type() const { return size_type_; }
+    arrow_date_time_type arrow_date_time_info::date_time_type() const { return size_type_; }
 
     arrow_decimal_info::arrow_decimal_info(decimal_bit_width bit_width)
         : arrow_type_info(arrow_type_info_type::DECIMAL)

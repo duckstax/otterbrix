@@ -18,34 +18,21 @@ TEST_CASE("data_chunk to arrow") {
     auto resource = std::pmr::synchronized_pool_resource();
     std::pmr::vector<complex_logical_type> types(&resource);
 
-    types.emplace_back(logical_type::BIGINT);
-    types.back().set_alias("fixed_size");
-    types.emplace_back(logical_type::STRING_LITERAL);
-    types.back().set_alias("string");
-    types.emplace_back(logical_type::DOUBLE);
-    types.back().set_alias("double");
-    types.emplace_back(logical_type::BOOLEAN);
-    types.back().set_alias("bool");
-    types.emplace_back(complex_logical_type::create_array(logical_type::UBIGINT, array_size));
-    types.back().set_alias("array_fixed");
-    types.emplace_back(complex_logical_type::create_array(logical_type::STRING_LITERAL, array_size));
-    types.back().set_alias("array_string");
-    types.emplace_back(complex_logical_type::create_list(logical_type::UINTEGER));
-    types.back().set_alias("list_fixed");
-    types.emplace_back(complex_logical_type::create_list(logical_type::STRING_LITERAL));
-    types.back().set_alias("list_string");
+    types.emplace_back(logical_type::BIGINT, "fixed_size");
+    types.emplace_back(logical_type::STRING_LITERAL, "string");
+    types.emplace_back(logical_type::DOUBLE, "double");
+    types.emplace_back(logical_type::BOOLEAN, "bool");
+    types.emplace_back(complex_logical_type::create_array(logical_type::UBIGINT, array_size, "array_fixed"));
+    types.emplace_back(complex_logical_type::create_array(logical_type::STRING_LITERAL, array_size, "array_string"));
+    types.emplace_back(complex_logical_type::create_list(logical_type::UINTEGER, "list_fixed"));
+    types.emplace_back(complex_logical_type::create_list(logical_type::STRING_LITERAL, "list_string"));
     {
         std::vector<complex_logical_type> fields;
-        fields.emplace_back(logical_type::BOOLEAN);
-        fields.back().set_alias("flag");
-        fields.emplace_back(logical_type::INTEGER);
-        fields.back().set_alias("number");
-        fields.emplace_back(logical_type::STRING_LITERAL);
-        fields.back().set_alias("string");
-        fields.emplace_back(complex_logical_type::create_list(logical_type::USMALLINT));
-        fields.back().set_alias("array");
-        types.emplace_back(complex_logical_type::create_struct(fields));
-        types.back().set_alias("struct");
+        fields.emplace_back(logical_type::BOOLEAN, "flag");
+        fields.emplace_back(logical_type::INTEGER, "number");
+        fields.emplace_back(logical_type::STRING_LITERAL, "string");
+        fields.emplace_back(complex_logical_type::create_list(logical_type::USMALLINT, "array"));
+        types.emplace_back(complex_logical_type::create_struct(fields, "struct"));
     }
 
     data_chunk_t chunk(&resource, types, chunk_size);

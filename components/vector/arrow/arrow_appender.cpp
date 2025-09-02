@@ -130,24 +130,13 @@ namespace components::vector::arrow {
             case logical_type::SMALLINT:
                 initialize_appender_templated<appender::arrow_scala_data<int16_t>>(append_data);
                 break;
-            // case logical_type::DATE:
             case logical_type::INTEGER:
                 initialize_appender_templated<appender::arrow_scala_data<int32_t>>(append_data);
                 break;
-            /*case logical_type::TIME_TZ: {
-    		if (append_data.options.arrow_lossless_conversion) {
-    			initialize_appender_templated<appender::arrow_scala_data<int64_t>>(append_data);
-    		} else {
-    			initialize_appender_templated<appender::arrow_scala_data<int64_t, dtime_tz_t, ArrowTimeTzConverter>>(append_data);
-    		}
-    		break;
-    	}
-    	case logical_type::TIME:*/
             case logical_type::TIMESTAMP_SEC:
             case logical_type::TIMESTAMP_MS:
             case logical_type::TIMESTAMP_US:
             case logical_type::TIMESTAMP_NS:
-            // case logical_type::TIMESTAMP_TZ:
             case logical_type::BIGINT:
                 initialize_appender_templated<appender::arrow_scala_data<int64_t>>(append_data);
                 break;
@@ -175,56 +164,29 @@ namespace components::vector::arrow {
             case logical_type::DOUBLE:
                 initialize_appender_templated<appender::arrow_scala_data<double>>(append_data);
                 break;
-            case logical_type::DECIMAL:
-                /*switch (type.InternalType()) {
-    		case physical_type::INT16:
-    			initialize_appender_templated<appender::arrow_scala_data<absl::int128, int16_t>>(append_data);
-    			break;
-    		case physical_type::INT32:
-    			initialize_appender_templated<appender::arrow_scala_data<absl::int128, int32_t>>(append_data);
-    			break;*/
-                //case physical_type::INT64:
-                initialize_appender_templated<appender::arrow_scala_data<absl::int128, int64_t>>(append_data);
-                //	break;
-                /*case physical_type::INT128:
-    			initialize_appender_templated<appender::arrow_scala_data<absl::int128>>(append_data);
-    			break;
-    		default:
-    			throw std::runtime_error("Unsupported internal decimal type");
-    		}*/
-                break;
+            case logical_type::DECIMAL: {
+                switch (type.to_physical_type()) {
+                    case physical_type::INT16:
+                        initialize_appender_templated<appender::arrow_scala_data<absl::int128, int16_t>>(append_data);
+                        break;
+                    case physical_type::INT32:
+                        initialize_appender_templated<appender::arrow_scala_data<absl::int128, int32_t>>(append_data);
+                        break;
+                    case physical_type::INT64:
+                        initialize_appender_templated<appender::arrow_scala_data<absl::int128, int64_t>>(append_data);
+                        break;
+                    case physical_type::INT128:
+                        initialize_appender_templated<appender::arrow_scala_data<absl::int128>>(append_data);
+                        break;
+                    default:
+                        throw std::runtime_error("Unsupported internal decimal type");
+                        break;
+                }
+            }
             case logical_type::STRING_LITERAL:
             case logical_type::BLOB:
                 initialize_appender_templated<appender::arrow_string_data_t<>>(append_data);
                 break;
-            /*case logical_type::BIT:
-    		if (arrow_offset == arrow_offset_size::LARGE) {
-    			initialize_appender_templated<appender::arrow_string_data_t<>>(append_data);
-    		} else {
-    			initialize_appender_templated<appender::arrow_string_data_t<string_t, ArrowVarcharConverter, int32_t>>(append_data);
-    		}
-    		break;*/
-            /*case logical_type::ENUM:
-    		switch (type.InternalType()) {
-    		case physical_type::UINT8:
-    			initialize_appender_templated<appender::ArrowEnumData<int8_t>>(append_data);
-    			break;
-    		case physical_type::UINT16:
-    			initialize_appender_templated<appender::ArrowEnumData<int16_t>>(append_data);
-    			break;
-    		case physical_type::UINT32:
-    			initialize_appender_templated<appender::ArrowEnumData<int32_t>>(append_data);
-    			break;
-    		default:
-    			throw std::runtime_error("Unsupported internal enum type");
-    		}
-    		break;
-    	case logical_type::INTERVAL:
-    		initialize_appender_templated<appender::arrow_scala_data<ArrowInterval, interval_t, ArrowIntervalConverter>>(append_data);
-    		break;
-    	case logical_type::UNION:
-    		initialize_appender_templated<appender::ArrowUnionData>(append_data);
-    		break;*/
             case logical_type::STRUCT:
                 initialize_appender_templated<appender::arrow_struct_data_t>(append_data);
                 break;
@@ -248,12 +210,10 @@ namespace components::vector::arrow {
                 break;
             }
             case logical_type::MAP:
-                // Arrow MapArray only supports 32-bit offsets. There is no LargeMapArray type in Arrow.
                 initialize_appender_templated<appender::arrow_map_data_t<int32_t>>(append_data);
                 break;
             default:
-                throw std::runtime_error("Unsupported type in OtterBrix -> Arrow Conversion: " +
-                                         std::to_string(int(type.type())));
+                throw std::runtime_error("Unsupported type in OtterBrix -> initialize_function_pointers()");
         }
     }
 

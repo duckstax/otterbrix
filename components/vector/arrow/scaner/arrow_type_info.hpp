@@ -34,7 +34,7 @@ namespace components::vector::arrow {
         SUPER_SIZE,
         VIEW
     };
-    enum class ArrowDateTimeType : uint8_t
+    enum class arrow_date_time_type : uint8_t
     {
         MILLISECONDS,
         MICROSECONDS,
@@ -92,13 +92,13 @@ namespace components::vector::arrow {
     public:
         static constexpr arrow_type_info_type TYPE = arrow_type_info_type::DATE_TIME;
 
-        explicit arrow_date_time_info(ArrowDateTimeType size);
+        explicit arrow_date_time_info(arrow_date_time_type size);
         ~arrow_date_time_info() override = default;
 
-        ArrowDateTimeType date_time_type() const;
+        arrow_date_time_type date_time_type() const;
 
     private:
-        ArrowDateTimeType size_type_;
+        arrow_date_time_type size_type_;
     };
 
     enum class decimal_bit_width : uint8_t

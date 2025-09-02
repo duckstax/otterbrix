@@ -33,7 +33,7 @@ namespace components::vector::arrow::appender {
             uint64_t size = to - from;
             std::vector<uint64_t> child_indices;
             append_data.add_validity(format, from, to);
-            AppendListMetadata(append_data, format, from, to, child_indices);
+            append_list_metadata(append_data, format, from, to, child_indices);
 
             indexing_vector_t child_sel(input.resource(), child_indices.data());
             auto& child = input.entry();
@@ -58,11 +58,11 @@ namespace components::vector::arrow::appender {
                 *arrow_appender_t::finalize_child(child_type, std::move(append_data.child_data[0]));
         }
 
-        static void AppendListMetadata(arrow_append_data_t& append_data,
-                                       unified_vector_format& format,
-                                       uint64_t from,
-                                       uint64_t to,
-                                       std::vector<uint64_t>& child_sel) {
+        static void append_list_metadata(arrow_append_data_t& append_data,
+                                         unified_vector_format& format,
+                                         uint64_t from,
+                                         uint64_t to,
+                                         std::vector<uint64_t>& child_sel) {
             uint64_t size = to - from;
             append_data.main_buffer().resize(append_data.main_buffer().size() + sizeof(BUFTYPE) * size);
             append_data.auxiliary_buffer().resize(append_data.auxiliary_buffer().size() + sizeof(BUFTYPE) * size);
