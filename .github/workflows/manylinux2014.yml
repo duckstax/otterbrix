@@ -94,7 +94,8 @@ jobs:
           cp integration/python/otterbrix/get_path.py .
           touch MANIFEST.in
 
-          python3 -m pip install wheel setuptools scikit-build==0.16.6 pytest==6.2.5
+          #python3 -m pip install wheel setuptools scikit-build==0.16.6 pytest==6.2.5
+          python3 -m pip install wheel setuptools scikit-build pytest==6.2.5
           mkdir -p $(echo "./$(python3 get_path.py )")
           conan install conanfile.py --build missing -s build_type=Release -of=$(echo "./$(python3 get_path.py )")
           ls
