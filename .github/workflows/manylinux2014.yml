@@ -74,32 +74,25 @@ jobs:
 
       - name: Download and Install conan dependencies
         run: |
+          python3 -m pip install --user --retries=30 --upgrade pip
+          python3 -m pip install wheel setuptools scikit-build pytest==6.2.5 cmake==3.28.3
+          
+          cp integration/python/otterbrix/get_path.py .
+          mkdir -p $(echo "./$(python3 get_path.py )")
+          conan install conanfile.py --build missing -s build_type=Release -of=$(echo "./$(python3 get_path.py )")
+          
           pwd
           ls
-          
-          conan install conanfile.py --build missing -s build_type=Release -s compiler.cppstd=gnu17
-          
-          #conan install conanfile.py --build missing  \
-          #-o boost/*:header_only=True \
-          #--build fmt \
-          #--build spdlog  \
-          #-s build_type=Release \
-          #-s compiler.cppstd=gnu17 \
-          #-g CMakeDeps -g CMakeToolchain
 
       - name: Build wheel
         run: |
+          pwd
+          ls
+          
           cp integration/python/otterbrix/setup.py .
           cp integration/python/otterbrix/pyproject.toml .
-          cp integration/python/otterbrix/get_path.py .
           touch MANIFEST.in
-
-          #python3 -m pip install wheel setuptools scikit-build==0.16.6 pytest==6.2.5
-          python3 -m pip install --user --retries=30 --upgrade pip
-          python3 -m pip install wheel setuptools scikit-build pytest==6.2.5 cmake==3.28.3
-          mkdir -p $(echo "./$(python3 get_path.py )")
-          conan install conanfile.py --build missing -s build_type=Release -of=$(echo "./$(python3 get_path.py )")
-          ls
+          
           python3 setup.py bdist_wheel --verbose
 
       - name: Repair wheel
