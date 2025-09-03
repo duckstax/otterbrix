@@ -11,7 +11,7 @@ class OtterbrixConan(ConanFile):
         self.requires("boost/1.87.0", override=True)
         self.requires("fmt/11.1.3@")
         self.requires("spdlog/1.15.1@")
-        self.requires("pybind11/2.10.0@")
+        self.requires("pybind11/2.13.6@")
         self.requires("msgpack-cxx/4.1.1@")
         self.requires("catch2/2.13.7@")
         self.requires("abseil/20230802.1@")
