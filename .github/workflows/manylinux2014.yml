@@ -62,7 +62,7 @@ jobs:
         run: |
           pip3 install --user --retries=30 --upgrade pip
           pip3 install --user --retries=30 scikit-build
-          pip3 install --user --retries=30 conan==2.15.0 cmake
+          pip3 install --user --retries=30 conan==2.15.0 cmake==3.28.3
 
       - name: Add user local bin to PATH
         run: echo "$HOME/.local/bin" >> $GITHUB_PATH
