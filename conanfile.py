@@ -57,12 +57,12 @@ class OtterbrixConan(ConanFile):
         self.copy("*.so*", dst="build_tools", src="lib")
 
     def generate(self):
-        deps = CMakeDeps(self)
-        deps.generate()
-
         tc = CMakeToolchain(self)
         tc.variables["CMAKE_CXX_STANDARD"] = "17"
         tc.generate()
+
+        deps = CMakeDeps(self)
+        deps.generate()
 
     def build(self):
         cmake = CMake(self)
