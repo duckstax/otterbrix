@@ -1,18 +1,18 @@
 name: manylinux2014
 
-#on:
-#  push:
-#    paths-ignore:
-#      - '**.md'
-#    tags:
-#      - '*'
-#    branches:
-#      - '**'
-#  pull_request:
-#    paths-ignore:
-#      - '**.md'
-#    branches:
-#      - '**'
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+    tags:
+      - '*'
+    branches:
+      - '**'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+    branches:
+      - '**'
 
 
 env:
@@ -60,32 +60,39 @@ jobs:
 
       - name: Set env conan dependencies
         run: |
-          pip3 install --retries=30 conan==2.15.0 cmake
+          pip3 install --user --retries=30 --upgrade pip
+          #pip3 install --user --retries=30 scikit-build
+          pip3 install --user --retries=30 conan==2.15.0
+
+      - name: Add user local bin to PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Use conan
+        run: |
           conan profile detect --force
           conan remote add otterbrix http://conan.otterbrix.com
 
       - name: Download and Install conan dependencies
         run: |
+          python3 -m pip install --user --retries=30 --upgrade pip
+          python3 -m pip install wheel setuptools scikit-build pytest==6.2.5 cmake==3.28.3
+          
+          cp integration/python/otterbrix/get_path.py .
+          mkdir -p $(echo "./$(python3 get_path.py )")
+          conan install conanfile.py --build missing -s build_type=Release -of=$(echo "./$(python3 get_path.py )")
+          
           pwd
           ls
-          conan install conanfile.py --build missing  \
-          --build fmt \
-          --build spdlog  \
-          -s build_type=Release \
-          -s compiler.cppstd=gnu17 \
-          -g CMakeDeps -g CMakeToolchain
 
       - name: Build wheel
         run: |
+          pwd
+          ls
+          
           cp integration/python/otterbrix/setup.py .
           cp integration/python/otterbrix/pyproject.toml .
-          cp integration/python/otterbrix/get_path.py .
           touch MANIFEST.in
-
-          python3 -m pip install wheel setuptools scikit-build==0.16.6 pytest==6.2.5
-          mkdir -p $(echo "./$(python3 get_path.py )")
-          conan install conanfile.py --build missing -s build_type=Release -if=$(echo "./$(python3 get_path.py )")
-          ls
+          
           python3 setup.py bdist_wheel --verbose
 
       - name: Repair wheel
@@ -205,6 +212,7 @@ jobs:
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+
         run: |
           echo "Pretend to upload"
           twine upload --skip-existing *
