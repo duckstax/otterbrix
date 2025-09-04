@@ -9,7 +9,8 @@ namespace components::vector::arrow::appender {
 
     template<class SRC = std::string_view, class BUFTYPE = int64_t>
     struct arrow_string_data_t {
-        static void initialize(arrow_append_data_t& result, const types::complex_logical_type& type, size_t capacity) {
+        static void
+        initialize(arrow_append_data_t& result, const types::complex_logical_type& type, uint64_t capacity) {
             result.main_buffer().reserve((capacity + 1) * sizeof(BUFTYPE));
             result.auxiliary_buffer().reserve(capacity);
         }
@@ -40,7 +41,7 @@ namespace components::vector::arrow::appender {
 
                 if (!format.validity.row_is_valid(source_idx)) {
                     uint8_t current_bit;
-                    size_t current_byte;
+                    uint64_t current_byte;
                     bit_position(append_data.row_count + i - from, current_byte, current_bit);
                     append_data.set_null(validity_data, current_byte, current_bit);
                     offset_data[offset_idx] = last_offset;
@@ -61,7 +62,7 @@ namespace components::vector::arrow::appender {
         }
 
         static void
-        append(arrow_append_data_t& append_data, vector_t& input, size_t from, size_t to, size_t input_size) {
+        append(arrow_append_data_t& append_data, vector_t& input, uint64_t from, uint64_t to, uint64_t input_size) {
             append_templated<false>(append_data, input, from, to, input_size);
         }
 

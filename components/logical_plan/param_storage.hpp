@@ -28,7 +28,7 @@ namespace components::logical_plan {
         document::impl::base_document* tape_;
     };
 
-    struct storage_parameters {
+    class storage_parameters {
         std::pmr::unordered_map<core::parameter_id_t, expr_value_t> parameters;
 
         explicit storage_parameters(std::pmr::memory_resource* resource)
