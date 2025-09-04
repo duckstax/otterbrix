@@ -29,7 +29,7 @@ namespace components::vector::arrow {
     void arrow_array_schema_wrapper_t::get_schema(arrow_schema_wrapper_t& schema) {
         assert(arrow_array_stream.get_schema);
         if (arrow_array_stream.get_schema(&arrow_array_stream, &schema.arrow_schema)) {
-            throw std::runtime_error(std::string("arrow_scan: get_schema failed(): ") + std::string(get_error()));
+            throw std::runtime_error(get_error());
         }
         if (!schema.arrow_schema.release) {
             throw std::runtime_error("arrow_scan: released schema passed");
