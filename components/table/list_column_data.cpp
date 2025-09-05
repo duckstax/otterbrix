@@ -199,7 +199,7 @@ namespace components::table {
         }
 
         vector::unified_vector_format uvf(resource_, vector.size());
-        uvf.referenced_indexing = vector::incremental_indexing_vector();
+        uvf.referenced_indexing = vector::incremental_indexing_vector(vector.resource());
         uvf.data = reinterpret_cast<std::byte*>(append_offsets.get());
 
         if (child_count > 0) {

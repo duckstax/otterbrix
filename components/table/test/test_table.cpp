@@ -39,16 +39,11 @@ TEST_CASE("data_table_t") {
     };
 
     std::vector<complex_logical_type> fields;
-    fields.emplace_back(logical_type::BOOLEAN);
-    fields.back().set_alias("flag");
-    fields.emplace_back(logical_type::INTEGER);
-    fields.back().set_alias("number");
-    fields.emplace_back(logical_type::STRING_LITERAL);
-    fields.back().set_alias("name");
-    fields.emplace_back(complex_logical_type::create_list(logical_type::USMALLINT));
-    fields.back().set_alias("array");
-    complex_logical_type struct_type = complex_logical_type::create_struct(fields);
-    struct_type.set_alias("test_struct");
+    fields.emplace_back(logical_type::BOOLEAN, "flag");
+    fields.emplace_back(logical_type::INTEGER, "number");
+    fields.emplace_back(logical_type::STRING_LITERAL, "name");
+    fields.emplace_back(complex_logical_type::create_list(logical_type::USMALLINT, "array"));
+    complex_logical_type struct_type = complex_logical_type::create_struct(fields, "test_struct");
 
     core::filesystem::local_file_system_t fs;
     auto buffer_pool =
@@ -535,7 +530,7 @@ TEST_CASE("data_table_t") {
         }
     }
 
-    INFO("Extention") {
+    INFO("Extension") {
         std::unique_ptr<data_table_t> extended_table;
 
         {
@@ -556,7 +551,7 @@ TEST_CASE("data_table_t") {
             }
             extended_table->update_column(v, {7}, chunk);
         }
-        // Scan after extention
+        // Scan after extension
         {
             std::vector<storage_index_t> column_indices;
             column_indices.reserve(extended_table->column_count());

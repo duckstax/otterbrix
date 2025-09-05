@@ -14,7 +14,7 @@ namespace components::serializer {
 } // namespace components::serializer
 
 namespace components::logical_plan {
-    class storage_parameters;
+    struct storage_parameters;
 }
 
 namespace components::expressions {

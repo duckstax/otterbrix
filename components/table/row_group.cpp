@@ -271,7 +271,7 @@ namespace components::table {
                 }
             } else {
                 uint64_t approved_tuple_count = count;
-                vector::indexing_vector_t indexing;
+                vector::indexing_vector_t indexing(result.resource());
                 if (count != max_count) {
                     indexing = state.valid_indexing;
                 } else {

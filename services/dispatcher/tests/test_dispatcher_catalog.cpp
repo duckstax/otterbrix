@@ -206,8 +206,8 @@ TEST_CASE("dispatcher::computed_operations") {
     std::stringstream query;
     query << "INSERT INTO test.test (_id, name, count) VALUES ";
     for (int num = 0; num < 100; ++num) {
-        query << "('" << gen_id(num + 1, &mr) << "', " << "'Name " << num << "', " << num << ")"
-              << (num == 99 ? ";" : ", ");
+        query << "('" << gen_id(num + 1, &mr) << "', "
+              << "'Name " << num << "', " << num << ")" << (num == 99 ? ";" : ", ");
     }
 
     test.execute_sql(query.str());

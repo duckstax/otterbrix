@@ -48,21 +48,14 @@ TEST_CASE("integration::cpp::test_collection::logical_plan") {
     std::pmr::vector<types::complex_logical_type> types_left(dispatcher->resource());
     std::pmr::vector<types::complex_logical_type> types_right(dispatcher->resource());
 
-    types_left.emplace_back(logical_type::STRING_LITERAL);
-    types_left.back().set_alias("_id");
-    types_left.emplace_back(logical_type::STRING_LITERAL);
-    types_left.back().set_alias("name");
-    types_left.emplace_back(logical_type::BIGINT);
-    types_left.back().set_alias("key_1");
-    types_left.emplace_back(logical_type::BIGINT);
-    types_left.back().set_alias("key_2");
+    types_left.emplace_back(logical_type::STRING_LITERAL, "_id");
+    types_left.emplace_back(logical_type::STRING_LITERAL, "name");
+    types_left.emplace_back(logical_type::BIGINT, "key_1");
+    types_left.emplace_back(logical_type::BIGINT, "key_2");
 
-    types_right.emplace_back(logical_type::STRING_LITERAL);
-    types_right.back().set_alias("_id");
-    types_right.emplace_back(logical_type::BIGINT);
-    types_right.back().set_alias("value");
-    types_right.emplace_back(logical_type::BIGINT);
-    types_right.back().set_alias("key");
+    types_right.emplace_back(logical_type::STRING_LITERAL, "_id");
+    types_right.emplace_back(logical_type::BIGINT, "value");
+    types_right.emplace_back(logical_type::BIGINT, "key");
 
     INFO("initialization") {
         INFO("documents") {

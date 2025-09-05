@@ -294,8 +294,8 @@ namespace components::table {
             return;
         }
 
-        vector::indexing_vector_t indexing;
-        count = sort_indexing_vector(base_data.resource(), indexing, count, ids);
+        vector::indexing_vector_t indexing(update.resource());
+        count = sort_indexing_vector(update.resource(), indexing, count, ids);
         assert(count > 0);
 
         auto first_id = ids[indexing.get_index(0)];
