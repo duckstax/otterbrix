@@ -54,23 +54,6 @@ namespace components::vector::arrow {
         virtual ~arrow_type_info() = default;
 
         arrow_type_info_type type;
-
-        template<class TARGET>
-        TARGET& cast() {
-            assert(dynamic_cast<TARGET*>(this));
-            if (type != TARGET::TYPE) {
-                throw std::runtime_error("Failed to cast arrow_type_info, type mismatch");
-            }
-            return reinterpret_cast<TARGET&>(*this);
-        }
-        template<class TARGET>
-        const TARGET& cast() const {
-            assert(dynamic_cast<const TARGET*>(this));
-            if (type != TARGET::TYPE) {
-                throw std::runtime_error("Failed to cast arrow_type_info, type mismatch");
-            }
-            return reinterpret_cast<const TARGET&>(*this);
-        }
     };
 
     class arrow_struct_info : public arrow_type_info {

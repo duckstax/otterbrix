@@ -12,8 +12,6 @@ namespace components::vector::arrow {
 
     void to_arrow_schema(ArrowSchema* out_schema, const std::pmr::vector<types::complex_logical_type>& types);
     void to_arrow_array(data_chunk_t& input, ArrowArray* out_array);
-    std::unique_ptr<arrow_type> type_from_schema(ArrowSchema& schema);
-    std::unique_ptr<arrow_type> arrow_logical_type(ArrowSchema& schema);
     void populate_arrow_table_schema(arrow_table_schema_t& arrow_table, const ArrowSchema& arrow_schema);
     arrow_table_schema_t schema_from_arrow(ArrowSchema* schema);
     data_chunk_t data_chunk_from_arrow(std::pmr::memory_resource* resource,

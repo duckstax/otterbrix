@@ -106,17 +106,17 @@ find_package(actor-zeta REQUIRED)
 
 # conan
 #############################################################################################
-# cache
+# ccache
 
-find_program(CCACHE_FOUND cache)
+find_program(CCACHE_FOUND ccache)
 if(CCACHE_FOUND)
-    message(STATUS "Using cache: ${CCACHE_FOUND}")
+    message(STATUS "Using ccache: ${CCACHE_FOUND}")
     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ${CCACHE_FOUND})
     set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ${CCACHE_FOUND})
     set(ENV{CCACHE_COMMENTS} "1")
 endif(CCACHE_FOUND)
 
-# cache
+# ccache
 #############################################################################################
 # wasm
 if(WASM_BUILD)

@@ -71,18 +71,8 @@ namespace components::vector::arrow {
 
         template<class T>
         const T& get_type_info() const {
-            return type_info_->cast<T>();
+            return *reinterpret_cast<T*>(type_info_.get());
         }
-
-        static std::unique_ptr<arrow_type> type_from_format(std::string& format);
-        static std::unique_ptr<arrow_type> type_from_format(ArrowSchema& schema, std::string& format);
-
-        static std::unique_ptr<arrow_type> type_from_schema(ArrowSchema& schema);
-
-        static std::unique_ptr<arrow_type>
-        create_list_type(ArrowSchema& child, arrow_variable_size_type size_type, bool view);
-
-        static std::unique_ptr<arrow_type> arrow_logical_type(ArrowSchema& schema);
 
         bool has_extension() const;
 
@@ -98,6 +88,12 @@ namespace components::vector::arrow {
         std::string error_message_;
         bool not_implemented_ = false;
     };
+
+    std::unique_ptr<arrow_type> type_from_format(std::string& format);
+    std::unique_ptr<arrow_type> type_from_format(ArrowSchema& schema, std::string& format);
+    std::unique_ptr<arrow_type> type_from_schema(ArrowSchema& schema);
+    std::unique_ptr<arrow_type> create_list_type(ArrowSchema& child, arrow_variable_size_type size_type, bool view);
+    std::unique_ptr<arrow_type> arrow_logical_type(ArrowSchema& schema);
 
     using arrow_column_map_t = std::unordered_map<size_t, std::shared_ptr<arrow_type>>;
 

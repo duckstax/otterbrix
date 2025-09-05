@@ -259,22 +259,6 @@ namespace components::vector::arrow {
         }
     }
 
-    std::unique_ptr<arrow_type> type_from_schema(ArrowSchema& schema) {
-        auto format = std::string(schema.format);
-        arrow_schema_metadata_t schema_metadata(schema.metadata);
-        auto arrow_type = arrow_type::type_from_format(schema, format);
-        return arrow_type;
-    }
-
-    std::unique_ptr<arrow_type> arrow_logical_type(ArrowSchema& schema) {
-        auto arrow_type = type_from_schema(schema);
-        if (schema.dictionary) {
-            auto dictionary = arrow_logical_type(*schema.dictionary);
-            arrow_type->set_dictionary(std::move(dictionary));
-        }
-        return arrow_type;
-    }
-
     void populate_arrow_table_schema(arrow_table_schema_t& arrow_table, const ArrowSchema& arrow_schema) {
         std::vector<std::string> names;
         for (uint64_t col_idx = 0; col_idx < static_cast<uint64_t>(arrow_schema.n_children); col_idx++) {
@@ -295,7 +279,7 @@ namespace components::vector::arrow {
             if (!schema.release) {
                 throw std::logic_error("arrow_scan: released schema passed");
             }
-            auto arrow_type = arrow_type::arrow_logical_type(schema);
+            auto arrow_type = arrow_logical_type(schema);
             arrow_table.add_column(col_idx, std::move(arrow_type), names[col_idx]);
         }
     }

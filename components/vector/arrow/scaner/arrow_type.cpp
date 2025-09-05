@@ -33,17 +33,84 @@ namespace components::vector::arrow {
     void arrow_type::set_run_end_encoded() {
         assert(type_info_);
         assert(type_info_->type == arrow_type_info_type::STRUCT);
-        auto& struct_info = type_info_->cast<arrow_struct_info>();
-        assert(struct_info.child_count() == 2);
+        auto struct_info = reinterpret_cast<arrow_struct_info*>(type_info_.get());
+        assert(struct_info->child_count() == 2);
 
-        auto actual_type = struct_info.get_child(1).type();
+        auto actual_type = struct_info->get_child(1).type();
         type_ = actual_type;
         run_end_encoded_ = true;
     }
 
     bool arrow_type::run_end_encoded() const { return run_end_encoded_; }
 
-    std::unique_ptr<arrow_type> arrow_type::type_from_format(std::string& format) {
+    types::complex_logical_type arrow_type::type(bool use_dictionary) const {
+        if (use_dictionary && dictionary_type_) {
+            return dictionary_type_->type();
+        }
+        if (!use_dictionary) {
+            if (extension_data) {
+                return extension_data->unique_type();
+            }
+            return type_;
+        }
+        auto id = type_.type();
+        switch (id) {
+            case types::logical_type::STRUCT: {
+                auto struct_info = reinterpret_cast<arrow_struct_info*>(type_info_.get());
+                std::vector<types::complex_logical_type> new_children;
+                for (size_t i = 0; i < struct_info->child_count(); i++) {
+                    auto& child = struct_info->get_child(i);
+                    auto& child_name = type_.child_name(i);
+                    new_children.emplace_back(child.type(true));
+                    new_children.back().set_alias(child_name);
+                }
+                return types::complex_logical_type::create_struct(std::move(new_children));
+            }
+            case types::logical_type::LIST: {
+                auto list_info = reinterpret_cast<arrow_list_info*>(type_info_.get());
+                auto& child = list_info->get_child();
+                return types::complex_logical_type::create_list(child.type(true));
+            }
+            case types::logical_type::MAP: {
+                auto list_info = reinterpret_cast<arrow_list_info*>(type_info_.get());
+                auto& struct_child = list_info->get_child();
+                auto struct_type = struct_child.type(true);
+                return types::complex_logical_type::create_map(struct_type.child_types()[0],
+                                                               struct_type.child_types()[1]);
+            }
+            case types::logical_type::UNION: {
+                auto union_info = reinterpret_cast<arrow_struct_info*>(type_info_.get());
+                std::vector<types::complex_logical_type> new_children;
+                for (size_t i = 0; i < union_info->child_count(); i++) {
+                    auto& child = union_info->get_child(i);
+                    auto& child_name = type_.child_types()[i].alias();
+                    new_children.emplace_back(child.type(true));
+                    new_children.back().set_alias(child_name);
+                }
+                return types::complex_logical_type::create_union(std::move(new_children));
+            }
+            default: {
+                if (extension_data) {
+                    return extension_data->unique_type();
+                }
+                return type_;
+            }
+        }
+    }
+
+    bool arrow_type::has_extension() const { return extension_data.get() != nullptr; }
+
+    arrow_array_physical_type arrow_type::get_physical_type() const {
+        if (has_dictionary()) {
+            return arrow_array_physical_type::DICTIONARY_ENCODED;
+        }
+        if (run_end_encoded()) {
+            return arrow_array_physical_type::RUN_END_ENCODED;
+        }
+        return arrow_array_physical_type::DEFAULT;
+    }
+
+    std::unique_ptr<arrow_type> type_from_format(std::string& format) {
         if (format == "n") {
             return std::make_unique<arrow_type>(types::logical_type::NA);
         } else if (format == "b") {
@@ -195,7 +262,7 @@ namespace components::vector::arrow {
         return nullptr;
     }
 
-    std::unique_ptr<arrow_type> arrow_type::type_from_format(ArrowSchema& schema, std::string& format) {
+    std::unique_ptr<arrow_type> type_from_format(ArrowSchema& schema, std::string& format) {
         auto type = type_from_format(format);
         if (type) {
             return type;
@@ -304,8 +371,7 @@ namespace components::vector::arrow {
         throw std::runtime_error("Unsupported Internal Arrow Type");
     }
 
-    std::unique_ptr<arrow_type>
-    arrow_type::create_list_type(ArrowSchema& child, arrow_variable_size_type size_type, bool view) {
+    std::unique_ptr<arrow_type> create_list_type(ArrowSchema& child, arrow_variable_size_type size_type, bool view) {
         auto child_type = arrow_logical_type(child);
 
         std::unique_ptr<arrow_type_info> type_info;
@@ -317,64 +383,8 @@ namespace components::vector::arrow {
         }
         return std::make_unique<arrow_type>(type, std::move(type_info));
     }
-
-    types::complex_logical_type arrow_type::type(bool use_dictionary) const {
-        if (use_dictionary && dictionary_type_) {
-            return dictionary_type_->type();
-        }
-        if (!use_dictionary) {
-            if (extension_data) {
-                return extension_data->unique_type();
-            }
-            return type_;
-        }
-        auto id = type_.type();
-        switch (id) {
-            case types::logical_type::STRUCT: {
-                auto& struct_info = type_info_->cast<arrow_struct_info>();
-                std::vector<types::complex_logical_type> new_children;
-                for (size_t i = 0; i < struct_info.child_count(); i++) {
-                    auto& child = struct_info.get_child(i);
-                    auto& child_name = type_.child_name(i);
-                    new_children.emplace_back(child.type(true));
-                    new_children.back().set_alias(child_name);
-                }
-                return types::complex_logical_type::create_struct(std::move(new_children));
-            }
-            case types::logical_type::LIST: {
-                auto& list_info = type_info_->cast<arrow_list_info>();
-                auto& child = list_info.get_child();
-                return types::complex_logical_type::create_list(child.type(true));
-            }
-            case types::logical_type::MAP: {
-                auto& list_info = type_info_->cast<arrow_list_info>();
-                auto& struct_child = list_info.get_child();
-                auto struct_type = struct_child.type(true);
-                return types::complex_logical_type::create_map(struct_type.child_types()[0],
-                                                               struct_type.child_types()[1]);
-            }
-            case types::logical_type::UNION: {
-                auto& union_info = type_info_->cast<arrow_struct_info>();
-                std::vector<types::complex_logical_type> new_children;
-                for (size_t i = 0; i < union_info.child_count(); i++) {
-                    auto& child = union_info.get_child(i);
-                    auto& child_name = type_.child_types()[i].alias();
-                    new_children.emplace_back(child.type(true));
-                    new_children.back().set_alias(child_name);
-                }
-                return types::complex_logical_type::create_union(std::move(new_children));
-            }
-            default: {
-                if (extension_data) {
-                    return extension_data->unique_type();
-                }
-                return type_;
-            }
-        }
-    }
-
-    std::unique_ptr<arrow_type> arrow_type::arrow_logical_type(ArrowSchema& schema) {
-        auto arrow_type = arrow_type::type_from_schema(schema);
+    std::unique_ptr<arrow_type> arrow_logical_type(ArrowSchema& schema) {
+        auto arrow_type = type_from_schema(schema);
         if (schema.dictionary) {
             auto dictionary = arrow_logical_type(*schema.dictionary);
             arrow_type->set_dictionary(std::move(dictionary));
@@ -382,19 +392,7 @@ namespace components::vector::arrow {
         return arrow_type;
     }
 
-    bool arrow_type::has_extension() const { return extension_data.get() != nullptr; }
-
-    arrow_array_physical_type arrow_type::get_physical_type() const {
-        if (has_dictionary()) {
-            return arrow_array_physical_type::DICTIONARY_ENCODED;
-        }
-        if (run_end_encoded()) {
-            return arrow_array_physical_type::RUN_END_ENCODED;
-        }
-        return arrow_array_physical_type::DEFAULT;
-    }
-
-    std::unique_ptr<arrow_type> arrow_type::type_from_schema(ArrowSchema& schema) {
+    std::unique_ptr<arrow_type> type_from_schema(ArrowSchema& schema) {
         auto format = std::string(schema.format);
         arrow_schema_metadata_t schema_metadata(schema.metadata);
 

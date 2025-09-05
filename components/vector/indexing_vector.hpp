@@ -50,6 +50,7 @@ namespace components::vector {
     };
 
     static uint64_t ZERO_VECTOR[DEFAULT_VECTOR_CAPACITY] = {0};
+    // nullptr as memory_resource* is questionable here, but i didn't find a better alternative
     inline static indexing_vector_t ZERO_INDEXING_VECTOR = indexing_vector_t(nullptr, ZERO_VECTOR);
 
 } // namespace components::vector
